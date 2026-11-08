@@ -1,0 +1,144 @@
+from geographiclib.geodesic import Geodesic
+from shapely.geometry import Point, Polygon, MultiPolygon
+from app.modules.geospatial.schemas import (
+    GeoJSONPoint,
+    GeoJSONPolygon,
+    GeoJSONMultiPolygon
+)
+from app.modules.geospatial.repository import (
+    create_location_record,
+    get_all_location_records,
+    get_location_record
+)
+
+
+def add_location(data: dict):
+
+    geometry = {
+        "type": "Point",
+        "coordinates": [
+            data["longitude"],
+            data["latitude"]
+        ]
+    }
+
+    location_data = {
+        **data,
+        "geometry": geometry
+    }
+
+    return create_location_record(location_data)
+
+
+def list_locations():
+
+    return get_all_location_records()
+
+
+def find_location(location_id: str):
+
+    return get_location_record(location_id)
+
+
+
+def analyze_point_in_polygon(
+    point_data: GeoJSONPoint,
+    polygon_data: GeoJSONPolygon | GeoJSONMultiPolygon
+):
+
+    # Convert GeoJSON Point into a Shapely Point.
+    point = Point(
+        point_data.coordinates
+    )
+
+    # Determine which geometry was supplied.
+    if isinstance(polygon_data, GeoJSONPolygon):
+
+        polygon = Polygon(
+            shell=polygon_data.coordinates[0],
+            holes=polygon_data.coordinates[1:]
+        )
+
+    elif isinstance(polygon_data, GeoJSONMultiPolygon):
+
+        polygons = []
+
+        for polygon_coordinates in polygon_data.coordinates:
+
+            individual_polygon = Polygon(
+                shell=polygon_coordinates[0],
+                holes=polygon_coordinates[1:]
+            )
+
+            polygons.append(individual_polygon)
+
+        polygon = MultiPolygon(polygons)
+
+    else:
+
+        raise ValueError(
+            "Unsupported geographic geometry."
+        )
+
+    # Reject invalid or empty geometry.
+    if polygon.is_empty or not polygon.is_valid:
+        raise ValueError(
+            "The supplied polygon is geometrically invalid."
+        )
+
+    # Perform spatial analysis.
+    covered = polygon.covers(point)
+
+    strictly_inside = polygon.contains(point)
+
+    on_boundary = polygon.boundary.covers(point)
+
+    # Determine the relationship.
+    if on_boundary:
+        relationship = "boundary"
+
+    elif strictly_inside:
+        relationship = "inside"
+
+    else:
+        relationship = "outside"
+
+    return {
+        "covered": covered,
+        "strictly_inside": strictly_inside,
+        "on_boundary": on_boundary,
+        "relationship": relationship
+    }
+
+
+# ==========================================
+# GEOGRAPHIC DISTANCE CALCULATION
+# ==========================================
+
+def calculate_geographic_distance(
+    point_a: GeoJSONPoint,
+    point_b: GeoJSONPoint
+):
+
+    # GeoJSON coordinates are [longitude, latitude].
+    longitude_a, latitude_a = point_a.coordinates
+
+    longitude_b, latitude_b = point_b.coordinates
+
+    # GeographicLib expects latitude first.
+    result = Geodesic.WGS84.Inverse(
+        latitude_a,
+        longitude_a,
+        latitude_b,
+        longitude_b
+    )
+
+    distance_meters = result["s12"]
+
+    distance_kilometers = distance_meters / 1000
+
+    return {
+        "distance_meters": distance_meters,
+        "distance_kilometers": distance_kilometers,
+        "method": "WGS84 geodesic"
+    }
