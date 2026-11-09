@@ -2,16 +2,20 @@ from fastapi import APIRouter, HTTPException, Query, Response, status
 
 from app.modules.assets.schemas import (
     AssetCreate,
+    AssetExposureReport,
     AssetListResponse,
     AssetResponse,
     AssetType,
     AssetUpdate,
     Criticality,
+    SingleAssetExposureResponse,
 )
 from app.modules.assets.service import (
     AssetOutsideCoverageError,
     add_asset,
+    analyze_asset_exposure,
     change_asset,
+    exposure_report,
     find_asset,
     list_assets,
     remove_asset,
@@ -56,6 +60,38 @@ def get_assets(
 ):
 
     return list_assets(asset_type, criticality, district_pcode)
+
+
+# Must be declared BEFORE "/{asset_id}": FastAPI matches routes top to
+# bottom, and "/{asset_id}" would otherwise catch "exposure" as an id.
+@router.get(
+    "/exposure",
+    response_model=AssetExposureReport
+)
+def get_exposure_report(
+    asset_type: AssetType | None = Query(default=None),
+    criticality: Criticality | None = Query(default=None),
+    district_pcode: str | None = Query(
+        default=None,
+        description="District code, e.g. BD3026 for Dhaka"
+    ),
+):
+
+    return exposure_report(asset_type, criticality, district_pcode)
+
+
+@router.get(
+    "/{asset_id}/exposure",
+    response_model=SingleAssetExposureResponse
+)
+def get_asset_exposure(asset_id: str):
+
+    exposure = analyze_asset_exposure(asset_id)
+
+    if exposure is None:
+        raise _not_found()
+
+    return exposure
 
 
 @router.get(

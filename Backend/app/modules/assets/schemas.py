@@ -147,3 +147,138 @@ class AssetListResponse(BaseModel):
     total_replacement_value_bdt: float
 
     assets: list[AssetResponse]
+
+
+# ==========================================
+# EXPOSURE ANALYSIS
+# ==========================================
+# Exposure = what the data says about each asset's location: where flooding
+# DID happen (observed), where it COULD happen (modelled hazard), and how
+# close the water is. These are facts with yes/no flags, NOT a risk score
+# and NOT a forecast: flood probabilities come later from the ML model.
+
+class ObservedFloodExposure(BaseModel):
+
+    # UNOSAT satellite observations at the asset's ~90 m grid cell.
+    times_observed: int
+
+    times_flooded: int
+
+    flooded_event_ids: list[str]
+
+    # The most recent event in which flood water was seen here, if any.
+    last_flooded_event_id: str | None
+
+
+class HazardExposure(BaseModel):
+
+    # Modelled river flood (JRC GloFAS).
+    return_period_years: Literal[10, 100]
+
+    depth_class: int | None
+
+    depth_label: str | None
+
+
+class DistrictFloodContext(BaseModel):
+
+    pcode: str
+
+    name: str
+
+    # 1 = most frequently flooded of Bangladesh's 64 districts.
+    flood_rank: int
+
+    events_observed: int
+
+    events_flooded: int
+
+
+class NearestWaterwayExposure(BaseModel):
+
+    waterway_type: str
+
+    name: str | None
+
+    distance_meters: float
+
+
+class ExposureFlags(BaseModel):
+
+    observed_flooding: bool
+
+    modelled_hazard_10yr: bool
+
+    modelled_hazard_100yr: bool
+
+
+class AssetExposure(BaseModel):
+
+    asset_id: str
+
+    name: str
+
+    asset_type: AssetType
+
+    criticality: Criticality
+
+    occupancy: int | None
+
+    replacement_value_bdt: float | None
+
+    district: DistrictFloodContext
+
+    grid_cell_size_m: int
+
+    # True when the asset sits on mapped permanent water (river/lake).
+    on_permanent_water: bool
+
+    observed: ObservedFloodExposure
+
+    hazard: list[HazardExposure]
+
+    # Waterway data only covers Dhaka District; elsewhere this is false
+    # and nearest_waterways is empty.
+    waterway_coverage: bool
+
+    nearest_waterways: list[NearestWaterwayExposure]
+
+    flags: ExposureFlags
+
+
+class ExposureGroupTotals(BaseModel):
+
+    assets: int
+
+    occupancy: int
+
+    replacement_value_bdt: float
+
+
+class ExposureSummary(BaseModel):
+
+    total: ExposureGroupTotals
+
+    with_observed_flooding: ExposureGroupTotals
+
+    with_modelled_hazard_10yr: ExposureGroupTotals
+
+    with_modelled_hazard_100yr: ExposureGroupTotals
+
+
+class AssetExposureReport(BaseModel):
+
+    summary: ExposureSummary
+
+    assets: list[AssetExposure]
+
+    attribution: list[str]
+
+    limitations: list[str]
+
+
+class SingleAssetExposureResponse(AssetExposure):
+
+    attribution: list[str]
+
+    limitations: list[str]
