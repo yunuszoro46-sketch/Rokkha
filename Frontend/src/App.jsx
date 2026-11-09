@@ -176,14 +176,14 @@ export default function App() {
 
   // Floating Multi-Page Switcher Dock — icons only
   const PageSwitcherDock = () => (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-[#060c1b]/95 backdrop-blur-md border border-sky-500/40 p-2.5 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.8)]">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-white/95 backdrop-blur-md border-2 border-cyan-400 p-2.5 rounded-2xl shadow-[0_8px_32px_rgba(6,182,212,0.25)]">
       <button
         onClick={() => setActiveTab('landing')}
         title="Landing Page"
         className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
           activeTab === 'landing'
-            ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow'
-            : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+            ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-200'
+            : 'text-slate-400 hover:text-cyan-600 hover:bg-cyan-50'
         }`}
       >
         <Home size={17} />
@@ -193,8 +193,8 @@ export default function App() {
         title="Feature Catalog"
         className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
           activeTab === 'catalog'
-            ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow'
-            : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+            ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-200'
+            : 'text-slate-400 hover:text-cyan-600 hover:bg-cyan-50'
         }`}
       >
         <LayoutGrid size={17} />
@@ -204,8 +204,8 @@ export default function App() {
         title="Live Sandbox"
         className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
           activeTab === 'console'
-            ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow'
-            : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+            ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-200'
+            : 'text-slate-400 hover:text-cyan-600 hover:bg-cyan-50'
         }`}
       >
         <SlidersHorizontal size={17} />

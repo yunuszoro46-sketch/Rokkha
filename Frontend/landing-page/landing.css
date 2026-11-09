@@ -1,0 +1,506 @@
+/* Rokkha Landing Page Stylesheet - Pixel-matched to design */
+
+.rokkha-landing {
+  background-color: #040812;
+  color: #f8fafc;
+  min-height: 100vh;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Background atmospheric glow */
+.rokkha-hero-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 720px;
+  background: 
+    radial-gradient(circle at 75% 25%, rgba(14, 116, 224, 0.18) 0%, rgba(4, 8, 18, 0.05) 50%, rgba(4, 8, 18, 0) 70%),
+    radial-gradient(circle at 20% 15%, rgba(2, 132, 199, 0.08) 0%, rgba(4, 8, 18, 0) 45%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Top Navbar */
+.rokkha-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(4, 8, 18, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0 40px;
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rokkha-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.rokkha-logo-shield {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 16px rgba(2, 132, 199, 0.5);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.rokkha-brand-title {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #ffffff;
+  display: flex;
+  align-items: baseline;
+}
+
+.rokkha-brand-dot {
+  color: #0084ff;
+  font-size: 22px;
+  line-height: 0;
+}
+
+.rokkha-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.rokkha-btn-protected {
+  background: rgba(14, 23, 42, 0.7);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #f1f5f9;
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 9px 20px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.rokkha-btn-protected:hover {
+  background: rgba(2, 132, 199, 0.2);
+  border-color: #38bdf8;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.rokkha-btn-console {
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.rokkha-btn-console:hover {
+  color: #f8fafc;
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+/* Hero Section */
+.rokkha-hero {
+  position: relative;
+  z-index: 1;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 70px 40px 90px;
+  display: grid;
+  grid-template-columns: 1.15fr 0.95fr;
+  gap: 60px;
+  align-items: center;
+}
+
+@media (max-width: 980px) {
+  .rokkha-hero {
+    grid-template-columns: 1fr;
+    padding: 40px 20px 60px;
+    gap: 40px;
+  }
+  .rokkha-header {
+    padding: 0 20px;
+  }
+}
+
+/* Hero Left Content */
+.rokkha-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(14, 116, 224, 0.12);
+  border: 1px solid rgba(14, 116, 224, 0.35);
+  color: #38bdf8;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+
+.rokkha-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #0084ff;
+  box-shadow: 0 0 8px #0084ff;
+}
+
+.rokkha-hero-heading {
+  font-size: 58px;
+  font-weight: 800;
+  line-height: 1.14;
+  letter-spacing: -0.025em;
+  color: #ffffff;
+  margin-bottom: 22px;
+}
+
+@media (max-width: 640px) {
+  .rokkha-hero-heading {
+    font-size: 38px;
+  }
+}
+
+.rokkha-hero-heading-blue {
+  color: #0084ff;
+  background: linear-gradient(135deg, #0099ff 0%, #38bdf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.rokkha-hero-subtext {
+  font-size: 15.5px;
+  line-height: 1.65;
+  color: #94a3b8;
+  max-width: 500px;
+  margin-bottom: 40px;
+}
+
+.rokkha-hero-divider {
+  width: 100%;
+  max-width: 480px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin-bottom: 34px;
+}
+
+.rokkha-hero-stats {
+  display: flex;
+  gap: 60px;
+}
+
+.rokkha-stat-value {
+  font-size: 38px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.rokkha-stat-label {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+/* Hero Right: Card (Form) */
+.rokkha-card-wrapper {
+  position: relative;
+}
+
+.rokkha-form-card {
+  background: #070d1a;
+  border: 1px solid #16243b;
+  border-radius: 18px;
+  padding: 34px;
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.7), 0 0 30px -5px rgba(2, 132, 199, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.rokkha-form-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, #0084ff 50%, transparent 100%);
+}
+
+.rokkha-form-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 6px;
+}
+
+.rokkha-form-subtitle {
+  font-size: 13px;
+  color: #94a3b8;
+  margin-bottom: 24px;
+}
+
+.rokkha-form-group {
+  margin-bottom: 18px;
+}
+
+.rokkha-input-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  margin-bottom: 7px;
+}
+
+.rokkha-input-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.rokkha-input-icon {
+  position: absolute;
+  left: 14px;
+  color: #64748b;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rokkha-input-field {
+  width: 100%;
+  background: #050914;
+  border: 1px solid #1a2942;
+  border-radius: 8px;
+  padding: 12px 14px 12px 42px;
+  color: #f8fafc;
+  font-size: 13.5px;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.rokkha-input-field::placeholder {
+  color: #475569;
+}
+
+.rokkha-input-field:focus {
+  border-color: #0284c7;
+  background: #080f22;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2);
+}
+
+select.rokkha-input-field {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  padding-right: 36px;
+}
+
+.rokkha-select-arrow {
+  position: absolute;
+  right: 14px;
+  color: #64748b;
+  pointer-events: none;
+}
+
+.rokkha-btn-submit {
+  width: 100%;
+  background: linear-gradient(180deg, #0084ff 0%, #0066d6 100%);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 15px;
+  padding: 13px 20px;
+  border-radius: 9px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px -4px rgba(0, 132, 255, 0.45);
+  transition: all 0.2s ease;
+  margin-top: 8px;
+  margin-bottom: 14px;
+}
+
+.rokkha-btn-submit:hover:not(:disabled) {
+  background: linear-gradient(180deg, #1a94ff 0%, #0072eb 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px -3px rgba(0, 132, 255, 0.6);
+}
+
+.rokkha-btn-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.rokkha-form-security {
+  font-size: 11px;
+  color: #64748b;
+  text-align: center;
+}
+
+/* Why Choose Rokkha Section */
+.rokkha-features-section {
+  position: relative;
+  z-index: 1;
+  background: #040812;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 90px 40px 100px;
+}
+
+.rokkha-section-header {
+  text-align: center;
+  max-width: 650px;
+  margin: 0 auto 55px;
+}
+
+.rokkha-section-title {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  margin-bottom: 12px;
+}
+
+.rokkha-section-subtitle {
+  font-size: 15px;
+  color: #94a3b8;
+  line-height: 1.6;
+}
+
+.rokkha-features-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 900px) {
+  .rokkha-features-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.rokkha-feature-card {
+  background: #060b17;
+  border: 1px solid #121c2e;
+  border-radius: 14px;
+  padding: 30px;
+  transition: all 0.25s ease;
+}
+
+.rokkha-feature-card:hover {
+  border-color: #0284c7;
+  background: #081022;
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.5);
+}
+
+.rokkha-feature-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(2, 132, 199, 0.12);
+  border: 1px solid rgba(2, 132, 199, 0.35);
+  color: #0084ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.rokkha-feature-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 10px;
+}
+
+.rokkha-feature-desc {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #94a3b8;
+}
+
+/* Footer */
+.rokkha-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 30px 40px;
+  background: #03060e;
+}
+
+.rokkha-footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.rokkha-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12.5px;
+  color: #64748b;
+}
+
+.rokkha-footer-brand {
+  font-weight: 800;
+  color: #f8fafc;
+  letter-spacing: 0.05em;
+}
+
+.rokkha-footer-links {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.rokkha-footer-link {
+  font-size: 12.5px;
+  color: #94a3b8;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.rokkha-footer-link:hover {
+  color: #f8fafc;
+}

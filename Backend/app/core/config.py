@@ -7,7 +7,7 @@ class Settings(BaseSettings):
 
     API_V1_PREFIX: str = "/api/v1"
 
-    MONGODB_URI: str
+    MONGODB_URI: str = "mongodb://localhost:27017"
 
     MONGODB_DATABASE: str = "climate_shield"
 

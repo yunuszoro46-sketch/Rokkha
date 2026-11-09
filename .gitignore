@@ -12,3 +12,9 @@ __pycache__/
 # IDE settings
 .idea/
 .vscode/
+
+# Node / Frontend
+node_modules/
+Frontend/node_modules/
+dist/
+Frontend/dist/
