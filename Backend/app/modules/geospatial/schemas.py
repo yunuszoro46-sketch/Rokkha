@@ -103,6 +103,33 @@ class GeoJSONLineString(BaseModel):
         return self
 
 
+# ==========================================
+# GEOJSON MULTIPOINT
+# ==========================================
+
+class GeoJSONMultiPoint(BaseModel):
+
+    type: Literal["MultiPoint"] = "MultiPoint"
+
+    # One or more [longitude, latitude] positions.
+    coordinates: list[tuple[float, float]] = Field(
+        min_length=1
+    )
+
+    @model_validator(mode="after")
+    def validate_coordinates(self):
+
+        for longitude, latitude in self.coordinates:
+
+            if not -180 <= longitude <= 180:
+                raise ValueError("Invalid longitude.")
+
+            if not -90 <= latitude <= 90:
+                raise ValueError("Invalid latitude.")
+
+        return self
+
+
 
 class GeoJSONPolygon(BaseModel):
 
@@ -257,3 +284,51 @@ class LineStringLengthResponse(BaseModel):
     planar_length_degrees: float
 
     method: Literal["WGS84 geodesic"]
+
+
+# ==========================================
+# MULTIPOINT IN ZONE
+# ==========================================
+
+class MultiPointZoneRequest(BaseModel):
+
+    points: GeoJSONMultiPoint
+
+    zone: GeoJSONPolygon | GeoJSONMultiPolygon
+
+
+class PointZoneResult(BaseModel):
+
+    # Position of this point in the request list (starts at 0).
+    point_index: int
+
+    # [longitude, latitude]
+    coordinates: tuple[float, float]
+
+    covered: bool
+
+    strictly_inside: bool
+
+    on_boundary: bool
+
+    relationship: Literal[
+        "inside",
+        "outside",
+        "boundary"
+    ]
+
+
+class MultiPointZoneResponse(BaseModel):
+
+    total_points: int
+
+    inside_count: int
+
+    boundary_count: int
+
+    outside_count: int
+
+    # inside + boundary: every point the zone touches.
+    covered_count: int
+
+    results: list[PointZoneResult]

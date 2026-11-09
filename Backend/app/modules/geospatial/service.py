@@ -4,7 +4,8 @@ from app.modules.geospatial.schemas import (
     GeoJSONPoint,
     GeoJSONPolygon,
     GeoJSONMultiPolygon,
-    GeoJSONLineString
+    GeoJSONLineString,
+    GeoJSONMultiPoint
 )
 from app.modules.geospatial.repository import (
     create_location_record,
@@ -194,4 +195,57 @@ def calculate_linestring_length(
         "segment_lengths_meters": segment_lengths_meters,
         "planar_length_degrees": line.length,
         "method": "WGS84 geodesic"
+    }
+
+
+# ==========================================
+# MULTIPOINT IN ZONE
+# ==========================================
+
+def analyze_multipoint_in_zone(
+    points_data: GeoJSONMultiPoint,
+    zone_data: GeoJSONPolygon | GeoJSONMultiPolygon
+):
+
+    results = []
+
+    # enumerate() gives each point's position (0, 1, 2, ...)
+    # together with its coordinates.
+    for index, coordinates in enumerate(points_data.coordinates):
+
+        # Wrap the position as a GeoJSON Point so we can reuse
+        # the already-tested point-in-polygon analysis.
+        point = GeoJSONPoint(
+            coordinates=list(coordinates)
+        )
+
+        # Raises ValueError if the zone geometry is invalid.
+        analysis = analyze_point_in_polygon(point, zone_data)
+
+        results.append({
+            "point_index": index,
+            "coordinates": coordinates,
+            **analysis
+        })
+
+    # Count how many points have each relationship.
+    inside_count = sum(
+        1 for result in results if result["relationship"] == "inside"
+    )
+
+    boundary_count = sum(
+        1 for result in results if result["relationship"] == "boundary"
+    )
+
+    outside_count = sum(
+        1 for result in results if result["relationship"] == "outside"
+    )
+
+    return {
+        "total_points": len(results),
+        "inside_count": inside_count,
+        "boundary_count": boundary_count,
+        "outside_count": outside_count,
+        "covered_count": inside_count + boundary_count,
+        "results": results
     }

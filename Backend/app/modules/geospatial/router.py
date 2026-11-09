@@ -9,7 +9,9 @@ from app.modules.geospatial.schemas import (
     DistanceCalculationRequest,
     DistanceCalculationResponse,
     LineStringLengthRequest,
-    LineStringLengthResponse
+    LineStringLengthResponse,
+    MultiPointZoneRequest,
+    MultiPointZoneResponse
 )
 
 from app.modules.geospatial.service import (
@@ -18,7 +20,8 @@ from app.modules.geospatial.service import (
     find_location,
     analyze_point_in_polygon,
     calculate_geographic_distance,
-    calculate_linestring_length
+    calculate_linestring_length,
+    analyze_multipoint_in_zone
 )
 
 
@@ -135,6 +138,34 @@ def linestring_length_analysis(
 
         result = calculate_linestring_length(
             data.line
+        )
+
+        return result
+
+    except ValueError as error:
+
+        raise HTTPException(
+            status_code=422,
+            detail=str(error)
+        )
+
+# ==========================================
+# MULTIPOINT IN ZONE ENDPOINT
+# ==========================================
+
+@router.post(
+    "/spatial-analysis/multipoint-in-zone",
+    response_model=MultiPointZoneResponse
+)
+def multipoint_in_zone_analysis(
+    data: MultiPointZoneRequest
+):
+
+    try:
+
+        result = analyze_multipoint_in_zone(
+            data.points,
+            data.zone
         )
 
         return result
