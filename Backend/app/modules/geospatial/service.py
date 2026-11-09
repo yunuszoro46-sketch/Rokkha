@@ -1,9 +1,10 @@
 from geographiclib.geodesic import Geodesic
-from shapely.geometry import Point, Polygon, MultiPolygon
+from shapely.geometry import Point, Polygon, MultiPolygon, LineString
 from app.modules.geospatial.schemas import (
     GeoJSONPoint,
     GeoJSONPolygon,
-    GeoJSONMultiPolygon
+    GeoJSONMultiPolygon,
+    GeoJSONLineString
 )
 from app.modules.geospatial.repository import (
     create_location_record,
@@ -140,5 +141,57 @@ def calculate_geographic_distance(
     return {
         "distance_meters": distance_meters,
         "distance_kilometers": distance_kilometers,
+        "method": "WGS84 geodesic"
+    }
+
+# ==========================================
+# LINESTRING PATH LENGTH
+# ==========================================
+
+def calculate_linestring_length(
+    line_data: GeoJSONLineString
+):
+
+    # Convert GeoJSON LineString into a Shapely LineString.
+    line = LineString(line_data.coordinates)
+
+    # Reject invalid or empty geometry.
+    # Example: every position identical, so the path has no length.
+    if line.is_empty or not line.is_valid:
+        raise ValueError(
+            "The supplied LineString is geometrically invalid."
+        )
+
+    segment_lengths_meters = []
+
+    # Walk through consecutive pairs of positions:
+    # (P1, P2), (P2, P3), ... (Pn-1, Pn)
+    positions = line_data.coordinates
+
+    for start, end in zip(positions[:-1], positions[1:]):
+
+        # GeoJSON coordinates are [longitude, latitude].
+        start_longitude, start_latitude = start
+
+        end_longitude, end_latitude = end
+
+        # GeographicLib expects latitude first.
+        result = Geodesic.WGS84.Inverse(
+            start_latitude,
+            start_longitude,
+            end_latitude,
+            end_longitude
+        )
+
+        segment_lengths_meters.append(result["s12"])
+
+    total_length_meters = sum(segment_lengths_meters)
+
+    return {
+        "total_length_meters": total_length_meters,
+        "total_length_kilometers": total_length_meters / 1000,
+        "segment_count": len(segment_lengths_meters),
+        "segment_lengths_meters": segment_lengths_meters,
+        "planar_length_degrees": line.length,
         "method": "WGS84 geodesic"
     }

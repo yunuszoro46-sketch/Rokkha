@@ -228,3 +228,32 @@ class DistanceCalculationResponse(BaseModel):
     distance_kilometers: float
 
     method: Literal["WGS84 geodesic"]
+
+
+# ==========================================
+# LINESTRING PATH LENGTH
+# ==========================================
+
+class LineStringLengthRequest(BaseModel):
+
+    line: GeoJSONLineString
+
+
+class LineStringLengthResponse(BaseModel):
+
+    # Real-world path length along the Earth's surface.
+    total_length_meters: float
+
+    total_length_kilometers: float
+
+    # Number of straight pieces between consecutive positions.
+    segment_count: int
+
+    # Geodesic length of each segment, in order.
+    segment_lengths_meters: list[float]
+
+    # Shapely's flat length in DEGREES, shown for learning only.
+    # This is NOT a distance and must not be used as one.
+    planar_length_degrees: float
+
+    method: Literal["WGS84 geodesic"]

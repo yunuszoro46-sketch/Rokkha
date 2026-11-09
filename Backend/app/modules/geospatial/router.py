@@ -7,7 +7,9 @@ from app.modules.geospatial.schemas import (
     SpatialAnalysisRequest,
     SpatialAnalysisResponse,
     DistanceCalculationRequest,
-    DistanceCalculationResponse
+    DistanceCalculationResponse,
+    LineStringLengthRequest,
+    LineStringLengthResponse
 )
 
 from app.modules.geospatial.service import (
@@ -15,7 +17,8 @@ from app.modules.geospatial.service import (
     list_locations,
     find_location,
     analyze_point_in_polygon,
-    calculate_geographic_distance
+    calculate_geographic_distance,
+    calculate_linestring_length
 )
 
 
@@ -114,3 +117,31 @@ def calculate_distance(
     )
 
     return result
+
+
+# ==========================================
+# LINESTRING PATH LENGTH ENDPOINT
+# ==========================================
+
+@router.post(
+    "/spatial-analysis/linestring-length",
+    response_model=LineStringLengthResponse
+)
+def linestring_length_analysis(
+    data: LineStringLengthRequest
+):
+
+    try:
+
+        result = calculate_linestring_length(
+            data.line
+        )
+
+        return result
+
+    except ValueError as error:
+
+        raise HTTPException(
+            status_code=422,
+            detail=str(error)
+        )
