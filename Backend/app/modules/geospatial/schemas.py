@@ -457,3 +457,50 @@ class PointInZonesResponse(BaseModel):
 
     # Only the zones that cover the point, in request order.
     matches: list[ZoneMatch]
+
+# ==========================================
+# ADMINISTRATIVE BOUNDARIES
+# ==========================================
+
+class BoundarySummary(BaseModel):
+
+    # Official place code, for example "BD30262000".
+    pcode: str
+
+    name: str
+
+    # 2 = district, 3 = upazila or city corporation.
+    admin_level: int
+
+    parent_name: str
+
+    parent_pcode: str
+
+    area_sqkm: float
+
+
+class BoundaryListResponse(BaseModel):
+
+    count: int
+
+    attribution: str
+
+    boundaries: list[BoundarySummary]
+
+
+class BoundaryLocateRequest(BaseModel):
+
+    point: GeoJSONPoint
+
+
+class BoundaryLocateResponse(BaseModel):
+
+    total_boundaries: int
+
+    # 0 means the point is outside Dhaka District.
+    matched_count: int
+
+    # Ordered from largest area (district) to smallest (unit).
+    matches: list[ZoneMatch]
+
+    attribution: str

@@ -11,7 +11,9 @@ from app.modules.geospatial.schemas import (
 from app.modules.geospatial.repository import (
     create_location_record,
     get_all_location_records,
-    get_location_record
+    get_location_record,
+    get_boundary_collection,
+    BOUNDARIES_ATTRIBUTION
 )
 
 
@@ -344,4 +346,45 @@ def analyze_point_in_zones(
         "total_zones": len(zones_data.features),
         "matched_count": len(matches),
         "matches": matches
+    }
+
+
+# ==========================================
+# ADMINISTRATIVE BOUNDARIES
+# ==========================================
+
+def list_boundaries(admin_level: int | None = None):
+
+    collection = get_boundary_collection()
+
+    boundaries = [
+        feature.properties
+        for feature in collection.features
+        if admin_level is None
+        or feature.properties["admin_level"] == admin_level
+    ]
+
+    return {
+        "count": len(boundaries),
+        "attribution": BOUNDARIES_ATTRIBUTION,
+        "boundaries": boundaries
+    }
+
+
+def locate_point_in_boundaries(point_data: GeoJSONPoint):
+
+    collection = get_boundary_collection()
+
+    # Reuse the tested FeatureCollection logic from Milestone 11.
+    result = analyze_point_in_zones(point_data, collection)
+
+    # District (level 2) first, then the unit inside it (level 3).
+    result["matches"].sort(
+        key=lambda match: match["properties"]["admin_level"]
+    )
+
+    return {
+        **result,
+        "total_boundaries": result.pop("total_zones"),
+        "attribution": BOUNDARIES_ATTRIBUTION
     }

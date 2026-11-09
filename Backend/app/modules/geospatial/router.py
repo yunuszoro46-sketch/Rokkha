@@ -1,5 +1,5 @@
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Query, status
 
 from app.modules.geospatial.schemas import (
     LocationCreate,
@@ -15,7 +15,10 @@ from app.modules.geospatial.schemas import (
     MultiPointDistanceRequest,
     MultiPointDistanceResponse,
     PointInZonesRequest,
-    PointInZonesResponse
+    PointInZonesResponse,
+    BoundaryListResponse,
+    BoundaryLocateRequest,
+    BoundaryLocateResponse
 )
 
 from app.modules.geospatial.service import (
@@ -27,7 +30,9 @@ from app.modules.geospatial.service import (
     calculate_linestring_length,
     analyze_multipoint_in_zone,
     calculate_multipoint_distances,
-    analyze_point_in_zones
+    analyze_point_in_zones,
+    list_boundaries,
+    locate_point_in_boundaries
 )
 
 
@@ -231,3 +236,34 @@ def point_in_zones_analysis(
             status_code=422,
             detail=str(error)
         )
+
+
+# ==========================================
+# ADMINISTRATIVE BOUNDARY ENDPOINTS
+# ==========================================
+
+@router.get(
+    "/boundaries",
+    response_model=BoundaryListResponse
+)
+def get_boundaries(
+    admin_level: int | None = Query(
+        default=None,
+        ge=2,
+        le=3,
+        description="2 = district, 3 = upazila / city corporation"
+    )
+):
+
+    return list_boundaries(admin_level)
+
+
+@router.post(
+    "/boundaries/locate",
+    response_model=BoundaryLocateResponse
+)
+def locate_boundary(
+    data: BoundaryLocateRequest
+):
+
+    return locate_point_in_boundaries(data.point)
