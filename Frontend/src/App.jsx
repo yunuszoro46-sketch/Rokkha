@@ -176,39 +176,39 @@ export default function App() {
 
   // Floating Multi-Page Switcher Dock — icons only
   const PageSwitcherDock = () => (
-    <div className="fixed bottom-5 right-5 z-50 flex items-center gap-1 bg-[#060c1b]/95 backdrop-blur-md border border-sky-500/40 p-1.5 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.8)]">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-[#060c1b]/95 backdrop-blur-md border border-sky-500/40 p-2.5 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.8)]">
       <button
         onClick={() => setActiveTab('landing')}
         title="Landing Page"
-        className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
+        className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
           activeTab === 'landing'
             ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow'
             : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
         }`}
       >
-        <Home size={15} />
+        <Home size={17} />
       </button>
       <button
         onClick={() => setActiveTab('catalog')}
         title="Feature Catalog"
-        className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
+        className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
           activeTab === 'catalog'
             ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow'
             : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
         }`}
       >
-        <LayoutGrid size={15} />
+        <LayoutGrid size={17} />
       </button>
       <button
         onClick={() => setActiveTab('console')}
         title="Live Sandbox"
-        className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
+        className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
           activeTab === 'console'
             ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow'
             : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
         }`}
       >
-        <SlidersHorizontal size={15} />
+        <SlidersHorizontal size={17} />
       </button>
     </div>
   );
@@ -254,8 +254,7 @@ export default function App() {
                 onClick={() => setActiveTab('catalog')}
                 className="text-lg font-black tracking-tight text-white cursor-pointer"
               >
-                ROKKHA<span className="text-sky-400">.</span>
-              </span>
+                ROKKHA<span className="text-sky-400">.</span>              </span>
               <span className="text-xs px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 font-semibold hidden sm:inline-block">
                 Live Sandbox
               </span>

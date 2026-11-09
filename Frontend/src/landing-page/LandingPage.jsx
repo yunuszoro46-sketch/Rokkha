@@ -42,10 +42,10 @@ export default function LandingPage({ onOpenConsole }) {
       <header className="rokkha-header">
         <div className="rokkha-brand" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
           <div className="rokkha-logo-shield">
-            <Shield size={22} fill="currentColor" fillOpacity={0.2} />
+            <Shield size={30} fill="currentColor" fillOpacity={0.2} />
           </div>
           <span className="rokkha-brand-title">
-            ROKKHA
+            Rokkha
           </span>
         </div>
 
@@ -92,7 +92,7 @@ export default function LandingPage({ onOpenConsole }) {
         {/* Right Column: Card Form */}
         <div className="rokkha-card-wrapper" id="early-access">
           <div className="rokkha-form-card">
-            <h2 className="rokkha-form-title">Request Info & Early Access</h2>
+            <h2 className="rokkha-form-title">Your Info</h2>
             <p className="rokkha-form-subtitle">Fill in your details below to get started with Rokkha.</p>
 
             {submitted ? (
@@ -285,7 +285,7 @@ export default function LandingPage({ onOpenConsole }) {
       <footer className="rokkha-footer">
         <div className="rokkha-footer-inner">
           <div className="rokkha-footer-left">
-            <span className="rokkha-footer-brand">ROKKHA</span>
+            <span className="rokkha-footer-brand">Rokkha</span>
             <span>|</span>
             <span>© 2026 Rokkha Security Solutions. All rights reserved.</span>
           </div>
