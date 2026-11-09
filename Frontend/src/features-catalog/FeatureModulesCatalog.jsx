@@ -330,91 +330,67 @@ export default function FeatureModulesCatalog({ onSelectFeature, onBackToLanding
 
       {/* Main Content Area */}
       <main className="rokkha-catalog-main">
-        {/* Banner Section matching Image */}
-        <div className="rokkha-catalog-banner">
-          <div>
-            <div className="rokkha-banner-pill">
-              <Sparkles size={12} /> Core Module Inventory B
-            </div>
-            <h1 className="rokkha-banner-title">Feature Modules Catalog</h1>
-            <p className="rokkha-banner-desc">
-              Categorized inventory showing implemented GIS utilities, upcoming milestone tasks, and planned
-              flood-risk monitoring modules. Click any icon card to launch its live sandbox.
-            </p>
-          </div>
 
-          {/* Right: Interactive Status Box (No picture, interactive filters) */}
+        {/* Search By Type Section — replaces old banner */}
+        <div className="rokkha-search-hero">
+          <div className="rokkha-search-hero-left">
+            <p className="rokkha-search-hero-label">Browse by type</p>
+            <h2 className="rokkha-search-hero-title">Search Modules</h2>
+            <div className="rokkha-search-hero-bar">
+              <Search size={18} className="rokkha-search-hero-icon" />
+              <input
+                type="text"
+                placeholder="Search by name, type or category..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="rokkha-search-hero-input"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} className="rokkha-search-hero-clear">
+                  <X size={15} />
+                </button>
+              )}
+            </div>
+            {/* Type filter chips */}
+            <div className="rokkha-type-chips">
+              {['all','implemented','milestone','planned'].map(type => (
+                <button
+                  key={type}
+                  onClick={() => setFilterStatus(type)}
+                  className={`rokkha-type-chip ${filterStatus === type ? 'active' : ''}`}
+                >
+                  {type === 'all' ? 'All (12)' : type.charAt(0).toUpperCase() + type.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+          {/* Right: clickable stat counters */}
           <div className="rokkha-stats-box">
             <button
               onClick={() => setFilterStatus(filterStatus === 'implemented' ? 'all' : 'implemented')}
               className={`rokkha-stat-btn ${filterStatus === 'implemented' ? 'active' : ''}`}
-              title="Click to filter Implemented"
+              title="Filter Implemented"
             >
               <div className="rokkha-stat-num emerald">4</div>
               <div className="rokkha-stat-caption">IMPLEMENTED</div>
             </button>
-
             <div className="rokkha-stat-divider" />
-
             <button
               onClick={() => setFilterStatus(filterStatus === 'milestone' ? 'all' : 'milestone')}
               className={`rokkha-stat-btn ${filterStatus === 'milestone' ? 'active' : ''}`}
-              title="Click to filter Milestone"
+              title="Filter Milestone"
             >
               <div className="rokkha-stat-num cyan">1</div>
               <div className="rokkha-stat-caption">MILESTONE</div>
             </button>
-
             <div className="rokkha-stat-divider" />
-
             <button
               onClick={() => setFilterStatus(filterStatus === 'planned' ? 'all' : 'planned')}
               className={`rokkha-stat-btn ${filterStatus === 'planned' ? 'active' : ''}`}
-              title="Click to filter Planned"
+              title="Filter Planned"
             >
               <div className="rokkha-stat-num blue">7</div>
               <div className="rokkha-stat-caption">PLANNED</div>
-            </button>
-          </div>
-        </div>
-
-        {/* Search & Filter Toolbar */}
-        <div className="rokkha-toolbar">
-          <div className="rokkha-search-wrap">
-            <Search size={15} className="rokkha-search-icon" />
-            <input 
-              type="text" 
-              placeholder="Search modules..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="rokkha-search-input"
-            />
-          </div>
-
-          <div className="rokkha-filter-group">
-            <button
-              onClick={() => setFilterStatus('all')}
-              className={`rokkha-filter-pill ${filterStatus === 'all' ? 'active' : ''}`}
-            >
-              All (12)
-            </button>
-            <button
-              onClick={() => setFilterStatus('implemented')}
-              className={`rokkha-filter-pill ${filterStatus === 'implemented' ? 'active' : ''}`}
-            >
-              Implemented
-            </button>
-            <button
-              onClick={() => setFilterStatus('milestone')}
-              className={`rokkha-filter-pill ${filterStatus === 'milestone' ? 'active' : ''}`}
-            >
-              Milestone
-            </button>
-            <button
-              onClick={() => setFilterStatus('planned')}
-              className={`rokkha-filter-pill ${filterStatus === 'planned' ? 'active' : ''}`}
-            >
-              Planned
             </button>
           </div>
         </div>
