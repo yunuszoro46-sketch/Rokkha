@@ -18,7 +18,11 @@ from app.modules.geospatial.schemas import (
     PointInZonesResponse,
     BoundaryListResponse,
     BoundaryLocateRequest,
-    BoundaryLocateResponse
+    BoundaryLocateResponse,
+    WaterwayType,
+    WaterwaySummaryResponse,
+    WaterwayNearestRequest,
+    WaterwayNearestResponse
 )
 
 from app.modules.geospatial.service import (
@@ -32,7 +36,9 @@ from app.modules.geospatial.service import (
     calculate_multipoint_distances,
     analyze_point_in_zones,
     list_boundaries,
-    locate_point_in_boundaries
+    locate_point_in_boundaries,
+    summarize_waterways,
+    find_nearest_waterways
 )
 
 
@@ -267,3 +273,35 @@ def locate_boundary(
 ):
 
     return locate_point_in_boundaries(data.point)
+
+
+# ==========================================
+# WATERWAY ENDPOINTS
+# ==========================================
+
+@router.get(
+    "/waterways",
+    response_model=WaterwaySummaryResponse
+)
+def get_waterways(
+    waterway_type: WaterwayType | None = Query(
+        default=None,
+        description="river, canal, stream, drain or ditch"
+    )
+):
+
+    return summarize_waterways(waterway_type)
+
+
+@router.post(
+    "/waterways/nearest",
+    response_model=WaterwayNearestResponse
+)
+def nearest_waterways(
+    data: WaterwayNearestRequest
+):
+
+    return find_nearest_waterways(
+        data.point,
+        data.waterway_types
+    )

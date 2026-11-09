@@ -69,3 +69,28 @@ def get_boundary_collection() -> GeoJSONFeatureCollection:
     # Validate with the same schema the API uses, so a broken
     # data file fails loudly instead of giving wrong answers.
     return GeoJSONFeatureCollection.model_validate(raw)
+
+
+# ==========================================
+# WATERWAYS (read-only file)
+# ==========================================
+
+WATERWAYS_FILE = (
+    Path(__file__).resolve().parents[3]
+    / "data" / "waterways" / "dhaka_waterways.geojson"
+)
+
+WATERWAYS_ATTRIBUTION = (
+    "Waterway data © OpenStreetMap contributors, "
+    "available under the Open Database License (ODbL)."
+)
+
+
+@lru_cache(maxsize=1)
+def get_waterway_collection() -> GeoJSONFeatureCollection:
+
+    raw = json.loads(
+        WATERWAYS_FILE.read_text(encoding="utf-8")
+    )
+
+    return GeoJSONFeatureCollection.model_validate(raw)

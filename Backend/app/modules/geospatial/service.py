@@ -1,5 +1,12 @@
+import math
+from functools import lru_cache
+
+import numpy
+import shapely
 from geographiclib.geodesic import Geodesic
+from shapely.affinity import scale
 from shapely.geometry import Point, Polygon, MultiPolygon, LineString
+from shapely.ops import nearest_points
 from app.modules.geospatial.schemas import (
     GeoJSONPoint,
     GeoJSONPolygon,
@@ -13,7 +20,9 @@ from app.modules.geospatial.repository import (
     get_all_location_records,
     get_location_record,
     get_boundary_collection,
-    BOUNDARIES_ATTRIBUTION
+    BOUNDARIES_ATTRIBUTION,
+    get_waterway_collection,
+    WATERWAYS_ATTRIBUTION
 )
 
 
@@ -388,3 +397,165 @@ def locate_point_in_boundaries(point_data: GeoJSONPoint):
         "total_boundaries": result.pop("total_zones"),
         "attribution": BOUNDARIES_ATTRIBUTION
     }
+
+
+# ==========================================
+# WATERWAYS (RIVERS, CANALS, DRAINS)
+# ==========================================
+
+WATERWAY_LIMITATIONS = [
+    "Coverage is Dhaka District only.",
+    "Drains are very incomplete (about 75 km mapped); Dhaka WASA's "
+    "storm-drain network is not available as open data.",
+    "OpenStreetMap is crowd-sourced and cannot be considered exhaustive.",
+]
+
+# Shapely measures in flat x/y units. One degree of longitude is shorter
+# than one degree of latitude (by cos(latitude)), so we shrink longitudes
+# by cos(Dhaka's latitude) before asking Shapely "which line is closest?".
+# Over a city-sized area this makes flat distances proportional to real
+# ground distances. The final distance is still measured geodesically.
+DHAKA_REFERENCE_LATITUDE = 23.8
+
+LONGITUDE_SCALE = math.cos(math.radians(DHAKA_REFERENCE_LATITUDE))
+
+
+@lru_cache(maxsize=1)
+def _waterway_summary_by_type():
+
+    totals = {}
+
+    for feature in get_waterway_collection().features:
+
+        waterway_type = feature.properties["waterway_type"]
+
+        # Reuse the Milestone 9 geodesic path-length calculation.
+        length = calculate_linestring_length(feature.geometry)
+
+        count, meters = totals.get(waterway_type, (0, 0.0))
+
+        totals[waterway_type] = (
+            count + 1,
+            meters + length["total_length_meters"]
+        )
+
+    return totals
+
+
+@lru_cache(maxsize=1)
+def _waterway_search_index():
+
+    # Build the scaled Shapely lines once, grouped by type.
+    index = {}
+
+    for feature in get_waterway_collection().features:
+
+        waterway_type = feature.properties["waterway_type"]
+
+        scaled_line = scale(
+            LineString(feature.geometry.coordinates),
+            xfact=LONGITUDE_SCALE,
+            yfact=1,
+            origin=(0, 0)
+        )
+
+        lines, features = index.setdefault(waterway_type, ([], []))
+
+        lines.append(scaled_line)
+        features.append(feature)
+
+    return {
+        waterway_type: (numpy.array(lines), features)
+        for waterway_type, (lines, features) in index.items()
+    }
+
+
+def summarize_waterways(waterway_type: str | None = None):
+
+    totals = _waterway_summary_by_type()
+
+    by_type = [
+        {
+            "waterway_type": name,
+            "feature_count": count,
+            "total_length_km": round(meters / 1000, 2)
+        }
+        for name, (count, meters) in sorted(totals.items())
+        if waterway_type is None or name == waterway_type
+    ]
+
+    return {
+        "total_features": sum(item["feature_count"] for item in by_type),
+        "by_type": by_type,
+        "attribution": WATERWAYS_ATTRIBUTION,
+        "limitations": WATERWAY_LIMITATIONS
+    }
+
+
+def find_nearest_waterways(
+    point_data: GeoJSONPoint,
+    waterway_types: list[str]
+):
+
+    longitude, latitude = point_data.coordinates
+
+    scaled_point = Point(longitude * LONGITUDE_SCALE, latitude)
+
+    index = _waterway_search_index()
+
+    results = []
+
+    # dict.fromkeys removes duplicates but keeps the request order.
+    for waterway_type in dict.fromkeys(waterway_types):
+
+        if waterway_type not in index:
+            continue
+
+        lines, features = index[waterway_type]
+
+        # Shapely 2 measures the distance to every line at once.
+        distances = shapely.distance(lines, scaled_point)
+
+        best = int(distances.argmin())
+
+        # Closest position on that line, converted back to real longitude.
+        closest = nearest_points(lines[best], scaled_point)[0]
+
+        nearest_point = GeoJSONPoint(
+            coordinates=[closest.x / LONGITUDE_SCALE, closest.y]
+        )
+
+        # Reuse the tested geodesic distance for the real-world answer.
+        distance = calculate_geographic_distance(point_data, nearest_point)
+
+        feature = features[best]
+
+        results.append({
+            "waterway_type": waterway_type,
+            "osm_id": feature.properties["osm_id"],
+            "name": feature.properties["name"],
+            "distance_meters": distance["distance_meters"],
+            "distance_kilometers": distance["distance_kilometers"],
+            "nearest_point": nearest_point
+        })
+
+    return {
+        "inside_coverage_area": _inside_dhaka_district(point_data),
+        "results": results,
+        "method": "WGS84 geodesic",
+        "attribution": WATERWAYS_ATTRIBUTION
+    }
+
+
+def _inside_dhaka_district(point_data: GeoJSONPoint):
+
+    for feature in get_boundary_collection().features:
+
+        if feature.properties["admin_level"] == 2:
+
+            return analyze_point_in_polygon(
+                point_data,
+                feature.geometry
+            )["covered"]
+
+    return False

@@ -12,6 +12,7 @@ pydantic-settings==2.16.2
 # Geospatial
 shapely==2.2.0
 geographiclib==2.1
+numpy==2.5.4
 
 # MongoDB Atlas driver (integration postponed)
 pymongo==4.19.0

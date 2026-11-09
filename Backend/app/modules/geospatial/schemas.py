@@ -504,3 +504,78 @@ class BoundaryLocateResponse(BaseModel):
     matches: list[ZoneMatch]
 
     attribution: str
+
+
+# ==========================================
+# WATERWAYS (RIVERS, CANALS, DRAINS)
+# ==========================================
+
+WaterwayType = Literal[
+    "river",
+    "canal",
+    "stream",
+    "drain",
+    "ditch"
+]
+
+
+class WaterwayTypeSummary(BaseModel):
+
+    waterway_type: WaterwayType
+
+    feature_count: int
+
+    # Geodesic length, summed over every feature of this type.
+    total_length_km: float
+
+
+class WaterwaySummaryResponse(BaseModel):
+
+    total_features: int
+
+    by_type: list[WaterwayTypeSummary]
+
+    attribution: str
+
+    limitations: list[str]
+
+
+class WaterwayNearestRequest(BaseModel):
+
+    point: GeoJSONPoint
+
+    # Which waterway types to search. One result is returned per type.
+    waterway_types: list[WaterwayType] = Field(
+        default=["river", "canal"],
+        min_length=1
+    )
+
+
+class NearestWaterway(BaseModel):
+
+    waterway_type: WaterwayType
+
+    osm_id: str
+
+    # Many canals and drains have no mapped name.
+    name: str | None
+
+    distance_meters: float
+
+    distance_kilometers: float
+
+    # The closest position on the waterway line.
+    nearest_point: GeoJSONPoint
+
+
+class WaterwayNearestResponse(BaseModel):
+
+    # False when the point is outside Dhaka District. The data only covers
+    # Dhaka District, so the real nearest waterway may then be missing.
+    inside_coverage_area: bool
+
+    results: list[NearestWaterway]
+
+    method: Literal["WGS84 geodesic"]
+
+    attribution: str
