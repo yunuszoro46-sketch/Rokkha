@@ -22,7 +22,12 @@ from app.modules.geospatial.schemas import (
     WaterwayType,
     WaterwaySummaryResponse,
     WaterwayNearestRequest,
-    WaterwayNearestResponse
+    WaterwayNearestResponse,
+    FloodEventListResponse,
+    DistrictFloodRankingResponse,
+    DistrictFloodHistoryResponse,
+    FloodCheckRequest,
+    FloodCheckResponse
 )
 
 from app.modules.geospatial.service import (
@@ -38,7 +43,11 @@ from app.modules.geospatial.service import (
     list_boundaries,
     locate_point_in_boundaries,
     summarize_waterways,
-    find_nearest_waterways
+    find_nearest_waterways,
+    list_flood_events,
+    rank_flood_districts,
+    get_district_flood_history,
+    check_flood_at_point
 )
 
 
@@ -305,3 +314,65 @@ def nearest_waterways(
         data.point,
         data.waterway_types
     )
+
+
+# ==========================================
+# FLOOD HISTORY AND FLOOD ZONE ENDPOINTS
+# ==========================================
+
+@router.get(
+    "/flood/events",
+    response_model=FloodEventListResponse
+)
+def get_flood_events():
+
+    return list_flood_events()
+
+
+@router.get(
+    "/flood/districts",
+    response_model=DistrictFloodRankingResponse
+)
+def get_flood_district_ranking(
+    limit: int | None = Query(
+        default=None,
+        ge=1,
+        le=64,
+        description="Return only the top N districts"
+    ),
+    division: str | None = Query(
+        default=None,
+        description="Filter by division name, e.g. Sylhet"
+    )
+):
+
+    return rank_flood_districts(limit, division)
+
+
+@router.get(
+    "/flood/districts/{pcode}",
+    response_model=DistrictFloodHistoryResponse
+)
+def get_flood_district_history(pcode: str):
+
+    history = get_district_flood_history(pcode)
+
+    if history is None:
+
+        raise HTTPException(
+            status_code=404,
+            detail="District not found"
+        )
+
+    return history
+
+
+@router.post(
+    "/flood/check",
+    response_model=FloodCheckResponse
+)
+def flood_check(
+    data: FloodCheckRequest
+):
+
+    return check_flood_at_point(data.point)

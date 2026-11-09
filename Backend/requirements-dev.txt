@@ -1,0 +1,9 @@
+# Extra tools for the offline data-preparation scripts in scripts/.
+# The API does NOT need these; it only reads the files the scripts produce.
+# Install with:  python -m pip install -r requirements-dev.txt
+
+-r requirements.txt
+
+# Raster grids (JRC flood hazard) and Esri geodatabases (UNOSAT)
+rasterio==1.5.2
+pyogrio==0.13.0

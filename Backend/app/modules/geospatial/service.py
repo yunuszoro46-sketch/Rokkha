@@ -22,7 +22,11 @@ from app.modules.geospatial.repository import (
     get_boundary_collection,
     BOUNDARIES_ATTRIBUTION,
     get_waterway_collection,
-    WATERWAYS_ATTRIBUTION
+    WATERWAYS_ATTRIBUTION,
+    get_district_collection,
+    get_flood_history,
+    get_flood_grid,
+    FLOOD_ATTRIBUTION
 )
 
 
@@ -559,3 +563,176 @@ def _inside_dhaka_district(point_data: GeoJSONPoint):
             )["covered"]
 
     return False
+
+
+# ==========================================
+# FLOOD HISTORY AND FLOOD GRID
+# ==========================================
+
+FLOOD_LIMITATIONS = [
+    "Observed floods come from UNOSAT satellite radar analyses of specific "
+    "dates. Radar underestimates standing water in built-up areas and under "
+    "dense vegetation, so city waterlogging is largely missed.",
+    "'not_observed' means no satellite analysis covered the place for that "
+    "event; it does not mean it stayed dry.",
+    "Hazard classes are modelled river floods (JRC GloFAS) that ignore flood "
+    "embankments, so protected areas such as central Dhaka are overstated.",
+    "Neither source models rainfall-driven urban waterlogging.",
+    "Seasonal wetlands (haors, beels) fill with water every monsoon; that "
+    "normal seasonal inundation is counted as flood water alongside "
+    "damaging floods.",
+    "Grid cells are about 90 m; results describe the cell, not an exact spot.",
+]
+
+JRC_DEPTH_LABELS = {1: "< 1 m", 2: "1 to 3 m", 3: "3 to 10 m", 4: "> 10 m"}
+
+
+def _district_summary(row: dict) -> dict:
+
+    return {
+        key: row[key]
+        for key in (
+            "rank", "pcode", "name", "division",
+            "events_observed", "events_flooded", "max_flooded_share"
+        )
+    }
+
+
+def list_flood_events():
+
+    history = get_flood_history()
+
+    return {
+        "count": len(history["events"]),
+        "events": history["events"],
+        "skipped_events": history["skipped_events"],
+        "method": history["method"],
+        "attribution": FLOOD_ATTRIBUTION
+    }
+
+
+def rank_flood_districts(
+    limit: int | None = None,
+    division: str | None = None
+):
+
+    history = get_flood_history()
+
+    rows = [
+        _district_summary(row)
+        for row in history["districts"]
+        if division is None or row["division"].lower() == division.lower()
+    ]
+
+    if limit is not None:
+        rows = rows[:limit]
+
+    return {
+        "total_districts": len(history["districts"]),
+        "total_events": len(history["events"]),
+        "districts": rows,
+        "attribution": FLOOD_ATTRIBUTION,
+        "limitations": FLOOD_LIMITATIONS
+    }
+
+
+def get_district_flood_history(pcode: str):
+
+    for row in get_flood_history()["districts"]:
+
+        if row["pcode"] == pcode.upper():
+
+            return {
+                **_district_summary(row),
+                "flooded_event_ids": row["flooded_event_ids"],
+                "events": row["events"],
+                "attribution": FLOOD_ATTRIBUTION
+            }
+
+    return None
+
+
+def _events_from_bits(bits: int, event_ids) -> list[str]:
+
+    # Bit k set means event k applies to this cell.
+    return [
+        str(event_id)
+        for k, event_id in enumerate(event_ids)
+        if bits & (1 << k)
+    ]
+
+
+def _flood_cell(longitude: float, latitude: float):
+
+    grid = get_flood_grid()
+
+    # Affine transform: lon = c + col * a, lat = f + row * e (e is negative).
+    a, _, c, _, e, f = grid["transform"]
+
+    col = int((longitude - c) // a)
+    row = int((latitude - f) // e)
+
+    rows, cols = grid["hazard"].shape
+
+    if not (0 <= row < rows and 0 <= col < cols):
+        return None
+
+    observed_bits = int(grid["observed_mask"][row, col])
+    flooded_bits = int(grid["flooded_mask"][row, col])
+    hazard_byte = int(grid["hazard"][row, col])
+
+    event_ids = grid["event_ids"]
+
+    hazard = []
+
+    for years, shift in ((10, 0), (100, 3)):
+
+        depth_class = (hazard_byte >> shift) & 0b111
+
+        hazard.append({
+            "return_period_years": years,
+            "depth_class": depth_class or None,
+            "depth_label": JRC_DEPTH_LABELS.get(depth_class)
+        })
+
+    observed_ids = _events_from_bits(observed_bits, event_ids)
+    flooded_ids = _events_from_bits(flooded_bits, event_ids)
+
+    return {
+        # 3 arc-seconds of latitude is about 92.6 m.
+        "grid_cell_size_m": round(abs(e) * 111_320),
+        "permanent_water": bool(hazard_byte & (1 << 6)),
+        "times_observed": len(observed_ids),
+        "times_flooded": len(flooded_ids),
+        "observed_event_ids": observed_ids,
+        "flooded_event_ids": flooded_ids,
+        "hazard": hazard
+    }
+
+
+def check_flood_at_point(point_data: GeoJSONPoint):
+
+    rows = {row["pcode"]: row for row in get_flood_history()["districts"]}
+
+    # Which district? Reuse the tested point-in-zones logic.
+    located = analyze_point_in_zones(point_data, get_district_collection())
+
+    if not located["matches"]:
+
+        return {
+            "district": None,
+            "cell": None,
+            "attribution": FLOOD_ATTRIBUTION,
+            "limitations": FLOOD_LIMITATIONS
+        }
+
+    pcode = located["matches"][0]["feature_id"]
+
+    longitude, latitude = point_data.coordinates
+
+    return {
+        "district": _district_summary(rows[pcode]),
+        "cell": _flood_cell(longitude, latitude),
+        "attribution": FLOOD_ATTRIBUTION,
+        "limitations": FLOOD_LIMITATIONS
+    }

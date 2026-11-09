@@ -4,6 +4,8 @@ from functools import lru_cache
 from pathlib import Path
 from uuid import uuid4
 
+import numpy
+
 from app.modules.geospatial.schemas import GeoJSONFeatureCollection
 
 # Temporary storage.
@@ -94,3 +96,49 @@ def get_waterway_collection() -> GeoJSONFeatureCollection:
     )
 
     return GeoJSONFeatureCollection.model_validate(raw)
+
+
+# ==========================================
+# FLOOD DATA (read-only files)
+# ==========================================
+
+DATA_DIR = Path(__file__).resolve().parents[3] / "data"
+
+DISTRICTS_FILE = DATA_DIR / "boundaries" / "bangladesh_districts.geojson"
+
+FLOOD_HISTORY_FILE = DATA_DIR / "flood" / "district_flood_history.json"
+
+FLOOD_GRID_FILE = DATA_DIR / "flood" / "flood_grid.npz"
+
+FLOOD_ATTRIBUTION = (
+    "Observed floods: UNOSAT (United Nations Satellite Centre), CC BY-SA. "
+    "Modelled river-flood hazard: JRC GloFAS flood hazard maps v2.1.2 "
+    "© European Union, CC BY 4.0 / ODbL. "
+    "District boundaries: Bangladesh Bureau of Statistics (BBS) and UN OCHA "
+    "via HDX, CC BY-IGO."
+)
+
+
+@lru_cache(maxsize=1)
+def get_district_collection() -> GeoJSONFeatureCollection:
+
+    raw = json.loads(DISTRICTS_FILE.read_text(encoding="utf-8"))
+
+    return GeoJSONFeatureCollection.model_validate(raw)
+
+
+@lru_cache(maxsize=1)
+def get_flood_history() -> dict:
+
+    # A plain JSON document: events, method, and per-district history.
+    return json.loads(FLOOD_HISTORY_FILE.read_text(encoding="utf-8"))
+
+
+@lru_cache(maxsize=1)
+def get_flood_grid() -> dict:
+
+    # Compressed numpy arrays on the ~90 m JRC grid covering Bangladesh.
+    # np.load reads them into memory once (lru_cache); lookups are then
+    # a simple array index.
+    with numpy.load(FLOOD_GRID_FILE) as grid:
+        return {name: grid[name] for name in grid.files}

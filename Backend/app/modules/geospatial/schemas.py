@@ -579,3 +579,143 @@ class WaterwayNearestResponse(BaseModel):
     method: Literal["WGS84 geodesic"]
 
     attribution: str
+
+
+# ==========================================
+# FLOOD HISTORY AND FLOOD GRID
+# ==========================================
+
+DistrictEventStatus = Literal["flooded", "not_flooded", "not_observed"]
+
+
+class FloodEvent(BaseModel):
+
+    event_id: str
+
+    name: str
+
+    start: str
+
+    end: str
+
+    flooded_area_sqkm: float
+
+    unosat_packages: list[str]
+
+
+class FloodEventListResponse(BaseModel):
+
+    count: int
+
+    events: list[FloodEvent]
+
+    # Events that could not be used, with the reason.
+    skipped_events: list[dict[str, Any]]
+
+    method: dict[str, Any]
+
+    attribution: str
+
+
+class DistrictFloodSummary(BaseModel):
+
+    # 1 = most frequently flooded district.
+    rank: int
+
+    pcode: str
+
+    name: str
+
+    division: str
+
+    # Events in which satellites actually looked at this district.
+    events_observed: int
+
+    # Events in which flood water covered at least the method's threshold.
+    events_flooded: int
+
+    # Largest share (0–1) of the district's observed land under flood water.
+    max_flooded_share: float | None
+
+
+class DistrictFloodRankingResponse(BaseModel):
+
+    total_districts: int
+
+    total_events: int
+
+    districts: list[DistrictFloodSummary]
+
+    attribution: str
+
+    limitations: list[str]
+
+
+class DistrictEventResult(BaseModel):
+
+    event_id: str
+
+    # Share (0–1) of the district's land inside the satellite analysis area.
+    observed_share: float
+
+    # Share (0–1) of the observed land under flood water; null if not observed.
+    flooded_share: float | None
+
+    status: DistrictEventStatus
+
+
+class DistrictFloodHistoryResponse(DistrictFloodSummary):
+
+    flooded_event_ids: list[str]
+
+    events: list[DistrictEventResult]
+
+    attribution: str
+
+
+class FloodCheckRequest(BaseModel):
+
+    point: GeoJSONPoint
+
+
+class FloodHazardResult(BaseModel):
+
+    # Modelled river flood (JRC GloFAS): where flooding COULD happen.
+    return_period_years: Literal[10, 100]
+
+    # 1: < 1 m, 2: 1–3 m, 3: 3–10 m, 4: > 10 m; null = not flooded in the model.
+    depth_class: int | None
+
+    depth_label: str | None
+
+
+class FloodCellResult(BaseModel):
+
+    # The ~90 m grid cell that contains the point.
+    grid_cell_size_m: int
+
+    # Normal river / lake water (JRC). Floods are counted on land only.
+    permanent_water: bool
+
+    # Observed by satellite: where flooding DID happen.
+    times_observed: int
+
+    times_flooded: int
+
+    observed_event_ids: list[str]
+
+    flooded_event_ids: list[str]
+
+    hazard: list[FloodHazardResult]
+
+
+class FloodCheckResponse(BaseModel):
+
+    # Null when the point is outside Bangladesh.
+    district: DistrictFloodSummary | None
+
+    cell: FloodCellResult | None
+
+    attribution: str
+
+    limitations: list[str]
