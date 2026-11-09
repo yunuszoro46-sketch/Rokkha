@@ -1,0 +1,21 @@
+# Climate Shield backend dependencies.
+# Install with:  python -m pip install -r requirements.txt
+
+# Web framework and server
+fastapi==0.162.2
+uvicorn[standard]==0.54.0
+
+# Data validation and settings (.env loading)
+pydantic==2.14.3
+pydantic-settings==2.16.2
+
+# Geospatial
+shapely==2.2.0
+geographiclib==2.1
+
+# MongoDB Atlas driver (integration postponed)
+pymongo==4.19.0
+
+# Testing
+pytest==9.2.0
+httpx==0.28.1
