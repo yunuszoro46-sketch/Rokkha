@@ -1,248 +1,680 @@
-🌍 Climate Shield AI-Powered Climate Risk Forecasting and Asset Protection
+# Climate Shield Backend
 
-![Python](https://img.shields.io/badge/Python-3.15-blue?logo=python) ![FastAPI](https://img.shields.io/badge/FastAPI-Backend-**009688**?logo=fastapi) ![MongoDB](https://img.shields.io/badge/Database-MongoDB%20Atlas-**47A248**?logo=mongodb) ![Shapely](https://img.shields.io/badge/Geospatial-Shapely-orange) ![Status](https://img.shields.io/badge/Status-Under%20Development-yellow)
+Climate Shield is a climate-risk platform under development. Its first planned use case is helping people and organizations understand localized urban flood risk in **Dhaka, Bangladesh**.
 
-Climate Shield is an AI-powered climate risk intelligence platform designed to help protect lives, infrastructure, and physical assets from climate-related hazards.
+This folder contains the backend: the application that receives requests, validates data, performs calculations, and returns results to the frontend.
 
-The initial Minimum Viable Product (**MVP**) focuses on localized flood-risk forecasting and geospatial intelligence for Dhaka, Bangladesh.
+**What works today:** manually submitted weather observations, geographic location records, point-in-polygon checks, and geographic distance calculations.
 
-The project combines climate data, geospatial analysis, machine learning, and alert generation to support better risk assessment and decision-making.
+**What does not exist yet:** a trained flood-forecasting model, live environmental-data ingestion, operational flood alerts, or persistent storage connected to the active API.
 
-## Project Vision
+> This is a development prototype, not an operational flood-warning service. A geometric result such as “inside” does not mean a location is flooding or will flood.
 
-Climate-related hazards, particularly urban flooding, pose significant risks to densely populated cities.
+## 1. Project goal
 
-Climate Shield aims to address this challenge by developing a platform that can:
+The planned minimum viable product (MVP)—the first usable version—will estimate:
 
-Analyze geographic locations and vulnerable areas. Assess the spatial exposure of physical assets. Incorporate weather and environmental observations. Predict localized flood-event probabilities. Generate risk alerts to support timely decisions. Help communities and organizations understand potential climate risks.
+> The probability that a clearly defined flood event will occur within a geographic grid cell during the next 24 hours.
 
-Our long-term goal is to build an intelligent climate-risk protection system that can be extended to other cities and climate hazards.
+A grid cell is a small area on a map. Dividing Dhaka into cells will allow the system to estimate risk for individual areas rather than giving one result for the entire city.
 
-## Initial MVP Scope
+The model is planned to use observed flood events as training labels, together with relevant environmental and geographic information.
 
-Target location: Dhaka, Bangladesh.
+Several modeling decisions remain open:
 
-Initial hazard: Urban flooding.
+- Grid-cell size: [not yet defined].
+- Flood-event definition and thresholds: [not yet defined].
+- Verified training-data sources: [not yet selected].
+- Alert thresholds: [not yet defined].
 
-Initial prediction objective:
+Rainfall alone will not be treated as proof of flooding. Being inside a supplied polygon will not, by itself, establish flood risk.
 
-Estimate the probability of a defined flood event occurring within a geographic grid cell over an initial 24-hour forecast horizon.
+## 2. Current implementation
 
-The prediction system will use observed flood events as labels and incorporate relevant environmental and geographic information.
+| Capability | Current state |
+| --- | --- |
+| FastAPI application | Implemented; application version is `0.3.0` |
+| Root information and health endpoints | Implemented |
+| Weather observation creation and retrieval | Implemented with in-memory storage |
+| Geographic location creation and retrieval | Implemented with in-memory storage |
+| GeoJSON Point validation | Implemented |
+| GeoJSON Polygon and MultiPolygon validation | Implemented |
+| Point inside/outside/on-boundary analysis | Implemented |
+| Polygon holes | Supported by the analysis service |
+| Invalid or empty polygon rejection | Implemented in the analysis service |
+| WGS84 geographic distance | Implemented using GeographicLib |
+| GeoJSON LineString validation | Schema implemented; no LineString API |
+| MongoDB connection helper | Implemented, but not enabled in the active application |
+| Persistent API storage | Not implemented |
+| Live weather or river-data ingestion | Not implemented |
+| Flood prediction and alerts | Not implemented |
+| Asset management and exposure analysis | Not implemented |
 
-Rainfall alone will not be treated as a complete flood prediction.
+Weather observations are submitted through the API. The current weather module does **not** fetch live weather from an external provider.
 
-## Technology Stack
+### Temporary storage
 
-Technology	Purpose
-Python	Primary programming language
-FastAPI	Backend **REST** **API**
-Pydantic	Data validation and schemas
-MongoDB Atlas	Planned primary database
-PyMongo	Planned MongoDB integration
-Shapely	Geometric and spatial operations
-GeographicLib	Accurate geodesic distance calculations
-XGBoost	Planned initial ML baseline
-GeoPandas	Planned geographic data processing
-Rasterio	Planned raster and environmental data processing
-Architecture
+Weather and location records are stored in Python lists:
 
-Climate Shield follows a Modular Monolith architecture.
+- Records disappear when the application restarts.
+- Development reloads can erase records.
+- Separate application processes do not share these lists.
+- List endpoints currently return all records without pagination.
 
-It uses one FastAPI application and a modular backend structure.
+Use the current storage for local development only.
 
-We are not using microservices, PostgreSQL, or PostGIS.
+## 3. Technology stack
 
-MongoDB Atlas is the established primary database choice. Database integration is planned for a later development phase.
+### Used by the current backend
 
-## Backend Architecture
+| Technology | Purpose |
+| --- | --- |
+| Python | Programming language |
+| FastAPI | HTTP API and interactive API documentation |
+| Pydantic v2 | Request validation and response schemas |
+| pydantic-settings | Configuration loaded from environment variables and `.env` |
+| Shapely | Planar geometry operations |
+| GeographicLib | Geographic distance on the WGS84 ellipsoid |
+| PyMongo | Asynchronous MongoDB connection helper; currently inactive |
+| Uvicorn | Local ASGI server |
 
-The backend follows a layered architecture:
+### Planned technologies
 
-text
-Client / Frontend
-    |
-    v
-    FastAPI
-    |
-    v
-    Router
-    |
-    v
-    Service
-    |
-    v
-    Repository
-    |
-    v
-    Database
+| Technology | Planned purpose |
+| --- | --- |
+| MongoDB Atlas | Primary persistent database |
+| XGBoost | Initial machine-learning baseline |
+| GeoPandas | Geographic dataset processing |
+| Rasterio | Raster and environmental dataset processing |
 
-Responsibilities:
+The established database direction is **MongoDB Atlas**. This backend does not use PostgreSQL, PostGIS, or microservices.
 
-Router: Handles **HTTP** requests and responses. Service: Contains application logic and geospatial operations. Repository: Handles data storage and retrieval. Schemas: Validate incoming data and structure **API** responses. ### Project Structure text Backend/ │ ├── app/ │   ├── core/ │   │   ├── config.py │   │   └── database.py │   │ │   ├── modules/ │   │   ├── alerts/ │   │   ├── assets/ │   │   │ │   │   ├── geospatial/ │   │   │   ├── __init__.py │   │   │   ├── schemas.py │   │   │   ├── repository.py │   │   │   ├── service.py │   │   │   └── router.py │   │   │ │   │   ├── ingestion/ │   │   ├── prediction/ │   │   └── weather/ │   │       ├── repository.py │   │       ├── router.py │   │       ├── schemas.py │   │       └── service.py │   │ │   ├── shared/ │   └── main.py │ ├── migrations/ ├── ml/ ├── tests/ │   └── test_geospatial.py │ ├── .env ├── .gitignore └── **README**.md
+## 4. How the backend is organized
 
-This represents the current known structure. Additional modules and files will be added as development progresses.
+The backend is a **modular monolith**: one application divided into modules for different responsibilities.
 
-## Implemented Features
+A typical request follows this path:
 
-The following backend functionality has been implemented and tested.
+```text
+Frontend or API client
+        |
+        v
+Router: receives the HTTP request
+        |
+        v
+Service: performs application logic or calculations
+        |
+        v
+Repository: stores or retrieves records
+        |
+        v
+Python list today / MongoDB after integration
+```
 
-### Backend Foundation
+Calculation-only requests, such as distance analysis, do not need repository storage.
 
-FastAPI application. Modular Monolith architecture. Centralized configuration using Pydantic. **API** versioning with /api/v1. Health-check endpoint. Weather module with temporary in-memory storage. ### Geospatial Module
+Each implemented module separates its responsibilities:
 
-GeoJSON support:
+| File | Responsibility |
+| --- | --- |
+| `schemas.py` | Defines accepted inputs, validation rules, and response formats |
+| `router.py` | Defines HTTP endpoints and handles HTTP errors |
+| `service.py` | Performs application logic |
+| `repository.py` | Stores and retrieves records |
 
-Point. Polygon. MultiPolygon. LineString schema validation.
+### Source structure
 
-Coordinate validation:
+Generated `__pycache__` directories are omitted below.
 
-Longitude range: -**180** to **180**. Latitude range: -90 to 90. GeoJSON coordinate order: [longitude, latitude]. Polygon ring closure validation. Minimum polygon ring positions. LineString minimum coordinate positions.
+```text
+Rokkha/
+├── Backend/
+│   ├── app/
+│   │   ├── core/
+│   │   │   ├── config.py
+│   │   │   └── database.py
+│   │   ├── modules/
+│   │   │   ├── __init__.py
+│   │   │   ├── alerts/
+│   │   │   ├── assets/
+│   │   │   ├── geospatial/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── repository.py
+│   │   │   │   ├── router.py
+│   │   │   │   ├── schemas.py
+│   │   │   │   └── service.py
+│   │   │   ├── ingestion/
+│   │   │   ├── prediction/
+│   │   │   └── weather/
+│   │   │       ├── __init__.py
+│   │   │       ├── repository.py
+│   │   │       ├── router.py
+│   │   │       ├── schemas.py
+│   │   │       └── service.py
+│   │   ├── shared/
+│   │   └── main.py
+│   ├── ml/
+│   │   └── __init__.py
+│   ├── tests/
+│   │   └── test_geospatial.py
+│   └── readme.md
+└── Frontend/
+```
 
-Spatial analysis:
+The alerts, assets, ingestion, prediction, shared, and ML areas are placeholders, not completed features.
 
-Point-in-Polygon analysis. Point-in-MultiPolygon analysis. Interior and exterior ring support. Boundary detection. Geometric validity checking. Invalid polygon rejection.
+## 5. Run the backend locally
 
-Geographic distance:
+### Requirements
 
-**WGS84** geodesic distance calculation. Distance output in meters. Distance output in kilometers. GeographicLib integration. ### Important Geospatial Design Decision
+- Git.
+- Python and pip.
+- A terminal.
+- An editor such as VS Code or PyCharm, if you want to change the code.
 
-Shapely is used for planar geometric operations.
+**Python version:** the repository does not contain a dependency manifest or a verified supported-version declaration. The previous README mentions Python 3.15.0, but that is not a reproducible compatibility guarantee.
 
-GeographicLib is used for geodesic distance calculations.
+[Suggested starting environment: Python 3.12; compatibility has not been tested as part of this documentation review.]
 
-Longitude and latitude are angular coordinates measured in degrees. They cannot be directly treated as meters.
+### Step 1: Clone the repository
 
-Therefore, ordinary Shapely distance on longitude/latitude coordinates is not presented as a meter-based geographic distance.
+```bash
+git clone https://github.com/yunuszoro46-sketch/Rokkha.git
+cd Rokkha/Backend
+```
 
-## API Endpoints
+Run the remaining commands from `Backend/`.
 
-Base **API** prefix:
+### Step 2: Create a virtual environment
 
-text /api/v1
+A virtual environment keeps this project's installed packages separate from other projects.
 
-General
-Method	Endpoint	Description
-**GET**	/	Project information
-**GET**	/api/v1/health	Backend health check
-Weather
+```bash
+python -m venv .venv
+```
 
-Weather endpoints are implemented in the weather module. Refer to the running Swagger documentation for their current definitions.
+On systems where Python is available as `python3`, use that command instead.
 
-Geospatial
-Method	Endpoint	Description
-**POST**	/api/v1/geospatial/locations	Create a geographic location
-**GET**	/api/v1/geospatial/locations	Retrieve all locations
-**GET**	/api/v1/geospatial/locations/{location_id}	Retrieve a location
-**POST**	/api/v1/geospatial/spatial-analysis/point-in-polygon	Analyze a point against a Polygon or MultiPolygon
-**POST**	/api/v1/geospatial/spatial-analysis/distance	Calculate **WGS84** geodesic distance
+### Step 3: Activate the environment
 
-LineString service and **API** integration are under development.
+**Windows PowerShell:**
 
-## Example API Response
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
 
-Point-in-Polygon
-json
+**Windows Command Prompt:**
+
+```bat
+.venv\Scripts\activate.bat
+```
+
+**macOS or Linux:**
+
+```bash
+source .venv/bin/activate
+```
+
+### Step 4: Install the development dependencies
+
+There is currently no checked-in `requirements.txt` or `pyproject.toml`.
+
+The following is a provisional installation command based on the source imports, not a tested or pinned dependency set:
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install fastapi "uvicorn[standard]" "pydantic>=2,<3" pydantic-settings shapely geographiclib "pymongo[srv]"
+```
+
+A maintained dependency file and a verified Python version should be added before expecting reproducible installations.
+
+### Step 5: Create a local `.env` file
+
+Create `Backend/.env` containing:
+
+```dotenv
+PROJECT_NAME="Climate Shield"
+API_V1_PREFIX="/api/v1"
+MONGODB_URI="mongodb://localhost:27017"
+MONGODB_DATABASE="climate_shield"
+DEBUG=true
+```
+
+**Why a MongoDB URI is needed:** configuration currently requires `MONGODB_URI`, even though the active application does not establish a database connection.
+
+The local URI above satisfies that configuration requirement. It does not enable persistence, and the active in-memory API does not require a local MongoDB server.
+
+When MongoDB integration is enabled, replace it with a working connection URI and configure access appropriately.
+
+Do not commit `.env` or real database credentials. No `.gitignore` or `.env.example` was present in the inspected root/backend directory listings; add suitable ignore rules before committing local files.
+
+### Step 6: Start the server
+
+```bash
+python -m uvicorn app.main:app --reload
+```
+
+`--reload` restarts the application when source files change. It is intended for development.
+
+### Step 7: Open the application
+
+- Project information: http://127.0.0.1:8000/
+- Health check: http://127.0.0.1:8000/api/v1/health
+- Interactive Swagger UI: http://127.0.0.1:8000/docs
+- Alternative documentation: http://127.0.0.1:8000/redoc
+- OpenAPI schema: http://127.0.0.1:8000/openapi.json
+
+The health endpoint returns:
+
+```json
 {
-    *covered*: true,
-    *strictly_inside*: true,
-    *on_boundary*: false,
-    *relationship*: *inside*
+  "status": "healthy"
 }
+```
 
-### Geographic Distance
+This confirms that the endpoint responds. It does not verify a database connection, data freshness, or prediction readiness.
 
-json
+## 6. API endpoints
+
+The following paths assume the default `API_V1_PREFIX=/api/v1`.
+
+The current health route is hardcoded as `/api/v1/health`; unlike the module routes, it does not follow a changed prefix setting.
+
+### General
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| GET | `/` | Basic project information |
+| GET | `/api/v1/health` | Basic application health response |
+
+### Weather
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| POST | `/api/v1/weather/observations` | Create a weather observation |
+| GET | `/api/v1/weather/observations` | List all stored observations |
+| GET | `/api/v1/weather/observations/{record_id}` | Retrieve one observation |
+
+### Geospatial
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| POST | `/api/v1/geospatial/locations` | Create a named point location |
+| GET | `/api/v1/geospatial/locations` | List all stored locations |
+| GET | `/api/v1/geospatial/locations/{location_id}` | Retrieve one location |
+| POST | `/api/v1/geospatial/spatial-analysis/point-in-polygon` | Check a point against a Polygon or MultiPolygon |
+| POST | `/api/v1/geospatial/spatial-analysis/distance` | Calculate WGS84 geographic distance |
+
+Successful creation requests return HTTP `201`. Successful retrieval and calculation requests normally return HTTP `200`.
+
+There are currently no update/delete endpoints, prediction endpoints, alert endpoints, or LineString endpoints.
+
+## 7. Try the API without writing code
+
+1. Start the backend.
+2. Open http://127.0.0.1:8000/docs.
+3. Expand an endpoint.
+4. Click **Try it out**.
+5. Paste an example request body below.
+6. Click **Execute**.
+
+All examples below are synthetic development inputs, not verified weather observations or official flood-zone data.
+
+### Example A: Create a location
+
+Send to `POST /api/v1/geospatial/locations`:
+
+```json
 {
-    *distance_meters*: **9591**.**848250510406**,
-    *distance_kilometers*: 9.**591848250510406**,
-    *method*: ***WGS84** geodesic*
+  "location_name": "Dhaka demo location",
+  "latitude": 23.7465,
+  "longitude": 90.376
 }
+```
 
-## Installation and Local Development
+The response includes a generated UUID and a GeoJSON Point:
 
-Requirements Python 3.15.0 (current development environment). Git. PyCharm or another Python **IDE**. Step 1: Clone the repository bash git clone YOUR_GITHUB_REPOSITORY_URL cd Backend
+```json
+{
+  "id": "[generated UUID]",
+  "location_name": "Dhaka demo location",
+  "latitude": 23.7465,
+  "longitude": 90.376,
+  "geometry": {
+    "type": "Point",
+    "coordinates": [90.376, 23.7465]
+  }
+}
+```
 
-Replace the repository **URL** with the actual GitHub repository **URL**.
+Copy the returned `id` to retrieve that record using the single-location endpoint.
 
-Step 2: Create a virtual environment powershell python -m venv .venv
+### Example B: Submit a weather observation
 
-Step 3: Activate the virtual environment
+Send to `POST /api/v1/weather/observations`:
 
-Windows PowerShell:
+```json
+{
+  "location_name": "Dhaka demo station",
+  "latitude": 23.7465,
+  "longitude": 90.376,
+  "rainfall_mm": 12.5,
+  "temperature_c": 29,
+  "humidity_percent": 80,
+  "source": "manual-demo"
+}
+```
 
-powershell .\.venv\Scripts\Activate.ps1
+The response includes a generated `id` and `observed_at`.
 
-Step 4: Install dependencies
+**Current timestamp limitation:** `observed_at` is assigned by the server at record creation in UTC. The request does not accept the actual observation time.
 
-Install the project's dependencies using its maintained dependency file.
+**Current rainfall limitation:** `rainfall_mm` has no accumulation-window field. Do not assume it represents hourly or daily rainfall.
 
-If a requirements.txt has not yet been created, the team should establish one before relying on this installation step.
+These limitations must be resolved before using these records as a reliable historical modeling dataset.
 
-Step 5: Run the backend powershell uvicorn app.main:app --reload
+### Example C: Check whether a point is inside an area
 
-Step 6: Open **API** documentation
+Send to `POST /api/v1/geospatial/spatial-analysis/point-in-polygon`:
 
-Swagger UI:
+```json
+{
+  "point": {
+    "type": "Point",
+    "coordinates": [90.376, 23.7465]
+  },
+  "polygon": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [90.35, 23.73],
+        [90.4, 23.73],
+        [90.4, 23.78],
+        [90.35, 23.78],
+        [90.35, 23.73]
+      ]
+    ]
+  }
+}
+```
 
-text [http://**127**.0.0.1:**8000**/docs](http://**127**.0.0.1:**8000**/docs)
+Expected from the implemented geometry logic:
 
-Alternative **API** documentation:
+```json
+{
+  "covered": true,
+  "strictly_inside": true,
+  "on_boundary": false,
+  "relationship": "inside"
+}
+```
 
-text [http://**127**.0.0.1:**8000**/redoc](http://**127**.0.0.1:**8000**/redoc)
+This rectangle is fictional. The response describes geometry only, not real-world flood conditions.
 
-## Testing
+#### Understanding the result
 
-Geospatial functionality has been tested through standalone Python scripts, service-level tests, and Swagger UI.
+| Point position | `covered` | `strictly_inside` | `on_boundary` | `relationship` |
+| --- | --- | --- | --- | --- |
+| Inside the area | true | true | false | `inside` |
+| On a boundary | true | false | true | `boundary` |
+| Outside the area | false | false | false | `outside` |
+| Inside a polygon hole, away from its boundary | false | false | false | `outside` |
 
-Verified test cases include:
+A MultiPolygon—several polygons represented as one geometry—can also be supplied in the `polygon` field.
 
-Valid geographic coordinates. Invalid longitude and latitude. Valid Polygon. Invalid self-intersecting Polygon. Point inside Polygon. Point outside Polygon. Point on Polygon boundary. Point inside different MultiPolygon components. Point outside MultiPolygon. MultiPolygon boundary behavior. Geographic distance between Dhaka coordinates. Valid LineString schema. LineString with insufficient positions. Invalid LineString longitude. Invalid LineString latitude.
+### Example D: Calculate geographic distance
 
-The LineString schema validation tests have passed.
+Send to `POST /api/v1/geospatial/spatial-analysis/distance`:
 
-Further automated regression testing and integration testing will continue as development progresses.
+```json
+{
+  "point_a": {
+    "type": "Point",
+    "coordinates": [90.376, 23.7465]
+  },
+  "point_b": {
+    "type": "Point",
+    "coordinates": [90.376, 23.7465]
+  }
+}
+```
 
-## Development Roadmap
+These points are identical, so the expected response is:
 
-Phase 1 — Backend Foundation FastAPI application. Modular Monolith structure. Configuration. Health endpoint. Phase 2 — Weather Module Weather schemas. Weather repository. Weather service. Weather **API**. Phase 3 — Geospatial Foundation Geographic location management. GeoJSON Point. GeoJSON Polygon. GeoJSON MultiPolygon. Point-in-Polygon analysis. Geographic distance calculation. GeoJSON LineString schema. Phase 4 — Advanced Geospatial Development Shapely LineString integration. LineString **API**. Additional GeoJSON geometry support. Dhaka administrative boundaries. River and drainage network representation. Flood-zone representation. Asset management. Asset exposure analysis. MongoDB geospatial queries and indexes. Phase 5 — Database Integration MongoDB Atlas integration. PyMongo repository implementation. Weather observation persistence. River observation persistence. Geographic data persistence. Phase 6 — Data Ingestion Historical climate data collection. Weather data ingestion. River-level observation ingestion. Flood-event data collection. Data cleaning and preprocessing. Phase 7 — Machine Learning Flood-event label definition. Geographic grid construction. ML dataset creation. XGBoost baseline. Temporal and geographic leakage prevention. Model evaluation. Probability calibration. Phase 8 — Prediction and Alerts Flood probability prediction **API**. Geographic risk mapping. Asset exposure analysis. Alert generation. End-to-end integration testing. ## Machine Learning Evaluation Strategy
+```json
+{
+  "distance_meters": 0.0,
+  "distance_kilometers": 0.0,
+  "method": "WGS84 geodesic"
+}
+```
 
-The initial ML target is:
+Change either point to calculate the shortest surface distance on the WGS84 ellipsoid. This is not a driving, walking, or evacuation-route distance.
 
-Probability of a defined flood event occurring within a geographic grid cell during the next 24 hours.
+## 8. Coordinate and validation rules
 
-Evaluation will include:
+### Coordinate order
 
-Precision. Recall. F1-score. PR-**AUC**. Brier score. False alarm rate. Missed flood events.
+GeoJSON uses:
 
-The project will prioritize reliable probability estimation and prevention of temporal and geographic data leakage.
+```text
+[longitude, latitude]
+```
 
-Predicted probability will be distinguished from model confidence.
+For example:
 
-## Team Development
+```json
+[90.376, 23.7465]
+```
 
-Climate Shield is being developed collaboratively.
+Location and weather creation requests use separate named `latitude` and `longitude` fields.
 
-Backend and machine learning development focus on:
+### Geographic geometry rules
 
-**API** development. Geospatial engineering. Climate data processing. Database integration. ML model development. Risk assessment. Alert generation.
+- Longitude must be between `-180` and `180`.
+- Latitude must be between `-90` and `90`.
+- Points contain exactly two coordinate values.
+- Each Polygon has at least one ring.
+- Each ring contains at least four positions, including the closing position.
+- The first and last positions of each ring must match.
+- The first ring is the outer boundary; additional rings represent holes.
+- MultiPolygons contain at least one polygon.
+- LineStrings contain at least two positions, but currently have schema support only.
+- The point-in-polygon service rejects empty or geometrically invalid polygons.
 
-Frontend development is handled separately by another teammate.
+### Weather input rules
 
-The frontend and backend will communicate through versioned **REST** APIs.
+| Field | Validation |
+| --- | --- |
+| `location_name` | 2–100 characters |
+| `latitude` | -90 to 90 |
+| `longitude` | -180 to 180 |
+| `rainfall_mm` | Zero or greater |
+| `temperature_c` | -90 to 65 |
+| `humidity_percent` | 0–100 |
+| `source` | Optional; defaults to `manual`; maximum 100 characters |
 
-## Project Status
+### Why two geometry libraries are used
 
-Current status: Under active development.
+**Shapely** performs planar geometric operations, including containment and boundary checks.
 
-The backend foundation, weather module, and initial geospatial capabilities are implemented.
+**GeographicLib** calculates geographic distance on the WGS84 ellipsoid.
 
-The project is currently progressing through advanced geospatial development before moving into database integration, climate-data ingestion, and machine learning.
+Longitude and latitude are angles measured in degrees, not meters. Ordinary Shapely distance on these coordinates must not be described as a distance in meters.
 
-## Project Goals
+The current containment implementation operates on longitude/latitude as planar coordinates. It should not be assumed to handle global geometry or antimeridian-crossing polygons correctly.
 
-Climate Shield aims to transform climate and geographic information into actionable intelligence that helps protect people, infrastructure, and valuable physical assets.
+## 9. Errors and troubleshooting
 
-Built with a focus on practical climate resilience, reliable engineering, and scalable development.
+### HTTP errors
 
-Climate Shield — Predict Risk. Protect Lives. Safeguard Assets.
+| Status | Meaning |
+| --- | --- |
+| `404` | The requested location or weather observation was not found |
+| `422` | Request validation failed, or the analysis polygon was rejected as invalid |
+
+Example missing-location response:
+
+```json
+{
+  "detail": "Location not found"
+}
+```
+
+### `MONGODB_URI` validation error on startup
+
+Create `Backend/.env` as shown above, or provide the variable in the process environment.
+
+Run the server from `Backend/`, because configuration looks for `.env` relative to the working directory.
+
+### `ModuleNotFoundError`
+
+Confirm that your virtual environment is active, install the dependencies, and run commands from `Backend/`.
+
+### Records disappeared
+
+The repositories use temporary memory. Restarting or reloading the application clears records.
+
+### Frontend browser requests are blocked by CORS
+
+The active application does not configure CORS middleware. Before connecting a frontend served from another origin, explicitly configure the allowed frontend origins.
+
+### `/api/v1/health/database` returns 404
+
+That endpoint appears only in an inactive, triple-quoted block in `main.py`. It is not registered in the active application.
+
+## 10. MongoDB integration status
+
+`app/core/database.py` contains an asynchronous PyMongo helper with methods to:
+
+- Create a client.
+- Ping MongoDB.
+- Select the configured database.
+- Close the client.
+
+However, the active application does not call this helper during startup or shutdown, and the repositories do not use it.
+
+An earlier application implementation containing database lifecycle wiring is retained inside a triple-quoted string in `main.py`. It does not execute.
+
+Therefore:
+
+- Setting `MONGODB_URI` does not turn on persistence.
+- The basic health response does not prove MongoDB is connected.
+- Database startup/shutdown integration and database-backed repositories remain unfinished.
+
+## 11. Testing
+
+The checked-in file `tests/test_geospatial.py` is a standalone Shapely demonstration. It prints `contains` and `covers` results for three points relative to a fictional rectangle.
+
+Run it from `Backend/`:
+
+```bash
+python tests/test_geospatial.py
+```
+
+Expected geometry behavior:
+
+| Case | `contains` | `covers` |
+| --- | --- | --- |
+| Inside | true | true |
+| Outside | false | false |
+| Boundary | false | true |
+
+The script does not contain assertions or test functions. It is not a comprehensive automated regression suite, and it does not exercise the API or application services.
+
+The previous README reports additional manual checks, but corresponding automated tests are not present in the inspected test directory.
+
+Recommended automated coverage:
+
+- Valid and invalid coordinate inputs.
+- Polygon closure and minimum ring size.
+- Invalid and self-intersecting geometry.
+- Polygon holes and boundaries.
+- MultiPolygon components and boundaries.
+- LineString schema validation.
+- Distance calculations against known reference values.
+- API creation, retrieval, missing-record, and validation behavior.
+- Database lifecycle and persistence after integration.
+
+No tests were executed as part of this README review.
+
+## 12. Development roadmap
+
+The following items are planned, not claims of completed functionality.
+
+1. **Make local development reproducible**
+   - Establish a supported Python version.
+   - Add a maintained dependency manifest.
+   - Add `.env.example` and appropriate `.gitignore` rules.
+   - Replace print-only checks with automated tests.
+   - Remove tracked generated bytecode in a separate cleanup change.
+
+2. **Extend geospatial functionality**
+   - Add LineString service and API support.
+   - Introduce verified Dhaka boundaries and relevant geographic datasets.
+   - Represent rivers, drainage networks, and flood zones.
+   - Add asset records and exposure analysis.
+
+3. **Enable MongoDB persistence**
+   - Connect database startup and shutdown lifecycle.
+   - Implement MongoDB-backed repositories.
+   - Add appropriate geospatial indexes and queries.
+   - Add database integration tests.
+
+4. **Build environmental-data ingestion**
+   - Select and document data sources.
+   - Ingest weather, river-level, and observed flood-event data.
+   - Preserve actual observation times, units, accumulation periods, and provenance.
+   - Add cleaning, quality checks, and missing-data handling.
+
+5. **Develop the forecasting baseline**
+   - Define the flood event and map grid.
+   - Build the labeled dataset.
+   - Train an XGBoost baseline.
+   - Prevent temporal and geographic data leakage.
+   - Evaluate and calibrate predicted probabilities.
+
+6. **Integrate predictions and alerts**
+   - Add prediction endpoints and risk-map outputs.
+   - Connect asset exposure analysis.
+   - Define and validate alert thresholds.
+   - Complete frontend integration and end-to-end testing.
+
+## 13. Planned machine-learning evaluation
+
+There is no trained model or measured forecasting performance in the current backend.
+
+Planned evaluation includes:
+
+- Precision: how often predicted flood events are correct.
+- Recall: how many actual flood events are detected.
+- F1-score: a combined precision/recall measure.
+- PR-AUC: precision/recall performance across thresholds.
+- Brier score: accuracy of predicted probabilities.
+- Calibration: whether predicted probabilities match observed frequencies.
+- False-alarm and missed-event measures, with their definitions stated explicitly.
+
+Training and evaluation must use only information available at the forecast issue time. Time-based and geographic separation should be designed to prevent leakage and test the intended deployment conditions.
+
+A predicted flood probability is not the same as model confidence. Neither should be presented as validated until supported by suitable evaluation.
+
+## 14. Working on the project
+
+Backend and frontend work are separated into `Backend/` and `Frontend/`. The intended integration is through versioned REST APIs.
+
+When contributing:
+
+- Keep HTTP handling in routers.
+- Keep application logic in services.
+- Keep storage access in repositories.
+- Keep validation and response contracts in schemas.
+- Preserve GeoJSON coordinate order.
+- Document input units, observation times, and data sources.
+- Add automated tests for changed behavior.
+- Update this README when behavior changes.
+- Label planned functionality separately from implemented functionality.
+- Never present synthetic examples as real hazard data.
+
+The current backend does not implement authentication, authorization, or rate limiting. Keep it in a controlled development environment until appropriate operational safeguards are implemented.
+
+**Climate Shield — building toward reliable climate-risk intelligence for Dhaka.**
