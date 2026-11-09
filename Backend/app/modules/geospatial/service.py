@@ -736,3 +736,25 @@ def check_flood_at_point(point_data: GeoJSONPoint):
         "attribution": FLOOD_ATTRIBUTION,
         "limitations": FLOOD_LIMITATIONS
     }
+
+
+# ==========================================
+# DISTRICT LOOKUP (used by other modules, e.g. assets)
+# ==========================================
+
+def find_district(point_data: GeoJSONPoint):
+
+    # Which of Bangladesh's 64 districts contains this point?
+    # Returns {"pcode", "name", "division"} or None outside Bangladesh.
+    located = analyze_point_in_zones(point_data, get_district_collection())
+
+    if not located["matches"]:
+        return None
+
+    properties = located["matches"][0]["properties"]
+
+    return {
+        "pcode": properties["pcode"],
+        "name": properties["name"],
+        "division": properties["parent_name"]
+    }

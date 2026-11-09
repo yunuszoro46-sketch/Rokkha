@@ -77,6 +77,7 @@ from fastapi import FastAPI
 from app.core.config import settings
 from app.modules.weather.router import router as weather_router
 from app.modules.geospatial.router import router as geospatial_router
+from app.modules.assets.router import router as assets_router
 
 
 app = FastAPI(
@@ -111,5 +112,10 @@ app.include_router(
 
 app.include_router(
     geospatial_router,
+    prefix=settings.API_V1_PREFIX
+)
+
+app.include_router(
+    assets_router,
     prefix=settings.API_V1_PREFIX
 )
