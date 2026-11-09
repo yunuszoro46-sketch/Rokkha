@@ -1,0 +1,346 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  CloudRain, 
+  MapPin, 
+  CheckSquare, 
+  ShieldAlert, 
+  Ruler, 
+  Layers, 
+  Building2, 
+  DownloadCloud, 
+  Waves, 
+  Cpu, 
+  Crosshair, 
+  Bell, 
+  Shield, 
+  ExternalLink, 
+  ChevronRight, 
+  ArrowLeft,
+  LayoutGrid,
+  SlidersHorizontal,
+  Home
+} from 'lucide-react';
+
+import { checkBackendHealth } from './services/apiClient';
+import LandingPage from './landing-page/LandingPage';
+import FeatureModulesCatalog from './features-catalog/FeatureModulesCatalog';
+import { Button } from './components/ui/button';
+
+// Import all 12 feature components from Frontend/feature
+import WeatherObservations from '../feature/Weather observations/WeatherObservations';
+import LocationManagement from '../feature/Location management/LocationManagement';
+import GeoJSONValidation from '../feature/GeoJSON validation/GeoJSONValidation';
+import PointInPolygon from '../feature/Point-in-Polygon/PointInPolygon';
+import GeographicDistance from '../feature/Geographic distance/GeographicDistance';
+import GeographicZones from '../feature/Geographic zones/GeographicZones';
+import AssetManagement from '../feature/Asset management/AssetManagement';
+import WeatherIngestion from '../feature/Weather ingestion/WeatherIngestion';
+import RiverMonitoring from '../feature/River monitoring/RiverMonitoring';
+import FloodPrediction from '../feature/Flood prediction/FloodPrediction';
+import AssetExposure from '../feature/Asset exposure/AssetExposure';
+import AlertsFeature from '../feature/Alerts/AlertsFeature';
+
+const FEATURES_CONFIG = [
+  {
+    id: 'weather-observations',
+    name: 'Weather observations',
+    purpose: 'Record weather measurements',
+    status: 'Implemented',
+    badgeType: 'emerald',
+    icon: CloudRain,
+    component: WeatherObservations
+  },
+  {
+    id: 'location-management',
+    name: 'Location management',
+    purpose: 'Store geographic locations',
+    status: 'Implemented',
+    badgeType: 'emerald',
+    icon: MapPin,
+    component: LocationManagement
+  },
+  {
+    id: 'geojson-validation',
+    name: 'GeoJSON validation',
+    purpose: 'Validate geographic inputs',
+    status: 'Implemented',
+    badgeType: 'emerald',
+    icon: CheckSquare,
+    component: GeoJSONValidation
+  },
+  {
+    id: 'point-in-polygon',
+    name: 'Point-in-Polygon',
+    purpose: 'Determine geographic containment',
+    status: 'Implemented',
+    badgeType: 'emerald',
+    icon: ShieldAlert,
+    component: PointInPolygon
+  },
+  {
+    id: 'geographic-distance',
+    name: 'Geographic distance',
+    purpose: 'Calculate real-world distances',
+    status: 'Milestone',
+    badgeType: 'blue',
+    icon: Ruler,
+    component: GeographicDistance
+  },
+  {
+    id: 'geographic-zones',
+    name: 'Geographic zones',
+    purpose: 'Represent flood-risk areas',
+    status: 'Planned',
+    badgeType: 'amber',
+    icon: Layers,
+    component: GeographicZones
+  },
+  {
+    id: 'asset-management',
+    name: 'Asset management',
+    purpose: 'Register protected assets',
+    status: 'Planned',
+    badgeType: 'amber',
+    icon: Building2,
+    component: AssetManagement
+  },
+  {
+    id: 'weather-ingestion',
+    name: 'Weather ingestion',
+    purpose: 'Collect external weather data',
+    status: 'Planned',
+    badgeType: 'amber',
+    icon: DownloadCloud,
+    component: WeatherIngestion
+  },
+  {
+    id: 'river-monitoring',
+    name: 'River monitoring',
+    purpose: 'Monitor water levels',
+    status: 'Planned',
+    badgeType: 'amber',
+    icon: Waves,
+    component: RiverMonitoring
+  },
+  {
+    id: 'flood-prediction',
+    name: 'Flood prediction',
+    purpose: 'Forecast localized flood probability',
+    status: 'Planned',
+    badgeType: 'amber',
+    icon: Cpu,
+    component: FloodPrediction
+  },
+  {
+    id: 'asset-exposure',
+    name: 'Asset exposure',
+    purpose: 'Identify assets exposed to flooding',
+    status: 'Planned',
+    badgeType: 'amber',
+    icon: Crosshair,
+    component: AssetExposure
+  },
+  {
+    id: 'alerts',
+    name: 'Alerts',
+    purpose: 'Notify users of potential danger',
+    status: 'Planned',
+    badgeType: 'amber',
+    icon: Bell,
+    component: AlertsFeature
+  }
+];
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState('landing'); // 'landing' | 'catalog' | 'console'
+  const [activeFeatureId, setActiveFeatureId] = useState('weather-observations');
+  const [backendHealth, setBackendHealth] = useState({ status: 'checking' });
+
+  useEffect(() => {
+    const check = async () => {
+      const res = await checkBackendHealth();
+      setBackendHealth(res);
+    };
+    check();
+    const interval = setInterval(check, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const activeFeature = FEATURES_CONFIG.find(f => f.id === activeFeatureId) || FEATURES_CONFIG[0];
+  const ActiveComponent = activeFeature.component;
+
+  const handleLaunchFeature = (featureId) => {
+    setActiveFeatureId(featureId);
+    setActiveTab('console');
+  };
+
+  // Floating Multi-Page Switcher Dock — icons only
+  const PageSwitcherDock = () => (
+    <div className="fixed bottom-5 right-5 z-50 flex items-center gap-1 bg-[#060c1b]/95 backdrop-blur-md border border-sky-500/40 p-1.5 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.8)]">
+      <button
+        onClick={() => setActiveTab('landing')}
+        title="Landing Page"
+        className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
+          activeTab === 'landing'
+            ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow'
+            : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+        }`}
+      >
+        <Home size={15} />
+      </button>
+      <button
+        onClick={() => setActiveTab('catalog')}
+        title="Feature Catalog"
+        className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
+          activeTab === 'catalog'
+            ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow'
+            : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+        }`}
+      >
+        <LayoutGrid size={15} />
+      </button>
+      <button
+        onClick={() => setActiveTab('console')}
+        title="Live Sandbox"
+        className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
+          activeTab === 'console'
+            ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow'
+            : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+        }`}
+      >
+        <SlidersHorizontal size={15} />
+      </button>
+    </div>
+  );
+
+  // View 1: Landing Page
+  if (activeTab === 'landing') {
+    return (
+      <>
+        <LandingPage onOpenConsole={() => setActiveTab('catalog')} />
+        <PageSwitcherDock />
+      </>
+    );
+  }
+
+  // View 2: Feature Modules Catalog (exact screenshot match: Rokkha Core Engine + 12 categories + interactive box)
+  if (activeTab === 'catalog') {
+    return (
+      <>
+        <FeatureModulesCatalog 
+          onSelectFeature={handleLaunchFeature} 
+          onBackToLanding={() => setActiveTab('landing')}
+        />
+        <PageSwitcherDock />
+      </>
+    );
+  }
+
+  // View 3: Live Sandbox Console for chosen feature
+  return (
+    <div className="min-h-screen bg-[#030712] text-slate-100 flex flex-col font-sans">
+      {/* Top Header Navbar */}
+      <header className="sticky top-0 z-50 bg-[#040816]/95 backdrop-blur-md border-b border-slate-800/80 px-4 sm:px-8 py-3.5 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div 
+            onClick={() => setActiveTab('catalog')}
+            className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-sky-500/30 cursor-pointer border border-sky-400/30"
+          >
+            <Shield size={20} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span 
+                onClick={() => setActiveTab('catalog')}
+                className="text-lg font-black tracking-tight text-white cursor-pointer"
+              >
+                ROKKHA<span className="text-sky-400">.</span>
+              </span>
+              <span className="text-xs px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 font-semibold hidden sm:inline-block">
+                Live Sandbox
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation Tabs */}
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline"
+            size="sm"
+            onClick={() => setActiveTab('catalog')}
+            className="text-xs flex items-center gap-1.5"
+          >
+            <LayoutGrid size={13} /> Return to Catalog
+          </Button>
+
+          <Button 
+            variant="ghost"
+            size="sm"
+            onClick={() => setActiveTab('landing')}
+            className="text-xs flex items-center gap-1.5 text-slate-400"
+          >
+            <Home size={13} /> Landing Page
+          </Button>
+        </div>
+      </header>
+
+      {/* Main Console Layout */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left Sidebar Feature Directory */}
+        <aside className="w-80 bg-[#060b17] border-r border-slate-800 p-4 space-y-2 overflow-y-auto hidden md:block">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-3">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              12 Core Modules
+            </span>
+            <span className="text-[10px] text-sky-400 font-bold px-2 py-0.5 rounded bg-sky-950 border border-sky-500/30">
+              ACTIVE
+            </span>
+          </div>
+
+          <div className="space-y-1">
+            {FEATURES_CONFIG.map((feat, index) => {
+              const Icon = feat.icon;
+              const isSelected = feat.id === activeFeatureId;
+
+              return (
+                <button
+                  key={feat.id}
+                  onClick={() => setActiveFeatureId(feat.id)}
+                  className={`w-full flex items-start gap-3 p-2.5 rounded-xl text-left text-xs transition-all cursor-pointer ${
+                    isSelected 
+                      ? 'bg-sky-950/80 border border-sky-500/50 text-white' 
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/50 border border-transparent'
+                  }`}
+                >
+                  <div className={`p-1.5 rounded-lg ${isSelected ? 'bg-sky-500/20 text-sky-400' : 'bg-slate-900 text-slate-500'}`}>
+                    <Icon size={14} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold truncate">{index + 1}. {feat.name}</div>
+                    <div className="text-[10px] text-slate-500 truncate mt-0.5">{feat.purpose}</div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </aside>
+
+        {/* Center Workspace Content */}
+        <main className="flex-1 p-6 md:p-8 overflow-y-auto max-w-5xl mx-auto w-full">
+          <div className="mb-4 flex items-center justify-between">
+            <button 
+              onClick={() => setActiveTab('catalog')} 
+              className="inline-flex items-center gap-1.5 text-xs text-sky-400 hover:text-sky-300 font-semibold cursor-pointer"
+            >
+              <ArrowLeft size={14} /> Back to Feature Modules Catalog
+            </button>
+          </div>
+
+          <ActiveComponent />
+        </main>
+      </div>
+      <PageSwitcherDock />
+    </div>
+  );
+}
