@@ -73,6 +73,7 @@ app.include_router(
 
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.modules.weather.router import router as weather_router
@@ -103,6 +104,15 @@ async def health_check():
     return {
         "status": "healthy"
     }
+
+
+# Let the frontend (running on another address) call this API from a browser.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 app.include_router(

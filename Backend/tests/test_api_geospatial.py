@@ -512,3 +512,28 @@ def test_feature_without_properties_or_id_allowed(client, flood_zone):
     assert body["matched_count"] == 1
     assert body["matches"][0]["feature_id"] is None
     assert body["matches"][0]["properties"] is None
+
+
+# ==========================================
+# CORS (frontend in a browser)
+# ==========================================
+
+def test_cors_allows_frontend_dev_server(client):
+
+    response = client.options(
+        "/api/v1/health",
+        headers={
+            "Origin": "http://localhost:5173",
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://localhost:5173"
+
+
+def test_cors_blocks_unknown_origin(client):
+
+    response = client.get("/api/v1/health", headers={"Origin": "http://evil.example"})
+
+    assert "access-control-allow-origin" not in response.headers
