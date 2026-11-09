@@ -332,3 +332,47 @@ class MultiPointZoneResponse(BaseModel):
     covered_count: int
 
     results: list[PointZoneResult]
+
+
+# ==========================================
+# MULTIPOINT DISTANCES FROM A REFERENCE POINT
+# ==========================================
+
+class MultiPointDistanceRequest(BaseModel):
+
+    # The point we measure FROM (for example, a flooded location).
+    reference: GeoJSONPoint
+
+    # The points we measure TO (for example, shelters or gauges).
+    points: GeoJSONMultiPoint
+
+
+class PointDistanceResult(BaseModel):
+
+    # Position of this point in the request list (starts at 0).
+    point_index: int
+
+    # [longitude, latitude]
+    coordinates: tuple[float, float]
+
+    distance_meters: float
+
+    distance_kilometers: float
+
+
+class MultiPointDistanceResponse(BaseModel):
+
+    total_points: int
+
+    # Index of the closest point. If several points are equally
+    # close, the first one in the request list is chosen.
+    nearest_point_index: int
+
+    nearest_distance_meters: float
+
+    nearest_distance_kilometers: float
+
+    # In the same order as the request, so indexes match.
+    results: list[PointDistanceResult]
+
+    method: Literal["WGS84 geodesic"]

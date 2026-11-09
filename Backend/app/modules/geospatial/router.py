@@ -11,7 +11,9 @@ from app.modules.geospatial.schemas import (
     LineStringLengthRequest,
     LineStringLengthResponse,
     MultiPointZoneRequest,
-    MultiPointZoneResponse
+    MultiPointZoneResponse,
+    MultiPointDistanceRequest,
+    MultiPointDistanceResponse
 )
 
 from app.modules.geospatial.service import (
@@ -21,7 +23,8 @@ from app.modules.geospatial.service import (
     analyze_point_in_polygon,
     calculate_geographic_distance,
     calculate_linestring_length,
-    analyze_multipoint_in_zone
+    analyze_multipoint_in_zone,
+    calculate_multipoint_distances
 )
 
 
@@ -176,3 +179,23 @@ def multipoint_in_zone_analysis(
             status_code=422,
             detail=str(error)
         )
+
+
+# ==========================================
+# MULTIPOINT DISTANCES ENDPOINT
+# ==========================================
+
+@router.post(
+    "/spatial-analysis/multipoint-distances",
+    response_model=MultiPointDistanceResponse
+)
+def multipoint_distance_analysis(
+    data: MultiPointDistanceRequest
+):
+
+    result = calculate_multipoint_distances(
+        data.reference,
+        data.points
+    )
+
+    return result

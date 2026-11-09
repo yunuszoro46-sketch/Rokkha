@@ -249,3 +249,51 @@ def analyze_multipoint_in_zone(
         "covered_count": inside_count + boundary_count,
         "results": results
     }
+
+
+# ==========================================
+# MULTIPOINT DISTANCES FROM A REFERENCE POINT
+# ==========================================
+
+def calculate_multipoint_distances(
+    reference_data: GeoJSONPoint,
+    points_data: GeoJSONMultiPoint
+):
+
+    results = []
+
+    for index, coordinates in enumerate(points_data.coordinates):
+
+        # Wrap the position as a GeoJSON Point so we can reuse
+        # the already-tested geodesic distance calculation.
+        point = GeoJSONPoint(
+            coordinates=list(coordinates)
+        )
+
+        distance = calculate_geographic_distance(
+            reference_data,
+            point
+        )
+
+        results.append({
+            "point_index": index,
+            "coordinates": coordinates,
+            "distance_meters": distance["distance_meters"],
+            "distance_kilometers": distance["distance_kilometers"]
+        })
+
+    # min() with key= finds the result with the smallest distance.
+    # On a tie, min() keeps the first one it saw.
+    nearest = min(
+        results,
+        key=lambda result: result["distance_meters"]
+    )
+
+    return {
+        "total_points": len(results),
+        "nearest_point_index": nearest["point_index"],
+        "nearest_distance_meters": nearest["distance_meters"],
+        "nearest_distance_kilometers": nearest["distance_kilometers"],
+        "results": results,
+        "method": "WGS84 geodesic"
+    }
