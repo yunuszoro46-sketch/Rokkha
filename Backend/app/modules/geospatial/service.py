@@ -5,7 +5,8 @@ from app.modules.geospatial.schemas import (
     GeoJSONPolygon,
     GeoJSONMultiPolygon,
     GeoJSONLineString,
-    GeoJSONMultiPoint
+    GeoJSONMultiPoint,
+    GeoJSONFeatureCollection
 )
 from app.modules.geospatial.repository import (
     create_location_record,
@@ -296,4 +297,51 @@ def calculate_multipoint_distances(
         "nearest_distance_kilometers": nearest["distance_kilometers"],
         "results": results,
         "method": "WGS84 geodesic"
+    }
+
+
+# ==========================================
+# POINT IN NAMED ZONES (FEATURECOLLECTION)
+# ==========================================
+
+def analyze_point_in_zones(
+    point_data: GeoJSONPoint,
+    zones_data: GeoJSONFeatureCollection
+):
+
+    matches = []
+
+    for index, feature in enumerate(zones_data.features):
+
+        # A zone must be an area. Points and lines cannot contain anything.
+        if not isinstance(
+            feature.geometry,
+            (GeoJSONPolygon, GeoJSONMultiPolygon)
+        ):
+            raise ValueError(
+                f"Zone feature {index} must have a Polygon or "
+                f"MultiPolygon geometry, not {feature.geometry.type}."
+            )
+
+        # Reuse the already-tested point-in-polygon analysis.
+        # Raises ValueError if this zone's geometry is invalid.
+        analysis = analyze_point_in_polygon(
+            point_data,
+            feature.geometry
+        )
+
+        # Keep only zones that cover the point (inside or boundary).
+        if analysis["covered"]:
+
+            matches.append({
+                "feature_index": index,
+                "feature_id": feature.id,
+                "properties": feature.properties,
+                **analysis
+            })
+
+    return {
+        "total_zones": len(zones_data.features),
+        "matched_count": len(matches),
+        "matches": matches
     }

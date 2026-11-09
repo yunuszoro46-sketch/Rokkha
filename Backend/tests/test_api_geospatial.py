@@ -354,3 +354,161 @@ def test_invalid_reference_rejected(client):
     response = distances(client, [90.37, 95], [OUTSIDE])
 
     assert response.status_code == 422
+
+
+# ==========================================
+# POINT IN NAMED ZONES (FEATURECOLLECTION)
+# ==========================================
+
+def zone_feature(feature_id, name, geometry):
+    return {
+        "type": "Feature",
+        "id": feature_id,
+        "geometry": geometry,
+        "properties": {"name": name}
+    }
+
+
+def dhaka_zones(flood_zone, second_zone):
+
+    # Large rectangle around both test areas
+    # (longitude 90.33–90.42, latitude 23.70–23.79).
+    district = {
+        "type": "Polygon",
+        "coordinates": [[
+            [90.33, 23.70], [90.42, 23.70], [90.42, 23.79],
+            [90.33, 23.79], [90.33, 23.70]
+        ]]
+    }
+
+    return {
+        "type": "FeatureCollection",
+        "features": [
+            zone_feature("FZ-1", "Dhanmondi Flood Zone", flood_zone),
+            zone_feature("D-1", "Test District", district),
+            zone_feature(
+                "FZ-2",
+                "Northeast Flood Zone",
+                {"type": "Polygon", "coordinates": second_zone}
+            )
+        ]
+    }
+
+
+def zones_for(client, coordinates, zones):
+    return client.post(
+        f"{BASE}/spatial-analysis/point-in-zones",
+        json={"point": point(coordinates), "zones": zones}
+    )
+
+
+def test_point_in_overlapping_zones(client, flood_zone, second_zone):
+
+    response = zones_for(
+        client, DHANMONDI, dhaka_zones(flood_zone, second_zone)
+    )
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert body["total_zones"] == 3
+    assert body["matched_count"] == 2
+
+    # Properties come back, so we know WHICH zones matched.
+    assert [m["properties"]["name"] for m in body["matches"]] == [
+        "Dhanmondi Flood Zone",
+        "Test District"
+    ]
+    assert [m["feature_id"] for m in body["matches"]] == ["FZ-1", "D-1"]
+    assert [m["feature_index"] for m in body["matches"]] == [0, 1]
+
+
+def test_point_in_one_zone_only(client, flood_zone, second_zone):
+
+    response = zones_for(
+        client, OUTSIDE, dhaka_zones(flood_zone, second_zone)
+    )
+
+    body = response.json()
+
+    assert body["matched_count"] == 1
+    assert body["matches"][0]["feature_id"] == "FZ-2"
+
+
+def test_point_on_zone_boundary(client, flood_zone, second_zone):
+
+    response = zones_for(
+        client, BOUNDARY, dhaka_zones(flood_zone, second_zone)
+    )
+
+    relationships = {
+        m["feature_id"]: m["relationship"]
+        for m in response.json()["matches"]
+    }
+
+    # On the edge of the flood zone, but well inside the district.
+    assert relationships == {"FZ-1": "boundary", "D-1": "inside"}
+
+
+def test_point_in_no_zone(client, flood_zone, second_zone):
+
+    response = zones_for(
+        client, [90.5000, 23.9000], dhaka_zones(flood_zone, second_zone)
+    )
+
+    assert response.status_code == 200
+    assert response.json()["matched_count"] == 0
+    assert response.json()["matches"] == []
+
+
+def test_non_area_zone_rejected(client, flood_zone):
+
+    zones = {
+        "type": "FeatureCollection",
+        "features": [
+            zone_feature("FZ-1", "Flood Zone", flood_zone),
+            zone_feature("P-1", "A gauge", point(SHAHBAGH))
+        ]
+    }
+
+    response = zones_for(client, DHANMONDI, zones)
+
+    assert response.status_code == 422
+    assert "Zone feature 1" in response.json()["detail"]
+
+
+def test_invalid_zone_geometry_rejected(client, bow_tie_zone):
+
+    zones = {
+        "type": "FeatureCollection",
+        "features": [zone_feature("BAD", "Bow tie", bow_tie_zone)]
+    }
+
+    assert zones_for(client, DHANMONDI, zones).status_code == 422
+
+
+def test_unknown_geometry_type_rejected(client):
+
+    zones = {
+        "type": "FeatureCollection",
+        "features": [zone_feature(
+            "X", "Circle", {"type": "Circle", "coordinates": [90.37, 23.74]}
+        )]
+    }
+
+    assert zones_for(client, DHANMONDI, zones).status_code == 422
+
+
+def test_feature_without_properties_or_id_allowed(client, flood_zone):
+
+    zones = {
+        "type": "FeatureCollection",
+        "features": [{"type": "Feature", "geometry": flood_zone}]
+    }
+
+    body = zones_for(client, DHANMONDI, zones).json()
+
+    assert body["matched_count"] == 1
+    assert body["matches"][0]["feature_id"] is None
+    assert body["matches"][0]["properties"] is None

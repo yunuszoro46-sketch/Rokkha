@@ -13,7 +13,9 @@ from app.modules.geospatial.schemas import (
     MultiPointZoneRequest,
     MultiPointZoneResponse,
     MultiPointDistanceRequest,
-    MultiPointDistanceResponse
+    MultiPointDistanceResponse,
+    PointInZonesRequest,
+    PointInZonesResponse
 )
 
 from app.modules.geospatial.service import (
@@ -24,7 +26,8 @@ from app.modules.geospatial.service import (
     calculate_geographic_distance,
     calculate_linestring_length,
     analyze_multipoint_in_zone,
-    calculate_multipoint_distances
+    calculate_multipoint_distances,
+    analyze_point_in_zones
 )
 
 
@@ -199,3 +202,32 @@ def multipoint_distance_analysis(
     )
 
     return result
+
+
+# ==========================================
+# POINT IN NAMED ZONES ENDPOINT
+# ==========================================
+
+@router.post(
+    "/spatial-analysis/point-in-zones",
+    response_model=PointInZonesResponse
+)
+def point_in_zones_analysis(
+    data: PointInZonesRequest
+):
+
+    try:
+
+        result = analyze_point_in_zones(
+            data.point,
+            data.zones
+        )
+
+        return result
+
+    except ValueError as error:
+
+        raise HTTPException(
+            status_code=422,
+            detail=str(error)
+        )

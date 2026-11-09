@@ -1,5 +1,5 @@
 
-from typing import Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import (
     BaseModel,
@@ -213,6 +213,43 @@ class GeoJSONMultiPolygon(BaseModel):
 
         return self
 
+
+# ==========================================
+# GEOJSON FEATURE AND FEATURECOLLECTION
+# ==========================================
+
+# Any supported geometry. Pydantic reads the "type" field
+# ("Point", "Polygon", ...) to decide which schema to validate with.
+GeoJSONGeometry = Annotated[
+    GeoJSONPoint
+    | GeoJSONMultiPoint
+    | GeoJSONLineString
+    | GeoJSONPolygon
+    | GeoJSONMultiPolygon,
+    Field(discriminator="type")
+]
+
+
+class GeoJSONFeature(BaseModel):
+
+    type: Literal["Feature"] = "Feature"
+
+    # Optional identifier, for example a ward number.
+    id: str | int | None = None
+
+    geometry: GeoJSONGeometry
+
+    # Free-form information about the feature,
+    # for example {"name": "Ward 15", "risk_level": "high"}.
+    properties: dict[str, Any] | None = None
+
+
+class GeoJSONFeatureCollection(BaseModel):
+
+    type: Literal["FeatureCollection"] = "FeatureCollection"
+
+    features: list[GeoJSONFeature]
+
 # ==========================================
 # SPATIAL ANALYSIS
 # ==========================================
@@ -376,3 +413,47 @@ class MultiPointDistanceResponse(BaseModel):
     results: list[PointDistanceResult]
 
     method: Literal["WGS84 geodesic"]
+
+
+# ==========================================
+# POINT IN NAMED ZONES (FEATURECOLLECTION)
+# ==========================================
+
+class PointInZonesRequest(BaseModel):
+
+    point: GeoJSONPoint
+
+    # Every feature must have a Polygon or MultiPolygon geometry.
+    zones: GeoJSONFeatureCollection
+
+
+class ZoneMatch(BaseModel):
+
+    # Position of the zone in the request's features list.
+    feature_index: int
+
+    feature_id: str | int | None
+
+    properties: dict[str, Any] | None
+
+    covered: bool
+
+    strictly_inside: bool
+
+    on_boundary: bool
+
+    relationship: Literal[
+        "inside",
+        "boundary"
+    ]
+
+
+class PointInZonesResponse(BaseModel):
+
+    total_zones: int
+
+    # Number of zones that cover the point (inside or boundary).
+    matched_count: int
+
+    # Only the zones that cover the point, in request order.
+    matches: list[ZoneMatch]
