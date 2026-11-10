@@ -297,7 +297,7 @@ Shapes for drawing: `Backend/data/boundaries/dhaka_boundaries.geojson` and
 `.../point-in-polygon`, `.../multipoint-in-zone`, `.../multipoint-distances`,
 `.../point-in-zones` — see `/docs` for examples. `GET /health` → `{"status": "healthy"}`.
 
-Also available (early versions, still in memory — reset on restart): manual weather observations
+Also available (early versions, stored in MongoDB): manual weather observations
 `POST/GET /weather/observations`, `GET /weather/observations/{record_id}`
 (rainfall mm, temperature °C, humidity %), and saved named locations
 `POST/GET /geospatial/locations`, `GET /geospatial/locations/{location_id}`.

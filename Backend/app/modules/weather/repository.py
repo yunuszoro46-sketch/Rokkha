@@ -1,38 +1,63 @@
 
+from datetime import datetime, timezone
 from uuid import uuid4
 
-from datetime import datetime, timezone
+from pymongo import ASCENDING
+
+from app.core.database import get_db
 
 
-# Temporary storage for development.
-# This data disappears when the application restarts.
+# Weather observations live in the MongoDB collection
+# "weather_observations" (Milestone 17). The API's "id" is stored as
+# MongoDB's "_id". Functions are async: they wait for the database
+# without blocking the server.
 
-weather_records = []
+COLLECTION = "weather_observations"
 
 
-def create_weather_record(data: dict):
+def _collection():
+    return get_db()[COLLECTION]
 
-    record = {
-        "id": str(uuid4()),
-        **data,
-        "observed_at": datetime.now(timezone.utc)
-    }
 
-    weather_records.append(record)
+def _now() -> datetime:
 
+    # MongoDB stores dates with millisecond precision; cut the microseconds
+    # so the time returned on create equals the time read back later.
+    now = datetime.now(timezone.utc)
+    return now.replace(microsecond=now.microsecond // 1000 * 1000)
+
+
+def _to_api(document: dict | None) -> dict | None:
+
+    if document is None:
+        return None
+
+    record = dict(document)
+    record["id"] = record.pop("_id")
     return record
 
 
-def get_all_weather_records():
+async def create_weather_record(data: dict) -> dict:
 
-    return weather_records
+    document = {
+        "_id": str(uuid4()),
+        **data,
+        "observed_at": _now()
+    }
+
+    await _collection().insert_one(document)
+
+    return _to_api(document)
 
 
-def get_weather_record(record_id: str):
+async def get_all_weather_records() -> list[dict]:
 
-    for record in weather_records:
+    # Oldest first, in the order the observations were made.
+    cursor = _collection().find().sort("observed_at", ASCENDING)
 
-        if record["id"] == record_id:
-            return record
+    return [_to_api(document) async for document in cursor]
 
-    return None
+
+async def get_weather_record(record_id: str) -> dict | None:
+
+    return _to_api(await _collection().find_one({"_id": record_id}))

@@ -66,9 +66,9 @@ router = APIRouter(
     response_model=LocationResponse,
     status_code=status.HTTP_201_CREATED
 )
-def create_location(data: LocationCreate):
+async def create_location(data: LocationCreate):
 
-    return add_location(
+    return await add_location(
         data.model_dump()
     )
 
@@ -77,18 +77,18 @@ def create_location(data: LocationCreate):
     "/locations",
     response_model=list[LocationResponse]
 )
-def get_locations():
+async def get_locations():
 
-    return list_locations()
+    return await list_locations()
 
 
 @router.get(
     "/locations/{location_id}",
     response_model=LocationResponse
 )
-def get_location(location_id: str):
+async def get_location(location_id: str):
 
-    location = find_location(location_id)
+    location = await find_location(location_id)
 
     if location is None:
 

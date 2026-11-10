@@ -1,45 +1,64 @@
 
 import json
+from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
 from uuid import uuid4
 
 import numpy
+from pymongo import ASCENDING
+
+from app.core.database import get_db
 
 from app.modules.geospatial.schemas import GeoJSONFeatureCollection
 
-# Temporary storage.
-# Records disappear when the application restarts.
+# ==========================================
+# SAVED LOCATIONS (MongoDB collection "locations", Milestone 17)
+# ==========================================
+# The API's "id" is stored as MongoDB's "_id". A hidden created_at keeps
+# the list in a stable, oldest-first order (it is not part of the API
+# response model, so clients never see it).
 
-location_records = []
+LOCATIONS_COLLECTION = "locations"
 
 
-def create_location_record(data: dict):
+def _locations():
+    return get_db()[LOCATIONS_COLLECTION]
 
-    record = {
-        "id": str(uuid4()),
-        **data
-    }
 
-    location_records.append(record)
+def _location_to_api(document: dict | None) -> dict | None:
 
+    if document is None:
+        return None
+
+    record = dict(document)
+    record["id"] = record.pop("_id")
     return record
 
 
-def get_all_location_records():
+async def create_location_record(data: dict) -> dict:
 
-    return location_records
+    document = {
+        "_id": str(uuid4()),
+        **data,
+        "created_at": datetime.now(timezone.utc),
+    }
+
+    await _locations().insert_one(document)
+
+    return _location_to_api(document)
 
 
-def get_location_record(location_id: str):
+async def get_all_location_records() -> list[dict]:
 
-    for location in location_records:
+    cursor = _locations().find().sort("created_at", ASCENDING)
 
-        if location["id"] == location_id:
-            return location
+    return [_location_to_api(document) async for document in cursor]
 
-    return None
 
+async def get_location_record(location_id: str) -> dict | None:
+
+    return _location_to_api(await _locations().find_one({"_id": location_id}))
 
 # ==========================================
 # ADMINISTRATIVE BOUNDARIES (read-only file)

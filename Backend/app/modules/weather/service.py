@@ -6,16 +6,16 @@ from app.modules.weather.repository import (
 )
 
 
-def add_weather_observation(data: dict):
+async def add_weather_observation(data: dict):
 
-    return create_weather_record(data)
-
-
-def list_weather_observations():
-
-    return get_all_weather_records()
+    return await create_weather_record(data)
 
 
-def find_weather_observation(record_id: str):
+async def list_weather_observations():
 
-    return get_weather_record(record_id)
+    return await get_all_weather_records()
+
+
+async def find_weather_observation(record_id: str):
+
+    return await get_weather_record(record_id)

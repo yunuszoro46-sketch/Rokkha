@@ -24,9 +24,9 @@ router = APIRouter(
     response_model=WeatherObservationResponse,
     status_code=status.HTTP_201_CREATED
 )
-def create_observation(data: WeatherObservationCreate):
+async def create_observation(data: WeatherObservationCreate):
 
-    return add_weather_observation(
+    return await add_weather_observation(
         data.model_dump()
     )
 
@@ -35,18 +35,18 @@ def create_observation(data: WeatherObservationCreate):
     "/observations",
     response_model=list[WeatherObservationResponse]
 )
-def get_observations():
+async def get_observations():
 
-    return list_weather_observations()
+    return await list_weather_observations()
 
 
 @router.get(
     "/observations/{record_id}",
     response_model=WeatherObservationResponse
 )
-def get_observation(record_id: str):
+async def get_observation(record_id: str):
 
-    record = find_weather_observation(record_id)
+    record = await find_weather_observation(record_id)
 
     if record is None:
 

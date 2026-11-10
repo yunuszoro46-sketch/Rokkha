@@ -30,7 +30,7 @@ from app.modules.geospatial.repository import (
 )
 
 
-def add_location(data: dict):
+async def add_location(data: dict):
 
     geometry = {
         "type": "Point",
@@ -45,17 +45,17 @@ def add_location(data: dict):
         "geometry": geometry
     }
 
-    return create_location_record(location_data)
+    return await create_location_record(location_data)
 
 
-def list_locations():
+async def list_locations():
 
-    return get_all_location_records()
+    return await get_all_location_records()
 
 
-def find_location(location_id: str):
+async def find_location(location_id: str):
 
-    return get_location_record(location_id)
+    return await get_location_record(location_id)
 
 
 

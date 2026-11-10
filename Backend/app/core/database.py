@@ -51,6 +51,16 @@ class Database:
         await assets.create_index([("asset_type", ASCENDING)], name="asset_type")
         await assets.create_index([("district.pcode", ASCENDING)], name="district_pcode")
 
+        # Saved locations: 2dsphere on their GeoJSON geometry, and the list order.
+        locations = cls.db["locations"]
+        await locations.create_index([("geometry", GEOSPHERE)], name="geometry_2dsphere")
+        await locations.create_index([("created_at", ASCENDING)], name="created_at")
+
+        # Weather observations: time-ordered lists and lookups by place.
+        weather = cls.db["weather_observations"]
+        await weather.create_index([("observed_at", ASCENDING)], name="observed_at")
+        await weather.create_index([("location_name", ASCENDING)], name="location_name")
+
     @classmethod
     async def disconnect(cls):
 
