@@ -50,8 +50,8 @@
 }
 
 body {
-  background-color: #030712;
-  color: #f8fafc;
+  background-color: #f0f9ff;
+  color: #0f172a;
   font-family: var(--font-sans);
   min-height: 100vh;
   margin: 0;
@@ -64,13 +64,13 @@ code, pre {
 }
 
 /* Form Elements for Feature Sandboxes */
-input:not(.rokkha-input-field),
+input:not(.rokkha-input-field):not(.rokkha-search-hero-input):not(.rokkha-search-input),
 select:not(.rokkha-input-field),
 textarea:not(.rokkha-input-field) {
   font-family: inherit;
-  background-color: #060b17;
-  border: 1px solid #1e293b;
-  color: #f8fafc;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
   padding: 0.6rem 0.85rem;
   border-radius: 0.5rem;
   outline: none;
@@ -79,16 +79,16 @@ textarea:not(.rokkha-input-field) {
   width: 100%;
 }
 
-input:not(.rokkha-input-field):focus,
+input:not(.rokkha-input-field):not(.rokkha-search-hero-input):not(.rokkha-search-input):focus,
 select:not(.rokkha-input-field):focus,
 textarea:not(.rokkha-input-field):focus {
-  border-color: #38bdf8;
-  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+  border-color: #06b6d4;
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2);
 }
 
 /* Common Sandbox Buttons & Cards */
 .btn-primary {
-  background: linear-gradient(135deg, #0284c7, #0369a1);
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
   color: #fff;
   font-weight: 600;
   font-size: 0.85rem;
@@ -99,18 +99,19 @@ textarea:not(.rokkha-input-field):focus {
   gap: 0.5rem;
   border: none;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
+  box-shadow: 0 4px 14px rgba(6, 182, 212, 0.35);
   transition: all 0.2s ease;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  background: linear-gradient(135deg, #22d3ee, #06b6d4);
   transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(6, 182, 212, 0.45);
 }
 
 .btn-secondary {
-  background: #0f172a;
-  color: #cbd5e1;
+  background: #ffffff;
+  color: #334155;
   font-weight: 600;
   font-size: 0.8rem;
   padding: 0.55rem 0.95rem;
@@ -118,23 +119,24 @@ textarea:not(.rokkha-input-field):focus {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  border: 1px solid #1e293b;
+  border: 1px solid #cbd5e1;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .btn-secondary:hover {
-  background: #1e293b;
-  color: #fff;
-  border-color: #38bdf8;
+  background: #f0f9ff;
+  color: #0891b2;
+  border-color: #06b6d4;
 }
 
 .card {
-  background: #070d1e;
-  border: 1px solid #1e293b;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 0.85rem;
   padding: 1.5rem;
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 20px rgba(6, 182, 212, 0.08);
+  color: #0f172a;
 }
 
 .badge {

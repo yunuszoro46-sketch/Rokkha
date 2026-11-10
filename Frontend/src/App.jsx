@@ -238,24 +238,25 @@ export default function App() {
 
   // View 3: Live Sandbox Console for chosen feature
   return (
-    <div className="min-h-screen bg-[#030712] text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#f0f9ff] text-slate-800 flex flex-col font-sans">
       {/* Top Header Navbar */}
-      <header className="sticky top-0 z-50 bg-[#040816]/95 backdrop-blur-md border-b border-slate-800/80 px-4 sm:px-8 py-3.5 flex items-center justify-between">
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-cyan-100 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
           <div 
             onClick={() => setActiveTab('catalog')}
-            className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-sky-500/30 cursor-pointer border border-sky-400/30"
+            className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-md shadow-cyan-500/20 cursor-pointer border border-cyan-300"
           >
-            <Shield size={20} />
+            <Shield size={22} fill="currentColor" fillOpacity={0.2} />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <span 
                 onClick={() => setActiveTab('catalog')}
-                className="text-lg font-black tracking-tight text-white cursor-pointer"
+                className="text-xl font-black tracking-tight text-slate-900 cursor-pointer"
               >
-                ROKKHA<span className="text-sky-400">.</span>              </span>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 font-semibold hidden sm:inline-block">
+                Rokkha
+              </span>
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200 font-bold hidden sm:inline-block">
                 Live Sandbox
               </span>
             </div>
@@ -268,7 +269,7 @@ export default function App() {
             variant="outline"
             size="sm"
             onClick={() => setActiveTab('catalog')}
-            className="text-xs flex items-center gap-1.5"
+            className="text-xs flex items-center gap-1.5 border-cyan-300 text-cyan-800 hover:bg-cyan-50 hover:text-cyan-900 font-semibold"
           >
             <LayoutGrid size={13} /> Return to Catalog
           </Button>
@@ -277,7 +278,7 @@ export default function App() {
             variant="ghost"
             size="sm"
             onClick={() => setActiveTab('landing')}
-            className="text-xs flex items-center gap-1.5 text-slate-400"
+            className="text-xs flex items-center gap-1.5 text-slate-500 hover:text-slate-900"
           >
             <Home size={13} /> Landing Page
           </Button>
@@ -287,12 +288,12 @@ export default function App() {
       {/* Main Console Layout */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar Feature Directory */}
-        <aside className="w-80 bg-[#060b17] border-r border-slate-800 p-4 space-y-2 overflow-y-auto hidden md:block">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+        <aside className="w-80 bg-white border-r border-slate-200 p-4 space-y-2 overflow-y-auto hidden md:block">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-3">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
               12 Core Modules
             </span>
-            <span className="text-[10px] text-sky-400 font-bold px-2 py-0.5 rounded bg-sky-950 border border-sky-500/30">
+            <span className="text-[10px] text-cyan-700 font-bold px-2 py-0.5 rounded bg-cyan-50 border border-cyan-200">
               ACTIVE
             </span>
           </div>
@@ -308,11 +309,11 @@ export default function App() {
                   onClick={() => setActiveFeatureId(feat.id)}
                   className={`w-full flex items-start gap-3 p-2.5 rounded-xl text-left text-xs transition-all cursor-pointer ${
                     isSelected 
-                      ? 'bg-sky-950/80 border border-sky-500/50 text-white' 
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/50 border border-transparent'
+                      ? 'bg-cyan-50 border border-cyan-300 text-cyan-950 font-bold shadow-sm' 
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-transparent'
                   }`}
                 >
-                  <div className={`p-1.5 rounded-lg ${isSelected ? 'bg-sky-500/20 text-sky-400' : 'bg-slate-900 text-slate-500'}`}>
+                  <div className={`p-1.5 rounded-lg ${isSelected ? 'bg-cyan-500 text-white' : 'bg-slate-100 text-slate-500'}`}>
                     <Icon size={14} />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -330,11 +331,15 @@ export default function App() {
           <div className="mb-4 flex items-center justify-between">
             <button 
               onClick={() => setActiveTab('catalog')} 
-              className="inline-flex items-center gap-1.5 text-xs text-sky-400 hover:text-sky-300 font-semibold cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-xs text-cyan-700 hover:text-cyan-900 font-bold cursor-pointer"
             >
-              <ArrowLeft size={14} /> Back to Feature Modules Catalog
+              <ArrowLeft size={14} /> Back to Modules Catalog
             </button>
           </div>
+
+          <ActiveComponent />
+        </main>
+      </div>
 
           <ActiveComponent />
         </main>

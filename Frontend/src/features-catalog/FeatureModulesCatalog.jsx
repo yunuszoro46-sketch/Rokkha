@@ -444,20 +444,20 @@ export default function FeatureModulesCatalog({ onSelectFeature, onBackToLanding
 
       {/* Modal: Live Simulator */}
       {activeSimulator && (
-        <div className="rokkha-modal-backdrop">
+        <div className="rokkha-modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setActiveSimulator(false); }}>
           <div className="rokkha-modal-box">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px solid #1e293b', marginBottom: '14px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '16px', color: '#fff' }}>
-                <Code2 size={18} color="#38bdf8" /> Rokkha Core Engine Simulator
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px solid #e2e8f0', marginBottom: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800, fontSize: '17px', color: '#0f172a' }}>
+                <Code2 size={20} color="#0891b2" /> Rokkha Core Engine Simulator
               </div>
-              <button onClick={() => setActiveSimulator(false)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
-                <X size={18} />
+              <button onClick={() => setActiveSimulator(false)} style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer' }}>
+                <X size={20} />
               </button>
             </div>
-            <p style={{ fontSize: '12.5px', color: '#94a3b8', marginBottom: '14px', lineHeight: 1.5 }}>
+            <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '14px', lineHeight: 1.5 }}>
               Real-time pipeline simulation connecting weather observation telemetry to localized Shapely point-in-polygon flood inundation engines.
             </p>
-            <div style={{ background: '#030712', border: '1px solid #1e293b', borderRadius: '10px', padding: '14px', fontFamily: 'monospace', fontSize: '12px', color: '#cbd5e1', maxHeight: '190px', overflowY: 'auto', marginBottom: '16px' }}>
+            <div style={{ background: '#0a1226', border: '1px solid rgba(6, 182, 212, 0.3)', borderRadius: '10px', padding: '14px', fontFamily: 'monospace', fontSize: '12px', color: '#cbd5e1', maxHeight: '190px', overflowY: 'auto', marginBottom: '16px' }}>
               <div style={{ color: '#34d399', marginBottom: '6px' }}>✓ FastAPI Server: http://127.0.0.1:8000 (Live)</div>
               <div style={{ color: '#38bdf8', marginBottom: '6px' }}>✓ WGS84 Geodesic Calculation Engine: Active</div>
               <div style={{ color: '#38bdf8', marginBottom: '6px' }}>✓ Shapely Geometry Point-in-Polygon Engine: Active</div>
@@ -477,20 +477,20 @@ export default function FeatureModulesCatalog({ onSelectFeature, onBackToLanding
 
       {/* Modal: Box Launcher Quick Selector */}
       {boxLauncherOpen && (
-        <div className="rokkha-modal-backdrop">
+        <div className="rokkha-modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setBoxLauncherOpen(false); }}>
           <div className="rokkha-modal-box">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px solid #1e293b', marginBottom: '14px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '16px', color: '#fff' }}>
-                <LayoutGrid size={18} color="#38bdf8" /> Rokkha Box Launcher
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px solid #e2e8f0', marginBottom: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800, fontSize: '18px', color: '#0f172a' }}>
+                <LayoutGrid size={20} color="#0891b2" /> Rokkha Box Launcher
               </div>
-              <button onClick={() => setBoxLauncherOpen(false)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
-                <X size={18} />
+              <button onClick={() => setBoxLauncherOpen(false)} style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer' }}>
+                <X size={20} />
               </button>
             </div>
-            <p style={{ fontSize: '12.5px', color: '#94a3b8', marginBottom: '14px' }}>
+            <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '16px' }}>
               Select any of the 12 core modules to directly launch its interactive environment:
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: '10px', maxHeight: '280px', overflowY: 'auto', marginBottom: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '10px', maxHeight: '320px', overflowY: 'auto', marginBottom: '18px', padding: '4px' }}>
               {CATALOG_DATA.flatMap(c => c.features).map(f => (
                 <button
                   key={f.id}
@@ -498,19 +498,10 @@ export default function FeatureModulesCatalog({ onSelectFeature, onBackToLanding
                     setBoxLauncherOpen(false);
                     onSelectFeature && onSelectFeature(f.id);
                   }}
-                  style={{
-                    padding: '10px 12px',
-                    borderRadius: '10px',
-                    background: '#0a1226',
-                    border: '1px solid #1e293b',
-                    color: '#e2e8f0',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    textAlign: 'left',
-                    cursor: 'pointer'
-                  }}
+                  className="rokkha-box-launcher-btn"
                 >
-                  {f.title}
+                  <span className="rokkha-box-launcher-dot" />
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.title}</span>
                 </button>
               ))}
             </div>
