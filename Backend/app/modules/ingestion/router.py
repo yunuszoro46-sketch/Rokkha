@@ -18,6 +18,7 @@ from app.modules.ingestion.service import (
     latest_rain_forecast,
     list_sites,
     rain_series,
+    recent_rain_series,
     river_series,
     run_by_id,
     runs,
@@ -58,7 +59,8 @@ async def create_run(data: RunRequest, background_tasks: BackgroundTasks):
 
     try:
         run = await start_run(
-            data.kind, data.start_date, data.end_date, data.site_ids, data.forecast_days
+            data.kind, data.start_date, data.end_date, data.site_ids, data.forecast_days,
+            data.past_days,
         )
 
     except IngestionRequestError as error:
@@ -128,6 +130,16 @@ async def _series(loader, site_id: str, start_date: date, end_date: date):
 async def get_rain(site_id: str, start_date: date, end_date: date):
 
     return await _series(rain_series, site_id, start_date, end_date)
+
+
+@router.get(
+    "/rain-recent",
+    response_model=DailySeriesResponse
+)
+async def get_recent_rain(site_id: str, start_date: date, end_date: date):
+
+    # GFS rain for the last days, kept apart from ERA5 (GET /ingestion/rain).
+    return await _series(recent_rain_series, site_id, start_date, end_date)
 
 
 @router.get(

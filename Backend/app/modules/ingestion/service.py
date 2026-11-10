@@ -44,11 +44,15 @@ ERA5_DELAY_DAYS = 6
 HISTORY_KINDS = {"rain_history", "river_history"}
 FORECAST_KINDS = {"rain_forecast", "river_forecast"}
 
+# Recent rain: the last days from GFS, for the days ERA5 has not delivered yet.
+RECENT_KINDS = {"rain_recent"}
+
 SOURCE_LABELS = {
     "rain_history": "ERA5 reanalysis (ECMWF, Copernicus C3S) via Open-Meteo Historical Weather API",
     "river_history": "GloFAS (Copernicus EMS) via Open-Meteo Flood API",
     "river_forecast": "GloFAS (Copernicus EMS) via Open-Meteo Flood API",
     "rain_forecast": "GFS (NOAA NCEP) via Open-Meteo GFS API",
+    "rain_recent": "GFS (NOAA NCEP), recent days, via Open-Meteo GFS API",
 }
 
 
@@ -116,7 +120,7 @@ def _sites_for(kind: str, site_ids: list[str] | None) -> list[dict]:
 
 def _validate_dates(kind: str, start_date: date | None, end_date: date | None, today: date):
 
-    if kind in FORECAST_KINDS:
+    if kind in FORECAST_KINDS or kind in RECENT_KINDS:
         return None, None
 
     if start_date is None or end_date is None:
@@ -145,6 +149,7 @@ async def start_run(
     end_date: date | None = None,
     site_ids: list[str] | None = None,
     forecast_days: int = 3,
+    past_days: int = 7,
 ) -> dict:
 
     # One run at a time, so two runs cannot overspend the budget together.
@@ -164,6 +169,7 @@ async def start_run(
         "start_date": start,
         "end_date": end,
         "forecast_days": forecast_days if kind in FORECAST_KINDS else None,
+        "past_days": past_days if kind in RECENT_KINDS else None,
         "site_ids": [s["site_id"] for s in sites],
         "started_at": now,
         "finished_at": None,
@@ -319,6 +325,32 @@ async def _forecast_rain_piece(run, sites, forecast_days):
     return await upsert_documents("rain_forecast_hourly", documents), calls
 
 
+async def _recent_rain_piece(run, sites, past_days):
+
+    calls = sources.estimate_calls(len(sites), past_days + 1)
+    await _spend(calls)
+
+    fetched_at = _utc_now()
+    results = await sources.fetch_gfs_recent_daily_rain(
+        [s["location"]["coordinates"] for s in sites], past_days
+    )
+    await add_api_calls(fetched_at, calls)
+
+    if len(results) != len(sites):
+        raise sources.SourceError(f"expected {len(sites)} locations, got {len(results)}")
+
+    documents = _daily_documents(
+        run["kind"], run["_id"], fetched_at, sites, results,
+        "precipitation_sum", "precipitation_mm", "mm", "24 h total, 00:00-24:00 UTC",
+    )
+
+    # Keep finished days only: today's total is still growing.
+    today = _midnight(fetched_at.date().isoformat())
+    documents = [d for d in documents if d["date"] < today]
+
+    return await upsert_documents("rain_recent_daily", documents), calls
+
+
 async def execute_run(run_id: str) -> None:
 
     run = await get_run(run_id)
@@ -337,6 +369,17 @@ async def execute_run(run_id: str) -> None:
 
             for group in site_groups:
                 written, calls = await _forecast_rain_piece(run, group, run["forecast_days"])
+                progress["pieces_done"] += 1
+                progress["values_written"] += written
+                progress["api_calls"] += calls
+                await update_run(run_id, dict(progress))
+
+        elif run["kind"] == "rain_recent":
+
+            await update_run(run_id, {"pieces_total": len(site_groups)})
+
+            for group in site_groups:
+                written, calls = await _recent_rain_piece(run, group, run["past_days"])
                 progress["pieces_done"] += 1
                 progress["values_written"] += written
                 progress["api_calls"] += calls
@@ -412,6 +455,18 @@ async def rain_series(site_id: str, start_date: date, end_date: date) -> dict:
     site = _check_site(site_id, "rain")
 
     values = await find_series("rain_daily", {
+        "site_id": site_id,
+        "date": {"$gte": _midnight(start_date.isoformat()), "$lte": _midnight(end_date.isoformat())},
+    }, "date")
+
+    return {"site": site, "count": len(values), "values": values, "attribution": sources.ATTRIBUTION}
+
+
+async def recent_rain_series(site_id: str, start_date: date, end_date: date) -> dict:
+
+    site = _check_site(site_id, "rain")
+
+    values = await find_series("rain_recent_daily", {
         "site_id": site_id,
         "date": {"$gte": _midnight(start_date.isoformat()), "$lte": _midnight(end_date.isoformat())},
     }, "date")

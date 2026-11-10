@@ -141,6 +141,19 @@ async def fetch_gfs_hourly_rain(points: list[list[float]], forecast_days: int) -
     })
 
 
+async def fetch_gfs_recent_daily_rain(points: list[list[float]], past_days: int) -> list[dict]:
+
+    # The last `past_days` days plus today, from the GFS model. Used for the
+    # days ERA5 has not delivered yet (ERA5 is about 5 days late).
+    return await _get(GFS_API, {
+        **_coords(points),
+        "daily": "precipitation_sum",
+        "past_days": past_days,
+        "forecast_days": 1,
+        "timezone": "UTC",
+    })
+
+
 def chunks(items: list, size: int) -> list[list]:
 
     return [items[i:i + size] for i in range(0, len(items), size)] if items else []

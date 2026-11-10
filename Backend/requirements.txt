@@ -20,5 +20,8 @@ pymongo==4.19.0
 # HTTP client: data ingestion (Open-Meteo) and the test client
 httpx==0.28.1
 
+# Flood model (CPU build: the same library without the large GPU package)
+xgboost-cpu==3.4.1
+
 # Testing
 pytest==9.2.0

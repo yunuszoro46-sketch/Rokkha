@@ -20,10 +20,12 @@ from pathlib import Path
 
 import httpx
 import pytest
+from fastapi.testclient import TestClient
 from pymongo import MongoClient
 from shapely.geometry import Point, shape
 
 from app.core.config import settings
+from app.main import app
 from app.modules.geospatial.repository import get_district_collection
 from app.modules.ingestion import sources
 
@@ -61,7 +63,13 @@ class FakeOpenMeteo:
         lats = [float(x) for x in params["latitude"].split(",")]
         lons = [float(x) for x in params["longitude"].split(",")]
 
-        if "hourly" in params:
+        if "past_days" in params:
+            # Recent days: past_days full days, then today (not finished yet).
+            today = datetime.now(timezone.utc).date()
+            past = int(params["past_days"])
+            days = [(today - timedelta(days=past - k)).isoformat() for k in range(past + 1)]
+            series = {"daily": {"time": days, "precipitation_sum": [k + 0.5 for k in range(len(days))]}}
+        elif "hourly" in params:
             start = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
             hours = 24 * int(params["forecast_days"])
             times = [(start + timedelta(hours=h)).strftime("%Y-%m-%dT%H:%M") for h in range(hours)]
@@ -449,6 +457,37 @@ def test_lasting_network_failure_is_reported_clearly(client):
     assert "start the same run again" in result["message"]
 
 
+def test_runs_interrupted_by_a_restart_are_closed(fake_api):
+
+    # A run was "running" when the server stopped (restart, crash, laptop
+    # closed). Nothing is running any more, so on the next start it must be
+    # closed; otherwise it would block every new run with 409 forever.
+    with MongoClient(TEST_MONGODB_URI) as mongo:
+        mongo[TEST_DATABASE]["ingestion_runs"].insert_one({
+            "_id": "interrupted", "kind": "rain_history", "status": "running",
+            "source": "x", "start_date": "2022-06-10", "end_date": "2022-06-12",
+            "forecast_days": None, "site_ids": [DHAKA],
+            "started_at": datetime.now(timezone.utc), "finished_at": None,
+            "pieces_total": 1, "pieces_done": 0, "pieces_skipped": 0,
+            "values_written": 0, "api_calls": 0, "message": None,
+        })
+
+    with TestClient(app) as client:                  # the server starts
+
+        old = client.get("/api/v1/ingestion/runs/interrupted").json()
+
+        assert old["status"] == "failed"
+        assert old["finished_at"] is not None
+        assert "interrupted" in old["message"]
+        assert "start the same run again" in old["message"]
+
+        response, result = run(client, kind="rain_history", start_date="2022-06-10",
+                               end_date="2022-06-12", site_ids=[DHAKA])
+
+        assert response.status_code == 202           # no longer blocked
+        assert result["status"] == "completed"
+
+
 def test_only_one_run_at_a_time(client):
 
     with MongoClient(TEST_MONGODB_URI) as mongo:
@@ -459,6 +498,78 @@ def test_only_one_run_at_a_time(client):
     response, _ = run(client, kind="rain_forecast")
 
     assert response.status_code == 409
+
+
+# ==========================================
+# RECENT RAIN (the days ERA5 has not delivered yet)
+# ==========================================
+
+def test_recent_rain_is_stored_apart_from_era5(client, fake_api):
+
+    _, result = run(client, kind="rain_recent", past_days=7, site_ids=[DHAKA])
+
+    assert result["status"] == "completed"
+    assert result["past_days"] == 7
+    assert result["values_written"] == 7
+    assert "GFS" in result["source"]
+
+    # Never mixed into the ERA5 collection.
+    assert stored("rain_daily") == []
+
+    documents = stored("rain_recent_daily")
+    today = datetime.now(timezone.utc).date()
+
+    assert len(documents) == 7
+    # Only finished days: today's total is still growing, so it is not stored.
+    assert sorted(d["date"].date() for d in documents) == [today - timedelta(days=k) for k in range(7, 0, -1)]
+
+    first = min(documents, key=lambda d: d["date"])
+
+    assert first["precipitation_mm"] == 0.5
+    assert first["unit"] == "mm"
+    assert first["statistic"] == "24 h total, 00:00-24:00 UTC"
+    assert "GFS" in first["source"]
+    assert first["run_id"] == result["run_id"]
+
+    request = fake_api.requests[0].url.params
+    assert request["past_days"] == "7"
+    assert request["daily"] == "precipitation_sum"
+    assert request["timezone"] == "UTC"
+
+
+def test_recent_rain_is_refreshed_not_duplicated(client, fake_api):
+
+    run(client, kind="rain_recent", past_days=3, site_ids=[DHAKA])
+    _, again = run(client, kind="rain_recent", past_days=3, site_ids=[DHAKA])
+
+    assert again["values_written"] == 3
+    assert len(stored("rain_recent_daily")) == 3
+
+
+def test_recent_rain_can_be_read(client, fake_api):
+
+    run(client, kind="rain_recent", past_days=5, site_ids=[DHAKA])
+
+    today = datetime.now(timezone.utc).date()
+    response = client.get(f"{BASE}/rain-recent", params={
+        "site_id": DHAKA,
+        "start_date": (today - timedelta(days=3)).isoformat(),
+        "end_date": today.isoformat(),
+    })
+
+    assert response.status_code == 200
+    assert response.json()["count"] == 3
+    assert client.get(f"{BASE}/rain-recent", params={
+        "site_id": SURMA, "start_date": "2022-06-01", "end_date": "2022-06-02",
+    }).status_code == 422
+
+
+@pytest.mark.parametrize("past_days", [0, 31])
+def test_recent_rain_days_out_of_range_rejected(client, past_days):
+
+    response, _ = run(client, kind="rain_recent", past_days=past_days)
+
+    assert response.status_code == 422
 
 
 # ==========================================

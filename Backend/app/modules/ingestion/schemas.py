@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from app.modules.geospatial.schemas import GeoJSONPoint
 
 
-IngestionKind = Literal["rain_history", "river_history", "rain_forecast", "river_forecast"]
+IngestionKind = Literal["rain_history", "river_history", "rain_forecast", "river_forecast", "rain_recent"]
 
 RunStatus = Literal["queued", "running", "completed", "paused_budget", "failed"]
 
@@ -63,6 +63,9 @@ class RunRequest(BaseModel):
     # Forecast runs only.
     forecast_days: int = Field(default=3, ge=1, le=7)
 
+    # rain_recent runs only: how many finished days back from today.
+    past_days: int = Field(default=7, ge=1, le=30)
+
 
 class RunResponse(BaseModel):
 
@@ -79,6 +82,8 @@ class RunResponse(BaseModel):
     end_date: str | None
 
     forecast_days: int | None
+
+    past_days: int | None = None
 
     site_ids: list[str]
 

@@ -95,6 +95,23 @@ async def update_run(run_id: str, changes: dict) -> None:
     await _collection("ingestion_runs").update_one({"_id": run_id}, {"$set": changes})
 
 
+async def close_interrupted_runs(now: datetime) -> int:
+
+    # Called when the server starts. A run still marked queued or running
+    # belonged to a server process that no longer exists.
+    result = await _collection("ingestion_runs").update_many(
+        {"status": {"$in": ["queued", "running"]}},
+        {"$set": {
+            "status": "failed",
+            "finished_at": now,
+            "message": "The run was interrupted because the server stopped or restarted. "
+                       "Data already stored is kept; start the same run again to continue.",
+        }},
+    )
+
+    return result.modified_count
+
+
 async def get_run(run_id: str) -> dict | None:
 
     return await _collection("ingestion_runs").find_one({"_id": run_id})

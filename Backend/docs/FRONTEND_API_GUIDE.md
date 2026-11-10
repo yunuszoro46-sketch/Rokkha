@@ -318,6 +318,7 @@ Shapes for drawing: `Backend/data/boundaries/dhaka_boundaries.geojson` and
 |---|---|---|
 | `GET` | `/ingestion/sites?kind=district\|river` | 64 district sites (rain) + 9 river sites (discharge), each with a GeoJSON `location` |
 | `GET` | `/ingestion/rain?site_id=&start_date=&end_date=` | daily rain (mm) — good for a bar chart |
+| `GET` | `/ingestion/rain-recent?site_id=&start_date=&end_date=` | daily rain of the last days from GFS (preliminary; ERA5 replaces it about 5 days later) |
 | `GET` | `/ingestion/river?site_id=&start_date=&end_date=` | daily river discharge (m³/s) — good for a line chart |
 | `GET` | `/ingestion/rain-forecast?site_id=` | latest hourly rain forecast + `total_precipitation_mm` |
 
@@ -327,7 +328,66 @@ has `unit`, `statistic` (e.g. "24 h total, 00:00-24:00 UTC"), `missing` (show a 
 (draw forecasts differently from observed history). Show the `attribution` list (Open-Meteo, Copernicus ERA5 /
 GloFAS, NOAA GFS). A rain *forecast* is not a flood forecast.
 
-### F. Small tools (optional)
+### F. Flood prediction and alerts (endpoints ready; the model is still being trained)
+
+| Method | Path | What it does |
+|---|---|---|
+| `GET` | `/predictions/model` | `{"status": "ready" \| "not_trained", "message", "model"}` |
+| `POST` | `/predictions` | body `{"target_date": "2022-06-18"}`: predicts all 64 districts for that day, stores and returns them (201) |
+| `GET` | `/predictions?target_date=2022-06-18` | the stored predictions for a day (404 if none) |
+| `GET` | `/alerts?target_date=2022-06-18&min_level=watch\|alert` | districts over the alert thresholds, with the registered assets in each (404 if no predictions for that day) |
+
+**Right now** `GET /predictions/model` returns `"status": "not_trained"` and `POST /predictions` returns **503**
+with a `detail` message. Build the screens against the shapes below and show a "Forecast model not available yet"
+state for `not_trained` / 503. When the model is added on the backend, the same calls start returning data;
+nothing changes on your side.
+
+One prediction (in `predictions[]`):
+
+```json
+{"pcode": "BD6090", "name": "Sunamganj", "division": "Sylhet", "target_date": "2022-06-18",
+ "status": "predicted", "probability": 0.83, "alert_level": "alert", "reason": null,
+ "features": {"rain_1d": 104.1, "rain_3d": 262.0, "last_flooded_share": 0.1797, "...": 0},
+ "data_through": "2022-06-17", "model_version": "...", "issued_at": "2026-11-12T03:00:00Z"}
+```
+
+(The numbers above only show the shape; they are not real model output.)
+
+- `status`: `predicted`, `unsupported` (8 districts satellites can't observe: show "no forecast possible here",
+  **not** "safe") or `inputs_missing` (data not loaded for that day). For the last two, `probability` and
+  `alert_level` are `null` and `reason` explains why.
+- `probability` is 0–1. Show it as a percentage. `alert_level` is `none`, `watch` or `alert`; the cut-offs are in
+  `alert_thresholds`. Colour the map by `alert_level`, with a separate grey for `unsupported`.
+- `features` are the inputs the model used (rain totals in mm, river and satellite values). Useful for a
+  "why?" panel. A `null` input means "not available", not zero.
+- `recent_rain_days`: how many of the 30 rain days came from a less exact recent source (GFS) because the main
+  source (ERA5) arrives 5 days late. 0 for past dates, about 5 for today. Worth a small note such as
+  "includes preliminary rain data" when it is above 0.
+
+One alert (in `alerts[]`, highest probability first):
+
+```json
+{"alert_id": "BD6090|2022-06-18", "level": "alert",
+ "district": {"pcode": "BD6090", "name": "Sunamganj", "division": "Sylhet"},
+ "target_date": "2022-06-18", "probability": 0.83,
+ "message": "Flood alert for Sunamganj district on 2022-06-18: the model estimates a 83% probability of satellite-observable flooding. 1 registered asset in this district.",
+ "assets_at_risk": {
+   "total": {"assets": 1, "occupancy": 500, "replacement_value_bdt": 0},
+   "with_observed_flooding": {"assets": 1, "occupancy": 500, "replacement_value_bdt": 0},
+   "with_modelled_hazard_10yr": {"assets": 1, "occupancy": 500, "replacement_value_bdt": 0},
+   "assets": [{"asset_id": "...", "name": "Haor flood shelter", "asset_type": "flood_shelter",
+               "criticality": "medium", "occupancy": 500,
+               "flags": {"observed_flooding": true, "modelled_hazard_10yr": true, "modelled_hazard_100yr": true}}]},
+ "issued_at": "...", "model_version": "..."}
+```
+
+- `message` is ready to show. `alerts: []` with `count: 0` means no district reached the threshold.
+- An alert is about the **district**. The listed assets are the registered ones in it; their `flags` say whether
+  that exact spot flooded before or lies in the modelled hazard zone. Don't present it as "this building will flood".
+- **Always show** that this is a model estimate and **not an official flood warning** (official warnings come
+  from FFWC/BWDB). The text is in `limitations`; `attribution` must be visible too.
+
+### G. Small tools (optional)
 
 `POST /geospatial/spatial-analysis/distance`, `.../linestring-length`,
 `.../point-in-polygon`, `.../multipoint-in-zone`, `.../multipoint-distances`,
@@ -348,15 +408,16 @@ Real weather data ingestion comes later.
 3. **Dashboard**: `summary` cards + district ranking table / choropleth.
    A district click can open its satellite flood timeline (section C).
 4. **"Check any place"**: click the map → `POST /geospatial/flood/check`.
+5. **Forecast and alerts**: `GET /predictions?target_date=` → district map coloured by `alert_level`;
+   `GET /alerts?target_date=` → alert cards with the assets at risk (section F).
 
 Test places: Dhaka Medical `[90.3976, 23.7258]`, Sunamganj haor `[91.1428, 24.8474]`
 (flooded 7/7), Keraniganj `[90.3500, 23.6800]` (modelled hazard only),
 Sadarghat `[90.4106, 23.7058]` (224 m from the Buriganga), Kolkata
 `[88.3639, 22.5726]` (outside Bangladesh → 422 / nulls).
 
-**Coming next (not available yet):** a flood *prediction* per district (probability of a satellite-observed
-flood, built from rain, river flow and these satellite observations), then alerts. Until then, nothing in the
-API is a flood forecast.
+**Coming next:** the trained flood model (then section F starts returning real predictions and alerts), and a
+daily automatic update. Until the model is trained, nothing in the API is a flood forecast.
 
 Questions or a field you need that isn't there? Ask the backend developer —
 `/docs` always shows the current, exact shapes.

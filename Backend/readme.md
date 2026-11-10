@@ -73,7 +73,7 @@ establish flood risk.
 
 | Capability | Current state |
 | --- | --- |
-| FastAPI application | Implemented; version `0.4.0` |
+| FastAPI application | Implemented; version `0.5.0` |
 | MongoDB Atlas persistence | Implemented: connected at startup, indexes created automatically |
 | Health endpoints (app and database) | Implemented |
 | Weather observation creation and retrieval | Implemented, stored in MongoDB (manual input only) |
@@ -92,8 +92,12 @@ establish flood risk.
 | CORS for frontend development servers | Implemented |
 | Rain and river-data ingestion (ERA5, GloFAS, GFS) with provenance, resumable runs, call budget | Implemented (started manually) |
 | Satellite flood observations per district and Sentinel-1 pass, 2016–2024 (flood-model labels) | Implemented (Copernicus GFM, offline build) |
-| Scheduled automatic ingestion | Not implemented |
-| Flood forecasting model and alerts | Not implemented |
+| Model inputs (features) with a no-future-data rule; training table builder | Implemented (table is built after the 2016–2024 backfill) |
+| Flood prediction API (`/predictions`) and alerts with assets at risk (`/alerts`) | Implemented and tested with a test-only model; **answers "no model trained yet" until the real model is trained** |
+| Training and evaluation script (baselines, calibration, alert thresholds, report) | Implemented and tested on a made-up table; **the real model is trained when the backfill is complete** |
+| Recent rain for the days ERA5 lacks (`rain_recent`, GFS) | Implemented |
+| Daily update script (refresh data, predict today, list alerts) | Implemented (start it by hand or with cron) |
+| Trained flood model with measured results | Not yet (next) |
 | Authentication, authorization, rate limiting | Not implemented |
 
 Weather observations are submitted through the API. The weather module does **not** fetch live weather.
@@ -113,6 +117,7 @@ Weather observations are submitted through the API. The weather module does **no
 | GeographicLib | Distances on the WGS84 ellipsoid |
 | NumPy | The flood grid (compressed arrays) |
 | httpx | Calls to Open-Meteo (ingestion) and the test client |
+| XGBoost (`xgboost-cpu`) | Loads the trained flood model and computes predictions |
 | pytest | Automated tests |
 
 Offline data-preparation scripts additionally use **Rasterio** and **pyogrio** (`requirements-dev.txt`). The API
@@ -122,7 +127,7 @@ itself does not need them.
 
 | Technology | Planned purpose |
 | --- | --- |
-| XGBoost | Initial machine-learning baseline |
+| scikit-learn | Model evaluation and probability calibration (training only) |
 | GeoPandas | Geographic dataset processing, if needed |
 
 The database is **MongoDB Atlas**. This backend does not use PostgreSQL, PostGIS, or microservices.
@@ -166,17 +171,21 @@ Rokkha/
     │   │   ├── geospatial/        geometry tools, boundaries, waterways, flood
     │   │   ├── weather/           weather observations
     │   │   ├── ingestion/         rain and river data from Open-Meteo
-    │   │   └── alerts/, prediction/   (placeholders)
+    │   │   ├── prediction/        model inputs, training table, flood predictions
+    │   │   └── alerts/            alerts from predictions + assets at risk
     │   └── main.py                app, startup/shutdown, routers, CORS
     ├── data/
     │   ├── boundaries/            Dhaka District + 64 districts (+ README)
     │   ├── waterways/             Dhaka rivers, canals, drains (+ README)
     │   ├── flood/                 flood history, flood grid (+ README)
-    │   └── ingestion/             measuring sites: 64 districts + 9 rivers (+ README)
+    │   ├── ingestion/             measuring sites: 64 districts + 9 rivers (+ README)
+    │   ├── labels/                satellite flood observations = model labels (+ README)
+    │   ├── ml/                    fixed district inputs, training table (+ README)
+    │   └── models/                the trained model files (none yet)
     ├── docs/
     │   └── FRONTEND_API_GUIDE.md  guide for the frontend developer
     ├── scripts/                   rebuild the data files from their sources
-    ├── tests/                     187 automated tests
+    ├── tests/                     278 automated tests
     ├── ml/                        (placeholder)
     ├── pytest.ini
     ├── requirements.txt           pinned API dependencies
@@ -333,11 +342,27 @@ All module paths start with `/api/v1`. Full request and response shapes: `/docs`
 | GET | `/ingestion/runs`, `/ingestion/runs/{run_id}` | Run log: status, pieces, values written, calls spent, message |
 | GET | `/ingestion/usage` | Open-Meteo calls spent this hour / today vs the budget |
 | GET | `/ingestion/rain?site_id=&start_date=&end_date=` | Daily rain (ERA5) |
+| GET | `/ingestion/rain-recent?site_id=&start_date=&end_date=` | Daily rain of the last days (GFS), kept apart from ERA5 |
 | GET | `/ingestion/river?site_id=&start_date=&end_date=` | Daily river discharge (GloFAS) |
 | GET | `/ingestion/rain-forecast?site_id=` | Latest hourly rain forecast (GFS) |
 
 Run kinds: `rain_history` and `river_history` (need `start_date`, `end_date`), `rain_forecast` and `river_forecast`
-(`forecast_days` 1–7). Optional `site_ids` limits a run to some sites. Only one run at a time (409 otherwise).
+(`forecast_days` 1–7), and `rain_recent` (`past_days` 1–30: the last finished days from GFS). Optional `site_ids` limits a run to some sites. Only one run at a time (409 otherwise).
+
+### Flood prediction and alerts
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| GET | `/predictions/model` | Is a trained model loaded? Its description, test results and alert thresholds |
+| POST | `/predictions` | Predict all districts for `{"target_date": "YYYY-MM-DD"}` from stored data and store the result |
+| GET | `/predictions?target_date=` | The stored predictions for a day |
+| GET | `/alerts?target_date=&min_level=watch\|alert` | Districts over the alert thresholds, with the registered assets in each |
+
+Each prediction lists the inputs it used (`features`) and `recent_rain_days`: how many of the 30 rain days came
+from the GFS recent-days source because ERA5 had not delivered them yet (0 for past dates, about 5 for today).
+
+**Until a model is trained** `GET /predictions/model` says `not_trained`, `POST /predictions` answers **503**, and
+there are no alerts. The backend never returns invented predictions.
 
 ## 7. Try the API without writing code
 
@@ -512,6 +537,13 @@ Every request is tried **3 times** (waiting 5, 10, 20 s) when Open-Meteo is busy
 connection fails** (timeout, network down). If it still fails, the run ends as `failed` with a message naming the
 cause. Data already stored is kept, so start the same run again later.
 
+If the server stops or restarts during a run, that run is closed as `failed` at the next start (message:
+"interrupted"), so it never blocks later runs. Start the same run again to continue.
+
+**Recent rain.** ERA5 is the rain the model learns from, but it is about 5 days late. `rain_recent` stores the
+last days from GFS in a separate collection (`rain_recent_daily`). Predictions use ERA5 wherever it exists and
+fill only the missing days from GFS. GFS and ERA5 are different products, so those days are less exact.
+
 A full backfill of all 64 district sites for 2016–2024 needs about 64 × 9 × 26 ≈ 15,000 calls: plan it over two
 days (about four re-runs). River history for the 9 river sites for 2016–2024 needs about 2,100 calls.
 
@@ -546,7 +578,7 @@ Allowed by default: `http://localhost:3000` and `http://localhost:5173`. Add oth
 python -m pytest -v
 ```
 
-Expected: **216 passed**.
+Expected: **278 passed**.
 
 Tests that store data use a **separate local test MongoDB in Docker**, never Atlas:
 
@@ -571,6 +603,10 @@ test. Use another test server with `TEST_MONGODB_URI=mongodb://host:port`.
 | `test_api_ingestion.py` | Ingestion: sites, runs, resuming, budget, errors, recorded real Open-Meteo responses |
 | `test_api_satellite_observations.py` | GFM flood observations: data file, label rule, Sunamganj 2022, endpoint |
 | `test_gfm_label_counting.py` | GFM counting rules on small hand-made rasters (skipped without rasterio) |
+| `test_prediction_features.py` | Model inputs, the no-future-data rule, training table rows and time split |
+| `test_api_prediction.py` | Prediction and alert API with a test-only model: no model (503), inputs shown, stored, alert levels, assets at risk, recent-rain fallback |
+| `test_train_flood_model.py` | Training script: measures, baselines, thresholds, calibration; whole pipeline on a made-up table; the API accepts its files (skipped without scikit-learn) |
+| `test_daily_update.py` | Daily chain: refresh data → predict today → alerts; no model; failing data source |
 
 `tests/test_geospatial.py` is an older print-only Shapely demonstration, kept for reference.
 
@@ -589,21 +625,53 @@ Planned items are not claims of completed functionality.
 | Environmental-data ingestion (ERA5 rain, GloFAS river flow, GFS forecast) with real times, units and provenance | Done (backfill 2016–2024 to be run) |
 | Scheduled automatic ingestion | Planned (Celery/Redis only if justified) |
 | Flood labels: satellite flood observations per district (Copernicus GFM) and label rule | Done |
-| ML dataset (rain and river backfill 2016–2024; time- and place-based splits) | Next |
-| XGBoost baseline; evaluation and probability calibration | Planned |
-| Prediction API, alert generation, end-to-end tests | Planned |
+| Model inputs, training table builder, time split | Done (table built after the backfill) |
+| Rain and river backfill 2016–2024 | In progress (budget-limited, about 2 days) |
+| Prediction API and alerts with assets at risk | Done (waiting for the trained model) |
+| Training and evaluation script; recent rain; daily update script | Done |
+| Train the real model and publish its measured results | Next (when the backfill is complete) |
+| New satellite passes for live use (the labels file ends in November 2024) | Planned |
 | Authentication and rate limiting before any public use | Planned |
 
-## 13. Planned machine-learning evaluation
+## 13. The flood model: design and planned evaluation
 
-There is no trained model or measured forecasting performance yet.
+There is **no trained model and no measured forecasting performance yet**. What is fixed and tested:
 
-Planned evaluation: precision, recall, F1, PR-AUC, Brier score, calibration, and false-alarm and missed-event
-measures with their definitions stated explicitly.
+| Part | Design |
+| --- | --- |
+| What is predicted | For a district and a day: the probability that a Sentinel-1 pass would observe flooding (Copernicus GFM, unusual water on ≥ 10 % of the visible land) |
+| Issue time | 00:00 UTC of the target day, with data **through the day before** |
+| Labels | `data/labels/district_flood_observations.json`: 632 flood and about 20,500 no-flood passes, 56 districts |
+| Inputs | Rain totals over 1, 3, 7, 14, 30 days (ERA5); river flow level and change at the nearest river site (GloFAS); modelled hazard share (JRC); the latest satellite pass within 30 days; month |
+| No leakage | One function (`app/modules/prediction/features.py`) builds the inputs for training **and** for live prediction and ignores every value dated on or after the target day (tested) |
+| Split by time | Train 2016–2021, validation 2022, **test 2023–2024**, whole years |
+| Split by place | A second check holding out one whole division at a time |
+| Baselines to beat | "Same as the latest satellite pass" and "usual flood rate of this district and month" |
+| Measures | Precision, recall, F1, PR-AUC, Brier score, calibration, false alarms and missed floods, each with its definition |
+| Not predictable | 8 districts the satellites cannot observe (`status: unsupported`) |
 
-Training and evaluation must use only information available at the forecast issue time. Time-based and
-geographic separation must prevent leakage. A predicted flood probability is not the same as model confidence,
-rainfall alone is not flood prediction, and a rule-based score must never be presented as an ML prediction.
+Build the training table after the backfill: `python scripts/build_training_table.py`
+(reads the database named in `.env`, writes `data/ml/training_table.csv`; see `data/ml/README.md`).
+
+Train and evaluate: `python scripts/train_flood_model.py` (needs `requirements-dev.txt`). It tries a small set of
+XGBoost settings, keeps the best on 2022, calibrates the probabilities on 2022, chooses the thresholds on 2022
+(`alert`: best balance of caught floods and false alarms; `watch`: catches at least 80 % of observed floods), and
+only then measures everything once on 2023–2024, next to the two baselines, the onset days (where the latest
+satellite pass saw no flood), a model without satellite inputs, and held-out divisions. The report is written to
+`data/models/README.md`.
+
+**Daily use.** With the backend running: `python scripts/daily_update.py` refreshes river flow, ERA5 rain and
+recent rain, predicts today and prints the alerts (about 235 Open-Meteo calls). To run it every morning, add the
+cron line shown at the top of the script. Known gap: the satellite inputs come from the labels file, which ends
+in November 2024, so for today's predictions those inputs are empty until new passes are fetched.
+
+**Model delivery.** Training writes two files into `data/models/`: `flood_model.json` (the XGBoost model) and
+`flood_model.meta.json` (model version, input names, training and test periods, measured results, the calibration
+curve, and the `watch` / `alert` thresholds chosen from the validation year). The API loads them when they appear;
+no code change is needed.
+
+A predicted probability is not the same as model confidence, rainfall alone is not flood prediction, and a
+rule-based score must never be presented as an ML prediction.
 
 ## 14. Working on the project
 

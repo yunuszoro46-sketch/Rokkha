@@ -136,3 +136,71 @@ def bow_tie_zone():
             [90.35, 23.73]
         ]]
     }
+
+
+# ==========================================
+# FLOOD MODEL FOR TESTS (not a real model)
+# ==========================================
+
+TEST_MODEL_THRESHOLDS = {"watch": 0.3, "alert": 0.7}
+
+
+def write_test_model_meta(directory, **changes):
+    """(Re)write the description file of the test model."""
+
+    import json
+
+    from app.modules.prediction.features import FEATURE_NAMES
+
+    meta = {
+        "model_version": "test-model-not-real",
+        "test_only": True,
+        "feature_names": FEATURE_NAMES,
+        "calibration": None,
+        "alert_thresholds": TEST_MODEL_THRESHOLDS,
+        **changes,
+    }
+    (directory / "flood_model.meta.json").write_text(json.dumps(meta))
+
+
+@pytest.fixture
+def no_flood_model(tmp_path, monkeypatch):
+
+    # An empty model folder: the state before any model has been trained.
+    from app.modules.prediction import repository
+
+    monkeypatch.setattr(repository, "MODEL_DIR", tmp_path)
+
+    return tmp_path
+
+
+@pytest.fixture
+def flood_model(tmp_path, monkeypatch):
+
+    # A tiny XGBoost model trained on MADE-UP numbers with one simple rule
+    # ("more than 100 mm of rain in 3 days = flood"). It exists only to prove
+    # that the prediction and alert code works; it says nothing about real
+    # floods and is never written into the project's data folder.
+    import numpy
+    import xgboost
+
+    from app.modules.prediction import repository
+    from app.modules.prediction.features import FEATURE_NAMES
+
+    random = numpy.random.default_rng(seed=1)
+    inputs = random.uniform(0, 1, size=(600, len(FEATURE_NAMES)))
+    rain_3d = FEATURE_NAMES.index("rain_3d")
+    inputs[:, rain_3d] = random.uniform(0, 300, size=600)
+    labels = (inputs[:, rain_3d] > 100).astype(int)
+
+    booster = xgboost.train(
+        {"objective": "binary:logistic", "max_depth": 2, "eta": 0.5, "seed": 1, "nthread": 1},
+        xgboost.DMatrix(inputs, label=labels, feature_names=FEATURE_NAMES),
+        num_boost_round=30,
+    )
+    booster.save_model(tmp_path / "flood_model.json")
+    write_test_model_meta(tmp_path)
+
+    monkeypatch.setattr(repository, "MODEL_DIR", tmp_path)
+
+    return tmp_path

@@ -73,6 +73,7 @@ app.include_router(
 
 
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -83,6 +84,9 @@ from app.modules.weather.router import router as weather_router
 from app.modules.geospatial.router import router as geospatial_router
 from app.modules.assets.router import router as assets_router
 from app.modules.ingestion.router import router as ingestion_router
+from app.modules.ingestion.repository import close_interrupted_runs
+from app.modules.prediction.router import router as prediction_router
+from app.modules.alerts.router import router as alerts_router
 
 
 @asynccontextmanager
@@ -92,6 +96,10 @@ async def lifespan(app: FastAPI):
     # stops (after "yield"): connect to MongoDB and create indexes, then
     # disconnect cleanly.
     await Database.connect()
+
+    # Ingestion runs that were cut off by the last shutdown would otherwise
+    # stay "running" forever and block new runs.
+    await close_interrupted_runs(datetime.now(timezone.utc))
 
     try:
         yield
@@ -103,7 +111,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.PROJECT_NAME,
     description="Flood forecasting and geospatial risk intelligence",
-    version="0.4.0",
+    version="0.5.0",
     lifespan=lifespan
 )
 
@@ -170,5 +178,15 @@ app.include_router(
 
 app.include_router(
     ingestion_router,
+    prefix=settings.API_V1_PREFIX
+)
+
+app.include_router(
+    prediction_router,
+    prefix=settings.API_V1_PREFIX
+)
+
+app.include_router(
+    alerts_router,
     prefix=settings.API_V1_PREFIX
 )

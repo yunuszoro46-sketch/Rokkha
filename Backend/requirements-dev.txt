@@ -7,3 +7,6 @@
 # Raster grids (JRC flood hazard) and Esri geodatabases (UNOSAT)
 rasterio==1.5.2
 pyogrio==0.13.0
+
+# Flood model training: evaluation measures and probability calibration
+scikit-learn==1.9.1
