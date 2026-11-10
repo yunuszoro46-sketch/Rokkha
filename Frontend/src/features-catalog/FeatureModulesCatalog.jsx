@@ -364,35 +364,6 @@ export default function FeatureModulesCatalog({ onSelectFeature, onBackToLanding
               ))}
             </div>
           </div>
-          {/* Right: clickable stat counters */}
-          <div className="rokkha-stats-box">
-            <button
-              onClick={() => setFilterStatus(filterStatus === 'implemented' ? 'all' : 'implemented')}
-              className={`rokkha-stat-btn ${filterStatus === 'implemented' ? 'active' : ''}`}
-              title="Filter Implemented"
-            >
-              <div className="rokkha-stat-num emerald">4</div>
-              <div className="rokkha-stat-caption">IMPLEMENTED</div>
-            </button>
-            <div className="rokkha-stat-divider" />
-            <button
-              onClick={() => setFilterStatus(filterStatus === 'milestone' ? 'all' : 'milestone')}
-              className={`rokkha-stat-btn ${filterStatus === 'milestone' ? 'active' : ''}`}
-              title="Filter Milestone"
-            >
-              <div className="rokkha-stat-num cyan">1</div>
-              <div className="rokkha-stat-caption">MILESTONE</div>
-            </button>
-            <div className="rokkha-stat-divider" />
-            <button
-              onClick={() => setFilterStatus(filterStatus === 'planned' ? 'all' : 'planned')}
-              className={`rokkha-stat-btn ${filterStatus === 'planned' ? 'active' : ''}`}
-              title="Filter Planned"
-            >
-              <div className="rokkha-stat-num blue">7</div>
-              <div className="rokkha-stat-caption">PLANNED</div>
-            </button>
-          </div>
         </div>
 
         {/* 4 Categorized Sections matching exact image */}
