@@ -15,3 +15,8 @@ __pycache__/
 
 # Test cache
 .pytest_cache/
+
+# Editor swap / backup files (can contain copies of .env secrets)
+*.swp
+*.swo
+*~

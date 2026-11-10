@@ -1,15 +1,14 @@
 """
 Automated tests for the asset management module (/api/v1/assets).
 
-Storage is in memory until MongoDB integration, so an autouse fixture
-empties it before every test: each test starts from a clean store.
+Assets are stored in MongoDB (a local test database, see conftest.py);
+conftest empties it before every test, so each test starts clean.
 
 Run from the Backend folder:  python -m pytest -v
 """
 
 import pytest
 
-from app.modules.assets.repository import clear_asset_records
 
 
 BASE = "/api/v1/assets"
@@ -21,11 +20,6 @@ SYLHET_OSMANI = [91.8545, 24.9007]          # Sylhet MAG Osmani Medical College
 KOLKATA = [88.3639, 22.5726]                # India: outside coverage
 
 
-@pytest.fixture(autouse=True)
-def empty_store():
-    clear_asset_records()
-    yield
-    clear_asset_records()
 
 
 def point(coordinates):

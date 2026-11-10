@@ -7,8 +7,8 @@ district boundaries, Dhaka's rivers and canals, and which buildings
 ("assets") we are protecting. This guide is everything you need to build
 screens on top of it.
 
-> **Not built yet:** flood *forecasts* / probabilities, alerts, user
-> accounts, and permanent storage (MongoDB). Don't design screens that
+> **Not built yet:** flood *forecasts* / probabilities, alerts and user
+> accounts. Don't design screens that
 > show "chance of flooding tomorrow" as real data yet.
 
 ---
@@ -25,17 +25,39 @@ source .venv/bin/activate            # Windows PowerShell: .venv\Scripts\Activat
 python -m pip install -r requirements.txt
 ```
 
-Start it (MongoDB isn't used yet, so a placeholder value is fine):
+The backend needs a **MongoDB** database to start (assets are stored there).
+Two options:
+
+**Option 1 — your own local MongoDB in Docker (easiest, no account needed):**
 
 ```bash
-# Linux / macOS
-MONGODB_URI=mongodb://placeholder uvicorn app.main:app --reload
+docker run -d --name rokkha-dev-mongo --restart unless-stopped -p 127.0.0.1:27017:27017 mongo:8.2
 ```
 
-```powershell
-# Windows PowerShell
-$env:MONGODB_URI="mongodb://placeholder"; uvicorn app.main:app --reload
+Then create `Backend/.env` (it is git-ignored, never commit it) with:
+
 ```
+MONGODB_URI=mongodb://127.0.0.1:27017
+MONGODB_DATABASE=climate_shield
+```
+
+(`mongo:8.0` does not start on Linux kernel 6.19+; `8.2` does. Don't use port
+27018: that is the backend developer's *test* database, which tests wipe.)
+
+**Option 2 — the shared MongoDB Atlas database:** ask the backend developer
+for access; put the connection string in `Backend/.env` the same way. Never
+paste it into chat or commit it.
+
+Start the API:
+
+```bash
+uvicorn app.main:app --reload
+```
+
+`GET http://localhost:8000/api/v1/health/database` → `{"database": "MongoDB", "status": "connected"}`
+confirms the database works. If the API does not start, it is almost always
+the database: check `.env`, that the Docker container runs, or (Atlas) that
+your IP is allowed in Atlas → Network Access.
 
 - API base URL: **`http://localhost:8000/api/v1`**
 - Interactive docs (try every endpoint in the browser): **http://localhost:8000/docs**
@@ -91,8 +113,7 @@ Most flood responses include **`attribution`** and **`limitations`**.
 
 ### A. Asset manager (hospitals, schools, shelters…)
 
-> Assets are stored **in memory for now: they disappear when the backend
-> restarts.** MongoDB will fix that later; the API shape will stay the same.
+> Assets are stored in **MongoDB**, so they survive restarts.
 
 | Method | Path | What it does |
 |---|---|---|
@@ -101,6 +122,8 @@ Most flood responses include **`attribution`** and **`limitations`**.
 | `GET` | `/assets/{id}` | one asset |
 | `PATCH` | `/assets/{id}` | change only the fields you send |
 | `DELETE` | `/assets/{id}` | delete (204) |
+| `GET` | `/assets/near?lng=&lat=&max_distance_m=` | assets within a radius, **nearest first** (same optional filters) |
+| `POST` | `/assets/within` | assets inside an area: body `{"area": <GeoJSON Polygon or MultiPolygon>}` (same optional filters as query parameters) |
 
 **Create — request:**
 
@@ -153,6 +176,31 @@ automatically**:
 location or criticality is rejected (422). Changing `location` updates the
 district automatically.
 
+
+**Near** (`GET /assets/near?lng=90.4106&lat=23.7058&max_distance_m=6000`) —
+"what is within 6 km of here?", e.g. around a flooded spot or a river point:
+
+```json
+{
+  "count": 3,
+  "max_distance_meters": 6000,
+  "total_occupancy": 7200,
+  "total_replacement_value_bdt": 0,
+  "results": [
+    {"asset": { "...full asset...": "" }, "distance_meters": 0.0,    "distance_kilometers": 0.0},
+    {"asset": { "...": "" },              "distance_meters": 2581.5, "distance_kilometers": 2.5815}
+  ],
+  "method": "MongoDB $geoNear (2dsphere) selection; distances WGS84 geodesic"
+}
+```
+
+`max_distance_m` is required, > 0 and at most 200,000 (200 km). Good for a
+"radius" circle on the map; results are already sorted nearest first.
+
+**Within** (`POST /assets/within`) — "which assets are inside this area?"
+(a drawn polygon, a district shape from `bangladesh_districts.geojson`, …).
+Returns the same shape as the asset list (`count`, totals, `assets`). A
+self-crossing polygon → 422 "geometrically invalid".
 ### B. Asset exposure (the main "risk" view)
 
 | Method | Path | What it does |
@@ -249,7 +297,7 @@ Shapes for drawing: `Backend/data/boundaries/dhaka_boundaries.geojson` and
 `.../point-in-polygon`, `.../multipoint-in-zone`, `.../multipoint-distances`,
 `.../point-in-zones` — see `/docs` for examples. `GET /health` → `{"status": "healthy"}`.
 
-Also available (in memory, early versions): manual weather observations
+Also available (early versions, still in memory — reset on restart): manual weather observations
 `POST/GET /weather/observations`, `GET /weather/observations/{record_id}`
 (rainfall mm, temperature °C, humidity %), and saved named locations
 `POST/GET /geospatial/locations`, `GET /geospatial/locations/{location_id}`.

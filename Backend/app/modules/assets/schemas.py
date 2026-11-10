@@ -5,7 +5,11 @@ from pydantic import BaseModel, Field, model_validator
 
 # Reuse the validated GeoJSON Point from the geospatial module, so an asset
 # location follows exactly the same [longitude, latitude] rules.
-from app.modules.geospatial.schemas import GeoJSONPoint
+from app.modules.geospatial.schemas import (
+    GeoJSONMultiPolygon,
+    GeoJSONPoint,
+    GeoJSONPolygon,
+)
 
 
 # ==========================================
@@ -282,3 +286,39 @@ class SingleAssetExposureResponse(AssetExposure):
     attribution: list[str]
 
     limitations: list[str]
+
+
+# ==========================================
+# GEOSPATIAL QUERIES (MongoDB 2dsphere index)
+# ==========================================
+
+class AssetNearResult(BaseModel):
+
+    asset: AssetResponse
+
+    # WGS84 geodesic distance from the search point.
+    distance_meters: float
+
+    distance_kilometers: float
+
+
+class AssetNearResponse(BaseModel):
+
+    count: int
+
+    max_distance_meters: float
+
+    total_occupancy: int
+
+    total_replacement_value_bdt: float
+
+    # Nearest first.
+    results: list[AssetNearResult]
+
+    method: str
+
+
+class AssetWithinRequest(BaseModel):
+
+    # Any area: a flood zone, a district shape, a hand-drawn polygon.
+    area: GeoJSONPolygon | GeoJSONMultiPolygon

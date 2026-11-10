@@ -1,13 +1,18 @@
+from shapely.geometry import shape
+
 from app.modules.assets.repository import (
     create_asset_record,
     delete_asset_record,
-    get_all_asset_records,
+    find_asset_records,
+    find_assets_near,
+    find_assets_within,
     get_asset_record,
     update_asset_record,
 )
 from app.modules.geospatial.schemas import GeoJSONPoint
 from app.modules.geospatial.service import (
     FLOOD_LIMITATIONS,
+    calculate_geographic_distance,
     check_flood_at_point,
     find_district,
     find_nearest_waterways,
@@ -16,6 +21,10 @@ from app.modules.geospatial.service import (
 
 class AssetOutsideCoverageError(ValueError):
     """Raised when an asset location is outside Bangladesh."""
+
+
+class InvalidAreaError(ValueError):
+    """Raised when a search polygon is geometrically invalid."""
 
 
 def _district_for(location: dict) -> dict:
@@ -32,32 +41,28 @@ def _district_for(location: dict) -> dict:
     return district
 
 
-def add_asset(data: dict) -> dict:
-
-    data["district"] = _district_for(data["location"])
-
-    return create_asset_record(data)
-
-
-def list_assets(
-    asset_type: str | None = None,
-    criticality: str | None = None,
-    district_pcode: str | None = None,
+def _filters(
+    asset_type: str | None,
+    criticality: str | None,
+    district_pcode: str | None,
 ) -> dict:
 
-    assets = [
-        asset
-        for asset in get_all_asset_records()
-        if (asset_type is None or asset["asset_type"] == asset_type)
-        and (criticality is None or asset["criticality"] == criticality)
-        and (
-            district_pcode is None
-            or asset["district"]["pcode"] == district_pcode.upper()
-        )
-    ]
+    # The same three filters everywhere, as a MongoDB query.
+    query = {}
 
-    # Oldest first, so the order is stable between requests.
-    assets.sort(key=lambda asset: asset["created_at"])
+    if asset_type is not None:
+        query["asset_type"] = asset_type
+
+    if criticality is not None:
+        query["criticality"] = criticality
+
+    if district_pcode is not None:
+        query["district.pcode"] = district_pcode.upper()
+
+    return query
+
+
+def _with_totals(assets: list[dict]) -> dict:
 
     return {
         "count": len(assets),
@@ -70,26 +75,113 @@ def list_assets(
     }
 
 
-def find_asset(asset_id: str) -> dict | None:
+async def add_asset(data: dict) -> dict:
 
-    return get_asset_record(asset_id)
+    data["district"] = _district_for(data["location"])
+
+    return await create_asset_record(data)
 
 
-def change_asset(asset_id: str, changes: dict) -> dict | None:
+async def list_assets(
+    asset_type: str | None = None,
+    criticality: str | None = None,
+    district_pcode: str | None = None,
+) -> dict:
 
-    if get_asset_record(asset_id) is None:
+    assets = await find_asset_records(_filters(asset_type, criticality, district_pcode))
+
+    return _with_totals(assets)
+
+
+async def find_asset(asset_id: str) -> dict | None:
+
+    return await get_asset_record(asset_id)
+
+
+async def change_asset(asset_id: str, changes: dict) -> dict | None:
+
+    if await get_asset_record(asset_id) is None:
         return None
 
-    # A new location means a (possibly) new district.
+    # A new location means a (possibly) new district. Checked BEFORE
+    # writing, so an invalid location changes nothing.
     if "location" in changes:
         changes["district"] = _district_for(changes["location"])
 
-    return update_asset_record(asset_id, changes)
+    return await update_asset_record(asset_id, changes)
 
 
-def remove_asset(asset_id: str) -> bool:
+async def remove_asset(asset_id: str) -> bool:
 
-    return delete_asset_record(asset_id)
+    return await delete_asset_record(asset_id)
+
+
+# ==========================================
+# GEOSPATIAL QUERIES (MongoDB 2dsphere index)
+# ==========================================
+
+async def assets_near(
+    point: GeoJSONPoint,
+    max_distance_m: float,
+    asset_type: str | None = None,
+    criticality: str | None = None,
+    district_pcode: str | None = None,
+) -> dict:
+
+    # MongoDB selects and orders the assets with the 2dsphere index (fast).
+    found = await find_assets_near(
+        point.model_dump(),
+        max_distance_m,
+        _filters(asset_type, criticality, district_pcode),
+    )
+
+    results = []
+
+    for asset in found:
+
+        # MongoDB measures on a simple sphere; report the WGS84 geodesic
+        # distance (GeographicLib), like every other distance in this API.
+        asset.pop("_mongo_distance_m", None)
+
+        distance = calculate_geographic_distance(
+            point, GeoJSONPoint(**asset["location"])
+        )
+
+        results.append({
+            "asset": asset,
+            "distance_meters": distance["distance_meters"],
+            "distance_kilometers": distance["distance_kilometers"],
+        })
+
+    return {
+        "count": len(results),
+        "max_distance_meters": max_distance_m,
+        "total_occupancy": sum(r["asset"]["occupancy"] or 0 for r in results),
+        "total_replacement_value_bdt": sum(
+            r["asset"]["replacement_value_bdt"] or 0 for r in results
+        ),
+        "results": results,
+        "method": "MongoDB $geoNear (2dsphere) selection; distances WGS84 geodesic",
+    }
+
+
+async def assets_within(
+    area: dict,
+    asset_type: str | None = None,
+    criticality: str | None = None,
+    district_pcode: str | None = None,
+) -> dict:
+
+    # Reject broken shapes (e.g. a self-crossing "bow tie") with a clear
+    # message, the same rule as the point-in-polygon endpoint.
+    if not shape(area).is_valid:
+        raise InvalidAreaError("The supplied area polygon is geometrically invalid.")
+
+    assets = await find_assets_within(
+        area, _filters(asset_type, criticality, district_pcode)
+    )
+
+    return _with_totals(assets)
 
 
 # ==========================================
@@ -167,9 +259,9 @@ def _exposure_for(asset: dict) -> tuple[dict, list[str]]:
     return exposure, attribution
 
 
-def analyze_asset_exposure(asset_id: str) -> dict | None:
+async def analyze_asset_exposure(asset_id: str) -> dict | None:
 
-    asset = get_asset_record(asset_id)
+    asset = await get_asset_record(asset_id)
 
     if asset is None:
         return None
@@ -194,14 +286,14 @@ def _totals(exposures: list[dict]) -> dict:
     }
 
 
-def exposure_report(
+async def exposure_report(
     asset_type: str | None = None,
     criticality: str | None = None,
     district_pcode: str | None = None,
 ) -> dict:
 
     # Same filters as the asset list, so both views always agree.
-    assets = list_assets(asset_type, criticality, district_pcode)["assets"]
+    assets = (await list_assets(asset_type, criticality, district_pcode))["assets"]
 
     exposures, attribution = [], []
 

@@ -14,7 +14,6 @@ Run from the Backend folder:  python -m pytest -v
 import pytest
 from pytest import approx
 
-from app.modules.assets.repository import clear_asset_records
 
 
 BASE = "/api/v1/assets"
@@ -29,11 +28,6 @@ PORTFOLIO = {
 }
 
 
-@pytest.fixture(autouse=True)
-def empty_store():
-    clear_asset_records()
-    yield
-    clear_asset_records()
 
 
 @pytest.fixture

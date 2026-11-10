@@ -72,19 +72,38 @@ app.include_router(
 """
 
 
-from fastapi import FastAPI
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
+from app.core.database import Database
 from app.modules.weather.router import router as weather_router
 from app.modules.geospatial.router import router as geospatial_router
 from app.modules.assets.router import router as assets_router
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+
+    # Runs once when the server starts (before "yield") and once when it
+    # stops (after "yield"): connect to MongoDB and create indexes, then
+    # disconnect cleanly.
+    await Database.connect()
+
+    try:
+        yield
+
+    finally:
+        await Database.disconnect()
+
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     description="Flood forecasting and geospatial risk intelligence",
-    version="0.3.0"
+    version="0.4.0",
+    lifespan=lifespan
 )
 
 
@@ -104,6 +123,24 @@ async def health_check():
     return {
         "status": "healthy"
     }
+
+
+@app.get("/api/v1/health/database")
+async def database_health():
+
+    try:
+        await Database.client.admin.command("ping")
+
+        return {
+            "database": "MongoDB",
+            "status": "connected"
+        }
+
+    except Exception:
+        raise HTTPException(
+            status_code=503,
+            detail="Database connection unavailable"
+        )
 
 
 # Let the frontend (running on another address) call this API from a browser.
