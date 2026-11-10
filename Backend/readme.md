@@ -508,6 +508,10 @@ that exceed it), and one call covers at most 14 days for one location. A run the
 (`status: paused_budget`) instead of exceeding them. **Start the same run again later: pieces already stored are
 skipped**, so it resumes where it stopped.
 
+Every request is tried **3 times** (waiting 5, 10, 20 s) when Open-Meteo is busy (HTTP 429 / 5xx) **or the
+connection fails** (timeout, network down). If it still fails, the run ends as `failed` with a message naming the
+cause. Data already stored is kept, so start the same run again later.
+
 A full backfill of all 64 district sites for 2016–2024 needs about 64 × 9 × 26 ≈ 15,000 calls: plan it over two
 days (about four re-runs). River history for the 9 river sites for 2016–2024 needs about 2,100 calls.
 
@@ -542,7 +546,7 @@ Allowed by default: `http://localhost:3000` and `http://localhost:5173`. Add oth
 python -m pytest -v
 ```
 
-Expected: **214 passed**.
+Expected: **216 passed**.
 
 Tests that store data use a **separate local test MongoDB in Docker**, never Atlas:
 

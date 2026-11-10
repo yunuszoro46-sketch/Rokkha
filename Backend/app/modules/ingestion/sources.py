@@ -68,12 +68,22 @@ async def _get(url: str, params: dict) -> list[dict]:
         headers={"User-Agent": USER_AGENT},
     ) as client:
 
+        problem = ""
+
         for attempt in range(3):
 
-            response = await client.get(url, params=params)
+            try:
+                response = await client.get(url, params=params)
+
+            # The connection itself failed (timeout, network down): wait and retry.
+            except httpx.TransportError as error:
+                problem = f"{type(error).__name__} ({error})"
+                await asyncio.sleep(2 ** attempt * RETRY_BASE_SECONDS)
+                continue
 
             # 429 = rate limited, 5xx = server trouble: wait and retry.
             if response.status_code == 429 or response.status_code >= 500:
+                problem = f"HTTP {response.status_code}"
                 await asyncio.sleep(2 ** attempt * RETRY_BASE_SECONDS)
                 continue
 
@@ -85,7 +95,10 @@ async def _get(url: str, params: dict) -> list[dict]:
             # One location -> one object; several -> a list.
             return body if isinstance(body, list) else [body]
 
-    raise SourceError(f"{url} kept failing (HTTP {response.status_code}) after 3 attempts")
+    raise SourceError(
+        f"{url} kept failing after 3 attempts: {problem}. "
+        "Data already stored is kept; start the same run again later to continue."
+    )
 
 
 def _coords(points: list[list[float]]) -> dict:

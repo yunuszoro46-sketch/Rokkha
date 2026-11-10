@@ -402,6 +402,53 @@ def test_source_failure_is_logged_not_crashed(client):
     assert len(fake.requests) == 3                  # tried three times
 
 
+def test_network_failures_are_retried(client):
+
+    # Two connection timeouts, then a normal answer: the run must still complete.
+    fake = FakeOpenMeteo()
+    attempts = []
+
+    def flaky(request):
+        attempts.append(request)
+        if len(attempts) <= 2:
+            raise httpx.ConnectTimeout("connection timed out", request=request)
+        return fake(request)
+
+    sources.set_transport(httpx.MockTransport(flaky))
+    sources.RETRY_BASE_SECONDS = 0
+    try:
+        _, result = run(client, kind="river_history", start_date="2022-06-10",
+                        end_date="2022-06-12", site_ids=[SURMA])
+    finally:
+        sources.set_transport(None)
+        sources.RETRY_BASE_SECONDS = 5.0
+
+    assert result["status"] == "completed"
+    assert result["values_written"] == 3
+    assert len(attempts) == 3
+
+
+def test_lasting_network_failure_is_reported_clearly(client):
+
+    def down(request):
+        raise httpx.ConnectTimeout("connection timed out", request=request)
+
+    sources.set_transport(httpx.MockTransport(down))
+    sources.RETRY_BASE_SECONDS = 0
+    try:
+        _, result = run(client, kind="river_history", start_date="2022-06-10",
+                        end_date="2022-06-12", site_ids=[SURMA])
+    finally:
+        sources.set_transport(None)
+        sources.RETRY_BASE_SECONDS = 5.0
+
+    assert result["status"] == "failed"
+    # Says what failed and that it is safe to start the run again.
+    assert "ConnectTimeout" in result["message"]
+    assert "flood-api.open-meteo.com" in result["message"]
+    assert "start the same run again" in result["message"]
+
+
 def test_only_one_run_at_a_time(client):
 
     with MongoClient(TEST_MONGODB_URI) as mongo:
