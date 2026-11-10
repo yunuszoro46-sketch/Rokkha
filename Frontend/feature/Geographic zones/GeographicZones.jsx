@@ -73,7 +73,7 @@ export default function GeographicZones() {
                   style={{
                     padding: '0.85rem',
                     borderRadius: '0.5rem',
-                    background: isSelected ? '#192640' : '#0b1120',
+                    background: isSelected ? '#192640' : '#f8fafc',
                     border: isSelected ? '2px solid #f59e0b' : '1px solid var(--border-color)',
                     cursor: 'pointer'
                   }}
@@ -94,10 +94,10 @@ export default function GeographicZones() {
 
         <div className="card">
           <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem' }}>Zone Specification & Geospatial Profile</h3>
-          <div style={{ background: '#0b1120', border: '1px solid var(--border-color)', borderRadius: '0.5rem', padding: '1.25rem' }}>
+          <div style={{ background: '#f8fafc', border: '1px solid var(--border-color)', borderRadius: '0.5rem', padding: '1.25rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
               <Shield size={20} color="#f59e0b" />
-              <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#f8fafc' }}>{selectedZone.name}</h4>
+              <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a' }}>{selectedZone.name}</h4>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
@@ -111,7 +111,7 @@ export default function GeographicZones() {
               </div>
               <div style={{ background: '#131e33', padding: '0.75rem', borderRadius: '0.4rem' }}>
                 <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Drainage Outflow</div>
-                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f8fafc' }}>{selectedZone.drainageCapacity}</div>
+                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#0f172a' }}>{selectedZone.drainageCapacity}</div>
               </div>
               <div style={{ background: '#131e33', padding: '0.75rem', borderRadius: '0.4rem' }}>
                 <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Boundary Vertices</div>

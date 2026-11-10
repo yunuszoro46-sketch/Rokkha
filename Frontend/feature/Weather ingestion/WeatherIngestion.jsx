@@ -50,9 +50,9 @@ export default function WeatherIngestion() {
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {activeFeeds.map(feed => (
-              <div key={feed.id} style={{ background: '#0b1120', border: '1px solid var(--border-color)', borderRadius: '0.5rem', padding: '0.85rem' }}>
+              <div key={feed.id} style={{ background: '#f8fafc', border: '1px solid var(--border-color)', borderRadius: '0.5rem', padding: '0.85rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.25rem' }}>
-                  <strong style={{ fontSize: '0.875rem', color: '#f8fafc' }}>{feed.name}</strong>
+                  <strong style={{ fontSize: '0.875rem', color: '#0f172a' }}>{feed.name}</strong>
                   <span className="badge badge-blue" style={{ fontSize: '0.65rem' }}>{feed.status}</span>
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
@@ -68,7 +68,7 @@ export default function WeatherIngestion() {
           <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Clock size={18} color="#34d399" /> Ingestion Activity Logs
           </h3>
-          <div style={{ background: '#0b1120', border: '1px solid var(--border-color)', borderRadius: '0.5rem', padding: '0.75rem', minHeight: '180px', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: '#94a3b8' }}>
+          <div style={{ background: '#f8fafc', border: '1px solid var(--border-color)', borderRadius: '0.5rem', padding: '0.75rem', minHeight: '180px', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: '#94a3b8' }}>
             {log.length === 0 ? (
               <span style={{ color: 'var(--text-muted)' }}>No recent ingestion activity. Click "Test Ingestion Cycle" to simulate.</span>
             ) : (

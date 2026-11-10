@@ -97,7 +97,7 @@ export default function GeographicDistance() {
           <div className="card">
             <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem' }}>Coordinates Input</h3>
             <form onSubmit={calculateDistance}>
-              <div style={{ marginBottom: '1rem', padding: '0.75rem', background: '#0b1120', borderRadius: '0.4rem', border: '1px solid var(--border-color)' }}>
+              <div style={{ marginBottom: '1rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.4rem', border: '1px solid var(--border-color)' }}>
                 <strong style={{ fontSize: '0.8rem', color: '#38bdf8' }}>Point A (e.g. Origin)</strong>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.4rem' }}>
                   <input type="number" step="any" placeholder="Latitude" value={p1.lat} onChange={e => setP1({...p1, lat: e.target.value})} required />
@@ -105,7 +105,7 @@ export default function GeographicDistance() {
                 </div>
               </div>
 
-              <div style={{ marginBottom: '1rem', padding: '0.75rem', background: '#0b1120', borderRadius: '0.4rem', border: '1px solid var(--border-color)' }}>
+              <div style={{ marginBottom: '1rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.4rem', border: '1px solid var(--border-color)' }}>
                 <strong style={{ fontSize: '0.8rem', color: '#34d399' }}>Point B (e.g. Destination)</strong>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.4rem' }}>
                   <input type="number" step="any" placeholder="Latitude" value={p2.lat} onChange={e => setP2({...p2, lat: e.target.value})} required />
@@ -125,7 +125,7 @@ export default function GeographicDistance() {
             {!distResult && !distError && <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Provide Point A and Point B to calculate surface geodesic distance.</p>}
             {distResult && (
               <div>
-                <div style={{ background: '#0b1120', border: '1px solid var(--border-color)', borderRadius: '0.6rem', padding: '1.25rem', textAlign: 'center', marginBottom: '1rem' }}>
+                <div style={{ background: '#f8fafc', border: '1px solid var(--border-color)', borderRadius: '0.6rem', padding: '1.25rem', textAlign: 'center', marginBottom: '1rem' }}>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Kilometers</div>
                   <div style={{ fontSize: '2.2rem', fontWeight: 800, color: '#38bdf8' }}>
                     {distResult.distance_kilometers.toFixed(3)} <span style={{ fontSize: '1rem' }}>km</span>
@@ -160,7 +160,7 @@ export default function GeographicDistance() {
             {lineError && <div style={{ background: 'rgba(244,63,94,0.15)', border: '1px solid rgba(244,63,94,0.3)', color: '#fb7185', padding: '0.75rem', borderRadius: '0.5rem', fontSize: '0.85rem' }}>{lineError}</div>}
             {!lineResult && !lineError && <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Submit LineString to calculate total route length.</p>}
             {lineResult && (
-              <div style={{ background: '#0b1120', border: '1px solid var(--border-color)', borderRadius: '0.6rem', padding: '1.25rem', textAlign: 'center' }}>
+              <div style={{ background: '#f8fafc', border: '1px solid var(--border-color)', borderRadius: '0.6rem', padding: '1.25rem', textAlign: 'center' }}>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Total Path Length</div>
                 <div style={{ fontSize: '2.2rem', fontWeight: 800, color: '#34d399' }}>
                   {lineResult.length_kilometers.toFixed(3)} <span style={{ fontSize: '1rem' }}>km</span>

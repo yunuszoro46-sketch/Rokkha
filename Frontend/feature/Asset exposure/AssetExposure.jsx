@@ -49,9 +49,9 @@ export default function AssetExposure() {
             const isSafe = item.exposureLevel === 'Safe';
 
             return (
-              <div key={idx} style={{ background: '#0b1120', border: '1px solid var(--border-color)', borderRadius: '0.5rem', padding: '1rem' }}>
+              <div key={idx} style={{ background: '#f8fafc', border: '1px solid var(--border-color)', borderRadius: '0.5rem', padding: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.4rem' }}>
-                  <strong style={{ fontSize: '0.95rem', color: '#f8fafc' }}>{item.assetName}</strong>
+                  <strong style={{ fontSize: '0.95rem', color: '#0f172a' }}>{item.assetName}</strong>
                   <span className="badge" style={{
                     background: isCrit ? 'rgba(244,63,94,0.15)' : isHigh ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.15)',
                     color: isCrit ? '#fb7185' : isHigh ? '#fbbf24' : '#34d399'
@@ -60,7 +60,7 @@ export default function AssetExposure() {
                   </span>
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
-                  Category: {item.category} • Hazard Zone: {item.zone} • Est. Flood Depth: <strong style={{ color: '#f8fafc' }}>{item.floodDepthEst}</strong>
+                  Category: {item.category} • Hazard Zone: {item.zone} • Est. Flood Depth: <strong style={{ color: '#0f172a' }}>{item.floodDepthEst}</strong>
                 </div>
                 <div style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>
                   <strong>Operational Impact:</strong> {item.impact}

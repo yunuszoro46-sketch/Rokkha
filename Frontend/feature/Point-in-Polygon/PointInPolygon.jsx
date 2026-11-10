@@ -146,22 +146,22 @@ export default function PointInPolygon() {
                 {result.relationship === 'inside' ? <AlertCircle size={32} color="#fb7185" /> : <CheckCircle2 size={32} color="#34d399" />}
                 <div>
                   <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Relationship</div>
-                  <div style={{ fontSize: '1.4rem', fontWeight: 800, textTransform: 'capitalize', color: '#f8fafc' }}>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 800, textTransform: 'capitalize', color: '#0f172a' }}>
                     {result.relationship}
                   </div>
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', textAlign: 'center' }}>
-                <div style={{ background: '#0b1120', padding: '0.6rem', borderRadius: '0.4rem' }}>
+                <div style={{ background: '#f8fafc', padding: '0.6rem', borderRadius: '0.4rem' }}>
                   <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Covered</div>
                   <div style={{ fontWeight: 700, color: result.covered ? '#38bdf8' : '#94a3b8' }}>{result.covered ? 'TRUE' : 'FALSE'}</div>
                 </div>
-                <div style={{ background: '#0b1120', padding: '0.6rem', borderRadius: '0.4rem' }}>
+                <div style={{ background: '#f8fafc', padding: '0.6rem', borderRadius: '0.4rem' }}>
                   <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Strictly Inside</div>
                   <div style={{ fontWeight: 700, color: result.strictly_inside ? '#fb7185' : '#94a3b8' }}>{result.strictly_inside ? 'TRUE' : 'FALSE'}</div>
                 </div>
-                <div style={{ background: '#0b1120', padding: '0.6rem', borderRadius: '0.4rem' }}>
+                <div style={{ background: '#f8fafc', padding: '0.6rem', borderRadius: '0.4rem' }}>
                   <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Boundary</div>
                   <div style={{ fontWeight: 700, color: result.on_boundary ? '#fbbf24' : '#94a3b8' }}>{result.on_boundary ? 'TRUE' : 'FALSE'}</div>
                 </div>

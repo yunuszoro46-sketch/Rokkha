@@ -81,7 +81,7 @@ export default function LocationManagement() {
       </div>
 
       {/* Presets */}
-      <div style={{ background: '#0b1120', border: '1px solid var(--border-color)', borderRadius: '0.5rem', padding: '0.75rem', marginBottom: '1.25rem' }}>
+      <div style={{ background: '#f8fafc', border: '1px solid var(--border-color)', borderRadius: '0.5rem', padding: '0.75rem', marginBottom: '1.25rem' }}>
         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.4rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
           <Sparkles size={13} color="#34d399" /> Quick Presets for Dhaka Locations:
         </div>
@@ -139,9 +139,9 @@ export default function LocationManagement() {
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '0.85rem' }}>
             {locations.map(loc => (
-              <div key={loc.id} style={{ background: '#0b1120', border: '1px solid var(--border-color)', borderRadius: '0.5rem', padding: '0.9rem' }}>
+              <div key={loc.id} style={{ background: '#f8fafc', border: '1px solid var(--border-color)', borderRadius: '0.5rem', padding: '0.9rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-                  <strong style={{ fontSize: '0.9rem', color: '#f8fafc' }}>{loc.location_name}</strong>
+                  <strong style={{ fontSize: '0.9rem', color: '#0f172a' }}>{loc.location_name}</strong>
                   <span className="badge badge-emerald">Point</span>
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>

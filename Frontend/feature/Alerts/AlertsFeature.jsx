@@ -85,9 +85,9 @@ export default function AlertsFeature() {
             {alerts.map(alt => {
               const isCrit = alt.severity.includes('Warning') || alt.severity.includes('Evacuation');
               return (
-                <div key={alt.id} style={{ background: '#0b1120', border: `1px solid ${isCrit ? 'rgba(244,63,94,0.4)' : 'var(--border-color)'}`, borderRadius: '0.5rem', padding: '0.9rem' }}>
+                <div key={alt.id} style={{ background: '#f8fafc', border: `1px solid ${isCrit ? 'rgba(244,63,94,0.4)' : 'var(--border-color)'}`, borderRadius: '0.5rem', padding: '0.9rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.35rem' }}>
-                    <strong style={{ fontSize: '0.9rem', color: '#f8fafc' }}>{alt.title}</strong>
+                    <strong style={{ fontSize: '0.9rem', color: '#0f172a' }}>{alt.title}</strong>
                     <span className="badge" style={{
                       background: isCrit ? 'rgba(244,63,94,0.15)' : 'rgba(245,158,11,0.15)',
                       color: isCrit ? '#fb7185' : '#fbbf24'

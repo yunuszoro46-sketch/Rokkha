@@ -28,20 +28,20 @@
     /* Feature Sandbox & App Variables */
     --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
-    --bg-primary: #030712;
-    --bg-secondary: #060b17;
-    --bg-card: #081022;
-    --bg-card-hover: #0d1832;
-    --border-color: #1e293b;
-    --border-subtle: #2d3b55;
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
+    --bg-primary: #f0f9ff;
+    --bg-secondary: #ffffff;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f0f9ff;
+    --border-color: #e2e8f0;
+    --border-subtle: #cbd5e1;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
     --text-muted: #64748b;
-    --accent-blue: #38bdf8;
+    --accent-blue: #0891b2;
     --accent-cyan: #06b6d4;
-    --accent-emerald: #10b981;
-    --accent-amber: #f59e0b;
-    --accent-rose: #f43f5e;
+    --accent-emerald: #059669;
+    --accent-amber: #d97706;
+    --accent-rose: #e11d48;
   }
 }
 

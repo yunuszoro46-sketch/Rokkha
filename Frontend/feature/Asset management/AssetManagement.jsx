@@ -99,9 +99,9 @@ export default function AssetManagement() {
           <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem' }}>Protected Asset Inventory ({assets.length})</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {assets.map(a => (
-              <div key={a.id} style={{ background: '#0b1120', border: '1px solid var(--border-color)', borderRadius: '0.5rem', padding: '0.85rem' }}>
+              <div key={a.id} style={{ background: '#f8fafc', border: '1px solid var(--border-color)', borderRadius: '0.5rem', padding: '0.85rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.35rem' }}>
-                  <strong style={{ fontSize: '0.875rem', color: '#f8fafc' }}>{a.name}</strong>
+                  <strong style={{ fontSize: '0.875rem', color: '#0f172a' }}>{a.name}</strong>
                   <span className="badge badge-emerald" style={{ fontSize: '0.65rem' }}>{a.criticality}</span>
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>

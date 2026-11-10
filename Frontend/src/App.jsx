@@ -240,26 +240,44 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#f0f9ff] text-slate-800 flex flex-col font-sans">
       {/* Top Header Navbar */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-cyan-100 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-cyan-100 px-6 sm:px-10 h-[84px] flex items-center justify-between shadow-sm">
+        <div className="flex items-center gap-3.5">
           <div 
             onClick={() => setActiveTab('catalog')}
-            className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-md shadow-cyan-500/20 cursor-pointer border border-cyan-300"
+            style={{
+              width: '52px',
+              height: '52px',
+              borderRadius: '14px',
+              background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 18px rgba(6,182,212,0.45)',
+              color: '#fff',
+              border: '1px solid rgba(255,255,255,0.4)',
+              cursor: 'pointer',
+              flexShrink: 0
+            }}
           >
-            <Shield size={22} fill="currentColor" fillOpacity={0.2} />
+            <Shield size={30} fill="currentColor" fillOpacity={0.2} />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span 
-                onClick={() => setActiveTab('catalog')}
-                className="text-xl font-black tracking-tight text-slate-900 cursor-pointer"
-              >
-                Rokkha
-              </span>
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200 font-bold hidden sm:inline-block">
-                Live Sandbox
-              </span>
-            </div>
+          <div className="flex items-baseline gap-2.5">
+            <span 
+              onClick={() => setActiveTab('catalog')}
+              style={{
+                fontSize: '36px',
+                fontWeight: 900,
+                letterSpacing: '-0.01em',
+                color: '#0f172a',
+                lineHeight: 1,
+                cursor: 'pointer'
+              }}
+            >
+              Rokkha
+            </span>
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200 font-bold hidden sm:inline-block">
+              Live Sandbox
+            </span>
           </div>
         </div>
 
@@ -336,10 +354,6 @@ export default function App() {
               <ArrowLeft size={14} /> Back to Modules Catalog
             </button>
           </div>
-
-          <ActiveComponent />
-        </main>
-      </div>
 
           <ActiveComponent />
         </main>

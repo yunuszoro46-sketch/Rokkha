@@ -155,7 +155,7 @@ export default function GeoJSONValidation() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#fb7185', fontWeight: 700, fontSize: '1.1rem' }}>
                 <XCircle size={24} /> Validation Failed
               </div>
-              <ul style={{ color: '#f8fafc', fontSize: '0.85rem', marginTop: '0.75rem', paddingLeft: '1.25rem' }}>
+              <ul style={{ color: '#0f172a', fontSize: '0.85rem', marginTop: '0.75rem', paddingLeft: '1.25rem' }}>
                 {validationResult.errors.map((err, i) => (
                   <li key={i} style={{ marginBottom: '0.35rem' }}>{err}</li>
                 ))}

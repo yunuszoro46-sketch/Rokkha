@@ -46,7 +46,7 @@ export default function FloodPrediction() {
 
         <div className="card" style={{ borderLeft: '4px solid #38bdf8' }}>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Model Baseline Architecture</div>
-          <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#f8fafc', marginTop: '0.4rem' }}>
+          <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginTop: '0.4rem' }}>
             XGBoost Spatial Regressor
           </div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Lead-time: 24 Hours • Dhaka Grid</div>
@@ -86,9 +86,9 @@ export default function FloodPrediction() {
           {CELLS.map(c => {
             const isTriggered = c.prob >= threshold;
             return (
-              <div key={c.cellId} style={{ background: '#0b1120', border: `1px solid ${isTriggered ? '#f43f5e' : 'var(--border-color)'}`, borderRadius: '0.5rem', padding: '0.9rem' }}>
+              <div key={c.cellId} style={{ background: '#f8fafc', border: `1px solid ${isTriggered ? '#f43f5e' : 'var(--border-color)'}`, borderRadius: '0.5rem', padding: '0.9rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.35rem' }}>
-                  <strong style={{ fontSize: '0.9rem', color: '#f8fafc' }}>{c.location}</strong>
+                  <strong style={{ fontSize: '0.9rem', color: '#0f172a' }}>{c.location}</strong>
                   <span className="badge" style={{
                     background: c.prob > 0.8 ? 'rgba(244,63,94,0.15)' : c.prob > 0.4 ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.15)',
                     color: c.prob > 0.8 ? '#fb7185' : c.prob > 0.4 ? '#fbbf24' : '#34d399'

@@ -96,7 +96,7 @@ export default function WeatherObservations() {
       </div>
 
       {/* Preset bar */}
-      <div style={{ background: '#0b1120', border: '1px solid var(--border-color)', borderRadius: '0.5rem', padding: '0.75rem', marginBottom: '1.25rem' }}>
+      <div style={{ background: '#f8fafc', border: '1px solid var(--border-color)', borderRadius: '0.5rem', padding: '0.75rem', marginBottom: '1.25rem' }}>
         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.4rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
           <Sparkles size={13} color="#38bdf8" /> Quick Fill Dhaka Presets:
         </div>
@@ -172,17 +172,17 @@ export default function WeatherObservations() {
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: '0.85rem' }}>
             {observations.map(obs => (
-              <div key={obs.id} style={{ background: '#0b1120', border: '1px solid var(--border-color)', borderRadius: '0.5rem', padding: '0.9rem' }}>
+              <div key={obs.id} style={{ background: '#f8fafc', border: '1px solid var(--border-color)', borderRadius: '0.5rem', padding: '0.9rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                  <strong style={{ fontSize: '0.9rem', color: '#f8fafc' }}>{obs.location_name}</strong>
+                  <strong style={{ fontSize: '0.9rem', color: '#0f172a' }}>{obs.location_name}</strong>
                   <span className="badge badge-blue">{obs.rainfall_mm} mm</span>
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
                   [{obs.latitude.toFixed(4)}, {obs.longitude.toFixed(4)}] • Source: {obs.source}
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem', color: '#94a3b8' }}>
-                  <span>Temp: <strong style={{ color: '#f8fafc' }}>{obs.temperature_c}°C</strong></span>
-                  <span>Humidity: <strong style={{ color: '#f8fafc' }}>{obs.humidity_percent}%</strong></span>
+                  <span>Temp: <strong style={{ color: '#0f172a' }}>{obs.temperature_c}°C</strong></span>
+                  <span>Humidity: <strong style={{ color: '#0f172a' }}>{obs.humidity_percent}%</strong></span>
                 </div>
               </div>
             ))}

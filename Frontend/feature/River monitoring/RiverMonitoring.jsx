@@ -35,10 +35,10 @@ export default function RiverMonitoring() {
             const statusColor = isDanger ? '#fb7185' : isWarning ? '#fbbf24' : '#34d399';
 
             return (
-              <div key={st.id} style={{ background: '#0b1120', border: `1px solid ${isDanger ? 'rgba(244,63,94,0.4)' : 'var(--border-color)'}`, borderRadius: '0.6rem', padding: '1rem' }}>
+              <div key={st.id} style={{ background: '#f8fafc', border: `1px solid ${isDanger ? 'rgba(244,63,94,0.4)' : 'var(--border-color)'}`, borderRadius: '0.6rem', padding: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                   <div>
-                    <strong style={{ fontSize: '1rem', color: '#f8fafc' }}>{st.river}</strong>
+                    <strong style={{ fontSize: '1rem', color: '#0f172a' }}>{st.river}</strong>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{st.station}</div>
                   </div>
                   <span className="badge" style={{
