@@ -1,680 +1,549 @@
-# Climate Shield Backend
+# Climate Shield Backend (Rokkha)
 
-Climate Shield is a climate-risk platform under development. Its first planned use case is helping people and organizations understand localized urban flood risk in **Dhaka, Bangladesh**.
+Climate Shield is a climate-risk platform under development for **Bangladesh**, built for the AI Builders Congress
+Climate Shield challenge (repository: **Rokkha**). Its goal is to help protect **people and physical assets from
+floods**: where flooding has happened, where it could happen, and which buildings and how many people are exposed.
 
-This folder contains the backend: the application that receives requests, validates data, performs calculations, and returns results to the frontend.
+This folder contains the backend: the application that receives requests, validates data, performs calculations,
+stores records in MongoDB, and returns results to the frontend.
 
-**What works today:** manually submitted weather observations, geographic location records, point-in-polygon checks, and geographic distance calculations.
+**What works today:**
 
-**What does not exist yet:** a trained flood-forecasting model, live environmental-data ingestion, operational flood alerts, or persistent storage connected to the active API.
+- Geospatial tools: point-in-polygon, WGS84 distances, path lengths, multi-point and named-zone analysis.
+- Real geographic data: Dhaka District and all 64 district boundaries, Dhaka's rivers, canals and drains.
+- Nationwide **flood history**: 10 satellite-observed flood events (2016–2024) and a modelled river-flood hazard map.
+- **Assets** (hospitals, schools, shelters, …) with people and value, their **flood exposure**, and map queries
+  ("near this point", "inside this area").
+- Persistent storage in **MongoDB Atlas**, with geospatial indexes.
+- 155 automated tests.
 
-> This is a development prototype, not an operational flood-warning service. A geometric result such as “inside” does not mean a location is flooding or will flood.
+**What does not exist yet:** a trained flood-forecasting model, live weather or river-data ingestion, flood alerts,
+user accounts.
+
+> This is a development prototype, not an operational flood-warning service. Flood history and modelled hazard
+> describe the past and possible floods; **nothing here is a forecast** or a flood probability.
+
+## Contents
+
+1. [Project goal](#1-project-goal)
+2. [Current implementation](#2-current-implementation)
+3. [Technology stack](#3-technology-stack)
+4. [How the backend is organized](#4-how-the-backend-is-organized)
+5. [Run the backend locally](#5-run-the-backend-locally)
+6. [API endpoints](#6-api-endpoints)
+7. [Try the API without writing code](#7-try-the-api-without-writing-code)
+8. [Coordinate and validation rules](#8-coordinate-and-validation-rules)
+9. [Data sources, licenses and limitations](#9-data-sources-licenses-and-limitations)
+10. [Errors and troubleshooting](#10-errors-and-troubleshooting)
+11. [Testing](#11-testing)
+12. [Development roadmap](#12-development-roadmap)
+13. [Planned machine-learning evaluation](#13-planned-machine-learning-evaluation)
+14. [Working on the project](#14-working-on-the-project)
 
 ## 1. Project goal
 
-The planned minimum viable product (MVP)—the first usable version—will estimate:
+The planned forecasting product will estimate:
 
-> The probability that a clearly defined flood event will occur within a geographic grid cell during the next 24 hours.
+> The probability that a clearly defined flood event will occur within a geographic grid cell during the next
+> 24 hours.
 
-A grid cell is a small area on a map. Dividing Dhaka into cells will allow the system to estimate risk for individual areas rather than giving one result for the entire city.
+A grid cell is a small area on a map, so risk can be shown per area instead of one value for a whole city.
 
-The model is planned to use observed flood events as training labels, together with relevant environmental and geographic information.
+What is already decided or prepared:
 
-Several modeling decisions remain open:
+- **Observed flood labels:** the flood grid in `data/flood/` records, for every ~90 m cell in Bangladesh, in which
+  of 10 satellite-observed events flood water was seen. These are candidate training labels (with known gaps,
+  see section 9).
+- **Where floods happen most:** a ranking of all 64 districts by observed flood frequency.
+- **Exposure:** assets with people (`occupancy`) and value (BDT), combined with flood history and hazard.
 
-- Grid-cell size: [not yet defined].
-- Flood-event definition and thresholds: [not yet defined].
-- Verified training-data sources: [not yet selected].
+Still open:
+
+- Forecast grid-cell size for the model: [not yet defined; the flood data grid is ~90 m].
+- Flood-event definition and thresholds for labels: [not yet defined].
+- Weather/rainfall data sources for forecasting: [not yet selected].
 - Alert thresholds: [not yet defined].
 
-Rainfall alone will not be treated as proof of flooding. Being inside a supplied polygon will not, by itself, establish flood risk.
+Rainfall alone will not be treated as proof of flooding. Being inside a supplied polygon does not, by itself,
+establish flood risk.
 
 ## 2. Current implementation
 
 | Capability | Current state |
 | --- | --- |
-| FastAPI application | Implemented; application version is `0.3.0` |
-| Root information and health endpoints | Implemented |
-| Weather observation creation and retrieval | Implemented with in-memory storage |
-| Geographic location creation and retrieval | Implemented with in-memory storage |
-| GeoJSON Point validation | Implemented |
-| GeoJSON Polygon and MultiPolygon validation | Implemented |
-| Point inside/outside/on-boundary analysis | Implemented |
-| Polygon holes | Supported by the analysis service |
-| Invalid or empty polygon rejection | Implemented in the analysis service |
-| WGS84 geographic distance | Implemented using GeographicLib |
-| GeoJSON LineString validation | Schema implemented; no LineString API |
-| MongoDB connection helper | Implemented, but not enabled in the active application |
-| Persistent API storage | Not implemented |
+| FastAPI application | Implemented; version `0.4.0` |
+| MongoDB Atlas persistence | Implemented: connected at startup, indexes created automatically |
+| Health endpoints (app and database) | Implemented |
+| Weather observation creation and retrieval | Implemented, stored in MongoDB (manual input only) |
+| Saved locations | Implemented, stored in MongoDB |
+| GeoJSON Point, MultiPoint, LineString, Polygon, MultiPolygon, Feature, FeatureCollection | Validated |
+| Point inside/outside/on-boundary, polygon holes, invalid-polygon rejection | Implemented |
+| WGS84 geodesic distance and path (LineString) length | Implemented (GeographicLib) |
+| MultiPoint in zone, distances from a reference point, point in named zones | Implemented |
+| Dhaka District boundaries (district + 7 upazilas / city corporations) | Implemented (HDX) |
+| All 64 district boundaries of Bangladesh | Implemented (HDX, simplified) |
+| Dhaka rivers, canals, drains; nearest waterway | Implemented (OpenStreetMap) |
+| Nationwide observed flood history and modelled flood hazard | Implemented (UNOSAT, JRC) |
+| Asset management (create, list, update, delete, filters, totals) | Implemented, stored in MongoDB |
+| Asset flood exposure (one asset and reports) | Implemented |
+| Assets near a point / inside an area | Implemented (MongoDB `2dsphere` index) |
+| CORS for frontend development servers | Implemented |
 | Live weather or river-data ingestion | Not implemented |
-| Flood prediction and alerts | Not implemented |
-| Asset management and exposure analysis | Not implemented |
+| Flood forecasting model and alerts | Not implemented |
+| Authentication, authorization, rate limiting | Not implemented |
 
-Weather observations are submitted through the API. The current weather module does **not** fetch live weather from an external provider.
-
-### Temporary storage
-
-Weather and location records are stored in Python lists:
-
-- Records disappear when the application restarts.
-- Development reloads can erase records.
-- Separate application processes do not share these lists.
-- List endpoints currently return all records without pagination.
-
-Use the current storage for local development only.
+Weather observations are submitted through the API. The weather module does **not** fetch live weather.
 
 ## 3. Technology stack
 
-### Used by the current backend
+### Used by the backend
 
 | Technology | Purpose |
 | --- | --- |
-| Python | Programming language |
-| FastAPI | HTTP API and interactive API documentation |
-| Pydantic v2 | Request validation and response schemas |
-| pydantic-settings | Configuration loaded from environment variables and `.env` |
-| Shapely | Planar geometry operations |
-| GeographicLib | Geographic distance on the WGS84 ellipsoid |
-| PyMongo | Asynchronous MongoDB connection helper; currently inactive |
+| Python 3.12 (tested) | Programming language |
+| FastAPI | HTTP API and interactive documentation |
+| Pydantic v2, pydantic-settings | Validation, response schemas, configuration from `.env` |
 | Uvicorn | Local ASGI server |
+| MongoDB Atlas + PyMongo (async) | Persistent storage, geospatial indexes and queries |
+| Shapely | Planar geometry (containment, validity, nearest points) |
+| GeographicLib | Distances on the WGS84 ellipsoid |
+| NumPy | The flood grid (compressed arrays) |
+| pytest + httpx | Automated tests |
+
+Offline data-preparation scripts additionally use **Rasterio** and **pyogrio** (`requirements-dev.txt`). The API
+itself does not need them.
 
 ### Planned technologies
 
 | Technology | Planned purpose |
 | --- | --- |
-| MongoDB Atlas | Primary persistent database |
 | XGBoost | Initial machine-learning baseline |
-| GeoPandas | Geographic dataset processing |
-| Rasterio | Raster and environmental dataset processing |
+| GeoPandas | Geographic dataset processing, if needed |
 
-The established database direction is **MongoDB Atlas**. This backend does not use PostgreSQL, PostGIS, or microservices.
+The database is **MongoDB Atlas**. This backend does not use PostgreSQL, PostGIS, or microservices.
 
 ## 4. How the backend is organized
 
-The backend is a **modular monolith**: one application divided into modules for different responsibilities.
-
-A typical request follows this path:
+The backend is a **modular monolith**: one application divided into modules.
 
 ```text
 Frontend or API client
         |
         v
-Router: receives the HTTP request
+Router: receives the HTTP request            (router.py)
         |
         v
-Service: performs application logic or calculations
+Service: application logic and calculations  (service.py)
         |
         v
-Repository: stores or retrieves records
+Repository: stores or reads records          (repository.py)
         |
         v
-Python list today / MongoDB after integration
+MongoDB Atlas  /  read-only data files in data/
 ```
 
-Calculation-only requests, such as distance analysis, do not need repository storage.
-
-Each implemented module separates its responsibilities:
-
-| File | Responsibility |
-| --- | --- |
-| `schemas.py` | Defines accepted inputs, validation rules, and response formats |
-| `router.py` | Defines HTTP endpoints and handles HTTP errors |
-| `service.py` | Performs application logic |
-| `repository.py` | Stores and retrieves records |
+Calculation-only requests (for example distance) do not use storage. Modules talk to each other through public
+service functions; for example the assets module asks the geospatial module `find_district()` instead of reading
+its files.
 
 ### Source structure
 
-Generated `__pycache__` directories are omitted below.
-
 ```text
 Rokkha/
-├── Backend/
-│   ├── app/
-│   │   ├── core/
-│   │   │   ├── config.py
-│   │   │   └── database.py
-│   │   ├── modules/
-│   │   │   ├── __init__.py
-│   │   │   ├── alerts/
-│   │   │   ├── assets/
-│   │   │   ├── geospatial/
-│   │   │   │   ├── __init__.py
-│   │   │   │   ├── repository.py
-│   │   │   │   ├── router.py
-│   │   │   │   ├── schemas.py
-│   │   │   │   └── service.py
-│   │   │   ├── ingestion/
-│   │   │   ├── prediction/
-│   │   │   └── weather/
-│   │   │       ├── __init__.py
-│   │   │       ├── repository.py
-│   │   │       ├── router.py
-│   │   │       ├── schemas.py
-│   │   │       └── service.py
-│   │   ├── shared/
-│   │   └── main.py
-│   ├── ml/
-│   │   └── __init__.py
-│   ├── tests/
-│   │   └── test_geospatial.py
-│   └── readme.md
-└── Frontend/
+├── .gitignore
+└── Backend/
+    ├── app/
+    │   ├── core/
+    │   │   ├── config.py          settings from .env (MongoDB, CORS)
+    │   │   └── database.py        MongoDB connection + index creation
+    │   ├── modules/
+    │   │   ├── assets/            assets, exposure, near/within queries
+    │   │   ├── geospatial/        geometry tools, boundaries, waterways, flood
+    │   │   ├── weather/           weather observations
+    │   │   └── alerts/, ingestion/, prediction/   (placeholders)
+    │   └── main.py                app, startup/shutdown, routers, CORS
+    ├── data/
+    │   ├── boundaries/            Dhaka District + 64 districts (+ README)
+    │   ├── waterways/             Dhaka rivers, canals, drains (+ README)
+    │   └── flood/                 flood history, flood grid (+ README)
+    ├── docs/
+    │   └── FRONTEND_API_GUIDE.md  guide for the frontend developer
+    ├── scripts/                   rebuild the data files from their sources
+    ├── tests/                     155 automated tests
+    ├── ml/                        (placeholder)
+    ├── pytest.ini
+    ├── requirements.txt           pinned API dependencies
+    ├── requirements-dev.txt       + tools for the data scripts
+    └── readme.md
 ```
-
-The alerts, assets, ingestion, prediction, shared, and ML areas are placeholders, not completed features.
 
 ## 5. Run the backend locally
 
 ### Requirements
 
-- Git.
-- Python and pip.
-- A terminal.
-- An editor such as VS Code or PyCharm, if you want to change the code.
+- Git, Python 3.12 (tested on Linux; newer versions are untested), a terminal.
+- A MongoDB database: **MongoDB Atlas** (the project database) or a **local MongoDB in Docker**.
+- Docker, to run the automated tests (they use their own local test database).
 
-**Python version:** the repository does not contain a dependency manifest or a verified supported-version declaration. The previous README mentions Python 3.15.0, but that is not a reproducible compatibility guarantee.
-
-[Suggested starting environment: Python 3.12; compatibility has not been tested as part of this documentation review.]
-
-### Step 1: Clone the repository
+### Step 1: Clone and enter the backend
 
 ```bash
 git clone https://github.com/yunuszoro46-sketch/Rokkha.git
 cd Rokkha/Backend
 ```
 
-Run the remaining commands from `Backend/`.
+Run every command below from `Backend/`.
 
-### Step 2: Create a virtual environment
-
-A virtual environment keeps this project's installed packages separate from other projects.
+### Step 2: Create and activate a virtual environment
 
 ```bash
 python -m venv .venv
+source .venv/bin/activate          # Windows PowerShell: .\.venv\Scripts\Activate.ps1
 ```
 
-On systems where Python is available as `python3`, use that command instead.
-
-### Step 3: Activate the environment
-
-**Windows PowerShell:**
-
-```powershell
-.\.venv\Scripts\Activate.ps1
-```
-
-**Windows Command Prompt:**
-
-```bat
-.venv\Scripts\activate.bat
-```
-
-**macOS or Linux:**
-
-```bash
-source .venv/bin/activate
-```
-
-### Step 4: Install the development dependencies
-
-There is currently no checked-in `requirements.txt` or `pyproject.toml`.
-
-The following is a provisional installation command based on the source imports, not a tested or pinned dependency set:
+### Step 3: Install the dependencies
 
 ```bash
 python -m pip install --upgrade pip
-python -m pip install fastapi "uvicorn[standard]" "pydantic>=2,<3" pydantic-settings shapely geographiclib "pymongo[srv]"
+python -m pip install -r requirements.txt
 ```
 
-A maintained dependency file and a verified Python version should be added before expecting reproducible installations.
+Only to rebuild the data files: `python -m pip install -r requirements-dev.txt`.
 
-### Step 5: Create a local `.env` file
+### Step 4: Create `Backend/.env`
 
-Create `Backend/.env` containing:
+`.env` holds your database connection. It is in `.gitignore`: **never commit it or paste it into chats.**
+
+**Option A — MongoDB Atlas:**
 
 ```dotenv
-PROJECT_NAME="Climate Shield"
-API_V1_PREFIX="/api/v1"
-MONGODB_URI="mongodb://localhost:27017"
-MONGODB_DATABASE="climate_shield"
-DEBUG=true
+MONGODB_URI=mongodb+srv://<db_user>:<db_password>@<your-cluster>.mongodb.net/?retryWrites=true&w=majority
+MONGODB_DATABASE=climate_shield
 ```
 
-**Why a MongoDB URI is needed:** configuration currently requires `MONGODB_URI`, even though the active application does not establish a database connection.
+In Atlas, add your computer under **Network Access**. If the password contains `@ : / ? # %`, URL-encode them
+(`@` → `%40`, `:` → `%3A`, `/` → `%2F`, `#` → `%23`, `%` → `%25`).
 
-The local URI above satisfies that configuration requirement. It does not enable persistence, and the active in-memory API does not require a local MongoDB server.
+**Option B — local MongoDB in Docker (no account needed):**
 
-When MongoDB integration is enabled, replace it with a working connection URI and configure access appropriately.
+```bash
+docker run -d --name rokkha-dev-mongo --restart unless-stopped -p 127.0.0.1:27017:27017 mongo:8.2
+```
 
-Do not commit `.env` or real database credentials. No `.gitignore` or `.env.example` was present in the inspected root/backend directory listings; add suitable ignore rules before committing local files.
+```dotenv
+MONGODB_URI=mongodb://127.0.0.1:27017
+MONGODB_DATABASE=climate_shield
+```
 
-### Step 6: Start the server
+`mongo:8.0` does not start on Linux kernel 6.19+ (MongoDB issue SERVER-121912); `8.2` does.
+
+Optional: `CORS_ORIGINS=["http://localhost:4200"]` if a frontend runs on another address
+(defaults: `localhost:3000` and `localhost:5173`).
+
+### Step 5: Start the server
 
 ```bash
 python -m uvicorn app.main:app --reload
 ```
 
-`--reload` restarts the application when source files change. It is intended for development.
+At startup the server connects to MongoDB and creates its indexes; it prints `MongoDB connected successfully!`.
+If MongoDB is unreachable, the server does not start (see section 10).
 
-### Step 7: Open the application
+### Step 6: Open the application
 
-- Project information: http://127.0.0.1:8000/
-- Health check: http://127.0.0.1:8000/api/v1/health
 - Interactive Swagger UI: http://127.0.0.1:8000/docs
-- Alternative documentation: http://127.0.0.1:8000/redoc
+- Health: http://127.0.0.1:8000/api/v1/health → `{"status": "healthy"}`
+- Database: http://127.0.0.1:8000/api/v1/health/database → `{"database": "MongoDB", "status": "connected"}`
 - OpenAPI schema: http://127.0.0.1:8000/openapi.json
-
-The health endpoint returns:
-
-```json
-{
-  "status": "healthy"
-}
-```
-
-This confirms that the endpoint responds. It does not verify a database connection, data freshness, or prediction readiness.
 
 ## 6. API endpoints
 
-The following paths assume the default `API_V1_PREFIX=/api/v1`.
-
-The current health route is hardcoded as `/api/v1/health`; unlike the module routes, it does not follow a changed prefix setting.
+All module paths start with `/api/v1`. Full request and response shapes: `/docs`, or
+[docs/FRONTEND_API_GUIDE.md](docs/FRONTEND_API_GUIDE.md).
 
 ### General
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | GET | `/` | Basic project information |
-| GET | `/api/v1/health` | Basic application health response |
+| GET | `/api/v1/health` | Application health |
+| GET | `/api/v1/health/database` | MongoDB connection health (503 if unavailable) |
 
 ### Weather
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| POST | `/api/v1/weather/observations` | Create a weather observation |
-| GET | `/api/v1/weather/observations` | List all stored observations |
-| GET | `/api/v1/weather/observations/{record_id}` | Retrieve one observation |
+| POST | `/weather/observations` | Create a weather observation |
+| GET | `/weather/observations` | List observations (oldest first) |
+| GET | `/weather/observations/{record_id}` | One observation |
 
-### Geospatial
+### Assets
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| POST | `/api/v1/geospatial/locations` | Create a named point location |
-| GET | `/api/v1/geospatial/locations` | List all stored locations |
-| GET | `/api/v1/geospatial/locations/{location_id}` | Retrieve one location |
-| POST | `/api/v1/geospatial/spatial-analysis/point-in-polygon` | Check a point against a Polygon or MultiPolygon |
-| POST | `/api/v1/geospatial/spatial-analysis/distance` | Calculate WGS84 geographic distance |
+| POST | `/assets` | Create an asset (district filled in automatically; outside Bangladesh → 422) |
+| GET | `/assets?asset_type=&criticality=&district_pcode=` | List with totals of people and value |
+| GET | `/assets/{asset_id}` | One asset |
+| PATCH | `/assets/{asset_id}` | Change only the fields sent |
+| DELETE | `/assets/{asset_id}` | Delete (204) |
+| GET | `/assets/near?lng=&lat=&max_distance_m=` | Assets within a radius, nearest first |
+| POST | `/assets/within` | Assets inside a Polygon or MultiPolygon |
+| GET | `/assets/{asset_id}/exposure` | Flood exposure of one asset |
+| GET | `/assets/exposure` | Exposure report for all (filtered) assets |
 
-Successful creation requests return HTTP `201`. Successful retrieval and calculation requests normally return HTTP `200`.
+### Geospatial tools
 
-There are currently no update/delete endpoints, prediction endpoints, alert endpoints, or LineString endpoints.
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| POST, GET | `/geospatial/locations`, `/geospatial/locations/{location_id}` | Saved named locations |
+| POST | `/geospatial/spatial-analysis/point-in-polygon` | Point vs Polygon / MultiPolygon |
+| POST | `/geospatial/spatial-analysis/distance` | WGS84 distance between two points |
+| POST | `/geospatial/spatial-analysis/linestring-length` | Length of a path |
+| POST | `/geospatial/spatial-analysis/multipoint-in-zone` | Which points are inside a zone |
+| POST | `/geospatial/spatial-analysis/multipoint-distances` | Distances from a reference point, nearest |
+| POST | `/geospatial/spatial-analysis/point-in-zones` | Which named zones (FeatureCollection) contain a point |
+
+### Boundaries, waterways and floods
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| GET | `/geospatial/boundaries?admin_level=2\|3` | Dhaka District and its 7 units |
+| POST | `/geospatial/boundaries/locate` | Which Dhaka unit contains a point |
+| GET | `/geospatial/waterways?waterway_type=` | Count and length of Dhaka rivers, canals, drains |
+| POST | `/geospatial/waterways/nearest` | Nearest river / canal to a point (Dhaka District) |
+| GET | `/geospatial/flood/events` | The 10 observed flood events (+ skipped event, method) |
+| GET | `/geospatial/flood/districts?limit=&division=` | 64 districts ranked by observed flood frequency |
+| GET | `/geospatial/flood/districts/{pcode}` | One district, event by event |
+| POST | `/geospatial/flood/check` | Flood history and modelled hazard at any point |
 
 ## 7. Try the API without writing code
 
-1. Start the backend.
-2. Open http://127.0.0.1:8000/docs.
-3. Expand an endpoint.
-4. Click **Try it out**.
-5. Paste an example request body below.
-6. Click **Execute**.
+1. Start the backend and open http://127.0.0.1:8000/docs.
+2. Expand an endpoint, click **Try it out**, paste a body, click **Execute**.
 
-All examples below are synthetic development inputs, not verified weather observations or official flood-zone data.
+The places below are real; the asset values are examples.
 
-### Example A: Create a location
+### Example A: Create an asset
 
-Send to `POST /api/v1/geospatial/locations`:
+`POST /api/v1/assets`:
 
 ```json
 {
-  "location_name": "Dhaka demo location",
-  "latitude": 23.7465,
-  "longitude": 90.376
+  "name": "Dhaka Medical College Hospital",
+  "asset_type": "hospital",
+  "location": {"type": "Point", "coordinates": [90.3976, 23.7258]},
+  "criticality": "critical",
+  "occupancy": 4000,
+  "replacement_value_bdt": 25000000000
 }
 ```
 
-The response includes a generated UUID and a GeoJSON Point:
+The response adds `id`, `created_at`, `updated_at` and `"district": {"pcode": "BD3026", "name": "Dhaka", "division": "Dhaka"}`.
+
+### Example B: Flood history at a place
+
+`POST /api/v1/geospatial/flood/check` with a haor point in Sunamganj:
+
+```json
+{"point": {"type": "Point", "coordinates": [91.1428, 24.8474]}}
+```
+
+Result: Sunamganj, rank 1 of 64 districts; the ~90 m cell was observed in 7 events and flooded in all 7; the
+modelled 10-year river flood depth is "1 to 3 m".
+
+### Example C: Assets near a point
+
+`GET /api/v1/assets/near?lng=90.4106&lat=23.7058&max_distance_m=3000` (Sadarghat) returns assets within 3 km,
+nearest first, with WGS84 distances (Dhaka Medical College Hospital: 2581.5 m).
+
+### Example D: Check whether a point is inside an area
+
+`POST /api/v1/geospatial/spatial-analysis/point-in-polygon`:
 
 ```json
 {
-  "id": "[generated UUID]",
-  "location_name": "Dhaka demo location",
-  "latitude": 23.7465,
-  "longitude": 90.376,
-  "geometry": {
-    "type": "Point",
-    "coordinates": [90.376, 23.7465]
-  }
+  "point": {"type": "Point", "coordinates": [90.376, 23.7465]},
+  "polygon": {"type": "Polygon", "coordinates": [[[90.35, 23.73], [90.4, 23.73], [90.4, 23.78], [90.35, 23.78], [90.35, 23.73]]]}
 }
 ```
 
-Copy the returned `id` to retrieve that record using the single-location endpoint.
-
-### Example B: Submit a weather observation
-
-Send to `POST /api/v1/weather/observations`:
-
-```json
-{
-  "location_name": "Dhaka demo station",
-  "latitude": 23.7465,
-  "longitude": 90.376,
-  "rainfall_mm": 12.5,
-  "temperature_c": 29,
-  "humidity_percent": 80,
-  "source": "manual-demo"
-}
-```
-
-The response includes a generated `id` and `observed_at`.
-
-**Current timestamp limitation:** `observed_at` is assigned by the server at record creation in UTC. The request does not accept the actual observation time.
-
-**Current rainfall limitation:** `rainfall_mm` has no accumulation-window field. Do not assume it represents hourly or daily rainfall.
-
-These limitations must be resolved before using these records as a reliable historical modeling dataset.
-
-### Example C: Check whether a point is inside an area
-
-Send to `POST /api/v1/geospatial/spatial-analysis/point-in-polygon`:
-
-```json
-{
-  "point": {
-    "type": "Point",
-    "coordinates": [90.376, 23.7465]
-  },
-  "polygon": {
-    "type": "Polygon",
-    "coordinates": [
-      [
-        [90.35, 23.73],
-        [90.4, 23.73],
-        [90.4, 23.78],
-        [90.35, 23.78],
-        [90.35, 23.73]
-      ]
-    ]
-  }
-}
-```
-
-Expected from the implemented geometry logic:
-
-```json
-{
-  "covered": true,
-  "strictly_inside": true,
-  "on_boundary": false,
-  "relationship": "inside"
-}
-```
-
-This rectangle is fictional. The response describes geometry only, not real-world flood conditions.
-
-#### Understanding the result
+→ `{"covered": true, "strictly_inside": true, "on_boundary": false, "relationship": "inside"}`. This rectangle
+is fictional: the response describes geometry only.
 
 | Point position | `covered` | `strictly_inside` | `on_boundary` | `relationship` |
 | --- | --- | --- | --- | --- |
-| Inside the area | true | true | false | `inside` |
+| Inside | true | true | false | `inside` |
 | On a boundary | true | false | true | `boundary` |
-| Outside the area | false | false | false | `outside` |
-| Inside a polygon hole, away from its boundary | false | false | false | `outside` |
-
-A MultiPolygon—several polygons represented as one geometry—can also be supplied in the `polygon` field.
-
-### Example D: Calculate geographic distance
-
-Send to `POST /api/v1/geospatial/spatial-analysis/distance`:
-
-```json
-{
-  "point_a": {
-    "type": "Point",
-    "coordinates": [90.376, 23.7465]
-  },
-  "point_b": {
-    "type": "Point",
-    "coordinates": [90.376, 23.7465]
-  }
-}
-```
-
-These points are identical, so the expected response is:
-
-```json
-{
-  "distance_meters": 0.0,
-  "distance_kilometers": 0.0,
-  "method": "WGS84 geodesic"
-}
-```
-
-Change either point to calculate the shortest surface distance on the WGS84 ellipsoid. This is not a driving, walking, or evacuation-route distance.
+| Outside, or inside a hole | false | false | false | `outside` |
 
 ## 8. Coordinate and validation rules
 
 ### Coordinate order
 
-GeoJSON uses:
+GeoJSON uses `[longitude, latitude]`, e.g. `[90.376, 23.7465]`. Location and weather creation requests use
+separate named `latitude` and `longitude` fields.
 
-```text
-[longitude, latitude]
-```
+### Geometry rules
 
-For example:
+- Longitude −180 to 180, latitude −90 to 90; a Point has exactly two values.
+- Polygon rings: at least four positions, closed (first = last); the first ring is the outer boundary, the rest
+  are holes. Self-intersecting ("bow tie") polygons are rejected with 422.
+- MultiPolygon, MultiPoint: at least one member. LineString: at least two positions.
+- Feature geometry is chosen by its `"type"` (Point, MultiPoint, LineString, Polygon, MultiPolygon).
 
-```json
-[90.376, 23.7465]
-```
+### Asset rules
 
-Location and weather creation requests use separate named `latitude` and `longitude` fields.
-
-### Geographic geometry rules
-
-- Longitude must be between `-180` and `180`.
-- Latitude must be between `-90` and `90`.
-- Points contain exactly two coordinate values.
-- Each Polygon has at least one ring.
-- Each ring contains at least four positions, including the closing position.
-- The first and last positions of each ring must match.
-- The first ring is the outer boundary; additional rings represent holes.
-- MultiPolygons contain at least one polygon.
-- LineStrings contain at least two positions, but currently have schema support only.
-- The point-in-polygon service rejects empty or geometrically invalid polygons.
+`asset_type`: hospital, clinic, school, flood_shelter, power_substation, water_treatment, telecom_tower,
+warehouse, factory, office, residential, road_bridge, other. `criticality`: low, medium (default), high, critical.
+`occupancy` (people) and `replacement_value_bdt` must be ≥ 0. Locations outside Bangladesh are rejected.
 
 ### Weather input rules
 
 | Field | Validation |
 | --- | --- |
 | `location_name` | 2–100 characters |
-| `latitude` | -90 to 90 |
-| `longitude` | -180 to 180 |
+| `latitude` / `longitude` | −90 to 90 / −180 to 180 |
 | `rainfall_mm` | Zero or greater |
-| `temperature_c` | -90 to 65 |
+| `temperature_c` | −90 to 65 |
 | `humidity_percent` | 0–100 |
 | `source` | Optional; defaults to `manual`; maximum 100 characters |
 
-### Why two geometry libraries are used
+**Weather limitations:** `observed_at` is set by the server when the record is created (UTC); the request cannot
+give the real observation time. `rainfall_mm` has no accumulation window (hourly? daily?). Both must be fixed
+before these records are used as a modelling dataset.
 
-**Shapely** performs planar geometric operations, including containment and boundary checks.
+### Why two geometry libraries (and MongoDB) measure differently
 
-**GeographicLib** calculates geographic distance on the WGS84 ellipsoid.
+**Shapely** works on flat x/y numbers: containment, validity, nearest points. **GeographicLib** measures distances
+on the WGS84 ellipsoid; every distance this API reports in metres comes from it. Shapely distances on
+longitude/latitude are in degrees and are never reported as metres. For "nearest" searches, longitudes are scaled
+by cos(latitude) first (verified within 0.09 m in Dhaka). **MongoDB** `$geoNear` measures on a simple sphere; it
+only selects and orders assets, and the reported distance is recomputed with GeographicLib.
 
-Longitude and latitude are angles measured in degrees, not meters. Ordinary Shapely distance on these coordinates must not be described as a distance in meters.
+## 9. Data sources, licenses and limitations
 
-The current containment implementation operates on longitude/latitude as planar coordinates. It should not be assumed to handle global geometry or antimeridian-crossing polygons correctly.
+Each data folder has its own README with sources, changes and limitations.
 
-## 9. Errors and troubleshooting
+| Data | Source | License |
+| --- | --- | --- |
+| Dhaka District and 64 district boundaries | Bangladesh Bureau of Statistics and UN OCHA, via HDX (COD-AB v03) | CC BY-IGO |
+| Dhaka rivers, canals, drains | OpenStreetMap contributors (HOT export, 2026-11-04) | ODbL |
+| Observed flood water, 10 events 2016–2024 | UNOSAT (United Nations Satellite Centre) | CC BY-SA |
+| Modelled river-flood hazard (10- and 100-year), permanent water | JRC GloFAS v2.1.2, © European Union | CC BY 4.0 / ODbL |
+
+API responses carry `attribution` and `limitations`; frontends must show the attribution.
+
+**Main limitations:**
+
+- Satellite radar **misses standing water in built-up areas**, so city waterlogging is largely missed.
+- `not_observed` means no satellite looked at a place in that event — it does **not** mean dry.
+- The JRC model **ignores flood embankments** (protected areas such as central Dhaka are overstated) and models
+  river floods only, not rainfall waterlogging.
+- **Seasonal wetlands** (haors, beels) are counted as flood water alongside damaging floods.
+- Drains in Dhaka are very incompletely mapped; waterway distances exist only inside Dhaka District.
+- Flood results describe a ~90 m grid cell, not an exact spot.
+
+## 10. Errors and troubleshooting
 
 ### HTTP errors
 
 | Status | Meaning |
 | --- | --- |
-| `404` | The requested location or weather observation was not found |
-| `422` | Request validation failed, or the analysis polygon was rejected as invalid |
+| `404` | The requested record (asset, location, observation, district) was not found |
+| `422` | Invalid input, invalid polygon, broken JSON, or an asset outside Bangladesh |
+| `503` | `/api/v1/health/database`: MongoDB unavailable |
 
-Example missing-location response:
+### The server does not start
 
-```json
-{
-  "detail": "Location not found"
-}
-```
-
-### `MONGODB_URI` validation error on startup
-
-Create `Backend/.env` as shown above, or provide the variable in the process environment.
-
-Run the server from `Backend/`, because configuration looks for `.env` relative to the working directory.
+Almost always the database. Check `Backend/.env` exists and `MONGODB_URI` is correct; with Atlas, that your IP is
+allowed in **Network Access** and the password is URL-encoded; with Docker, that the container runs
+(`docker ps`). Run the server from `Backend/`, because `.env` is read from the working directory.
 
 ### `ModuleNotFoundError`
 
-Confirm that your virtual environment is active, install the dependencies, and run commands from `Backend/`.
+Activate the virtual environment, run `python -m pip install -r requirements.txt`, and run from `Backend/`.
 
-### Records disappeared
+### Frontend requests blocked by CORS
 
-The repositories use temporary memory. Restarting or reloading the application clears records.
-
-### Frontend browser requests are blocked by CORS
-
-The active application does not configure CORS middleware. Before connecting a frontend served from another origin, explicitly configure the allowed frontend origins.
-
-### `/api/v1/health/database` returns 404
-
-That endpoint appears only in an inactive, triple-quoted block in `main.py`. It is not registered in the active application.
-
-## 10. MongoDB integration status
-
-`app/core/database.py` contains an asynchronous PyMongo helper with methods to:
-
-- Create a client.
-- Ping MongoDB.
-- Select the configured database.
-- Close the client.
-
-However, the active application does not call this helper during startup or shutdown, and the repositories do not use it.
-
-An earlier application implementation containing database lifecycle wiring is retained inside a triple-quoted string in `main.py`. It does not execute.
-
-Therefore:
-
-- Setting `MONGODB_URI` does not turn on persistence.
-- The basic health response does not prove MongoDB is connected.
-- Database startup/shutdown integration and database-backed repositories remain unfinished.
+Allowed by default: `http://localhost:3000` and `http://localhost:5173`. Add other addresses to `CORS_ORIGINS` in
+`.env`.
 
 ## 11. Testing
 
-The checked-in file `tests/test_geospatial.py` is a standalone Shapely demonstration. It prints `contains` and `covers` results for three points relative to a fictional rectangle.
-
-Run it from `Backend/`:
-
 ```bash
-python tests/test_geospatial.py
+python -m pytest -v
 ```
 
-Expected geometry behavior:
+Expected: **155 passed**.
 
-| Case | `contains` | `covers` |
-| --- | --- | --- |
-| Inside | true | true |
-| Outside | false | false |
-| Boundary | false | true |
+Tests that store data use a **separate local test MongoDB in Docker**, never Atlas:
 
-The script does not contain assertions or test functions. It is not a comprehensive automated regression suite, and it does not exercise the API or application services.
+```bash
+docker run -d --name rokkha-test-mongo --restart unless-stopped -p 127.0.0.1:27018:27017 mongo:8.2
+```
 
-The previous README reports additional manual checks, but corresponding automated tests are not present in the inspected test directory.
+`tests/conftest.py` forces the tests onto `mongodb://127.0.0.1:27018` (database `climate_shield_test`), refuses to
+run against any Atlas address, starts the container if it is stopped, and empties the collections before each
+test. Use another test server with `TEST_MONGODB_URI=mongodb://host:port`.
 
-Recommended automated coverage:
+| Test file | Covers |
+| --- | --- |
+| `test_api_geospatial.py` | Geometry tools, locations, health, CORS |
+| `test_api_boundaries.py` | Dhaka boundaries |
+| `test_api_waterways.py` | Rivers, canals, nearest waterway |
+| `test_api_flood.py` | Flood history, flood grid, district ranking |
+| `test_api_assets.py` | Asset create / list / update / delete |
+| `test_api_asset_exposure.py` | Asset flood exposure |
+| `test_api_assets_mongodb.py` | MongoDB storage, indexes, near / within |
+| `test_api_weather_and_locations.py` | Weather and locations in MongoDB |
 
-- Valid and invalid coordinate inputs.
-- Polygon closure and minimum ring size.
-- Invalid and self-intersecting geometry.
-- Polygon holes and boundaries.
-- MultiPolygon components and boundaries.
-- LineString schema validation.
-- Distance calculations against known reference values.
-- API creation, retrieval, missing-record, and validation behavior.
-- Database lifecycle and persistence after integration.
-
-No tests were executed as part of this README review.
+`tests/test_geospatial.py` is an older print-only Shapely demonstration, kept for reference.
 
 ## 12. Development roadmap
 
-The following items are planned, not claims of completed functionality.
+Planned items are not claims of completed functionality.
 
-1. **Make local development reproducible**
-   - Establish a supported Python version.
-   - Add a maintained dependency manifest.
-   - Add `.env.example` and appropriate `.gitignore` rules.
-   - Replace print-only checks with automated tests.
-   - Remove tracked generated bytecode in a separate cleanup change.
-
-2. **Extend geospatial functionality**
-   - Add LineString service and API support.
-   - Introduce verified Dhaka boundaries and relevant geographic datasets.
-   - Represent rivers, drainage networks, and flood zones.
-   - Add asset records and exposure analysis.
-
-3. **Enable MongoDB persistence**
-   - Connect database startup and shutdown lifecycle.
-   - Implement MongoDB-backed repositories.
-   - Add appropriate geospatial indexes and queries.
-   - Add database integration tests.
-
-4. **Build environmental-data ingestion**
-   - Select and document data sources.
-   - Ingest weather, river-level, and observed flood-event data.
-   - Preserve actual observation times, units, accumulation periods, and provenance.
-   - Add cleaning, quality checks, and missing-data handling.
-
-5. **Develop the forecasting baseline**
-   - Define the flood event and map grid.
-   - Build the labeled dataset.
-   - Train an XGBoost baseline.
-   - Prevent temporal and geographic data leakage.
-   - Evaluate and calibrate predicted probabilities.
-
-6. **Integrate predictions and alerts**
-   - Add prediction endpoints and risk-map outputs.
-   - Connect asset exposure analysis.
-   - Define and validate alert thresholds.
-   - Complete frontend integration and end-to-end testing.
+| Step | Status |
+| --- | --- |
+| Reproducible setup: requirements, `.gitignore`, automated tests | Done |
+| LineString, MultiPoint, GeoJSON Feature/FeatureCollection support | Done |
+| Dhaka and national boundaries; Dhaka rivers and drains | Done |
+| Observed flood history and modelled flood hazard (nationwide) | Done |
+| Asset management and flood exposure analysis | Done |
+| MongoDB persistence, geospatial indexes and queries | Done |
+| Environmental-data ingestion (weather, river levels, observed floods) with real observation times, units and provenance | Next |
+| Flood-event label definition and ML dataset (time- and place-based splits) | Planned |
+| XGBoost baseline; evaluation and probability calibration | Planned |
+| Prediction API, alert generation, end-to-end tests | Planned |
+| Authentication and rate limiting before any public use | Planned |
 
 ## 13. Planned machine-learning evaluation
 
-There is no trained model or measured forecasting performance in the current backend.
+There is no trained model or measured forecasting performance yet.
 
-Planned evaluation includes:
+Planned evaluation: precision, recall, F1, PR-AUC, Brier score, calibration, and false-alarm and missed-event
+measures with their definitions stated explicitly.
 
-- Precision: how often predicted flood events are correct.
-- Recall: how many actual flood events are detected.
-- F1-score: a combined precision/recall measure.
-- PR-AUC: precision/recall performance across thresholds.
-- Brier score: accuracy of predicted probabilities.
-- Calibration: whether predicted probabilities match observed frequencies.
-- False-alarm and missed-event measures, with their definitions stated explicitly.
-
-Training and evaluation must use only information available at the forecast issue time. Time-based and geographic separation should be designed to prevent leakage and test the intended deployment conditions.
-
-A predicted flood probability is not the same as model confidence. Neither should be presented as validated until supported by suitable evaluation.
+Training and evaluation must use only information available at the forecast issue time. Time-based and
+geographic separation must prevent leakage. A predicted flood probability is not the same as model confidence,
+rainfall alone is not flood prediction, and a rule-based score must never be presented as an ML prediction.
 
 ## 14. Working on the project
 
-Backend and frontend work are separated into `Backend/` and `Frontend/`. The intended integration is through versioned REST APIs.
+Backend and frontend are separated into `Backend/` and `Frontend/`, integrated through versioned REST APIs. The
+frontend developer's guide is [docs/FRONTEND_API_GUIDE.md](docs/FRONTEND_API_GUIDE.md).
 
 When contributing:
 
-- Keep HTTP handling in routers.
-- Keep application logic in services.
-- Keep storage access in repositories.
-- Keep validation and response contracts in schemas.
-- Preserve GeoJSON coordinate order.
-- Document input units, observation times, and data sources.
-- Add automated tests for changed behavior.
-- Update this README when behavior changes.
-- Label planned functionality separately from implemented functionality.
-- Never present synthetic examples as real hazard data.
+- Keep HTTP handling in routers, logic in services, storage access in repositories, contracts in schemas.
+- Preserve GeoJSON `[longitude, latitude]` order.
+- Never invent geographic or hazard data and present it as real; document sources, licenses and limitations.
+- Keep "observed" (did flood) and "modelled hazard" (could flood) separate.
+- Add automated tests for changed behaviour; run `python -m pytest` before committing.
+- Never commit `.env` or secrets.
+- Update this README when behaviour changes.
 
-The current backend does not implement authentication, authorization, or rate limiting. Keep it in a controlled development environment until appropriate operational safeguards are implemented.
+The backend has no authentication, authorization or rate limiting. Keep it in a controlled development environment
+until those safeguards exist.
 
-**Climate Shield — building toward reliable climate-risk intelligence for Dhaka.**
+**Climate Shield (Rokkha) — building toward reliable flood-risk intelligence for Bangladesh.**
