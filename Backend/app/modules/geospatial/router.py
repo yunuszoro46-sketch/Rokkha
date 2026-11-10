@@ -1,4 +1,6 @@
 
+from datetime import date
+
 from fastapi import APIRouter, HTTPException, Query, status
 
 from app.modules.geospatial.schemas import (
@@ -26,6 +28,7 @@ from app.modules.geospatial.schemas import (
     FloodEventListResponse,
     DistrictFloodRankingResponse,
     DistrictFloodHistoryResponse,
+    DistrictSatelliteObservationsResponse,
     FloodCheckRequest,
     FloodCheckResponse
 )
@@ -47,6 +50,7 @@ from app.modules.geospatial.service import (
     list_flood_events,
     rank_flood_districts,
     get_district_flood_history,
+    get_district_satellite_observations,
     check_flood_at_point
 )
 
@@ -365,6 +369,43 @@ def get_flood_district_history(pcode: str):
         )
 
     return history
+
+
+@router.get(
+    "/flood/districts/{pcode}/satellite-observations",
+    response_model=DistrictSatelliteObservationsResponse
+)
+def get_flood_district_satellite_observations(
+    pcode: str,
+    start_date: date | None = Query(default=None, description="First UTC day, e.g. 2022-05-01"),
+    end_date: date | None = Query(default=None, description="Last UTC day, e.g. 2022-07-31"),
+    min_observed_share: float = Query(
+        default=0.5,
+        ge=0.05,
+        le=1,
+        description="Only passes that saw at least this share of the district"
+    )
+):
+
+    if start_date and end_date and start_date > end_date:
+
+        raise HTTPException(
+            status_code=422,
+            detail="start_date must not be after end_date."
+        )
+
+    observations = get_district_satellite_observations(
+        pcode, start_date, end_date, min_observed_share
+    )
+
+    if observations is None:
+
+        raise HTTPException(
+            status_code=404,
+            detail="District not found"
+        )
+
+    return observations
 
 
 @router.post(

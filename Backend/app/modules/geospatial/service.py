@@ -26,6 +26,7 @@ from app.modules.geospatial.repository import (
     get_district_collection,
     get_flood_history,
     get_flood_grid,
+    get_satellite_observations,
     FLOOD_ATTRIBUTION
 )
 
@@ -648,6 +649,73 @@ def get_district_flood_history(pcode: str):
                 "events": row["events"],
                 "attribution": FLOOD_ATTRIBUTION
             }
+
+    return None
+
+
+SATELLITE_LIMITATIONS = [
+    "Observations, not a forecast: what Sentinel-1 radar saw on the day of "
+    "each pass. Passes come every few days, so short floods between passes "
+    "can be missed.",
+    "A pass usually sees only part of a district (strip edges, and areas where "
+    "radar cannot map floods such as cities, dense vegetation and steep hills). "
+    "observed_share says how much; unseen land is unknown, not dry.",
+    "Radar underestimates standing water in built-up areas, so city "
+    "waterlogging is largely missed.",
+    "GFM removes normal permanent and monthly seasonal water (a 2018-2022 "
+    "Sentinel-1 reference), so flooded_share is unusual water for that month.",
+    "Results are based on an automated satellite product; they are information "
+    "only and not an official flood warning.",
+]
+
+SATELLITE_ATTRIBUTION = (
+    "Contains modified Copernicus Emergency Management Service information "
+    "[2016-2024] (Global Flood Monitoring, GFM). "
+    "District boundaries: Bangladesh Bureau of Statistics (BBS) and UN OCHA "
+    "via HDX, CC BY-IGO."
+)
+
+
+def get_district_satellite_observations(pcode: str, start_date, end_date, min_observed_share: float):
+
+    data = get_satellite_observations()
+    rule = data["label_rule"]
+
+    for district in data["districts"]:
+
+        if district["pcode"] != pcode.upper():
+            continue
+
+        observations = [
+            {
+                "date": day,
+                "observed_share": observed,
+                "flooded_share": flooded,
+                "advisory_share": advisory,
+                # The label rule only applies to passes that saw enough of the
+                # district; otherwise the answer is unknown (null).
+                "flooded": (flooded >= rule["flooded_share_threshold"])
+                if observed >= rule["min_observed_share"] else None,
+            }
+            for day, observed, flooded, advisory in district["rows"]
+            if observed >= min_observed_share
+            and (start_date is None or day >= start_date.isoformat())
+            and (end_date is None or day <= end_date.isoformat())
+        ]
+
+        return {
+            "pcode": district["pcode"],
+            "name": district["name"],
+            "division": district["division"],
+            "kind": data["kind"],
+            "min_observed_share": min_observed_share,
+            "count": len(observations),
+            "observations": observations,
+            "label_rule": rule,
+            "method": data["method"],
+            "attribution": SATELLITE_ATTRIBUTION,
+            "limitations": SATELLITE_LIMITATIONS,
+        }
 
     return None
 

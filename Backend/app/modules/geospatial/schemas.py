@@ -1,4 +1,5 @@
 
+import datetime as dt
 from typing import Annotated, Any, Literal
 
 from pydantic import (
@@ -671,6 +672,54 @@ class DistrictFloodHistoryResponse(DistrictFloodSummary):
     events: list[DistrictEventResult]
 
     attribution: str
+
+
+class SatelliteObservation(BaseModel):
+
+    # UTC day of the Sentinel-1 pass.
+    date: dt.date
+
+    # Share (0–1) of the district's land the satellite could map on this pass.
+    observed_share: float
+
+    # Share (0–1) of the observed land with unusual (flood) water.
+    # GFM has already removed normal permanent and seasonal water.
+    flooded_share: float
+
+    # Share (0–1) of the observed land with a GFM advisory flag
+    # (dry soil / frost / wind-roughened water: lower confidence).
+    # null = the archive has no advisory file for this pass.
+    advisory_share: float | None
+
+    # The label: flood observed on this pass (see label_rule).
+    # null = the pass saw less than half the district, so no label.
+    flooded: bool | None
+
+
+class DistrictSatelliteObservationsResponse(BaseModel):
+
+    pcode: str
+
+    name: str
+
+    division: str
+
+    # Always "observed": satellite measurements, not a forecast or a model.
+    kind: str
+
+    min_observed_share: float
+
+    count: int
+
+    observations: list[SatelliteObservation]
+
+    label_rule: dict[str, Any]
+
+    method: dict[str, Any]
+
+    attribution: str
+
+    limitations: list[str]
 
 
 class FloodCheckRequest(BaseModel):

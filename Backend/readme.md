@@ -91,6 +91,7 @@ establish flood risk.
 | Assets near a point / inside an area | Implemented (MongoDB `2dsphere` index) |
 | CORS for frontend development servers | Implemented |
 | Rain and river-data ingestion (ERA5, GloFAS, GFS) with provenance, resumable runs, call budget | Implemented (started manually) |
+| Satellite flood observations per district and Sentinel-1 pass, 2016–2024 (flood-model labels) | Implemented (Copernicus GFM, offline build) |
 | Scheduled automatic ingestion | Not implemented |
 | Flood forecasting model and alerts | Not implemented |
 | Authentication, authorization, rate limiting | Not implemented |
@@ -320,6 +321,7 @@ All module paths start with `/api/v1`. Full request and response shapes: `/docs`
 | GET | `/geospatial/flood/events` | The 10 observed flood events (+ skipped event, method) |
 | GET | `/geospatial/flood/districts?limit=&division=` | 64 districts ranked by observed flood frequency |
 | GET | `/geospatial/flood/districts/{pcode}` | One district, event by event |
+| GET | `/geospatial/flood/districts/{pcode}/satellite-observations?start_date=&end_date=&min_observed_share=` | Satellite flood timeline of one district (Copernicus GFM): every Sentinel-1 pass, with `flooded` true/false/null |
 | POST | `/geospatial/flood/check` | Flood history and modelled hazard at any point |
 
 ### Ingestion
@@ -389,6 +391,15 @@ Then `{"kind": "river_history", "start_date": "2022-06-10", "end_date": "2022-06
 Check `GET /api/v1/ingestion/runs` until `status` is `completed`, then
 `GET /api/v1/ingestion/rain?site_id=district-BD6090&start_date=2022-06-13&end_date=2022-06-20` → about 515 mm in
 8 days (104 mm on 17 June), and the Surma rising from about 890 to 1,737 m³/s on 18 June.
+
+### Example F: Sunamganj's 2022 floods seen by satellite
+
+`GET /api/v1/geospatial/flood/districts/BD6090/satellite-observations?start_date=2022-05-01&end_date=2022-07-31`
+
+One entry per Sentinel-1 pass that saw at least half the district. `flooded_share` rises from about 1 % to
+**58.6 % on 23 May** (`flooded: true`), stays high through June (30.7 % on 18 June, the day after ERA5's 104 mm
+rain) and is back near 0.5 % by 29 July (`flooded: false`). Add `min_observed_share=0.05` to also see passes that
+saw only part of the district; those carry `flooded: null` (unknown, not dry).
 
 ### Example D: Check whether a point is inside an area
 
@@ -467,6 +478,7 @@ Each data folder has its own README with sources, changes and limitations.
 | Historical rain | ERA5 reanalysis (ECMWF, Copernicus C3S) via Open-Meteo | CC BY 4.0 (Open-Meteo) |
 | River discharge (history and forecast) | GloFAS (Copernicus EMS) via Open-Meteo | CC BY 4.0 (Open-Meteo) |
 | Forecast rain | GFS (NOAA NCEP) via Open-Meteo | CC BY 4.0 (Open-Meteo) |
+| Satellite flood observations per Sentinel-1 pass, Apr–Nov 2016–2024 | Copernicus EMS Global Flood Monitoring (GFM) | CEMS-FLOODS licence (free, attribution; not a flood warning) |
 
 API responses carry `attribution` and `limitations`; frontends must show the attribution.
 
@@ -479,6 +491,8 @@ API responses carry `attribution` and `limitations`; frontends must show the att
 - **Seasonal wetlands** (haors, beels) are counted as flood water alongside damaging floods.
 - Drains in Dhaka are very incompletely mapped; waterway distances exist only inside Dhaka District.
 - Flood results describe a ~90 m grid cell, not an exact spot.
+- GFM satellite passes come every few days and usually see only part of a district; **8 districts** (hill
+  districts, Sundarbans, Gazipur) are never seen well enough to be labelled. See `data/labels/README.md`.
 
 ### Ingestion: what is stored, and the call budget
 
@@ -528,7 +542,7 @@ Allowed by default: `http://localhost:3000` and `http://localhost:5173`. Add oth
 python -m pytest -v
 ```
 
-Expected: **187 passed**.
+Expected: **214 passed**.
 
 Tests that store data use a **separate local test MongoDB in Docker**, never Atlas:
 
@@ -551,6 +565,8 @@ test. Use another test server with `TEST_MONGODB_URI=mongodb://host:port`.
 | `test_api_assets_mongodb.py` | MongoDB storage, indexes, near / within |
 | `test_api_weather_and_locations.py` | Weather and locations in MongoDB |
 | `test_api_ingestion.py` | Ingestion: sites, runs, resuming, budget, errors, recorded real Open-Meteo responses |
+| `test_api_satellite_observations.py` | GFM flood observations: data file, label rule, Sunamganj 2022, endpoint |
+| `test_gfm_label_counting.py` | GFM counting rules on small hand-made rasters (skipped without rasterio) |
 
 `tests/test_geospatial.py` is an older print-only Shapely demonstration, kept for reference.
 
@@ -568,7 +584,8 @@ Planned items are not claims of completed functionality.
 | MongoDB persistence, geospatial indexes and queries | Done |
 | Environmental-data ingestion (ERA5 rain, GloFAS river flow, GFS forecast) with real times, units and provenance | Done (backfill 2016–2024 to be run) |
 | Scheduled automatic ingestion | Planned (Celery/Redis only if justified) |
-| Flood-event label definition and ML dataset (time- and place-based splits) | Next |
+| Flood labels: satellite flood observations per district (Copernicus GFM) and label rule | Done |
+| ML dataset (rain and river backfill 2016–2024; time- and place-based splits) | Next |
 | XGBoost baseline; evaluation and probability calibration | Planned |
 | Prediction API, alert generation, end-to-end tests | Planned |
 | Authentication and rate limiting before any public use | Planned |

@@ -98,7 +98,7 @@ Most flood responses include **`attribution`** and **`limitations`**.
 
 - **`attribution` must be visible** somewhere near maps/results (a small
   footer is fine). The data licenses (UNOSAT CC BY-SA, JRC, OpenStreetMap
-  ODbL, HDX CC BY-IGO) require credit.
+  ODbL, HDX CC BY-IGO, Copernicus GFM) require credit.
 - **`limitations`** should be reachable (e.g. an "About this data" info
   icon). The most important ones for users:
   - Satellites **can't see water between buildings**, so a city-centre spot
@@ -274,6 +274,27 @@ District row: `{"rank": 1, "pcode": "BD6090", "name": "Sunamganj", "division": "
 
 One district (`/flood/districts/BD6090`) adds `events: [{"event_id", "observed_share", "flooded_share", "status"}]` where `status` is `flooded`, `not_flooded` or `not_observed` — show `not_observed` as grey "no data", **not** as green/safe.
 
+**Satellite flood timeline (new):** `GET /geospatial/flood/districts/{pcode}/satellite-observations?start_date=&end_date=`
+returns every Sentinel-1 satellite pass (Copernicus GFM, April–November 2016–2024) that saw at least half of
+the district:
+
+```json
+{"date": "2022-05-23", "observed_share": 0.9051, "flooded_share": 0.5859, "advisory_share": 0.8369, "flooded": true}
+```
+
+- `flooded_share` = share of what the satellite saw that was **unusual** water (normal rivers and seasonal haor
+  water already removed). Good for a line chart per district; mark points with `flooded: true`
+  (rule: `label_rule`, at least 10 %).
+- `flooded: null` (only with `min_observed_share` below 0.5) means the pass saw too little: show **no data**, not dry.
+- Gaps between dates are days with **no satellite pass**, not dry days. Don't draw a continuous line through
+  long gaps.
+- 8 districts (Bandarban, Rangamati, Khagrachhari, Chattogram, Cox's Bazar, Gazipur, Bagerhat, Khulna) return
+  `count: 0`: radar can't map floods under hills, forest or city. Show "satellite can't observe this district".
+- These are **observations**, not forecasts. Show the `attribution` (Copernicus) and the `limitations`.
+
+Try Sunamganj 2022: `/geospatial/flood/districts/BD6090/satellite-observations?start_date=2022-05-01&end_date=2022-07-31`
+(peak 58.6 % on 23 May).
+
 `/flood/check` returns `{"district": {...} | null, "cell": {...} | null}` —
 both `null` when the point is outside Bangladesh. `cell` has the same
 fields as the exposure `observed`/`hazard` parts (plus `permanent_water`).
@@ -325,12 +346,17 @@ Real weather data ingestion comes later.
 1. **Map + asset list**: markers from `GET /assets`, colour by `flags` from `GET /assets/exposure`; a form for `POST /assets` (click the map to fill `location`).
 2. **Asset detail**: `GET /assets/{id}/exposure` → badges, flood history timeline (`flooded_event_ids` + names/dates from `/geospatial/flood/events`), nearest river.
 3. **Dashboard**: `summary` cards + district ranking table / choropleth.
+   A district click can open its satellite flood timeline (section C).
 4. **"Check any place"**: click the map → `POST /geospatial/flood/check`.
 
 Test places: Dhaka Medical `[90.3976, 23.7258]`, Sunamganj haor `[91.1428, 24.8474]`
 (flooded 7/7), Keraniganj `[90.3500, 23.6800]` (modelled hazard only),
 Sadarghat `[90.4106, 23.7058]` (224 m from the Buriganga), Kolkata
 `[88.3639, 22.5726]` (outside Bangladesh → 422 / nulls).
+
+**Coming next (not available yet):** a flood *prediction* per district (probability of a satellite-observed
+flood, built from rain, river flow and these satellite observations), then alerts. Until then, nothing in the
+API is a flood forecast.
 
 Questions or a field you need that isn't there? Ask the backend developer —
 `/docs` always shows the current, exact shapes.

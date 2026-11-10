@@ -138,6 +138,17 @@ FLOOD_ATTRIBUTION = (
 )
 
 
+SATELLITE_OBSERVATIONS_FILE = DATA_DIR / "labels" / "district_flood_observations.json"
+
+
+@lru_cache(maxsize=1)
+def get_satellite_observations() -> dict:
+
+    # Copernicus GFM flood observations per district and Sentinel-1 pass,
+    # built offline by scripts/build_gfm_labels.py.
+    return json.loads(SATELLITE_OBSERVATIONS_FILE.read_text(encoding="utf-8"))
+
+
 @lru_cache(maxsize=1)
 def get_district_collection() -> GeoJSONFeatureCollection:
 
