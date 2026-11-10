@@ -1,0 +1,1410 @@
+{
+ "generated_on": "2026-11-10",
+ "method": {
+  "district_sites": "Shapely representative_point of each district polygon (HDX COD-AB v03, simplified)",
+  "river_sites": "approximate gauge location snapped to the GloFAS cell with the highest mean discharge within +/-0.05 degrees (2020-07-01 to 2020-08-31); kept if >= 100.0 m3/s",
+  "source": "GloFAS (Copernicus Emergency Management Service) via the Open-Meteo Flood API, CC BY 4.0"
+ },
+ "sites": [
+  {
+   "site_id": "district-BD1004",
+   "kind": "district",
+   "name": "Barguna",
+   "district_pcode": "BD1004",
+   "division": "Barishal",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     90.13684,
+     22.16442
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD1006",
+   "kind": "district",
+   "name": "Barishal",
+   "district_pcode": "BD1006",
+   "division": "Barishal",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     90.38923,
+     22.76756
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD1009",
+   "kind": "district",
+   "name": "Bhola",
+   "district_pcode": "BD1009",
+   "division": "Barishal",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     90.83372,
+     22.35579
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD1042",
+   "kind": "district",
+   "name": "Jhalokati",
+   "district_pcode": "BD1042",
+   "division": "Barishal",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     90.17183,
+     22.56128
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD1078",
+   "kind": "district",
+   "name": "Patuakhali",
+   "district_pcode": "BD1078",
+   "division": "Barishal",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     90.48276,
+     22.19261
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD1079",
+   "kind": "district",
+   "name": "Pirojpur",
+   "district_pcode": "BD1079",
+   "division": "Barishal",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     89.99463,
+     22.51492
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD2003",
+   "kind": "district",
+   "name": "Bandarban",
+   "district_pcode": "BD2003",
+   "division": "Chattogram",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     92.38557,
+     21.76572
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD2012",
+   "kind": "district",
+   "name": "Brahmanbaria",
+   "district_pcode": "BD2012",
+   "division": "Chattogram",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     91.11136,
+     23.95697
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD2013",
+   "kind": "district",
+   "name": "Chandpur",
+   "district_pcode": "BD2013",
+   "division": "Chattogram",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     90.80994,
+     23.24271
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD2015",
+   "kind": "district",
+   "name": "Chattogram",
+   "district_pcode": "BD2015",
+   "division": "Chattogram",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     91.87828,
+     22.41844
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD2019",
+   "kind": "district",
+   "name": "Cumilla",
+   "district_pcode": "BD2019",
+   "division": "Chattogram",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     91.07547,
+     23.42291
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD2022",
+   "kind": "district",
+   "name": "Cox's Bazar",
+   "district_pcode": "BD2022",
+   "division": "Chattogram",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     92.09384,
+     21.32084
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD2030",
+   "kind": "district",
+   "name": "Feni",
+   "district_pcode": "BD2030",
+   "division": "Chattogram",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     91.40272,
+     23.01204
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD2046",
+   "kind": "district",
+   "name": "Khagrachhari",
+   "district_pcode": "BD2046",
+   "division": "Chattogram",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     91.97326,
+     23.21131
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD2051",
+   "kind": "district",
+   "name": "Lakshmipur",
+   "district_pcode": "BD2051",
+   "division": "Chattogram",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     90.82745,
+     22.8304
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD2075",
+   "kind": "district",
+   "name": "Noakhali",
+   "district_pcode": "BD2075",
+   "division": "Chattogram",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     91.14879,
+     22.60975
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD2084",
+   "kind": "district",
+   "name": "Rangamati",
+   "district_pcode": "BD2084",
+   "division": "Chattogram",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     92.2226,
+     22.79579
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD3026",
+   "kind": "district",
+   "name": "Dhaka",
+   "district_pcode": "BD3026",
+   "division": "Dhaka",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     90.35647,
+     23.78588
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD3029",
+   "kind": "district",
+   "name": "Faridpur",
+   "district_pcode": "BD3029",
+   "division": "Dhaka",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     89.86789,
+     23.46708
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD3033",
+   "kind": "district",
+   "name": "Gazipur",
+   "district_pcode": "BD3033",
+   "division": "Dhaka",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     90.4096,
+     24.09462
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD3035",
+   "kind": "district",
+   "name": "Gopalganj",
+   "district_pcode": "BD3035",
+   "division": "Dhaka",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     89.89691,
+     23.10383
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD3048",
+   "kind": "district",
+   "name": "Kishoreganj",
+   "district_pcode": "BD3048",
+   "division": "Dhaka",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     90.92608,
+     24.34063
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD3054",
+   "kind": "district",
+   "name": "Madaripur",
+   "district_pcode": "BD3054",
+   "division": "Dhaka",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     90.13367,
+     23.23085
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD3056",
+   "kind": "district",
+   "name": "Manikganj",
+   "district_pcode": "BD3056",
+   "division": "Dhaka",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     89.96141,
+     23.83105
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD3059",
+   "kind": "district",
+   "name": "Munshiganj",
+   "district_pcode": "BD3059",
+   "division": "Dhaka",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     90.43157,
+     23.52575
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD3067",
+   "kind": "district",
+   "name": "Narayanganj",
+   "district_pcode": "BD3067",
+   "division": "Dhaka",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     90.62022,
+     23.7135
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD3068",
+   "kind": "district",
+   "name": "Narsingdi",
+   "district_pcode": "BD3068",
+   "division": "Dhaka",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     90.80674,
+     24.00614
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD3082",
+   "kind": "district",
+   "name": "Rajbari",
+   "district_pcode": "BD3082",
+   "division": "Dhaka",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     89.57246,
+     23.73478
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD3086",
+   "kind": "district",
+   "name": "Shariatpur",
+   "district_pcode": "BD3086",
+   "division": "Dhaka",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     90.41977,
+     23.22462
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD3093",
+   "kind": "district",
+   "name": "Tangail",
+   "district_pcode": "BD3093",
+   "division": "Dhaka",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     90.00344,
+     24.38037
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD4001",
+   "kind": "district",
+   "name": "Bagerhat",
+   "district_pcode": "BD4001",
+   "division": "Khulna",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     89.76138,
+     22.35368
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD4018",
+   "kind": "district",
+   "name": "Chuadanga",
+   "district_pcode": "BD4018",
+   "division": "Khulna",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     88.82425,
+     23.60387
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD4041",
+   "kind": "district",
+   "name": "Jashore",
+   "district_pcode": "BD4041",
+   "division": "Khulna",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     89.12469,
+     23.08541
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD4044",
+   "kind": "district",
+   "name": "Jhenaidah",
+   "district_pcode": "BD4044",
+   "division": "Khulna",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     89.12321,
+     23.49526
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD4047",
+   "kind": "district",
+   "name": "Khulna",
+   "district_pcode": "BD4047",
+   "division": "Khulna",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     89.43946,
+     22.33618
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD4050",
+   "kind": "district",
+   "name": "Kushtia",
+   "district_pcode": "BD4050",
+   "division": "Khulna",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     88.97964,
+     23.95566
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD4055",
+   "kind": "district",
+   "name": "Magura",
+   "district_pcode": "BD4055",
+   "division": "Khulna",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     89.45694,
+     23.4713
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD4057",
+   "kind": "district",
+   "name": "Meherpur",
+   "district_pcode": "BD4057",
+   "division": "Khulna",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     88.70053,
+     23.7882
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD4065",
+   "kind": "district",
+   "name": "Narail",
+   "district_pcode": "BD4065",
+   "division": "Khulna",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     89.57256,
+     23.13826
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD4087",
+   "kind": "district",
+   "name": "Satkhira",
+   "district_pcode": "BD4087",
+   "division": "Khulna",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     89.15185,
+     22.29601
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD4539",
+   "kind": "district",
+   "name": "Jamalpur",
+   "district_pcode": "BD4539",
+   "division": "Mymensingh",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     89.77809,
+     25.00369
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD4561",
+   "kind": "district",
+   "name": "Mymensingh",
+   "district_pcode": "BD4561",
+   "division": "Mymensingh",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     90.41799,
+     24.7225
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD4572",
+   "kind": "district",
+   "name": "Netrakona",
+   "district_pcode": "BD4572",
+   "division": "Mymensingh",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     90.79224,
+     24.88612
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD4589",
+   "kind": "district",
+   "name": "Sherpur",
+   "district_pcode": "BD4589",
+   "division": "Mymensingh",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     90.0964,
+     25.09363
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD5010",
+   "kind": "district",
+   "name": "Bogura",
+   "district_pcode": "BD5010",
+   "division": "Rajshahi",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     89.34127,
+     24.82867
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD5038",
+   "kind": "district",
+   "name": "Joypurhat",
+   "district_pcode": "BD5038",
+   "division": "Rajshahi",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     89.09202,
+     25.06105
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD5064",
+   "kind": "district",
+   "name": "Naogaon",
+   "district_pcode": "BD5064",
+   "division": "Rajshahi",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     88.7364,
+     24.87384
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD5069",
+   "kind": "district",
+   "name": "Natore",
+   "district_pcode": "BD5069",
+   "division": "Rajshahi",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     89.09081,
+     24.39455
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD5070",
+   "kind": "district",
+   "name": "Chapainababganj",
+   "district_pcode": "BD5070",
+   "division": "Rajshahi",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     88.26137,
+     24.69532
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD5076",
+   "kind": "district",
+   "name": "Pabna",
+   "district_pcode": "BD5076",
+   "division": "Rajshahi",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     89.33896,
+     24.07841
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD5081",
+   "kind": "district",
+   "name": "Rajshahi",
+   "district_pcode": "BD5081",
+   "division": "Rajshahi",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     88.59819,
+     24.41911
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD5088",
+   "kind": "district",
+   "name": "Sirajganj",
+   "district_pcode": "BD5088",
+   "division": "Rajshahi",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     89.53022,
+     24.39788
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD5527",
+   "kind": "district",
+   "name": "Dinajpur",
+   "district_pcode": "BD5527",
+   "division": "Rangpur",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     88.72329,
+     25.6431
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD5532",
+   "kind": "district",
+   "name": "Gaibandha",
+   "district_pcode": "BD5532",
+   "division": "Rangpur",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     89.53509,
+     25.33951
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD5549",
+   "kind": "district",
+   "name": "Kurigram",
+   "district_pcode": "BD5549",
+   "division": "Rangpur",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     89.64323,
+     25.80629
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD5552",
+   "kind": "district",
+   "name": "Lalmonirhat",
+   "district_pcode": "BD5552",
+   "division": "Rangpur",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     89.14655,
+     26.12372
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD5573",
+   "kind": "district",
+   "name": "Nilphamari",
+   "district_pcode": "BD5573",
+   "division": "Rangpur",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     88.92345,
+     26.02307
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD5577",
+   "kind": "district",
+   "name": "Panchagarh",
+   "district_pcode": "BD5577",
+   "division": "Rangpur",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     88.58612,
+     26.31974
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD5585",
+   "kind": "district",
+   "name": "Rangpur",
+   "district_pcode": "BD5585",
+   "division": "Rangpur",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     89.25997,
+     25.63432
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD5594",
+   "kind": "district",
+   "name": "Thakurgaon",
+   "district_pcode": "BD5594",
+   "division": "Rangpur",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     88.31014,
+     25.93636
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD6036",
+   "kind": "district",
+   "name": "Habiganj",
+   "district_pcode": "BD6036",
+   "division": "Sylhet",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     91.43314,
+     24.33228
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD6058",
+   "kind": "district",
+   "name": "Moulvibazar",
+   "district_pcode": "BD6058",
+   "division": "Sylhet",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     91.88353,
+     24.48772
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD6090",
+   "kind": "district",
+   "name": "Sunamganj",
+   "district_pcode": "BD6090",
+   "division": "Sylhet",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     91.3907,
+     24.88794
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "district-BD6091",
+   "kind": "district",
+   "name": "Sylhet",
+   "district_pcode": "BD6091",
+   "division": "Sylhet",
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     91.96237,
+     24.89076
+    ]
+   },
+   "measures": [
+    "rain"
+   ]
+  },
+  {
+   "site_id": "surma-sunamganj",
+   "kind": "river",
+   "name": "Surma near Sunamganj",
+   "river": "Surma",
+   "near": "Sunamganj",
+   "approximate_location": {
+    "type": "Point",
+    "coordinates": [
+     91.4,
+     25.07
+    ]
+   },
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     91.375,
+     25.07501
+    ]
+   },
+   "measures": [
+    "river_discharge"
+   ],
+   "verification": {
+    "period": "2020-07-01 to 2020-08-31",
+    "mean_discharge_m3s": 1240.2,
+    "cells_searched": 9,
+    "moved_km": 2.6,
+    "moved_more_than_max": false,
+    "min_required_m3s": 100.0
+   },
+   "district_pcode": "BD6090"
+  },
+  {
+   "site_id": "kushiyara-sherpur",
+   "kind": "river",
+   "name": "Kushiyara near Sherpur (Moulvibazar)",
+   "river": "Kushiyara",
+   "near": "Sherpur (Moulvibazar)",
+   "approximate_location": {
+    "type": "Point",
+    "coordinates": [
+     91.68,
+     24.63
+    ]
+   },
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     91.625,
+     24.625
+    ]
+   },
+   "measures": [
+    "river_discharge"
+   ],
+   "verification": {
+    "period": "2020-07-01 to 2020-08-31",
+    "mean_discharge_m3s": 2219.3,
+    "cells_searched": 9,
+    "moved_km": 5.6,
+    "moved_more_than_max": false,
+    "min_required_m3s": 100.0
+   },
+   "district_pcode": "BD6036"
+  },
+  {
+   "site_id": "jamuna-bahadurabad",
+   "kind": "river",
+   "name": "Jamuna (Brahmaputra) near Bahadurabad (Jamalpur)",
+   "river": "Jamuna (Brahmaputra)",
+   "near": "Bahadurabad (Jamalpur)",
+   "approximate_location": {
+    "type": "Point",
+    "coordinates": [
+     89.7,
+     25.15
+    ]
+   },
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     89.67502,
+     25.07501
+    ]
+   },
+   "measures": [
+    "river_discharge"
+   ],
+   "verification": {
+    "period": "2020-07-01 to 2020-08-31",
+    "mean_discharge_m3s": 59547.8,
+    "cells_searched": 9,
+    "moved_km": 8.7,
+    "moved_more_than_max": true,
+    "min_required_m3s": 100.0
+   },
+   "district_pcode": "BD4539"
+  },
+  {
+   "site_id": "jamuna-sirajganj",
+   "kind": "river",
+   "name": "Jamuna (Brahmaputra) near Sirajganj",
+   "river": "Jamuna (Brahmaputra)",
+   "near": "Sirajganj",
+   "approximate_location": {
+    "type": "Point",
+    "coordinates": [
+     89.71,
+     24.45
+    ]
+   },
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     89.72501,
+     24.425
+    ]
+   },
+   "measures": [
+    "river_discharge"
+   ],
+   "verification": {
+    "period": "2020-07-01 to 2020-08-31",
+    "mean_discharge_m3s": 60298.0,
+    "cells_searched": 9,
+    "moved_km": 3.2,
+    "moved_more_than_max": false,
+    "min_required_m3s": 100.0
+   },
+   "district_pcode": "BD5088"
+  },
+  {
+   "site_id": "ganges-hardinge-bridge",
+   "kind": "river",
+   "name": "Ganges (Padma) near Hardinge Bridge (Pabna/Kushtia)",
+   "river": "Ganges (Padma)",
+   "near": "Hardinge Bridge (Pabna/Kushtia)",
+   "approximate_location": {
+    "type": "Point",
+    "coordinates": [
+     89.03,
+     24.07
+    ]
+   },
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     88.97501,
+     24.07501
+    ]
+   },
+   "measures": [
+    "river_discharge"
+   ],
+   "verification": {
+    "period": "2020-07-01 to 2020-08-31",
+    "mean_discharge_m3s": 42133.7,
+    "cells_searched": 9,
+    "moved_km": 5.6,
+    "moved_more_than_max": false,
+    "min_required_m3s": 100.0
+   },
+   "district_pcode": "BD4050"
+  },
+  {
+   "site_id": "padma-goalundo",
+   "kind": "river",
+   "name": "Padma near Goalundo (Rajbari)",
+   "river": "Padma",
+   "near": "Goalundo (Rajbari)",
+   "approximate_location": {
+    "type": "Point",
+    "coordinates": [
+     89.76,
+     23.8
+    ]
+   },
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     89.77502,
+     23.775
+    ]
+   },
+   "measures": [
+    "river_discharge"
+   ],
+   "verification": {
+    "period": "2020-07-01 to 2020-08-31",
+    "mean_discharge_m3s": 104258.7,
+    "cells_searched": 9,
+    "moved_km": 3.2,
+    "moved_more_than_max": false,
+    "min_required_m3s": 100.0
+   },
+   "district_pcode": "BD3082"
+  },
+  {
+   "site_id": "meghna-bhairab",
+   "kind": "river",
+   "name": "Meghna near Bhairab Bazar (Kishoreganj)",
+   "river": "Meghna",
+   "near": "Bhairab Bazar (Kishoreganj)",
+   "approximate_location": {
+    "type": "Point",
+    "coordinates": [
+     90.98,
+     24.05
+    ]
+   },
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     90.92502,
+     24.025
+    ]
+   },
+   "measures": [
+    "river_discharge"
+   ],
+   "verification": {
+    "period": "2020-07-01 to 2020-08-31",
+    "mean_discharge_m3s": 6606.8,
+    "cells_searched": 9,
+    "moved_km": 6.2,
+    "moved_more_than_max": false,
+    "min_required_m3s": 100.0
+   },
+   "district_pcode": "BD3068"
+  },
+  {
+   "site_id": "teesta-kaunia",
+   "kind": "river",
+   "name": "Teesta near Kaunia (Rangpur)",
+   "river": "Teesta",
+   "near": "Kaunia (Rangpur)",
+   "approximate_location": {
+    "type": "Point",
+    "coordinates": [
+     89.43,
+     25.78
+    ]
+   },
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     89.47501,
+     25.72501
+    ]
+   },
+   "measures": [
+    "river_discharge"
+   ],
+   "verification": {
+    "period": "2020-07-01 to 2020-08-31",
+    "mean_discharge_m3s": 3479.6,
+    "cells_searched": 9,
+    "moved_km": 7.6,
+    "moved_more_than_max": false,
+    "min_required_m3s": 100.0
+   },
+   "district_pcode": "BD5585"
+  },
+  {
+   "site_id": "feni-area-river",
+   "kind": "river",
+   "name": "Feni area river (name not verified) near Feni",
+   "river": "Feni area river (name not verified)",
+   "near": "Feni",
+   "approximate_location": {
+    "type": "Point",
+    "coordinates": [
+     91.45,
+     22.95
+    ]
+   },
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     91.42502,
+     22.925
+    ]
+   },
+   "measures": [
+    "river_discharge"
+   ],
+   "verification": {
+    "period": "2020-07-01 to 2020-08-31",
+    "mean_discharge_m3s": 162.1,
+    "cells_searched": 9,
+    "moved_km": 3.8,
+    "moved_more_than_max": false,
+    "min_required_m3s": 100.0
+   },
+   "district_pcode": "BD2030"
+  }
+ ],
+ "rejected_river_candidates": [],
+ "excluded_river_candidates": [
+  {
+   "site_id": "buriganga-dhaka",
+   "name": "Buriganga near Dhaka (Sadarghat)",
+   "approximate_location": {
+    "type": "Point",
+    "coordinates": [
+     90.41,
+     23.7
+    ]
+   },
+   "reason": "GloFAS ~5 km cells cannot separate the Buriganga from the Turag, Dhaleshwari and Shitalakshya where they meet around Dhaka: two nearby cells both lie close to OSM 'Buriganga River' lines but carry 364 and 670 m3/s (Jul-Aug 2020), and a wider search reached the Dhaleshwari-Meghna system (8,048 m3/s). Dhaka keeps its district rain site."
+  }
+ ]
+}

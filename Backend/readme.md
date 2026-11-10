@@ -14,11 +14,13 @@ stores records in MongoDB, and returns results to the frontend.
 - Nationwide **flood history**: 10 satellite-observed flood events (2016–2024) and a modelled river-flood hazard map.
 - **Assets** (hospitals, schools, shelters, …) with people and value, their **flood exposure**, and map queries
   ("near this point", "inside this area").
+- **Environmental-data ingestion**: historical rain (ERA5), river flow (GloFAS) and forecast rain (GFS) for 64
+  district sites and 9 verified river sites, stored with full provenance and a call budget.
 - Persistent storage in **MongoDB Atlas**, with geospatial indexes.
-- 155 automated tests.
+- 187 automated tests.
 
-**What does not exist yet:** a trained flood-forecasting model, live weather or river-data ingestion, flood alerts,
-user accounts.
+**What does not exist yet:** a trained flood-forecasting model, flood labels and an ML dataset, flood alerts,
+scheduled (automatic) ingestion, user accounts.
 
 > This is a development prototype, not an operational flood-warning service. Flood history and modelled hazard
 > describe the past and possible floods; **nothing here is a forecast** or a flood probability.
@@ -61,7 +63,7 @@ Still open:
 
 - Forecast grid-cell size for the model: [not yet defined; the flood data grid is ~90 m].
 - Flood-event definition and thresholds for labels: [not yet defined].
-- Weather/rainfall data sources for forecasting: [not yet selected].
+- Weather and river data: **selected and ingested** (ERA5 rain, GloFAS discharge, GFS forecast rain; section 9).
 - Alert thresholds: [not yet defined].
 
 Rainfall alone will not be treated as proof of flooding. Being inside a supplied polygon does not, by itself,
@@ -88,7 +90,8 @@ establish flood risk.
 | Asset flood exposure (one asset and reports) | Implemented |
 | Assets near a point / inside an area | Implemented (MongoDB `2dsphere` index) |
 | CORS for frontend development servers | Implemented |
-| Live weather or river-data ingestion | Not implemented |
+| Rain and river-data ingestion (ERA5, GloFAS, GFS) with provenance, resumable runs, call budget | Implemented (started manually) |
+| Scheduled automatic ingestion | Not implemented |
 | Flood forecasting model and alerts | Not implemented |
 | Authentication, authorization, rate limiting | Not implemented |
 
@@ -108,7 +111,8 @@ Weather observations are submitted through the API. The weather module does **no
 | Shapely | Planar geometry (containment, validity, nearest points) |
 | GeographicLib | Distances on the WGS84 ellipsoid |
 | NumPy | The flood grid (compressed arrays) |
-| pytest + httpx | Automated tests |
+| httpx | Calls to Open-Meteo (ingestion) and the test client |
+| pytest | Automated tests |
 
 Offline data-preparation scripts additionally use **Rasterio** and **pyogrio** (`requirements-dev.txt`). The API
 itself does not need them.
@@ -160,16 +164,18 @@ Rokkha/
     │   │   ├── assets/            assets, exposure, near/within queries
     │   │   ├── geospatial/        geometry tools, boundaries, waterways, flood
     │   │   ├── weather/           weather observations
-    │   │   └── alerts/, ingestion/, prediction/   (placeholders)
+    │   │   ├── ingestion/         rain and river data from Open-Meteo
+    │   │   └── alerts/, prediction/   (placeholders)
     │   └── main.py                app, startup/shutdown, routers, CORS
     ├── data/
     │   ├── boundaries/            Dhaka District + 64 districts (+ README)
     │   ├── waterways/             Dhaka rivers, canals, drains (+ README)
-    │   └── flood/                 flood history, flood grid (+ README)
+    │   ├── flood/                 flood history, flood grid (+ README)
+    │   └── ingestion/             measuring sites: 64 districts + 9 rivers (+ README)
     ├── docs/
     │   └── FRONTEND_API_GUIDE.md  guide for the frontend developer
     ├── scripts/                   rebuild the data files from their sources
-    ├── tests/                     155 automated tests
+    ├── tests/                     187 automated tests
     ├── ml/                        (placeholder)
     ├── pytest.ini
     ├── requirements.txt           pinned API dependencies
@@ -316,6 +322,21 @@ All module paths start with `/api/v1`. Full request and response shapes: `/docs`
 | GET | `/geospatial/flood/districts/{pcode}` | One district, event by event |
 | POST | `/geospatial/flood/check` | Flood history and modelled hazard at any point |
 
+### Ingestion
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| GET | `/ingestion/sites?kind=district\|river` | Measuring sites (+ excluded river candidates and why) |
+| POST | `/ingestion/runs` | Start a run (202; continues in the background) |
+| GET | `/ingestion/runs`, `/ingestion/runs/{run_id}` | Run log: status, pieces, values written, calls spent, message |
+| GET | `/ingestion/usage` | Open-Meteo calls spent this hour / today vs the budget |
+| GET | `/ingestion/rain?site_id=&start_date=&end_date=` | Daily rain (ERA5) |
+| GET | `/ingestion/river?site_id=&start_date=&end_date=` | Daily river discharge (GloFAS) |
+| GET | `/ingestion/rain-forecast?site_id=` | Latest hourly rain forecast (GFS) |
+
+Run kinds: `rain_history` and `river_history` (need `start_date`, `end_date`), `rain_forecast` and `river_forecast`
+(`forecast_days` 1–7). Optional `site_ids` limits a run to some sites. Only one run at a time (409 otherwise).
+
 ## 7. Try the API without writing code
 
 1. Start the backend and open http://127.0.0.1:8000/docs.
@@ -355,6 +376,19 @@ modelled 10-year river flood depth is "1 to 3 m".
 
 `GET /api/v1/assets/near?lng=90.4106&lat=23.7058&max_distance_m=3000` (Sadarghat) returns assets within 3 km,
 nearest first, with WGS84 distances (Dhaka Medical College Hospital: 2581.5 m).
+
+### Example E: Ingest the 2022 Sunamganj flood rain and river data
+
+`POST /api/v1/ingestion/runs`:
+
+```json
+{"kind": "rain_history", "start_date": "2022-06-13", "end_date": "2022-06-20", "site_ids": ["district-BD6090"]}
+```
+
+Then `{"kind": "river_history", "start_date": "2022-06-10", "end_date": "2022-06-25", "site_ids": ["surma-sunamganj"]}`.
+Check `GET /api/v1/ingestion/runs` until `status` is `completed`, then
+`GET /api/v1/ingestion/rain?site_id=district-BD6090&start_date=2022-06-13&end_date=2022-06-20` → about 515 mm in
+8 days (104 mm on 17 June), and the Surma rising from about 890 to 1,737 m³/s on 18 June.
 
 ### Example D: Check whether a point is inside an area
 
@@ -430,6 +464,9 @@ Each data folder has its own README with sources, changes and limitations.
 | Dhaka rivers, canals, drains | OpenStreetMap contributors (HOT export, 2026-11-04) | ODbL |
 | Observed flood water, 10 events 2016–2024 | UNOSAT (United Nations Satellite Centre) | CC BY-SA |
 | Modelled river-flood hazard (10- and 100-year), permanent water | JRC GloFAS v2.1.2, © European Union | CC BY 4.0 / ODbL |
+| Historical rain | ERA5 reanalysis (ECMWF, Copernicus C3S) via Open-Meteo | CC BY 4.0 (Open-Meteo) |
+| River discharge (history and forecast) | GloFAS (Copernicus EMS) via Open-Meteo | CC BY 4.0 (Open-Meteo) |
+| Forecast rain | GFS (NOAA NCEP) via Open-Meteo | CC BY 4.0 (Open-Meteo) |
 
 API responses carry `attribution` and `limitations`; frontends must show the attribution.
 
@@ -442,6 +479,23 @@ API responses carry `attribution` and `limitations`; frontends must show the att
 - **Seasonal wetlands** (haors, beels) are counted as flood water alongside damaging floods.
 - Drains in Dhaka are very incompletely mapped; waterway distances exist only inside Dhaka District.
 - Flood results describe a ~90 m grid cell, not an exact spot.
+
+### Ingestion: what is stored, and the call budget
+
+Every value records its site, real date or valid time, unit, accumulation window (`24 h total, 00:00-24:00 UTC`,
+`daily mean discharge`, or `1 h, the hour ending at valid_time`), source, the data-grid point it came from
+(`grid_location`), fetch time and run id. Re-running replaces values instead of duplicating them; values the
+source does not have are stored with `missing: true`. ERA5 arrives about 5 days late, so `rain_history` cannot end
+in the last 6 days.
+
+Open-Meteo's free tier allows < 5,000 calls per hour and < 10,000 per day for non-commercial use (it blocks IPs
+that exceed it), and one call covers at most 14 days for one location. A run therefore checks
+`INGESTION_MAX_CALLS_PER_HOUR` (4,000) and `INGESTION_MAX_CALLS_PER_DAY` (8,000) before every request and **pauses**
+(`status: paused_budget`) instead of exceeding them. **Start the same run again later: pieces already stored are
+skipped**, so it resumes where it stopped.
+
+A full backfill of all 64 district sites for 2016–2024 needs about 64 × 9 × 26 ≈ 15,000 calls: plan it over two
+days (about four re-runs). River history for the 9 river sites for 2016–2024 needs about 2,100 calls.
 
 ## 10. Errors and troubleshooting
 
@@ -474,7 +528,7 @@ Allowed by default: `http://localhost:3000` and `http://localhost:5173`. Add oth
 python -m pytest -v
 ```
 
-Expected: **155 passed**.
+Expected: **187 passed**.
 
 Tests that store data use a **separate local test MongoDB in Docker**, never Atlas:
 
@@ -496,6 +550,7 @@ test. Use another test server with `TEST_MONGODB_URI=mongodb://host:port`.
 | `test_api_asset_exposure.py` | Asset flood exposure |
 | `test_api_assets_mongodb.py` | MongoDB storage, indexes, near / within |
 | `test_api_weather_and_locations.py` | Weather and locations in MongoDB |
+| `test_api_ingestion.py` | Ingestion: sites, runs, resuming, budget, errors, recorded real Open-Meteo responses |
 
 `tests/test_geospatial.py` is an older print-only Shapely demonstration, kept for reference.
 
@@ -511,8 +566,9 @@ Planned items are not claims of completed functionality.
 | Observed flood history and modelled flood hazard (nationwide) | Done |
 | Asset management and flood exposure analysis | Done |
 | MongoDB persistence, geospatial indexes and queries | Done |
-| Environmental-data ingestion (weather, river levels, observed floods) with real observation times, units and provenance | Next |
-| Flood-event label definition and ML dataset (time- and place-based splits) | Planned |
+| Environmental-data ingestion (ERA5 rain, GloFAS river flow, GFS forecast) with real times, units and provenance | Done (backfill 2016–2024 to be run) |
+| Scheduled automatic ingestion | Planned (Celery/Redis only if justified) |
+| Flood-event label definition and ML dataset (time- and place-based splits) | Next |
 | XGBoost baseline; evaluation and probability calibration | Planned |
 | Prediction API, alert generation, end-to-end tests | Planned |
 | Authentication and rate limiting before any public use | Planned |

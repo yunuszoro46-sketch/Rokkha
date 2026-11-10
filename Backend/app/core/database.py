@@ -61,6 +61,18 @@ class Database:
         await weather.create_index([("observed_at", ASCENDING)], name="observed_at")
         await weather.create_index([("location_name", ASCENDING)], name="location_name")
 
+        # Ingestion (Milestone 18): time series per site, run log, call budget.
+        for name in ("rain_daily", "river_discharge_daily"):
+            await cls.db[name].create_index(
+                [("site_id", ASCENDING), ("date", ASCENDING)], name="site_date"
+            )
+        await cls.db["rain_forecast_hourly"].create_index(
+            [("site_id", ASCENDING), ("fetched_at", ASCENDING), ("valid_time", ASCENDING)],
+            name="site_fetch_valid",
+        )
+        await cls.db["ingestion_runs"].create_index([("started_at", ASCENDING)], name="started_at")
+        await cls.db["ingestion_api_usage"].create_index([("date", ASCENDING)], name="date")
+
     @classmethod
     async def disconnect(cls):
 

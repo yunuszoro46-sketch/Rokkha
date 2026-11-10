@@ -82,6 +82,7 @@ from app.core.database import Database
 from app.modules.weather.router import router as weather_router
 from app.modules.geospatial.router import router as geospatial_router
 from app.modules.assets.router import router as assets_router
+from app.modules.ingestion.router import router as ingestion_router
 
 
 @asynccontextmanager
@@ -164,5 +165,10 @@ app.include_router(
 
 app.include_router(
     assets_router,
+    prefix=settings.API_V1_PREFIX
+)
+
+app.include_router(
+    ingestion_router,
     prefix=settings.API_V1_PREFIX
 )

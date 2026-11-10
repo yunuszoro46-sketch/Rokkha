@@ -13,6 +13,13 @@ class Settings(BaseSettings):
 
     DEBUG: bool = True
 
+    # Open-Meteo free tier: < 5,000 calls per hour and < 10,000 per day
+    # (they block IPs that exceed it). The ingestion module stays below
+    # these safety limits and pauses a run when the next request would
+    # cross them; re-running later resumes where it stopped.
+    INGESTION_MAX_CALLS_PER_HOUR: float = 4000
+    INGESTION_MAX_CALLS_PER_DAY: float = 8000
+
     # Web addresses allowed to call this API from a browser (CORS).
     # Defaults cover common frontend dev servers (React/Next.js, Vite).
     # Override in .env as a JSON list, e.g.

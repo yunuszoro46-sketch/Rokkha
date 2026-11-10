@@ -291,7 +291,22 @@ Good for "click anywhere on the map".
 Shapes for drawing: `Backend/data/boundaries/dhaka_boundaries.geojson` and
 `Backend/data/waterways/dhaka_waterways.geojson` (2,141 lines, ~0.9 MB).
 
-### E. Small tools (optional)
+### E. Rain and river data (charts)
+
+| Method | Path | What it does |
+|---|---|---|
+| `GET` | `/ingestion/sites?kind=district\|river` | 64 district sites (rain) + 9 river sites (discharge), each with a GeoJSON `location` |
+| `GET` | `/ingestion/rain?site_id=&start_date=&end_date=` | daily rain (mm) — good for a bar chart |
+| `GET` | `/ingestion/river?site_id=&start_date=&end_date=` | daily river discharge (m³/s) — good for a line chart |
+| `GET` | `/ingestion/rain-forecast?site_id=` | latest hourly rain forecast + `total_precipitation_mm` |
+
+Site ids: `district-<pcode>` (e.g. `district-BD3026` Dhaka, `district-BD6090` Sunamganj) and river ids such as
+`surma-sunamganj`. Values only exist after the backend developer has run an ingestion for those dates. Each value
+has `unit`, `statistic` (e.g. "24 h total, 00:00-24:00 UTC"), `missing` (show a gap, not 0), and `is_forecast`
+(draw forecasts differently from observed history). Show the `attribution` list (Open-Meteo, Copernicus ERA5 /
+GloFAS, NOAA GFS). A rain *forecast* is not a flood forecast.
+
+### F. Small tools (optional)
 
 `POST /geospatial/spatial-analysis/distance`, `.../linestring-length`,
 `.../point-in-polygon`, `.../multipoint-in-zone`, `.../multipoint-distances`,
