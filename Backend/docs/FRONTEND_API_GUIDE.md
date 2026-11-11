@@ -2,14 +2,17 @@
 
 Climate Shield helps protect **lives and assets from floods in Bangladesh**.
 The backend already knows where floods have happened (satellite
-observations, 2016–2024), where they could happen (a flood model), the
-district boundaries, Dhaka's rivers and canals, and which buildings
-("assets") we are protecting. This guide is everything you need to build
-screens on top of it.
+observations, 2016 up to yesterday), where they could happen (a flood hazard
+map), how likely a flood is in each district on a given day (a trained
+model, with alerts), the district boundaries, Dhaka's rivers and canals,
+and which buildings ("assets") we are protecting. This guide is everything
+you need to build screens on top of it.
 
-> **Not built yet:** flood *forecasts* / probabilities, alerts and user
-> accounts. Don't design screens that
-> show "chance of flooding tomorrow" as real data yet.
+> **Start with section 4** if you want to know what a user can see and do.
+>
+> **Not built yet:** user accounts / login, notifications (SMS, push,
+> email) and Bangla text. Don't design screens that depend on them as if
+> they were real.
 
 ---
 
@@ -410,7 +413,68 @@ Real rain and river data is in section E; these manual records are separate from
 
 ---
 
-## 4. Suggested first screens
+## 4. What a user can see and do
+
+The backend only returns data. Everything below becomes real for a user
+only when a screen shows it. Use this list to decide which screens to build
+and who each screen is for.
+
+### For a citizen (read only)
+
+| What the user gets | Call | Show it like this |
+|---|---|---|
+| **Flood risk for my district** today or on a chosen date | `GET /predictions?target_date=` | "Sunamganj: 42% flood probability". Above 0.95 write "more than 95%". Colour by `alert_level` |
+| **Find my district** from the phone's location | `POST /geospatial/flood/check` with the GPS point | Use the returned `district.pcode` to pick the right prediction. Outside Bangladesh both parts are `null` |
+| **Alerts** | `GET /alerts?target_date=` | One card per district with the ready-made `message`. `count: 0` = "No district reached the alert level", not "safe" |
+| **Flood risk map** of Bangladesh | `GET /predictions?target_date=` + the district shapes file (section C) | Colours for `none` / `watch` / `alert`, grey for `unsupported` (8 districts) |
+| **Why this risk?** | `features` inside each prediction | A few plain lines: rain in the last 3 days, river level, last satellite pass |
+| **Flood history** of a district | `GET /geospatial/flood/districts/{pcode}` and `.../satellite-observations` | "Flooded in 6 of 6 large flood events"; a timeline of satellite passes |
+| **Rain and river charts** | `GET /ingestion/rain`, `/ingestion/rain-forecast`, `/ingestion/river` | Bars for rain, line for river flow; draw forecast values differently |
+| **Check any place** | `POST /geospatial/flood/check` | Tap the map: flooded before? In the 10- or 100-year flood zone? |
+| **Nearest shelter or hospital** | `GET /assets/near?lng=&lat=&max_distance_m=&asset_type=` | A list, nearest first, with distance in metres |
+| **How good the model is** | `GET /predictions/model` | An "About the forecast" panel with the test results and limits |
+
+Rules for every citizen screen:
+
+- Use **`GET`** for predictions and alerts. `POST /predictions` computes and stores a new day; that is the
+  backend's daily job, not something a page should trigger for every visitor.
+- `GET /predictions` and `GET /alerts` answer **404** when no prediction exists for that day. Show
+  "No forecast for this day yet", never an empty "all clear" map.
+- Always show that this is a **model estimate, not an official flood warning**, and show `data_through`
+  (how fresh the data is).
+- Predictions are **per district**. Never say "your house will flood".
+
+### For a rescue team or coordinator
+
+| What the user gets | Call | Show it like this |
+|---|---|---|
+| **Where to prepare first** | `GET /alerts?target_date=&min_level=watch` | Districts sorted by probability (the list already comes highest first) |
+| **Important places in an alerted district** | `assets_at_risk` inside each alert | Counts and a list of hospitals, schools and shelters, with the badges from `flags` |
+| **Places that flooded before** | `GET /assets/exposure?district_pcode=` | Filter to `flags.observed_flooding = true` |
+| **Latest observed flooding** | `GET /geospatial/flood/districts/{pcode}/satellite-observations` | The newest pass: date and `flooded_share`. This is an observation, not a forecast |
+| **Places inside an area** | `POST /assets/within` | Draw a polygon, list what is inside |
+
+### For an admin only
+
+Creating, changing and deleting assets (`POST`, `PATCH`, `DELETE /assets`). **There is no login yet**, so
+the backend cannot tell an admin from a visitor. Keep these forms out of the public pages. Hiding a form is not
+security; real protection comes with the login work.
+
+### What the backend does not give you (yet)
+
+| Missing | What it means for your screens |
+|---|---|
+| Notifications (SMS, push, email) | An alert exists only when someone opens the app. Don't show "you will be notified" |
+| User accounts | No saved "my district" on the server. You can remember it in the browser (`localStorage`) |
+| Bangla text | `message` and all names are in English. Translate fixed labels in the frontend; keep district names as they are until a Bangla name list exists |
+| Upazila or village detail | Only districts. Don't zoom the risk colours below district level |
+| Other hazards (cyclone, heat, erosion) | Floods only |
+| Offline support | The API needs a connection. Keep the last answer and show its time ("updated 3 hours ago"); never show old data as current, and never show "no risk" because a call failed |
+| Rescue requests (SOS, missions, teams) | Not in this backend at all |
+
+---
+
+## 5. Suggested first screens
 
 1. **Map + asset list**: markers from `GET /assets`, colour by `flags` from `GET /assets/exposure`; a form for `POST /assets` (click the map to fill `location`).
 2. **Asset detail**: `GET /assets/{id}/exposure` → badges, flood history timeline (`flooded_event_ids` + names/dates from `/geospatial/flood/events`), nearest river.
