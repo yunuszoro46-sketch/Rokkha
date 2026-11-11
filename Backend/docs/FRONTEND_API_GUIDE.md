@@ -443,6 +443,10 @@ Rules for every citizen screen:
 - Always show that this is a **model estimate, not an official flood warning**, and show `data_through`
   (how fresh the data is).
 - Predictions are **per district**. Never say "your house will flood".
+- **Never fall back to made-up sample data when a call fails.** If the request fails or answers 404, show an
+  error or "no data" state. An invented alert that looks real (for example a fake "88% probability" for
+  Sunamganj) is the most dangerous thing this app could show. If you need sample data while building, show a
+  clear "DEMO DATA" label on the screen.
 
 ### For a rescue team or coordinator
 
