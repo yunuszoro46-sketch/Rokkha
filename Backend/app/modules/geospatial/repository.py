@@ -141,12 +141,24 @@ FLOOD_ATTRIBUTION = (
 SATELLITE_OBSERVATIONS_FILE = DATA_DIR / "labels" / "district_flood_observations.json"
 
 
+def satellite_observations_version() -> tuple:
+
+    # Changes whenever the file is rebuilt (new satellite passes), so readers
+    # can keep the parsed file in memory and still notice a new one.
+    return str(SATELLITE_OBSERVATIONS_FILE), SATELLITE_OBSERVATIONS_FILE.stat().st_mtime_ns
+
+
 @lru_cache(maxsize=1)
+def _read_satellite_observations(version: tuple) -> dict:
+
+    return json.loads(Path(version[0]).read_text(encoding="utf-8"))
+
+
 def get_satellite_observations() -> dict:
 
     # Copernicus GFM flood observations per district and Sentinel-1 pass,
     # built offline by scripts/build_gfm_labels.py.
-    return json.loads(SATELLITE_OBSERVATIONS_FILE.read_text(encoding="utf-8"))
+    return _read_satellite_observations(satellite_observations_version())
 
 
 @lru_cache(maxsize=1)

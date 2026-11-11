@@ -7,7 +7,7 @@ import xgboost
 from pymongo import ASCENDING, ReplaceOne
 
 from app.core.database import get_db
-from app.modules.geospatial.repository import get_satellite_observations
+from app.modules.geospatial.repository import get_satellite_observations, satellite_observations_version
 
 
 DATA_DIR = Path(__file__).resolve().parents[3] / "data"
@@ -56,9 +56,14 @@ def get_static() -> dict[str, dict]:
     return {row["pcode"]: row for row in rows}
 
 
-@lru_cache(maxsize=1)
 def get_labelled_passes() -> dict[str, list[tuple[date, float]]]:
     """Per district: (day, flooded_share) of satellite passes that saw at least half of it."""
+
+    return _labelled_passes(satellite_observations_version())
+
+
+@lru_cache(maxsize=1)
+def _labelled_passes(version: tuple) -> dict[str, list[tuple[date, float]]]:
 
     data = get_satellite_observations()
     minimum = data["label_rule"]["min_observed_share"]

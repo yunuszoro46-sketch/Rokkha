@@ -43,7 +43,7 @@ def observations(client, pcode, **params):
 # DATA FILE
 # ==========================================
 
-def test_file_covers_64_districts_april_to_november_2016_2024():
+def test_file_covers_64_districts_and_every_training_month():
 
     data = get_satellite_observations()
 
@@ -51,14 +51,20 @@ def test_file_covers_64_districts_april_to_november_2016_2024():
     assert len(data["districts"]) == 64
     assert len({d["pcode"] for d in data["districts"]}) == 64
 
-    expected = [f"{y}-{m:02d}" for y in range(2016, 2025) for m in range(4, 12)]
-    assert data["months"] == expected
+    # The training years are complete. Later months are added by the daily update.
+    training_months = [f"{y}-{m:02d}" for y in range(2016, 2025) for m in range(4, 12)]
+    assert data["months"][:len(training_months)] == training_months
+    assert data["months"] == sorted(data["months"])
 
 
-def test_one_gfm_version_for_every_year():
+def test_one_gfm_version_for_every_training_year():
 
-    # One processing version means every year is comparable.
-    assert get_satellite_observations()["gfm_processing_versions"] == ["GFM v3.1.0"]
+    # One processing version means the years the model learned from are
+    # comparable. Newer passes (live inputs) come from newer versions.
+    by_year = get_satellite_observations()["gfm_processing_versions_by_year"]
+
+    for year in range(2016, 2025):
+        assert by_year[str(year)] == ["GFM v3.1.0"]
 
 
 def test_rows_are_valid_shares_in_date_order():
@@ -209,3 +215,29 @@ def test_unknown_district_returns_404(client):
 def test_invalid_parameters_rejected(client, params):
 
     assert observations(client, SUNAMGANJ, **params).status_code == 422
+
+
+def test_a_rebuilt_observations_file_is_read_without_a_restart(tmp_path, monkeypatch):
+    import json
+    import os
+
+    from app.modules.geospatial import repository as geo
+    from app.modules.prediction.repository import get_labelled_passes
+
+    def write(day, stamp):
+        path.write_text(json.dumps({
+            "label_rule": {"min_observed_share": 0.5},
+            "districts": [{"pcode": "BD6090", "rows": [[day, 0.9, 0.2, None]]}],
+        }))
+        os.utime(path, ns=(stamp, stamp))
+
+    path = tmp_path / "observations.json"
+    monkeypatch.setattr(geo, "SATELLITE_OBSERVATIONS_FILE", path)
+
+    write("2026-11-01", 1_000_000_000)
+    assert geo.get_satellite_observations()["districts"][0]["rows"][0][0] == "2026-11-01"
+    assert get_labelled_passes()["BD6090"][0][0].isoformat() == "2026-11-01"
+
+    write("2026-11-09", 2_000_000_000)
+    assert geo.get_satellite_observations()["districts"][0]["rows"][0][0] == "2026-11-09"
+    assert get_labelled_passes()["BD6090"][0][0].isoformat() == "2026-11-09"

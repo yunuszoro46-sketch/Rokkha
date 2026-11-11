@@ -27,7 +27,8 @@ Usage (from the Backend folder):
 
 `fetch` saves one cache file per month in data/labels/.cache/ (not committed)
 and skips months already cached, so an interrupted run can simply be started
-again. `assemble` combines the cache into data/labels/district_flood_observations.json.
+again. A month that was fetched before it was over (the current month) is
+fetched again, so repeating the command keeps the newest passes up to date. `assemble` combines the cache into data/labels/district_flood_observations.json.
 """
 
 import argparse
@@ -38,7 +39,7 @@ import threading
 import time
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 # GDAL settings for reading cloud-optimised GeoTIFFs over HTTP. Without them
@@ -353,11 +354,24 @@ def months_between(start, end):
         y, m = (y + 1, 1) if m == 12 else (y, m + 1)
 
 
+# Passes can still be added to the archive a few days after acquisition.
+LATE_PASS_DAYS = 3
+
+
+def month_is_final(month, fetched_at):
+    """True if a month ("YYYY-MM") fetched at `fetched_at` (ISO time) can have no new passes."""
+    year, number = (int(part) for part in month.split("-"))
+    next_month = datetime(year + (number == 12), number % 12 + 1, 1, tzinfo=timezone.utc)
+    return datetime.fromisoformat(fetched_at) >= next_month + timedelta(days=LATE_PASS_DAYS)
+
+
 def fetch_month(client, year, month, districts):
     path = CACHE_DIR / f"{year:04d}-{month:02d}.json"
     if path.exists():
-        log(f"{year}-{month:02d}: cached, skipped")
-        return
+        if month_is_final(f"{year:04d}-{month:02d}", json.loads(path.read_text())["fetched_at"]):
+            log(f"{year}-{month:02d}: cached, skipped")
+            return
+        log(f"{year}-{month:02d}: was fetched before the month was over, fetching again")
 
     t0 = time.time()
     items = search_month(client, year, month)
@@ -416,6 +430,7 @@ def assemble(districts):
                                    "flagged": np.zeros(n, np.int64), "advisory_known": np.zeros(n, np.int64),
                                    "scenes": 0})
     months, versions, skipped, advisory_missing = [], set(), [], []
+    versions_by_year = defaultdict(set)
 
     for path in caches:
         cache = json.loads(path.read_text())
@@ -423,6 +438,7 @@ def assemble(districts):
             sys.exit(f"{path.name} was built with other districts; delete it and fetch again.")
         months.append(cache["month"])
         versions.update(cache["processing_versions"])
+        versions_by_year[cache["month"][:4]].update(cache["processing_versions"])
         for g in cache["groups"]:
             land_by_tile[g["tile"]] = np.array(g["land"], np.int64)
             day = per_day[g["day"]]
@@ -459,6 +475,8 @@ def assemble(districts):
         "kind": "observed",
         "months": months,
         "gfm_processing_versions": sorted(versions),
+        # The model was trained on 2016-2024; a version change after that can shift the shares.
+        "gfm_processing_versions_by_year": {y: sorted(v) for y, v in sorted(versions_by_year.items())},
         "method": {
             "unit": "one row per district per Sentinel-1 pass (UTC day of acquisition)",
             "resolution_m": 20 * OVERVIEW_FACTOR,

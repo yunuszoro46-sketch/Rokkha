@@ -5,10 +5,17 @@ Talks to the running backend over its own API, in this order:
     1. river_history   river flow for the last 35 days                (GloFAS)
     2. rain_history    rain up to 6 days ago, the last 32 days of it  (ERA5, arrives about 5 days late)
     3. rain_recent     rain for the last 7 days                       (GFS, fills the days ERA5 lacks)
-    4. POST /predictions for today (UTC)
-    5. GET  /alerts      for today
+    4. new satellite passes of this month and the last            (Copernicus GFM)
+    5. POST /predictions for today (UTC)
+    6. GET  /alerts      for today
 
 About 235 Open-Meteo calls per day, far inside the free budget.
+
+Step 4 runs scripts/build_gfm_labels.py (needs requirements-dev.txt) and
+rewrites data/labels/district_flood_observations.json; the backend notices the
+new file by itself. If it fails, the update goes on and says so: predictions
+are then made with the satellite passes already stored. Skip it with
+--no-satellite.
 
 Usage (the backend must be running):
     python scripts/daily_update.py
@@ -21,9 +28,11 @@ Exit code 0 = predictions made; 1 = a step failed (the message says which).
 """
 
 import argparse
+import subprocess
 import sys
 import time
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import httpx
 
@@ -59,8 +68,41 @@ def ingest(client, wait_seconds, **body):
     return run
 
 
-def daily_update(client, today=None, wait_seconds=5, log=print):
-    """Run every step. Returns {"target_date", "predicted", "alerts"}."""
+def satellite_months(today):
+    """The two months ("YYYY-MM") that hold the last 30 days: last month and this one."""
+
+    last_month = today.replace(day=1) - timedelta(days=1)
+
+    return last_month.strftime("%Y-%m"), today.strftime("%Y-%m")
+
+
+def refresh_satellite_passes(today=None):
+    """Fetch the newest Copernicus GFM passes and rebuild the observations file."""
+
+    today = today or datetime.now(timezone.utc).date()
+    start, end = satellite_months(today)
+    script = str(Path(__file__).resolve().parent / "build_gfm_labels.py")
+
+    for arguments in (["fetch", "--start", start, "--end", end, "--months", "1-12"], ["assemble"]):
+        try:
+            done = subprocess.run([sys.executable, script, *arguments], capture_output=True, text=True, timeout=1800)
+        except subprocess.TimeoutExpired:
+            raise StepFailed(f"{arguments[0]} took longer than 30 minutes")
+
+        last_line = (done.stdout + done.stderr).strip().splitlines()[-1:] or [""]
+
+        if done.returncode != 0 or "NOT cached" in done.stdout:
+            raise StepFailed(f"{arguments[0]}: {last_line[0]}")
+
+    return f"{start} and {end} fetched; {last_line[0]}"
+
+
+def daily_update(client, today=None, wait_seconds=5, log=print, refresh_satellite=None):
+    """Run every step. Returns {"target_date", "predicted", "alerts", "satellite_refreshed"}.
+
+    refresh_satellite: a function that fetches new satellite passes and returns
+    a short text, or None to skip that step.
+    """
 
     today = today or datetime.now(timezone.utc).date()
 
@@ -76,6 +118,16 @@ def daily_update(client, today=None, wait_seconds=5, log=print):
     for body in steps:
         run = ingest(client, wait_seconds, **body)
         log(f"{body['kind']}: {run['values_written']} values, {run['api_calls']:.0f} calls")
+
+    # New satellite passes help, but predictions do not depend on them.
+    satellite_refreshed = False
+
+    if refresh_satellite:
+        try:
+            log(f"satellite passes: {refresh_satellite()}")
+            satellite_refreshed = True
+        except StepFailed as error:
+            log(f"satellite passes NOT refreshed ({error}); predicting with the passes already stored")
 
     response = client.post(f"{V1}/predictions", json={"target_date": today.isoformat()})
 
@@ -97,12 +149,14 @@ def daily_update(client, today=None, wait_seconds=5, log=print):
         "target_date": today.isoformat(),
         "predicted": predictions["count_predicted"],
         "alerts": alerts["alerts"],
+        "satellite_refreshed": satellite_refreshed,
     }
 
 
 def main():
     parser = argparse.ArgumentParser(description="Refresh data, predict today, list alerts.")
     parser.add_argument("--api", default="http://127.0.0.1:8000", help="address of the running backend")
+    parser.add_argument("--no-satellite", action="store_true", help="do not fetch new satellite passes")
     args = parser.parse_args()
 
     def log(text):
@@ -110,7 +164,7 @@ def main():
 
     try:
         with httpx.Client(base_url=args.api, timeout=120) as client:
-            daily_update(client, log=log)
+            daily_update(client, log=log, refresh_satellite=None if args.no_satellite else refresh_satellite_passes)
 
     except StepFailed as error:
         log(f"FAILED: {error}")

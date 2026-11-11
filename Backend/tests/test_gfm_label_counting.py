@@ -135,3 +135,22 @@ def test_advisory_share_uses_only_pixels_with_known_flags():
 def test_advisory_share_unknown_when_no_flags_exist():
 
     assert gfm.shares(land=200, observed=100, flooded=30, flagged=0, advisory_known=0) == (0.5, 0.3, None)
+
+
+# ------------------------------------------------------------------
+# A month fetched before it was over must be fetched again
+# ------------------------------------------------------------------
+
+def test_month_fetched_while_running_is_not_final():
+    assert not gfm.month_is_final("2026-11", "2026-11-11T05:00:00+00:00")
+
+
+def test_month_fetched_just_after_its_end_is_not_final():
+    # Late passes can still arrive for a few days.
+    assert not gfm.month_is_final("2026-10", "2026-11-02T00:00:00+00:00")
+
+
+def test_month_fetched_well_after_its_end_is_final():
+    assert gfm.month_is_final("2026-10", "2026-11-05T00:00:00+00:00")
+    assert gfm.month_is_final("2022-07", "2026-11-09T12:00:00+00:00")
+    assert gfm.month_is_final("2024-12", "2025-01-10T00:00:00+00:00")

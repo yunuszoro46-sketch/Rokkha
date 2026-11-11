@@ -23,3 +23,6 @@ __pycache__/
 
 # Download cache of offline data scripts (rebuildable)
 Backend/data/labels/.cache/
+
+# Local explanation for teammates: shared outside GitHub
+Backend/docs/BACKEND_EXPLAINED.md

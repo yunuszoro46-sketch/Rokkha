@@ -116,3 +116,52 @@ def test_daily_update_stops_when_a_data_source_fails(client, flood_model):
         sources.RETRY_BASE_SECONDS = 5.0
 
     assert str(failure.value).startswith("river_history: failed")
+
+
+# ------------------------------------------------------------------
+# New satellite passes
+# ------------------------------------------------------------------
+
+def test_satellite_months_cover_the_last_30_days():
+    from datetime import date
+
+    assert daily.satellite_months(date(2026, 11, 11)) == ("2026-10", "2026-11")
+    assert daily.satellite_months(date(2027, 1, 3)) == ("2026-12", "2027-01")
+
+
+def test_daily_update_refreshes_satellite_passes_before_predicting(client, flood_model, weather):
+    weather(0.0)
+    lines = []
+
+    def refresh():
+        lines.append("REFRESH CALLED")
+        return "2 new passes"
+
+    result = daily.daily_update(client, wait_seconds=0, log=lines.append, refresh_satellite=refresh)
+
+    assert result["satellite_refreshed"] is True
+    assert "satellite passes: 2 new passes" in lines
+    predicted = next(i for i, line in enumerate(lines) if line.startswith("predictions for"))
+    assert lines.index("REFRESH CALLED") < predicted
+
+
+def test_daily_update_still_predicts_when_the_satellite_archive_fails(client, flood_model, weather):
+    weather(0.0)
+    lines = []
+
+    def refresh():
+        raise daily.StepFailed("archive not reachable")
+
+    result = daily.daily_update(client, wait_seconds=0, log=lines.append, refresh_satellite=refresh)
+
+    assert result["satellite_refreshed"] is False
+    assert result["predicted"] > 0
+    assert any("NOT refreshed" in line and "archive not reachable" in line for line in lines)
+
+
+def test_daily_update_without_a_satellite_step(client, flood_model, weather):
+    weather(0.0)
+
+    result = daily.daily_update(client, wait_seconds=0, log=lambda text: None)
+
+    assert result["satellite_refreshed"] is False

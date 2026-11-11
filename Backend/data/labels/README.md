@@ -1,7 +1,8 @@
 # Satellite flood observations per district (Copernicus GFM)
 
 `district_flood_observations.json` records, for each of the 64 districts and
-each Sentinel-1 radar pass from April to November 2016–2024, how much of the
+each Sentinel-1 radar pass from April to November 2016–2026 (up to the last
+fetch), how much of the
 district the satellite could see and how much of that was under unusual (flood)
 water. These are **observations** and the candidate **labels** for the flood
 model. They are not a forecast and not a modelled hazard.
@@ -14,7 +15,17 @@ python scripts/build_gfm_labels.py assemble
 ```
 
 `fetch` keeps one cache file per month in `.cache/` (not committed) and skips
-cached months, so an interrupted run can be started again.
+cached months, so an interrupted run can be started again. A month fetched
+before it was over (or within 3 days after) is fetched again, so the current
+month stays up to date. `scripts/daily_update.py` runs `fetch` for this month
+and the last (all months, `--months 1-12`) and then `assemble`, every day.
+
+**Model training uses 2016–2024 only** (the 21,165 passes and 632 floods
+described below). Passes of 2025–2026 (4,743 labelled passes, 160 floods by the
+same rule, as of 11 November 2026) are inputs for live predictions and are
+kept for a later check of the model on years it has never seen. They come from
+GFM v4.x, the training years from v3.1.0; the effect of that version change has
+not been measured.
 
 ## Why GFM and not only the UNOSAT maps (Milestone 14)
 
@@ -70,8 +81,9 @@ flooded  = observed AND flood pixel
 - GFM uses the Equi7 Asia projection. Its pixels over Bangladesh cover about
   2.5 % less ground than the nominal 80 m. This cancels out because every
   value is a ratio.
-- Whole archive processed with **GFM v3.1.0** (`gfm_processing_versions`), so
-  all years are comparable.
+- All of 2016–2024 was processed with **GFM v3.1.0**
+  (`gfm_processing_versions_by_year`), so the training years are comparable.
+  Passes from April 2025 on come from v4.0.0 to v4.1.1.
 
 Check: the trial for Sunamganj 2022 shows 0.5–7.8 % on ordinary days, a first
 wave from 13 to 30 May (peak 58.6 % on 23 May) and a second wave in June

@@ -275,7 +275,7 @@ District row: `{"rank": 1, "pcode": "BD6090", "name": "Sunamganj", "division": "
 One district (`/flood/districts/BD6090`) adds `events: [{"event_id", "observed_share", "flooded_share", "status"}]` where `status` is `flooded`, `not_flooded` or `not_observed` — show `not_observed` as grey "no data", **not** as green/safe.
 
 **Satellite flood timeline (new):** `GET /geospatial/flood/districts/{pcode}/satellite-observations?start_date=&end_date=`
-returns every Sentinel-1 satellite pass (Copernicus GFM, April–November 2016–2024) that saw at least half of
+returns every Sentinel-1 satellite pass (Copernicus GFM, April–November, 2016 up to yesterday's pass) that saw at least half of
 the district:
 
 ```json
@@ -424,8 +424,12 @@ Test places: Dhaka Medical `[90.3976, 23.7258]`, Sunamganj haor `[91.1428, 24.84
 Sadarghat `[90.4106, 23.7058]` (224 m from the Buriganga), Kolkata
 `[88.3639, 22.5726]` (outside Bangladesh → 422 / nulls).
 
-**Coming next:** new satellite passes for today's predictions (until then, predictions for *today* use rain and
-river only and are weaker than those for past dates), a daily automatic update, and model improvements.
+**Predictions for today** now work too: the backend's daily update loads the newest rain, river and satellite
+data and then predicts. Show `data_through` and, from `features`, `days_since_last_observation` ("last satellite
+pass: 1 day ago") so users can see how fresh the inputs are; when it is `null`, no pass from the last 30 days
+was available and the prediction is weaker. In the dry season (now) expect no alerts.
+
+**Coming next:** a scheduled daily update, a check of the model on 2025–2026, and model improvements.
 
 Questions or a field you need that isn't there? Ask the backend developer —
 `/docs` always shows the current, exact shapes.

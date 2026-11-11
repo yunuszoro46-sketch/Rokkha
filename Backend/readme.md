@@ -91,7 +91,7 @@ establish flood risk.
 | Assets near a point / inside an area | Implemented (MongoDB `2dsphere` index) |
 | CORS for frontend development servers | Implemented |
 | Rain and river-data ingestion (ERA5, GloFAS, GFS) with provenance, resumable runs, call budget | Implemented (started manually) |
-| Satellite flood observations per district and Sentinel-1 pass, 2016–2024 (flood-model labels) | Implemented (Copernicus GFM, offline build) |
+| Satellite flood observations per district and Sentinel-1 pass, April 2016 to now (flood-model labels and live inputs) | Implemented (Copernicus GFM; refreshed by the daily update) |
 | Model inputs (features) with a no-future-data rule; training table | Implemented (21,165 rows, 2016–2024, in `data/ml/`) |
 | Flood prediction API (`/predictions`) and alerts with assets at risk (`/alerts`) | Implemented; uses the trained model in `data/models/` |
 | Training and evaluation script (baselines, calibration, alert thresholds, report) | Implemented |
@@ -120,14 +120,14 @@ Weather observations are submitted through the API. The weather module does **no
 | XGBoost (`xgboost-cpu`) | Loads the trained flood model and computes predictions |
 | pytest | Automated tests |
 
-Offline data-preparation scripts additionally use **Rasterio** and **pyogrio** (`requirements-dev.txt`). The API
-itself does not need them.
+Offline scripts additionally use **Rasterio** and **pyogrio** (data preparation) and **scikit-learn** (model
+evaluation and probability calibration during training), all in `requirements-dev.txt`. The API itself does not
+need them.
 
 ### Planned technologies
 
 | Technology | Planned purpose |
 | --- | --- |
-| scikit-learn | Model evaluation and probability calibration (training only) |
 | GeoPandas | Geographic dataset processing, if needed |
 
 The database is **MongoDB Atlas**. This backend does not use PostgreSQL, PostGIS, or microservices.
@@ -181,11 +181,11 @@ Rokkha/
     │   ├── ingestion/             measuring sites: 64 districts + 9 rivers (+ README)
     │   ├── labels/                satellite flood observations = model labels (+ README)
     │   ├── ml/                    fixed district inputs, training table (+ README)
-    │   └── models/                the trained model files (none yet)
+    │   └── models/                the trained model, its description and test report
     ├── docs/
     │   └── FRONTEND_API_GUIDE.md  guide for the frontend developer
     ├── scripts/                   rebuild the data files from their sources
-    ├── tests/                     279 automated tests
+    ├── tests/                     287 automated tests
     ├── ml/                        (placeholder)
     ├── pytest.ini
     ├── requirements.txt           pinned API dependencies
@@ -505,7 +505,7 @@ Each data folder has its own README with sources, changes and limitations.
 | Historical rain | ERA5 reanalysis (ECMWF, Copernicus C3S) via Open-Meteo | CC BY 4.0 (Open-Meteo) |
 | River discharge (history and forecast) | GloFAS (Copernicus EMS) via Open-Meteo | CC BY 4.0 (Open-Meteo) |
 | Forecast rain | GFS (NOAA NCEP) via Open-Meteo | CC BY 4.0 (Open-Meteo) |
-| Satellite flood observations per Sentinel-1 pass, Apr–Nov 2016–2024 | Copernicus EMS Global Flood Monitoring (GFM) | CEMS-FLOODS licence (free, attribution; not a flood warning) |
+| Satellite flood observations per Sentinel-1 pass, Apr–Nov 2016–2026 | Copernicus EMS Global Flood Monitoring (GFM) | CEMS-FLOODS licence (free, attribution; not a flood warning) |
 
 API responses carry `attribution` and `limitations`; frontends must show the attribution.
 
@@ -581,7 +581,7 @@ Allowed by default: `http://localhost:3000` and `http://localhost:5173`. Add oth
 python -m pytest -v
 ```
 
-Expected: **279 passed**.
+Expected: **287 passed**.
 
 Tests that store data use a **separate local test MongoDB in Docker**, never Atlas:
 
@@ -634,7 +634,8 @@ Planned items are not claims of completed functionality.
 | Training and evaluation script; recent rain; daily update script | Done |
 | Train the real model and publish its measured results | Done (section 13) |
 | Improve the model on new floods (better river inputs, upstream rain) | Planned |
-| New satellite passes for live use (the labels file ends in November 2024) | Planned (next) |
+| New satellite passes for live use (fetched by the daily update) | Done |
+| Check the model on 2025–2026, years never used so far | Planned (next) |
 | Authentication and rate limiting before any public use | Planned |
 
 ## 13. The flood model: design and measured results
@@ -665,9 +666,12 @@ What these numbers say, including the weak points:
   flooded 62 % of the time. Alert messages therefore never state more than "more than 95%".
 - **Places differ.** With a whole division held out of training, the score ranges from 0.72 (Sylhet) to about
   0.10–0.12 (Rajshahi, Barishal); Khulna and Rangpur had too few floods to score.
-- **Live use is weaker than the test.** The satellite inputs come from the labels file, which ends in November
-  2024. For today's predictions those inputs are empty, so the model works from rain and river only (compare
-  the 0.249 row) until new passes are fetched.
+- **Live use can be weaker than the test.** Today's prediction uses the newest satellite passes (the daily
+  update fetches them), but a district is passed only every few days, and the last 5 days of rain come from GFS
+  instead of ERA5. If the satellite archive cannot be reached, the model works from older passes or from rain
+  and river only (compare the 0.249 row).
+- **Newer satellite passes come from newer GFM versions.** The model learned from GFM v3.1.0 maps; passes of
+  2025–2026 are v4.x. Whether that changes the flooded shares has not been measured yet.
 
 The design, fixed and tested before training:
 
@@ -695,9 +699,16 @@ satellite pass saw no flood), a model without satellite inputs, and held-out div
 `data/models/README.md`.
 
 **Daily use.** With the backend running: `python scripts/daily_update.py` refreshes river flow, ERA5 rain and
-recent rain, predicts today and prints the alerts (about 235 Open-Meteo calls). To run it every morning, add the
-cron line shown at the top of the script. Known gap: the satellite inputs come from the labels file, which ends
-in November 2024, so for today's predictions those inputs are empty until new passes are fetched.
+recent rain, fetches the newest satellite passes (Copernicus GFM, this month and the last), predicts today and
+prints the alerts. It takes about a minute and a half and about 235 Open-Meteo calls. To run it every morning,
+add the cron line shown at the top of the script.
+
+The satellite step needs `requirements-dev.txt` (rasterio) and rewrites
+`data/labels/district_flood_observations.json`; the running backend notices the new file by itself. Git will
+show that file as changed: commit it when you want to publish the newer passes. If the satellite archive cannot
+be reached, the update says so and still predicts with the passes already stored. `--no-satellite` skips the step.
+Checked on 11 November 2026: all 56 districts had a pass from the last 30 days (41 from the day before), and
+no district reached the watch level.
 
 **Model delivery.** Training writes two files into `data/models/`: `flood_model.json` (the XGBoost model) and
 `flood_model.meta.json` (model version, input names, training and test periods, measured results, the calibration
