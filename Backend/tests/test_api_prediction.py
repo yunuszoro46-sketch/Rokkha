@@ -423,3 +423,16 @@ def test_invalid_alert_requests_rejected(client, flood_model):
 
     assert client.get(ALERTS).status_code == 422
     assert alerts(client, min_level="panic").status_code == 422
+
+
+def test_alert_message_never_claims_certainty():
+    # A model cannot be 100 % sure; the wording stops at "more than 95%".
+    from app.modules.alerts.service import _message
+
+    prediction = {"name": "Sylhet", "target_date": "2022-06-18", "probability": 1.0}
+
+    assert "a more than 95% probability" in _message("alert", prediction, 0)
+    assert "100%" not in _message("alert", prediction, 0)
+
+    prediction["probability"] = 0.6
+    assert "a 60% probability" in _message("alert", prediction, 0)

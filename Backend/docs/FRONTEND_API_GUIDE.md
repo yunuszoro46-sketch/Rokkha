@@ -328,7 +328,7 @@ has `unit`, `statistic` (e.g. "24 h total, 00:00-24:00 UTC"), `missing` (show a 
 (draw forecasts differently from observed history). Show the `attribution` list (Open-Meteo, Copernicus ERA5 /
 GloFAS, NOAA GFS). A rain *forecast* is not a flood forecast.
 
-### F. Flood prediction and alerts (endpoints ready; the model is still being trained)
+### F. Flood prediction and alerts (working, with a trained model)
 
 | Method | Path | What it does |
 |---|---|---|
@@ -337,10 +337,17 @@ GloFAS, NOAA GFS). A rain *forecast* is not a flood forecast.
 | `GET` | `/predictions?target_date=2022-06-18` | the stored predictions for a day (404 if none) |
 | `GET` | `/alerts?target_date=2022-06-18&min_level=watch\|alert` | districts over the alert thresholds, with the registered assets in each (404 if no predictions for that day) |
 
-**Right now** `GET /predictions/model` returns `"status": "not_trained"` and `POST /predictions` returns **503**
-with a `detail` message. Build the screens against the shapes below and show a "Forecast model not available yet"
-state for `not_trained` / 503. When the model is added on the backend, the same calls start returning data;
-nothing changes on your side.
+**A trained model is now loaded**: `GET /predictions/model` returns `"status": "ready"` and the calls below
+return real model output. Still handle `"not_trained"` / **503** with a "Forecast model not available" state, in
+case the model files are missing on a server.
+
+Good days to try (the data for them is stored): `2022-06-18` (Sylhet floods: 7 alerts, 8 watches),
+`2024-08-22` (eastern floods: Feni, Noakhali, Lakshmipur) and `2023-04-10` (a dry day: no alerts).
+
+**How good is it? Say this honestly in the UI.** Tested on 2023–2024, the `alert` level was right 6 times in 10
+and caught 4 floods in 10; the `watch` level caught 6 in 10 with more false alarms. It is much better at saying
+"a visible flood will continue" than at announcing a new flood. `GET /predictions/model` returns these test
+results in `model.test_results` if you want an "About the model" panel.
 
 One prediction (in `predictions[]`):
 
@@ -356,7 +363,8 @@ One prediction (in `predictions[]`):
 - `status`: `predicted`, `unsupported` (8 districts satellites can't observe: show "no forecast possible here",
   **not** "safe") or `inputs_missing` (data not loaded for that day). For the last two, `probability` and
   `alert_level` are `null` and `reason` explains why.
-- `probability` is 0–1. Show it as a percentage. `alert_level` is `none`, `watch` or `alert`; the cut-offs are in
+- `probability` is 0–1. Show it as a percentage, but **show anything above 0.95 as "more than 95%"**, never
+  "100%": the model's highest values are too confident. The alert `message` text already does this. `alert_level` is `none`, `watch` or `alert`; the cut-offs are in
   `alert_thresholds`. Colour the map by `alert_level`, with a separate grey for `unsupported`.
 - `features` are the inputs the model used (rain totals in mm, river and satellite values). Useful for a
   "why?" panel. A `null` input means "not available", not zero.
@@ -416,8 +424,8 @@ Test places: Dhaka Medical `[90.3976, 23.7258]`, Sunamganj haor `[91.1428, 24.84
 Sadarghat `[90.4106, 23.7058]` (224 m from the Buriganga), Kolkata
 `[88.3639, 22.5726]` (outside Bangladesh → 422 / nulls).
 
-**Coming next:** the trained flood model (then section F starts returning real predictions and alerts), and a
-daily automatic update. Until the model is trained, nothing in the API is a flood forecast.
+**Coming next:** new satellite passes for today's predictions (until then, predictions for *today* use rain and
+river only and are weaker than those for past dates), a daily automatic update, and model improvements.
 
 Questions or a field you need that isn't there? Ask the backend developer —
 `/docs` always shows the current, exact shapes.

@@ -12,6 +12,9 @@ from app.modules.prediction.service import (
 # Most serious first.
 LEVELS = ["alert", "watch"]
 
+# Above this, the message says "more than 95%" instead of the number.
+MAX_STATED_PROBABILITY = 0.95
+
 ALERT_LIMITATIONS = [
     "Alerts are made from the model's district-level probability. They do not say that a "
     "particular asset will flood.",
@@ -26,9 +29,14 @@ def _message(level: str, prediction: dict, asset_count: int) -> str:
     title = "Flood alert" if level == "alert" else "Flood watch"
     assets = "1 registered asset" if asset_count == 1 else f"{asset_count} registered assets"
 
+    # The model's highest probabilities are too confident (see the calibration
+    # table in data/models/README.md), so the wording never claims certainty.
+    probability = prediction["probability"]
+    chance = "more than 95%" if probability > MAX_STATED_PROBABILITY else f"{probability:.0%}"
+
     return (
         f"{title} for {prediction['name']} district on {prediction['target_date']}: "
-        f"the model estimates a {prediction['probability']:.0%} probability of "
+        f"the model estimates a {chance} probability of "
         f"satellite-observable flooding. {assets} in this district."
     )
 

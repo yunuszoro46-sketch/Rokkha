@@ -1,0 +1,92 @@
+{
+ "generated_on": "2026-11-11",
+ "rows": 21165,
+ "districts": 56,
+ "first_date": "2016-04-01",
+ "last_date": "2024-11-30",
+ "label": "1 = flood observed (see label_rule), 0 = pass saw no flood",
+ "label_rule": {
+  "min_observed_share": 0.5,
+  "flooded_share_threshold": 0.1,
+  "meaning": "flood observed = observed_share >= 0.5 and flooded_share >= 0.10; passes that saw less than half the district are not labelled"
+ },
+ "splits": {
+  "train": {
+   "years": [
+    2016,
+    2021
+   ],
+   "rows": 13839,
+   "floods": 411
+  },
+  "validation": {
+   "years": [
+    2022,
+    2022
+   ],
+   "rows": 2543,
+   "floods": 112
+  },
+  "test": {
+   "years": [
+    2023,
+    2024
+   ],
+   "rows": 4783,
+   "floods": 109
+  }
+ },
+ "rows_by_year": {
+  "2016": 1147,
+  "2017": 2352,
+  "2018": 2482,
+  "2019": 2462,
+  "2020": 2768,
+  "2021": 2628,
+  "2022": 2543,
+  "2023": 2484,
+  "2024": 2299
+ },
+ "dropped_for_missing_rain_by_year": {},
+ "feature_names": [
+  "rain_1d",
+  "rain_3d",
+  "rain_7d",
+  "rain_14d",
+  "rain_30d",
+  "river_log_discharge",
+  "river_change_3d",
+  "river_vs_30d_mean",
+  "river_distance_km",
+  "hazard_share_10yr",
+  "hazard_share_100yr",
+  "last_flooded_share",
+  "days_since_last_observation",
+  "max_flooded_share_14d",
+  "month"
+ ],
+ "missing_values_per_feature": {
+  "rain_1d": 0,
+  "rain_3d": 0,
+  "rain_7d": 0,
+  "rain_14d": 0,
+  "rain_30d": 0,
+  "river_log_discharge": 0,
+  "river_change_3d": 0,
+  "river_vs_30d_mean": 0,
+  "river_distance_km": 0,
+  "hazard_share_10yr": 0,
+  "hazard_share_100yr": 0,
+  "last_flooded_share": 523,
+  "days_since_last_observation": 523,
+  "max_flooded_share_14d": 730,
+  "month": 0
+ },
+ "no_leakage_rule": "inputs for day D use only data dated before D (app/modules/prediction/features.py)",
+ "sources": [
+  "Labels: Copernicus Emergency Management Service, Global Flood Monitoring (GFM)",
+  "Rain: ERA5 reanalysis (ECMWF, Copernicus C3S) via Open-Meteo, CC BY 4.0",
+  "River flow: GloFAS (Copernicus EMS) via Open-Meteo, CC BY 4.0 (modelled)",
+  "Hazard shares: JRC GloFAS flood hazard maps v2.1.2 (modelled)"
+ ]
+}

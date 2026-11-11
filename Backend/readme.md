@@ -39,7 +39,7 @@ scheduled (automatic) ingestion, user accounts.
 10. [Errors and troubleshooting](#10-errors-and-troubleshooting)
 11. [Testing](#11-testing)
 12. [Development roadmap](#12-development-roadmap)
-13. [Planned machine-learning evaluation](#13-planned-machine-learning-evaluation)
+13. [The flood model: design and measured results](#13-the-flood-model-design-and-measured-results)
 14. [Working on the project](#14-working-on-the-project)
 
 ## 1. Project goal
@@ -92,12 +92,12 @@ establish flood risk.
 | CORS for frontend development servers | Implemented |
 | Rain and river-data ingestion (ERA5, GloFAS, GFS) with provenance, resumable runs, call budget | Implemented (started manually) |
 | Satellite flood observations per district and Sentinel-1 pass, 2016–2024 (flood-model labels) | Implemented (Copernicus GFM, offline build) |
-| Model inputs (features) with a no-future-data rule; training table builder | Implemented (table is built after the 2016–2024 backfill) |
-| Flood prediction API (`/predictions`) and alerts with assets at risk (`/alerts`) | Implemented and tested with a test-only model; **answers "no model trained yet" until the real model is trained** |
-| Training and evaluation script (baselines, calibration, alert thresholds, report) | Implemented and tested on a made-up table; **the real model is trained when the backfill is complete** |
+| Model inputs (features) with a no-future-data rule; training table | Implemented (21,165 rows, 2016–2024, in `data/ml/`) |
+| Flood prediction API (`/predictions`) and alerts with assets at risk (`/alerts`) | Implemented; uses the trained model in `data/models/` |
+| Training and evaluation script (baselines, calibration, alert thresholds, report) | Implemented |
 | Recent rain for the days ERA5 lacks (`rain_recent`, GFS) | Implemented |
 | Daily update script (refresh data, predict today, list alerts) | Implemented (start it by hand or with cron) |
-| Trained flood model with measured results | Not yet (next) |
+| Trained flood model with measured results | Implemented: modestly better than the baselines on 2023–2024; weak on new floods (see [section 13](#13-the-flood-model-design-and-measured-results)) |
 | Authentication, authorization, rate limiting | Not implemented |
 
 Weather observations are submitted through the API. The weather module does **not** fetch live weather.
@@ -185,7 +185,7 @@ Rokkha/
     ├── docs/
     │   └── FRONTEND_API_GUIDE.md  guide for the frontend developer
     ├── scripts/                   rebuild the data files from their sources
-    ├── tests/                     278 automated tests
+    ├── tests/                     279 automated tests
     ├── ml/                        (placeholder)
     ├── pytest.ini
     ├── requirements.txt           pinned API dependencies
@@ -361,8 +361,10 @@ Run kinds: `rain_history` and `river_history` (need `start_date`, `end_date`), `
 Each prediction lists the inputs it used (`features`) and `recent_rain_days`: how many of the 30 rain days came
 from the GFS recent-days source because ERA5 had not delivered them yet (0 for past dates, about 5 for today).
 
-**Until a model is trained** `GET /predictions/model` says `not_trained`, `POST /predictions` answers **503**, and
-there are no alerts. The backend never returns invented predictions.
+A trained model is delivered in `data/models/`. **If those files are missing** `GET /predictions/model` says
+`not_trained`, `POST /predictions` answers **503**, and there are no alerts. The backend never returns invented
+predictions. Alert messages state at most "more than 95%", because the model's highest probabilities are too
+confident (section 13).
 
 ## 7. Try the API without writing code
 
@@ -544,8 +546,9 @@ If the server stops or restarts during a run, that run is closed as `failed` at 
 last days from GFS in a separate collection (`rain_recent_daily`). Predictions use ERA5 wherever it exists and
 fill only the missing days from GFS. GFS and ERA5 are different products, so those days are less exact.
 
-A full backfill of all 64 district sites for 2016–2024 needs about 64 × 9 × 26 ≈ 15,000 calls: plan it over two
-days (about four re-runs). River history for the 9 river sites for 2016–2024 needs about 2,100 calls.
+The 2016–2024 backfill is done: March–November rain for all 64 district sites (1,257 calls per year, 17,600
+values per year, spread over two days to stay inside the budget) and river flow for the 9 river sites (about
+2,100 calls).
 
 ## 10. Errors and troubleshooting
 
@@ -578,7 +581,7 @@ Allowed by default: `http://localhost:3000` and `http://localhost:5173`. Add oth
 python -m pytest -v
 ```
 
-Expected: **278 passed**.
+Expected: **279 passed**.
 
 Tests that store data use a **separate local test MongoDB in Docker**, never Atlas:
 
@@ -622,20 +625,51 @@ Planned items are not claims of completed functionality.
 | Observed flood history and modelled flood hazard (nationwide) | Done |
 | Asset management and flood exposure analysis | Done |
 | MongoDB persistence, geospatial indexes and queries | Done |
-| Environmental-data ingestion (ERA5 rain, GloFAS river flow, GFS forecast) with real times, units and provenance | Done (backfill 2016–2024 to be run) |
+| Environmental-data ingestion (ERA5 rain, GloFAS river flow, GFS forecast) with real times, units and provenance | Done |
 | Scheduled automatic ingestion | Planned (Celery/Redis only if justified) |
 | Flood labels: satellite flood observations per district (Copernicus GFM) and label rule | Done |
-| Model inputs, training table builder, time split | Done (table built after the backfill) |
-| Rain and river backfill 2016–2024 | In progress (budget-limited, about 2 days) |
-| Prediction API and alerts with assets at risk | Done (waiting for the trained model) |
+| Model inputs, training table, time split | Done |
+| Rain and river backfill 2016–2024 | Done |
+| Prediction API and alerts with assets at risk | Done |
 | Training and evaluation script; recent rain; daily update script | Done |
-| Train the real model and publish its measured results | Next (when the backfill is complete) |
-| New satellite passes for live use (the labels file ends in November 2024) | Planned |
+| Train the real model and publish its measured results | Done (section 13) |
+| Improve the model on new floods (better river inputs, upstream rain) | Planned |
+| New satellite passes for live use (the labels file ends in November 2024) | Planned (next) |
 | Authentication and rate limiting before any public use | Planned |
 
-## 13. The flood model: design and planned evaluation
+## 13. The flood model: design and measured results
 
-There is **no trained model and no measured forecasting performance yet**. What is fixed and tested:
+A model is trained (`xgb-2026-11-11-60d30b1a`, 11 November 2026). The full report, written by the training
+script, is [data/models/README.md](data/models/README.md). The main numbers, measured **once** on 2023–2024
+(4,783 district-days with 109 observed floods; years the model never saw):
+
+| | PR-AUC | Floods caught | Floods missed | False alarms |
+| --- | --- | --- | --- | --- |
+| **Model**, `watch` level (probability ≥ 0.18) | 0.460 | 68 of 109 | 41 | 127 |
+| **Model**, `alert` level (probability ≥ 0.375) | 0.460 | 46 of 109 | 63 | 31 |
+| Baseline: same as the latest satellite pass | 0.420 | 51 of 109 | 58 | 58 |
+| Baseline: usual flood rate of the district and month | 0.170 | 26 of 109 | 83 | 98 |
+| Model without the satellite inputs (rain and river only) | 0.249 | | | |
+
+PR-AUC measures how well flood days are ranked above other days (1 = perfect; random ≈ 0.023, the flood rate).
+
+What these numbers say, including the weak points:
+
+- The model is **better than both baselines, by a modest margin** over "same as the latest satellite pass"
+  (0.460 against 0.420). Most of its skill comes from the latest satellite passes: a flood that is already
+  visible usually continues.
+- **New floods are hard.** On days where the latest pass saw no flood (58 floods), the `watch` level caught 18
+  and missed 40. The persistence baseline catches none of these, but 18 of 58 is still low.
+- The `watch` level was chosen to catch 80 % of floods in 2022; on the test years it caught **62 %**.
+- **High probabilities are too confident.** Days given 80–100 % flooded 81 % of the time; days given 60–80 %
+  flooded 62 % of the time. Alert messages therefore never state more than "more than 95%".
+- **Places differ.** With a whole division held out of training, the score ranges from 0.72 (Sylhet) to about
+  0.10–0.12 (Rajshahi, Barishal); Khulna and Rangpur had too few floods to score.
+- **Live use is weaker than the test.** The satellite inputs come from the labels file, which ends in November
+  2024. For today's predictions those inputs are empty, so the model works from rain and river only (compare
+  the 0.249 row) until new passes are fetched.
+
+The design, fixed and tested before training:
 
 | Part | Design |
 | --- | --- |
@@ -646,11 +680,11 @@ There is **no trained model and no measured forecasting performance yet**. What 
 | No leakage | One function (`app/modules/prediction/features.py`) builds the inputs for training **and** for live prediction and ignores every value dated on or after the target day (tested) |
 | Split by time | Train 2016–2021, validation 2022, **test 2023–2024**, whole years |
 | Split by place | A second check holding out one whole division at a time |
-| Baselines to beat | "Same as the latest satellite pass" and "usual flood rate of this district and month" |
+| Baselines | "Same as the latest satellite pass" and "usual flood rate of this district and month" |
 | Measures | Precision, recall, F1, PR-AUC, Brier score, calibration, false alarms and missed floods, each with its definition |
 | Not predictable | 8 districts the satellites cannot observe (`status: unsupported`) |
 
-Build the training table after the backfill: `python scripts/build_training_table.py`
+Rebuild the training table: `python scripts/build_training_table.py`
 (reads the database named in `.env`, writes `data/ml/training_table.csv`; see `data/ml/README.md`).
 
 Train and evaluate: `python scripts/train_flood_model.py` (needs `requirements-dev.txt`). It tries a small set of

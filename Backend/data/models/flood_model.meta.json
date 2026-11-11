@@ -1,0 +1,483 @@
+{
+ "model_version": "xgb-2026-11-11-60d30b1a",
+ "trained_on": "2026-11-11",
+ "algorithm": "XGBoost 3.4.1 (gradient-boosted decision trees), binary:logistic",
+ "what_is_predicted": "probability that a Sentinel-1 pass on the target day observes flooding in the district (Copernicus GFM, unusual water on at least 10 % of the visible land)",
+ "issue_time": "00:00 UTC of the target day, with data through the day before",
+ "years": {
+  "train": "2016-2021",
+  "validation": "2022",
+  "test": "2023-2024"
+ },
+ "training_table_sha256": "60d30b1aaad15b3ce824fe7d8a780fc8683d2d6a3ec82e0fad59b2c9ca7f44ff",
+ "feature_names": [
+  "rain_1d",
+  "rain_3d",
+  "rain_7d",
+  "rain_14d",
+  "rain_30d",
+  "river_log_discharge",
+  "river_change_3d",
+  "river_vs_30d_mean",
+  "river_distance_km",
+  "hazard_share_10yr",
+  "hazard_share_100yr",
+  "last_flooded_share",
+  "days_since_last_observation",
+  "max_flooded_share_14d",
+  "month"
+ ],
+ "settings": {
+  "objective": "binary:logistic",
+  "eval_metric": "aucpr",
+  "eta": 0.05,
+  "subsample": 0.8,
+  "colsample_bytree": 0.8,
+  "seed": 7,
+  "nthread": 4,
+  "max_depth": 3,
+  "min_child_weight": 1,
+  "rounds": 49,
+  "chosen_by": "best validation PR-AUC among the candidates in the training script"
+ },
+ "calibration": {
+  "method": "isotonic regression fitted on the validation year",
+  "x": [
+   0.0,
+   0.0037586227990686893,
+   0.007516658399254084,
+   0.007524463348090649,
+   0.015279456041753292,
+   0.015362952835857868,
+   0.021916978061199188,
+   0.021938372403383255,
+   0.02619624137878418,
+   0.026263291016221046,
+   0.05036170780658722,
+   0.050464097410440445,
+   0.0973055362701416,
+   0.0979364663362503,
+   0.12769007682800293,
+   0.12775321304798126,
+   0.1490020751953125,
+   0.1500503122806549,
+   0.174641951918602,
+   0.1760234832763672,
+   0.2853966951370239,
+   0.2858552038669586,
+   0.29662102460861206,
+   0.2967955470085144,
+   0.30429011583328247,
+   0.3197157084941864,
+   0.34083646535873413,
+   0.3606957197189331,
+   0.38555869460105896,
+   0.39526018500328064,
+   0.5263956189155579,
+   0.5270952582359314,
+   0.5678263902664185,
+   0.5723611116409302,
+   0.7818735837936401,
+   1.0
+  ],
+  "y": [
+   0.0,
+   0.0,
+   0.0,
+   0.0017094017239287496,
+   0.0017094017239287496,
+   0.007352941203862429,
+   0.007352941203862429,
+   0.01666666753590107,
+   0.01666666753590107,
+   0.036231882870197296,
+   0.036231882870197296,
+   0.12121212482452393,
+   0.12121212482452393,
+   0.125,
+   0.125,
+   0.1764705926179886,
+   0.1764705926179886,
+   0.1818181872367859,
+   0.1818181872367859,
+   0.2083333283662796,
+   0.2083333283662796,
+   0.3333333432674408,
+   0.3333333432674408,
+   0.3636363744735718,
+   0.3636363744735718,
+   0.375,
+   0.375,
+   0.6000000238418579,
+   0.6000000238418579,
+   0.7560975551605225,
+   0.7560975551605225,
+   0.9230769276618958,
+   0.9230769276618958,
+   1.0,
+   1.0,
+   1.0
+  ]
+ },
+ "alert_thresholds": {
+  "watch": 0.1818,
+  "alert": 0.375,
+  "chosen_on": "validation year 2022 (calibrated probabilities)",
+  "alert_rule": "the cut-off with the best F1 (balance of caught floods and false alarms)",
+  "watch_rule": "the highest cut-off that still catches at least 80% of observed floods, never above the alert cut-off"
+ },
+ "rows": {
+  "train_2016_2021": {
+   "rows": 13839,
+   "floods": 411
+  },
+  "validation_2022": {
+   "rows": 2543,
+   "floods": 112
+  },
+  "test_2023_2024": {
+   "rows": 4783,
+   "floods": 109
+  }
+ },
+ "supported_pcodes": [
+  "BD1004",
+  "BD1006",
+  "BD1009",
+  "BD1042",
+  "BD1078",
+  "BD1079",
+  "BD2012",
+  "BD2013",
+  "BD2019",
+  "BD2030",
+  "BD2051",
+  "BD2075",
+  "BD3026",
+  "BD3029",
+  "BD3035",
+  "BD3048",
+  "BD3054",
+  "BD3056",
+  "BD3059",
+  "BD3067",
+  "BD3068",
+  "BD3082",
+  "BD3086",
+  "BD3093",
+  "BD4018",
+  "BD4041",
+  "BD4044",
+  "BD4050",
+  "BD4055",
+  "BD4057",
+  "BD4065",
+  "BD4087",
+  "BD4539",
+  "BD4561",
+  "BD4572",
+  "BD4589",
+  "BD5010",
+  "BD5038",
+  "BD5064",
+  "BD5069",
+  "BD5070",
+  "BD5076",
+  "BD5081",
+  "BD5088",
+  "BD5527",
+  "BD5532",
+  "BD5549",
+  "BD5552",
+  "BD5573",
+  "BD5577",
+  "BD5585",
+  "BD5594",
+  "BD6036",
+  "BD6058",
+  "BD6090",
+  "BD6091"
+ ],
+ "test_results": {
+  "model": {
+   "rows": 4783,
+   "floods": 109,
+   "flood_rate": 0.0228,
+   "pr_auc": 0.46,
+   "roc_auc": 0.936,
+   "brier": 0.0156,
+   "at_watch": {
+    "floods_caught": 68,
+    "floods_missed": 41,
+    "false_alarms": 127,
+    "precision": 0.349,
+    "recall": 0.624,
+    "f1": 0.447
+   },
+   "at_alert": {
+    "floods_caught": 46,
+    "floods_missed": 63,
+    "false_alarms": 31,
+    "precision": 0.597,
+    "recall": 0.422,
+    "f1": 0.495
+   },
+   "calibration_table": [
+    {
+     "bin": "0.00-0.02",
+     "rows": 3937,
+     "mean_predicted": 0.002,
+     "observed_rate": 0.003
+    },
+    {
+     "bin": "0.02-0.05",
+     "rows": 334,
+     "mean_predicted": 0.036,
+     "observed_rate": 0.024
+    },
+    {
+     "bin": "0.10-0.20",
+     "rows": 352,
+     "mean_predicted": 0.134,
+     "observed_rate": 0.074
+    },
+    {
+     "bin": "0.20-0.40",
+     "rows": 92,
+     "mean_predicted": 0.241,
+     "observed_rate": 0.174
+    },
+    {
+     "bin": "0.60-0.80",
+     "rows": 47,
+     "mean_predicted": 0.744,
+     "observed_rate": 0.617
+    },
+    {
+     "bin": "0.80-1.00",
+     "rows": 21,
+     "mean_predicted": 0.945,
+     "observed_rate": 0.81
+    }
+   ]
+  },
+  "baseline_persistence": {
+   "rows": 4783,
+   "floods": 109,
+   "flood_rate": 0.0228,
+   "pr_auc": 0.42,
+   "roc_auc": 0.823,
+   "brier": 0.0186,
+   "rule": "flood if the latest satellite pass (within 30 days) saw at least 10 % flooded",
+   "decision": {
+    "floods_caught": 51,
+    "floods_missed": 58,
+    "false_alarms": 58,
+    "precision": 0.468,
+    "recall": 0.468,
+    "f1": 0.468
+   }
+  },
+  "baseline_climatology": {
+   "rows": 4783,
+   "floods": 109,
+   "flood_rate": 0.0228,
+   "pr_auc": 0.17,
+   "roc_auc": 0.844,
+   "brier": 0.0224,
+   "rule": "usual flood rate of the district and month in 2016-2021; cut-off with the best F1 in 2022",
+   "decision": {
+    "floods_caught": 26,
+    "floods_missed": 83,
+    "false_alarms": 98,
+    "precision": 0.21,
+    "recall": 0.239,
+    "f1": 0.223
+   }
+  },
+  "onset_days": {
+   "meaning": "test days where the latest satellite pass saw no flood (or there was none): persistence always says 'no flood' here, so it catches none of these floods",
+   "model": {
+    "rows": 4674,
+    "floods": 58,
+    "flood_rate": 0.0124,
+    "pr_auc": 0.148,
+    "roc_auc": 0.893,
+    "brier": 0.0115,
+    "at_watch": {
+     "floods_caught": 18,
+     "floods_missed": 40,
+     "false_alarms": 72,
+     "precision": 0.2,
+     "recall": 0.31,
+     "f1": 0.243
+    },
+    "at_alert": {
+     "floods_caught": 2,
+     "floods_missed": 56,
+     "false_alarms": 3,
+     "precision": 0.4,
+     "recall": 0.034,
+     "f1": 0.063
+    }
+   },
+   "climatology": {
+    "rows": 4674,
+    "floods": 58,
+    "flood_rate": 0.0124,
+    "pr_auc": 0.062,
+    "roc_auc": 0.799,
+    "brier": 0.0152
+   }
+  },
+  "without_satellite_inputs": {
+   "meaning": "trained without the three satellite inputs: what rain, river flow, hazard and month alone can do",
+   "test": {
+    "rows": 4783,
+    "floods": 109,
+    "flood_rate": 0.0228,
+    "pr_auc": 0.249,
+    "roc_auc": 0.927,
+    "brier": 0.0254,
+    "at_watch": {
+     "floods_caught": 101,
+     "floods_missed": 8,
+     "false_alarms": 1415,
+     "precision": 0.067,
+     "recall": 0.927,
+     "f1": 0.124
+    },
+    "at_alert": {
+     "floods_caught": 68,
+     "floods_missed": 41,
+     "false_alarms": 265,
+     "precision": 0.204,
+     "recall": 0.624,
+     "f1": 0.308
+    }
+   }
+  },
+  "held_out_division": {
+   "Barishal": {
+    "rows": 375,
+    "floods": 16,
+    "flood_rate": 0.0427,
+    "pr_auc": 0.123,
+    "roc_auc": 0.791,
+    "brier": 0.0461
+   },
+   "Chattogram": {
+    "rows": 552,
+    "floods": 14,
+    "flood_rate": 0.0254,
+    "pr_auc": 0.404,
+    "roc_auc": 0.936,
+    "brier": 0.0188
+   },
+   "Dhaka": {
+    "rows": 886,
+    "floods": 12,
+    "flood_rate": 0.0135,
+    "pr_auc": 0.429,
+    "roc_auc": 0.877,
+    "brier": 0.0101
+   },
+   "Khulna": {
+    "rows": 738,
+    "floods": 2,
+    "flood_rate": 0.0027,
+    "pr_auc": null,
+    "roc_auc": null,
+    "brier": null
+   },
+   "Mymensingh": {
+    "rows": 283,
+    "floods": 8,
+    "flood_rate": 0.0283,
+    "pr_auc": 0.458,
+    "roc_auc": 0.951,
+    "brier": 0.02
+   },
+   "Rajshahi": {
+    "rows": 786,
+    "floods": 6,
+    "flood_rate": 0.0076,
+    "pr_auc": 0.103,
+    "roc_auc": 0.759,
+    "brier": 0.008
+   },
+   "Rangpur": {
+    "rows": 749,
+    "floods": 1,
+    "flood_rate": 0.0013,
+    "pr_auc": null,
+    "roc_auc": null,
+    "brier": null
+   },
+   "Sylhet": {
+    "rows": 414,
+    "floods": 50,
+    "flood_rate": 0.1208,
+    "pr_auc": 0.718,
+    "roc_auc": 0.934,
+    "brier": 0.0585
+   },
+   "all divisions pooled": {
+    "rows": 4783,
+    "floods": 109,
+    "flood_rate": 0.0228,
+    "pr_auc": 0.451,
+    "roc_auc": 0.911,
+    "brier": 0.0164
+   }
+  }
+ },
+ "validation_results": {
+  "rows": 2543,
+  "floods": 112,
+  "flood_rate": 0.044,
+  "pr_auc": 0.805,
+  "roc_auc": 0.984,
+  "brier": 0.0155,
+  "at_watch": {
+   "floods_caught": 91,
+   "floods_missed": 21,
+   "false_alarms": 55,
+   "precision": 0.623,
+   "recall": 0.812,
+   "f1": 0.705
+  },
+  "at_alert": {
+   "floods_caught": 79,
+   "floods_missed": 33,
+   "false_alarms": 18,
+   "precision": 0.814,
+   "recall": 0.705,
+   "f1": 0.756
+  }
+ },
+ "input_importance": {
+  "rain_1d": 0.033,
+  "rain_3d": 0.057,
+  "rain_7d": 0.028,
+  "rain_14d": 0.06,
+  "rain_30d": 0.015,
+  "river_log_discharge": 0.037,
+  "river_change_3d": 0.027,
+  "river_vs_30d_mean": 0.024,
+  "river_distance_km": 0.035,
+  "hazard_share_10yr": 0.022,
+  "hazard_share_100yr": 0.024,
+  "last_flooded_share": 0.215,
+  "days_since_last_observation": 0.028,
+  "max_flooded_share_14d": 0.351,
+  "month": 0.045
+ },
+ "limitations": [
+  "District-level estimate from 56 districts; 8 districts cannot be predicted.",
+  "Labels come from satellite radar every few days: short floods and city waterlogging are missed.",
+  "River flow is the GloFAS model at the nearest of 9 river sites, sometimes far away.",
+  "Trained on rain from ERA5 reanalysis; live use needs a more recent rain source, which can differ.",
+  "Test results describe 2023-2024; performance in other years can differ."
+ ]
+}

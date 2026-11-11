@@ -19,8 +19,11 @@ so it can learn how much that river matters.
 
 ## `training_table.csv`: one row per district and labelled satellite pass
 
-Built by `scripts/build_training_table.py` **after** the 2016–2024 rain and river
-backfill. It reads the database named in `Backend/.env` (read only).
+Built by `scripts/build_training_table.py` from the 2016–2024 rain and river
+backfill. It reads the database named in `Backend/.env` (read only). The
+committed table has 21,165 rows (train 13,839 with 411 floods, validation 2,543
+with 112, test 4,783 with 109); no pass was dropped for missing rain. With it,
+`scripts/train_flood_model.py` can be re-run without a database.
 
 | Columns | Meaning |
 |---|---|
