@@ -406,7 +406,7 @@ Also available (early versions, stored in MongoDB): manual weather observations
 `POST/GET /weather/observations`, `GET /weather/observations/{record_id}`
 (rainfall mm, temperature °C, humidity %), and saved named locations
 `POST/GET /geospatial/locations`, `GET /geospatial/locations/{location_id}`.
-Real weather data ingestion comes later.
+Real rain and river data is in section E; these manual records are separate from it.
 
 ---
 
