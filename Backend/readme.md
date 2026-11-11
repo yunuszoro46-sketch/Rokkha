@@ -97,7 +97,7 @@ establish flood risk.
 | Training and evaluation script (baselines, calibration, alert thresholds, report) | Implemented |
 | Recent rain for the days ERA5 lacks (`rain_recent`, GFS) | Implemented |
 | Daily update script (refresh data, predict today, list alerts) | Implemented (start it by hand or with cron) |
-| Trained flood model with measured results | Implemented: modestly better than the baselines on 2023–2024; weak on new floods (see [section 13](#13-the-flood-model-design-and-measured-results)) |
+| Trained flood model with measured results | Implemented: better than the baselines on 2023–2024 and again on 2025; weak on new floods (see [section 13](#13-the-flood-model-design-and-measured-results)) |
 | Authentication, authorization, rate limiting | Not implemented |
 
 Weather observations are submitted through the API. The weather module does **not** fetch live weather.
@@ -185,7 +185,7 @@ Rokkha/
     ├── docs/
     │   └── FRONTEND_API_GUIDE.md  guide for the frontend developer
     ├── scripts/                   rebuild the data files from their sources
-    ├── tests/                     287 automated tests
+    ├── tests/                     289 automated tests
     ├── ml/                        (placeholder)
     ├── pytest.ini
     ├── requirements.txt           pinned API dependencies
@@ -581,7 +581,7 @@ Allowed by default: `http://localhost:3000` and `http://localhost:5173`. Add oth
 python -m pytest -v
 ```
 
-Expected: **287 passed**.
+Expected: **289 passed**.
 
 Tests that store data use a **separate local test MongoDB in Docker**, never Atlas:
 
@@ -633,9 +633,10 @@ Planned items are not claims of completed functionality.
 | Prediction API and alerts with assets at risk | Done |
 | Training and evaluation script; recent rain; daily update script | Done |
 | Train the real model and publish its measured results | Done (section 13) |
-| Improve the model on new floods (better river inputs, upstream rain) | Planned |
+| Improve the model on new floods | Tried once (neighbour inputs): no gain, not adopted. Open: upstream and cross-border rain and river data |
 | New satellite passes for live use (fetched by the daily update) | Done |
-| Check the model on 2025–2026, years never used so far | Planned (next) |
+| Check the model on 2025, a year never used so far | Done (section 13) |
+| Check on 2026 (kept untouched for the next model change) | Planned |
 | Authentication and rate limiting before any public use | Planned |
 
 ## 13. The flood model: design and measured results
@@ -672,6 +673,35 @@ What these numbers say, including the weak points:
   and river only (compare the 0.249 row).
 - **Newer satellite passes come from newer GFM versions.** The model learned from GFM v3.1.0 maps; passes of
   2025–2026 are v4.x. Whether that changes the flooded shares has not been measured yet.
+
+### Second check: 2025, a year never used for anything
+
+After training, the delivered model was measured, unchanged, on 2025 (2,485 district-days, 83 observed floods)
+with `python scripts/check_flood_model.py --first-year 2025 --last-year 2025`. Full report:
+[data/models/CHECK_2025.md](data/models/CHECK_2025.md).
+
+| 2025 | PR-AUC | Floods caught | Floods missed | False alarms |
+| --- | --- | --- | --- | --- |
+| **Model**, `watch` level | 0.569 | 54 of 83 | 29 | 68 |
+| **Model**, `alert` level | 0.569 | 38 of 83 | 45 | 13 |
+| Baseline: same as the latest satellite pass | 0.499 | 45 of 83 | 38 | 38 |
+| Baseline: usual flood rate of the district and month | 0.213 | 16 of 83 | 67 | 41 |
+
+- The model beat both baselines again, in a second, independent period. At the `alert` level 3 of 4 flagged
+  days really flooded.
+- **New floods stayed hard:** of 38 floods not already visible at the latest pass, the `watch` level caught 10.
+- 2025 was a year with more floods than 2023–2024; scores differ from year to year, so neither number is "the"
+  accuracy.
+
+### An improvement that was tried and not kept
+
+To catch more new floods, extra inputs were tried: rain and satellite-observed flooding in the 5 nearest
+districts, the change between the last two passes, more rain windows, and the flow of all 9 river sites. They
+were compared by leaving out one year at a time within 2016–2022 only. The best set (neighbour rain and
+flooding) gained about 0.01 PR-AUC and was better in only 4 of 7 years. Trained the same way as the delivered
+model and measured on 2025, it scored **0.496 against 0.569** for the delivered model, so it was **not adopted**.
+The likely reason new floods are hard: they are driven by rain and river flow upstream, much of it outside
+Bangladesh, which these inputs do not cover.
 
 The design, fixed and tested before training:
 

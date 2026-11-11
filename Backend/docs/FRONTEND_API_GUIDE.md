@@ -344,7 +344,8 @@ case the model files are missing on a server.
 Good days to try (the data for them is stored): `2022-06-18` (Sylhet floods: 7 alerts, 8 watches),
 `2024-08-22` (eastern floods: Feni, Noakhali, Lakshmipur) and `2023-04-10` (a dry day: no alerts).
 
-**How good is it? Say this honestly in the UI.** Tested on 2023–2024, the `alert` level was right 6 times in 10
+**How good is it? Say this honestly in the UI.** (A second check on 2025 gave similar or better results: `alert`
+right 3 times in 4, catching nearly half the floods.) Tested on 2023–2024, the `alert` level was right 6 times in 10
 and caught 4 floods in 10; the `watch` level caught 6 in 10 with more false alarms. It is much better at saying
 "a visible flood will continue" than at announcing a new flood. `GET /predictions/model` returns these test
 results in `model.test_results` if you want an "About the model" panel.
@@ -429,7 +430,7 @@ data and then predicts. Show `data_through` and, from `features`, `days_since_la
 pass: 1 day ago") so users can see how fresh the inputs are; when it is `null`, no pass from the last 30 days
 was available and the prediction is weaker. In the dry season (now) expect no alerts.
 
-**Coming next:** a scheduled daily update, a check of the model on 2025–2026, and model improvements.
+**Coming next:** a scheduled daily update, and login / rate limits before any public use.
 
 Questions or a field you need that isn't there? Ask the backend developer —
 `/docs` always shows the current, exact shapes.

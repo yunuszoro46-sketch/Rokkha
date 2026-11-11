@@ -291,3 +291,60 @@ def test_api_predicts_with_the_trained_files(client, trained, monkeypatch):
     assert districts["BD6090"]["probability"] > 0.8
     assert districts["BD3026"]["alert_level"] == "none"
     assert districts["BD3026"]["probability"] < 0.2
+
+
+# ==========================================
+# CHECK ON LATER YEARS (scripts/check_flood_model.py)
+# ==========================================
+
+CHECK_SCRIPT = SCRIPT.parent / "check_flood_model.py"
+check_spec = importlib.util.spec_from_file_location("check_flood_model", CHECK_SCRIPT)
+checker = importlib.util.module_from_spec(check_spec)
+check_spec.loader.exec_module(checker)
+
+
+def test_check_measures_the_delivered_model_on_a_later_year(trained, tmp_path):
+
+    model_dir, meta = trained
+    random = np.random.default_rng(seed=11)
+    rows = []
+
+    for pcode, name, division in DISTRICTS:
+        for step in range(60):
+            day = date(2025, 4, 1) + timedelta(days=4 * step)
+            values = {feature: round(float(random.uniform(0, 1)), 4) for feature in FEATURE_NAMES}
+            values["rain_3d"] = round(float(random.uniform(0, 300)), 1)
+            values["month"] = day.month
+            rows.append({
+                "pcode": pcode, "name": name, "division": division,
+                "date": day.isoformat(), "year": 2025, "split": "check",
+                "label": int(values["rain_3d"] > 150),
+                "flooded_share": 0.0, "observed_share": 0.9, "advisory_share": 0.0,
+                **values,
+            })
+
+    table = tmp_path / "check.csv"
+    with table.open("w", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=COLUMNS)
+        writer.writeheader()
+        writer.writerows(rows)
+
+    result = checker.check(model_dir.parent / "table.csv", table, model_dir)
+    floods = sum(row["label"] for row in rows)
+
+    assert result["years"] == [2025]
+    assert result["model_version"] == meta["model_version"]
+    assert result["model"]["rows"] == len(rows)
+    assert result["model"]["floods"] == floods
+    # The made-up rule is easy: the model finds it again in the new year, the baselines cannot.
+    assert result["model"]["pr_auc"] > 0.95
+    assert result["model"]["pr_auc"] > result["persistence"]["pr_auc"]
+    assert result["model"]["pr_auc"] > result["climatology"]["pr_auc"]
+    alert = result["model"]["at_alert"]
+    assert alert["floods_caught"] + alert["floods_missed"] == floods
+    assert result["alert_thresholds"] == {k: meta["alert_thresholds"][k] for k in ("watch", "alert")}
+    assert result["onset_days"]["rows"] <= len(rows)
+
+    text = checker.report(result)
+    assert "check on 2025" in text
+    assert "not used to train, tune, calibrate or choose thresholds" in text

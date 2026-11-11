@@ -25,9 +25,9 @@ LABEL_COLUMNS = ["label", "flooded_share", "observed_share", "advisory_share"]
 COLUMNS = ID_COLUMNS + LABEL_COLUMNS + FEATURE_NAMES
 
 
-def split_for(year: int) -> str | None:
+def split_for(year: int, splits: Mapping[str, tuple[int, int]] = SPLITS) -> str | None:
 
-    for name, (first, last) in SPLITS.items():
+    for name, (first, last) in splits.items():
         if first <= year <= last:
             return name
 
@@ -45,8 +45,13 @@ def build_rows(
     static: Mapping[str, Mapping],
     rain_by_site: Mapping[str, Mapping[date, float | None]],
     river_by_site: Mapping[str, Mapping[date, float | None]],
+    splits: Mapping[str, tuple[int, int]] = SPLITS,
 ) -> tuple[list[dict], Counter]:
-    """Returns (table rows, how many passes were dropped per year for missing rain)."""
+    """Returns (table rows, how many passes were dropped per year for missing rain).
+
+    splits: which years go into the table and under which name. The default is
+    the training table; scripts/check_flood_model.py passes later years.
+    """
 
     rule = labels["label_rule"]
     table, dropped = [], Counter()
@@ -66,7 +71,7 @@ def build_rows(
         for day_text, observed_share, flooded_share, advisory_share in passes:
 
             day = date.fromisoformat(day_text)
-            split = split_for(day.year)
+            split = split_for(day.year, splits)
 
             if split is None:
                 continue

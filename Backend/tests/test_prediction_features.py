@@ -265,3 +265,9 @@ def test_table_never_uses_the_label_day_itself_as_an_input():
         # A pass can only be an input for LATER days. If the day's own flooded
         # share leaked in, last_flooded_share would equal flooded_share here.
         assert row["last_flooded_share"] is None
+
+
+def test_other_years_can_be_put_in_a_table_under_another_name():
+    # scripts/check_flood_model.py builds a table of years outside the training split.
+    assert split_for(2025, {"check": (2025, 2026)}) == "check"
+    assert split_for(2024, {"check": (2025, 2026)}) is None

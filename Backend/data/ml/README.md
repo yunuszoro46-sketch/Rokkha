@@ -43,5 +43,12 @@ Rules:
 - River and satellite inputs may be empty; the model handles gaps.
 - Empty cell = value not available.
 
+## `check_table_2025.csv`: a later year, for checking only
+
+Built by `scripts/check_flood_model.py` in the same way and with the same
+columns as the training table (`split` = `check`): 2,485 passes of 2025 with 83
+floods. It is **never used for training**; the delivered model is only measured
+on it (`data/models/CHECK_2025.md`).
+
 Sources: Copernicus EMS GFM (labels), ERA5 via Open-Meteo (rain), GloFAS via
 Open-Meteo (river flow, modelled), JRC flood hazard maps (modelled hazard).
