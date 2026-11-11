@@ -109,7 +109,7 @@ export default function GeoJSONValidation() {
     <div>
       <div style={{ marginBottom: '1.25rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span className="badge badge-emerald">Implemented</span>
+          <span className="badge badge-cyan">Implemented</span>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Status from Feature Inventory</span>
         </div>
         <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginTop: '0.25rem' }}>GeoJSON validation</h2>
@@ -144,8 +144,8 @@ export default function GeoJSONValidation() {
           {!validationResult ? (
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Click "Validate Geometry" to test the payload.</p>
           ) : validationResult.valid ? (
-            <div style={{ padding: '1.25rem', background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.4)', borderRadius: '0.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#34d399', fontWeight: 700, fontSize: '1.1rem' }}>
+            <div style={{ padding: '1.25rem', background: 'rgba(6, 182, 212,0.15)', border: '1px solid rgba(6, 182, 212,0.4)', borderRadius: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#0891b2', fontWeight: 700, fontSize: '1.1rem' }}>
                 <CheckCircle2 size={24} /> Valid {validationResult.type}
               </div>
               <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginTop: '0.5rem' }}>{validationResult.details}</p>

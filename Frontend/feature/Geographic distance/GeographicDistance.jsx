@@ -70,7 +70,7 @@ export default function GeographicDistance() {
     <div>
       <div style={{ marginBottom: '1.25rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span className="badge badge-blue">Current milestone</span>
+          <span className="badge badge-cyan">Current milestone</span>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Status from Feature Inventory</span>
         </div>
         <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginTop: '0.25rem' }}>Geographic distance</h2>
@@ -106,7 +106,7 @@ export default function GeographicDistance() {
               </div>
 
               <div style={{ marginBottom: '1rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.4rem', border: '1px solid var(--border-color)' }}>
-                <strong style={{ fontSize: '0.8rem', color: '#34d399' }}>Point B (e.g. Destination)</strong>
+                <strong style={{ fontSize: '0.8rem', color: '#0891b2' }}>Point B (e.g. Destination)</strong>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.4rem' }}>
                   <input type="number" step="any" placeholder="Latitude" value={p2.lat} onChange={e => setP2({...p2, lat: e.target.value})} required />
                   <input type="number" step="any" placeholder="Longitude" value={p2.lon} onChange={e => setP2({...p2, lon: e.target.value})} required />
@@ -162,7 +162,7 @@ export default function GeographicDistance() {
             {lineResult && (
               <div style={{ background: '#f8fafc', border: '1px solid var(--border-color)', borderRadius: '0.6rem', padding: '1.25rem', textAlign: 'center' }}>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Total Path Length</div>
-                <div style={{ fontSize: '2.2rem', fontWeight: 800, color: '#34d399' }}>
+                <div style={{ fontSize: '2.2rem', fontWeight: 800, color: '#0891b2' }}>
                   {lineResult.length_kilometers.toFixed(3)} <span style={{ fontSize: '1rem' }}>km</span>
                 </div>
                 <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>

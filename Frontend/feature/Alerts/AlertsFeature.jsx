@@ -32,14 +32,14 @@ export default function AlertsFeature() {
     <div>
       <div style={{ marginBottom: '1.25rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span className="badge badge-amber">Planned</span>
+          <span className="badge badge-cyan">Planned</span>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Status from Feature Inventory</span>
         </div>
         <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginTop: '0.25rem' }}>Alerts</h2>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Notify citizens, utility managers, and emergency responders of imminent urban flood danger</p>
       </div>
 
-      {msg && <div style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', color: '#34d399', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem', fontSize: '0.85rem' }}>✓ {msg}</div>}
+      {msg && <div style={{ background: 'rgba(6, 182, 212,0.15)', border: '1px solid rgba(6, 182, 212,0.3)', color: '#0891b2', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem', fontSize: '0.85rem' }}>✓ {msg}</div>}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
         <div className="card">

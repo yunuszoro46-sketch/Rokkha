@@ -29,7 +29,7 @@ export default function FloodPrediction() {
     <div>
       <div style={{ marginBottom: '1.25rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span className="badge badge-amber">Planned</span>
+          <span className="badge badge-cyan">Planned</span>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Status from Feature Inventory</span>
         </div>
         <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginTop: '0.25rem' }}>Flood prediction</h2>
@@ -55,7 +55,7 @@ export default function FloodPrediction() {
         <div className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Inference Status</div>
-            <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#34d399' }}>Synced ({lastInference})</div>
+            <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#0891b2' }}>Synced ({lastInference})</div>
           </div>
           <button className="btn-primary" onClick={runModel} disabled={running}>
             <Cpu size={15} /> {running ? 'Predicting...' : 'Re-run Model'}
@@ -90,8 +90,8 @@ export default function FloodPrediction() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.35rem' }}>
                   <strong style={{ fontSize: '0.9rem', color: '#0f172a' }}>{c.location}</strong>
                   <span className="badge" style={{
-                    background: c.prob > 0.8 ? 'rgba(244,63,94,0.15)' : c.prob > 0.4 ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.15)',
-                    color: c.prob > 0.8 ? '#fb7185' : c.prob > 0.4 ? '#fbbf24' : '#34d399'
+                    background: c.prob > 0.8 ? 'rgba(244,63,94,0.15)' : c.prob > 0.4 ? 'rgba(245,158,11,0.15)' : 'rgba(6, 182, 212,0.15)',
+                    color: c.prob > 0.8 ? '#fb7185' : c.prob > 0.4 ? '#fbbf24' : '#0891b2'
                   }}>
                     {(c.prob * 100).toFixed(0)}% Flood Risk
                   </span>

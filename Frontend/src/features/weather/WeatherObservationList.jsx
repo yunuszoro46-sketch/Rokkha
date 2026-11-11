@@ -97,7 +97,7 @@ export default function WeatherObservationList({ observations, loading }) {
                 </div>
 
                 <div style={{ background: '#131e33', padding: '0.6rem', borderRadius: '0.4rem', textAlign: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', color: '#34d399', fontSize: '0.7rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', color: '#0891b2', fontSize: '0.7rem' }}>
                     <Droplets size={13} /> Humidity
                   </div>
                   <div style={{ fontSize: '1rem', fontWeight: 700, color: '#f8fafc', marginTop: '0.2rem' }}>

@@ -54,7 +54,7 @@ export default function LocationForm({ onLocationAdded }) {
   return (
     <div className="card" style={{ marginBottom: '1.5rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem' }}>
-        <div style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', padding: '0.5rem', borderRadius: '0.5rem' }}>
+        <div style={{ background: 'rgba(6, 182, 212, 0.15)', color: '#0891b2', padding: '0.5rem', borderRadius: '0.5rem' }}>
           <MapPin size={20} />
         </div>
         <div>
@@ -68,7 +68,7 @@ export default function LocationForm({ onLocationAdded }) {
       {/* Dhaka Presets */}
       <div style={{ marginBottom: '1.25rem', padding: '0.75rem', background: '#0b1120', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: 600 }}>
-          <Sparkles size={14} color="#34d399" /> Quick Dhaka Coordinates:
+          <Sparkles size={14} color="#0891b2" /> Quick Dhaka Coordinates:
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
           {DHAKA_LOCATION_PRESETS.map((p, idx) => (
@@ -97,7 +97,7 @@ export default function LocationForm({ onLocationAdded }) {
         </div>
       )}
       {successMsg && (
-        <div style={{ padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#34d399', fontSize: '0.85rem', marginBottom: '1rem' }}>
+        <div style={{ padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(6, 182, 212, 0.1)', border: '1px solid rgba(6, 182, 212, 0.3)', color: '#0891b2', fontSize: '0.85rem', marginBottom: '1rem' }}>
           ✓ {successMsg}
         </div>
       )}
@@ -146,7 +146,7 @@ export default function LocationForm({ onLocationAdded }) {
           </div>
         </div>
 
-        <button type="submit" className="btn-primary" style={{ background: 'linear-gradient(135deg, #059669, #047857)' }} disabled={loading}>
+        <button type="submit" className="btn-primary" style={{ background: 'linear-gradient(135deg, #0891b2, #0e7490)' }} disabled={loading}>
           <Plus size={16} />
           {loading ? 'Creating Location...' : 'Save Location'}
         </button>

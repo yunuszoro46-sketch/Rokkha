@@ -30,7 +30,7 @@ export default function WeatherIngestion() {
     <div>
       <div style={{ marginBottom: '1.25rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span className="badge badge-amber">Planned</span>
+          <span className="badge badge-cyan">Planned</span>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Status from Feature Inventory</span>
         </div>
         <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginTop: '0.25rem' }}>Weather ingestion</h2>
@@ -53,7 +53,7 @@ export default function WeatherIngestion() {
               <div key={feed.id} style={{ background: '#f8fafc', border: '1px solid var(--border-color)', borderRadius: '0.5rem', padding: '0.85rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.25rem' }}>
                   <strong style={{ fontSize: '0.875rem', color: '#0f172a' }}>{feed.name}</strong>
-                  <span className="badge badge-blue" style={{ fontSize: '0.65rem' }}>{feed.status}</span>
+                  <span className="badge badge-cyan" style={{ fontSize: '0.65rem' }}>{feed.status}</span>
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                   <span>Freq: {feed.interval}</span>
@@ -66,7 +66,7 @@ export default function WeatherIngestion() {
 
         <div className="card">
           <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Clock size={18} color="#34d399" /> Ingestion Activity Logs
+            <Clock size={18} color="#0891b2" /> Ingestion Activity Logs
           </h3>
           <div style={{ background: '#f8fafc', border: '1px solid var(--border-color)', borderRadius: '0.5rem', padding: '0.75rem', minHeight: '180px', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: '#94a3b8' }}>
             {log.length === 0 ? (

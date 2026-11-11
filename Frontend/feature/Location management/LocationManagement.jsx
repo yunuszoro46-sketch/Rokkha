@@ -69,7 +69,7 @@ export default function LocationManagement() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span className="badge badge-emerald">Implemented with temporary storage</span>
+            <span className="badge badge-cyan">Implemented with temporary storage</span>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Status from Feature Inventory</span>
           </div>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginTop: '0.25rem' }}>Location management</h2>
@@ -83,7 +83,7 @@ export default function LocationManagement() {
       {/* Presets */}
       <div style={{ background: '#f8fafc', border: '1px solid var(--border-color)', borderRadius: '0.5rem', padding: '0.75rem', marginBottom: '1.25rem' }}>
         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.4rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-          <Sparkles size={13} color="#34d399" /> Quick Presets for Dhaka Locations:
+          <Sparkles size={13} color="#0891b2" /> Quick Presets for Dhaka Locations:
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
           {PRESETS.map((p, idx) => (
@@ -105,11 +105,11 @@ export default function LocationManagement() {
       </div>
 
       {error && <div style={{ background: 'rgba(244,63,94,0.15)', border: '1px solid rgba(244,63,94,0.3)', color: '#fb7185', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem', fontSize: '0.85rem' }}>{error}</div>}
-      {msg && <div style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', color: '#34d399', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem', fontSize: '0.85rem' }}>✓ {msg}</div>}
+      {msg && <div style={{ background: 'rgba(6, 182, 212,0.15)', border: '1px solid rgba(6, 182, 212,0.3)', color: '#0891b2', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem', fontSize: '0.85rem' }}>✓ {msg}</div>}
 
       <div className="card" style={{ marginBottom: '1.5rem' }}>
         <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          <MapPin size={18} color="#34d399" /> Add New Location Record
+          <MapPin size={18} color="#0891b2" /> Add New Location Record
         </h3>
         <form onSubmit={handleSubmit}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.85rem', marginBottom: '1rem' }}>
@@ -126,7 +126,7 @@ export default function LocationManagement() {
               <input required type="number" step="any" value={form.longitude} onChange={e => setForm({...form, longitude: e.target.value})} placeholder="90.3686" />
             </div>
           </div>
-          <button type="submit" className="btn-primary" disabled={formLoading} style={{ background: 'linear-gradient(135deg, #059669, #047857)' }}>
+          <button type="submit" className="btn-primary" disabled={formLoading} style={{ background: 'linear-gradient(135deg, #0891b2, #0e7490)' }}>
             <Plus size={15} /> {formLoading ? 'Saving...' : 'Register Location'}
           </button>
         </form>
@@ -142,7 +142,7 @@ export default function LocationManagement() {
               <div key={loc.id} style={{ background: '#f8fafc', border: '1px solid var(--border-color)', borderRadius: '0.5rem', padding: '0.9rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
                   <strong style={{ fontSize: '0.9rem', color: '#0f172a' }}>{loc.location_name}</strong>
-                  <span className="badge badge-emerald">Point</span>
+                  <span className="badge badge-cyan">Point</span>
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
                   Lat: {loc.latitude.toFixed(6)} | Lon: {loc.longitude.toFixed(6)}

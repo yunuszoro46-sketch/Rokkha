@@ -124,7 +124,7 @@ export default function WeatherObservationForm({ onObservationAdded }) {
         </div>
       )}
       {successMsg && (
-        <div style={{ padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#34d399', fontSize: '0.85rem', marginBottom: '1rem' }}>
+        <div style={{ padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(6, 182, 212, 0.1)', border: '1px solid rgba(6, 182, 212, 0.3)', color: '#0891b2', fontSize: '0.85rem', marginBottom: '1rem' }}>
           ✓ {successMsg}
         </div>
       )}

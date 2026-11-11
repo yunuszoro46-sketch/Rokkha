@@ -429,7 +429,7 @@ export default function FeatureModulesCatalog({ onSelectFeature, onBackToLanding
               Real-time pipeline simulation connecting weather observation telemetry to localized Shapely point-in-polygon flood inundation engines.
             </p>
             <div style={{ background: '#0a1226', border: '1px solid rgba(6, 182, 212, 0.3)', borderRadius: '10px', padding: '14px', fontFamily: 'monospace', fontSize: '12px', color: '#cbd5e1', maxHeight: '190px', overflowY: 'auto', marginBottom: '16px' }}>
-              <div style={{ color: '#34d399', marginBottom: '6px' }}>✓ FastAPI Server: http://127.0.0.1:8000 (Live)</div>
+              <div style={{ color: '#0891b2', marginBottom: '6px' }}>✓ FastAPI Server: http://127.0.0.1:8000 (Live)</div>
               <div style={{ color: '#38bdf8', marginBottom: '6px' }}>✓ WGS84 Geodesic Calculation Engine: Active</div>
               <div style={{ color: '#38bdf8', marginBottom: '6px' }}>✓ Shapely Geometry Point-in-Polygon Engine: Active</div>
               {simLog.map((log, i) => (
