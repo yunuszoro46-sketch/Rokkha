@@ -20,7 +20,7 @@ export default function AssetExposure() {
     <div>
       <div style={{ marginBottom: '1.25rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span className="badge badge-amber">Planned</span>
+          <span className="badge badge-cyan">Planned</span>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Status from Feature Inventory</span>
         </div>
         <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginTop: '0.25rem' }}>Asset exposure</h2>
@@ -53,8 +53,8 @@ export default function AssetExposure() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.4rem' }}>
                   <strong style={{ fontSize: '0.95rem', color: '#0f172a' }}>{item.assetName}</strong>
                   <span className="badge" style={{
-                    background: isCrit ? 'rgba(244,63,94,0.15)' : isHigh ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.15)',
-                    color: isCrit ? '#fb7185' : isHigh ? '#fbbf24' : '#34d399'
+                    background: isCrit ? 'rgba(244,63,94,0.15)' : isHigh ? 'rgba(245,158,11,0.15)' : 'rgba(6, 182, 212,0.15)',
+                    color: isCrit ? '#fb7185' : isHigh ? '#fbbf24' : '#0891b2'
                   }}>
                     {item.exposureLevel} Exposure
                   </span>

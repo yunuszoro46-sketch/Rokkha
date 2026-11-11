@@ -83,7 +83,7 @@ export default function PointInPolygon() {
     <div>
       <div style={{ marginBottom: '1.25rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span className="badge badge-emerald">Implemented and tested</span>
+          <span className="badge badge-cyan">Implemented and tested</span>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Status from Feature Inventory</span>
         </div>
         <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginTop: '0.25rem' }}>Point-in-Polygon</h2>
@@ -137,13 +137,13 @@ export default function PointInPolygon() {
                 padding: '1rem',
                 borderRadius: '0.5rem',
                 marginBottom: '1rem',
-                background: result.relationship === 'inside' ? 'rgba(244,63,94,0.15)' : 'rgba(16,185,129,0.15)',
-                border: result.relationship === 'inside' ? '1px solid rgba(244,63,94,0.4)' : '1px solid rgba(16,185,129,0.4)',
+                background: result.relationship === 'inside' ? 'rgba(244,63,94,0.15)' : 'rgba(6, 182, 212,0.15)',
+                border: result.relationship === 'inside' ? '1px solid rgba(244,63,94,0.4)' : '1px solid rgba(6, 182, 212,0.4)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.75rem'
               }}>
-                {result.relationship === 'inside' ? <AlertCircle size={32} color="#fb7185" /> : <CheckCircle2 size={32} color="#34d399" />}
+                {result.relationship === 'inside' ? <AlertCircle size={32} color="#fb7185" /> : <CheckCircle2 size={32} color="#0891b2" />}
                 <div>
                   <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Relationship</div>
                   <div style={{ fontSize: '1.4rem', fontWeight: 800, textTransform: 'capitalize', color: '#0f172a' }}>

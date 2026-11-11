@@ -16,7 +16,7 @@ export default function RiverMonitoring() {
     <div>
       <div style={{ marginBottom: '1.25rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span className="badge badge-amber">Planned</span>
+          <span className="badge badge-cyan">Planned</span>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Status from Feature Inventory</span>
         </div>
         <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginTop: '0.25rem' }}>River monitoring</h2>
@@ -32,7 +32,7 @@ export default function RiverMonitoring() {
           {stations.map(st => {
             const isDanger = st.currentLevel >= st.dangerLevel;
             const isWarning = !isDanger && st.currentLevel >= st.warningLevel;
-            const statusColor = isDanger ? '#fb7185' : isWarning ? '#fbbf24' : '#34d399';
+            const statusColor = isDanger ? '#fb7185' : isWarning ? '#fbbf24' : '#0891b2';
 
             return (
               <div key={st.id} style={{ background: '#f8fafc', border: `1px solid ${isDanger ? 'rgba(244,63,94,0.4)' : 'var(--border-color)'}`, borderRadius: '0.6rem', padding: '1rem' }}>
@@ -42,7 +42,7 @@ export default function RiverMonitoring() {
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{st.station}</div>
                   </div>
                   <span className="badge" style={{
-                    background: isDanger ? 'rgba(244,63,94,0.15)' : isWarning ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.15)',
+                    background: isDanger ? 'rgba(244,63,94,0.15)' : isWarning ? 'rgba(245,158,11,0.15)' : 'rgba(6, 182, 212,0.15)',
                     color: statusColor
                   }}>
                     {isDanger ? 'ABOVE DANGER' : isWarning ? 'WARNING' : 'NORMAL'}
@@ -59,7 +59,7 @@ export default function RiverMonitoring() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
                     Trend:
                     {st.trend === 'rising' && <ArrowUp size={12} color="#fb7185" />}
-                    {st.trend === 'falling' && <ArrowDown size={12} color="#34d399" />}
+                    {st.trend === 'falling' && <ArrowDown size={12} color="#0891b2" />}
                     {st.trend === 'steady' && <Minus size={12} color="#94a3b8" />}
                     <span>{st.delta24h}</span>
                   </div>

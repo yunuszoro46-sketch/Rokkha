@@ -46,7 +46,7 @@ export default function LocationList({ locations, loading }) {
             >
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <div style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', padding: '0.4rem', borderRadius: '0.4rem' }}>
+                  <div style={{ background: 'rgba(6, 182, 212, 0.15)', color: '#0891b2', padding: '0.4rem', borderRadius: '0.4rem' }}>
                     <MapPin size={16} />
                   </div>
                   <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f8fafc' }}>
@@ -69,7 +69,7 @@ export default function LocationList({ locations, loading }) {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
                   <span style={{ color: 'var(--text-muted)' }}>GeoJSON Point:</span>
-                  <span style={{ fontFamily: 'var(--font-mono)', color: '#34d399', fontSize: '0.7rem' }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', color: '#0891b2', fontSize: '0.7rem' }}>
                     [{lon}, {lat}]
                   </span>
                 </div>

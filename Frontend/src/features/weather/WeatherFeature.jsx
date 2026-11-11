@@ -68,7 +68,7 @@ export default function WeatherFeature() {
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>
             Heavy Rainfall Alerts (&gt;50mm)
           </div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 800, marginTop: '0.25rem', color: highRainCount > 0 ? '#fb7185' : '#34d399' }}>
+          <div style={{ fontSize: '1.75rem', fontWeight: 800, marginTop: '0.25rem', color: highRainCount > 0 ? '#fb7185' : '#0891b2' }}>
             {highRainCount}
           </div>
         </div>

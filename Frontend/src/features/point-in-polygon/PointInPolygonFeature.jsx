@@ -260,17 +260,17 @@ export default function PointInPolygonFeature() {
                     ? 'rgba(244, 63, 94, 0.15)'
                     : analysisResult.relationship === 'boundary'
                     ? 'rgba(245, 158, 11, 0.15)'
-                    : 'rgba(16, 185, 129, 0.15)',
+                    : 'rgba(6, 182, 212, 0.15)',
                   border: analysisResult.relationship === 'inside'
                     ? '1px solid rgba(244, 63, 94, 0.4)'
                     : analysisResult.relationship === 'boundary'
                     ? '1px solid rgba(245, 158, 11, 0.4)'
-                    : '1px solid rgba(16, 185, 129, 0.4)',
+                    : '1px solid rgba(6, 182, 212, 0.4)',
                 }}
               >
                 {analysisResult.relationship === 'inside' && <AlertCircle size={36} color="#fb7185" />}
                 {analysisResult.relationship === 'boundary' && <ShieldAlert size={36} color="#fbbf24" />}
-                {analysisResult.relationship === 'outside' && <CheckCircle2 size={36} color="#34d399" />}
+                {analysisResult.relationship === 'outside' && <CheckCircle2 size={36} color="#0891b2" />}
 
                 <div>
                   <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--text-muted)' }}>

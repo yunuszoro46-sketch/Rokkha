@@ -35,7 +35,7 @@ export default function GeospatialFeature() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <MapPin size={26} color="#34d399" /> Geospatial Locations
+            <MapPin size={26} color="#0891b2" /> Geospatial Locations
           </h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.2rem' }}>
             Manage geographical assets, monitoring stations, and vulnerable urban coordinates

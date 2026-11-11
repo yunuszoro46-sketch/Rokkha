@@ -33,14 +33,14 @@ export default function AssetManagement() {
     <div>
       <div style={{ marginBottom: '1.25rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span className="badge badge-amber">Planned</span>
+          <span className="badge badge-cyan">Planned</span>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Status from Feature Inventory</span>
         </div>
         <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginTop: '0.25rem' }}>Asset management</h2>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Register protected critical urban infrastructure, pumps, healthcare facilities, and flood shelters</p>
       </div>
 
-      {msg && <div style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', color: '#34d399', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem', fontSize: '0.85rem' }}>✓ {msg}</div>}
+      {msg && <div style={{ background: 'rgba(6, 182, 212,0.15)', border: '1px solid rgba(6, 182, 212,0.3)', color: '#0891b2', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem', fontSize: '0.85rem' }}>✓ {msg}</div>}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
         <div className="card">
@@ -102,7 +102,7 @@ export default function AssetManagement() {
               <div key={a.id} style={{ background: '#f8fafc', border: '1px solid var(--border-color)', borderRadius: '0.5rem', padding: '0.85rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.35rem' }}>
                   <strong style={{ fontSize: '0.875rem', color: '#0f172a' }}>{a.name}</strong>
-                  <span className="badge badge-emerald" style={{ fontSize: '0.65rem' }}>{a.criticality}</span>
+                  <span className="badge badge-cyan" style={{ fontSize: '0.65rem' }}>{a.criticality}</span>
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                   <span>Category: {a.category}</span>

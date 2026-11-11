@@ -84,7 +84,7 @@ export default function WeatherObservations() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span className="badge badge-emerald">Basic API implemented</span>
+            <span className="badge badge-cyan">Basic API implemented</span>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Status from Feature Inventory</span>
           </div>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginTop: '0.25rem' }}>Weather observations</h2>
@@ -124,7 +124,7 @@ export default function WeatherObservations() {
       </div>
 
       {error && <div style={{ background: 'rgba(244,63,94,0.15)', border: '1px solid rgba(244,63,94,0.3)', color: '#fb7185', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem', fontSize: '0.85rem' }}>{error}</div>}
-      {msg && <div style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', color: '#34d399', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem', fontSize: '0.85rem' }}>✓ {msg}</div>}
+      {msg && <div style={{ background: 'rgba(6, 182, 212,0.15)', border: '1px solid rgba(6, 182, 212,0.3)', color: '#0891b2', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem', fontSize: '0.85rem' }}>✓ {msg}</div>}
 
       {/* Form */}
       <div className="card" style={{ marginBottom: '1.5rem' }}>
@@ -175,7 +175,7 @@ export default function WeatherObservations() {
               <div key={obs.id} style={{ background: '#f8fafc', border: '1px solid var(--border-color)', borderRadius: '0.5rem', padding: '0.9rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                   <strong style={{ fontSize: '0.9rem', color: '#0f172a' }}>{obs.location_name}</strong>
-                  <span className="badge badge-blue">{obs.rainfall_mm} mm</span>
+                  <span className="badge badge-cyan">{obs.rainfall_mm} mm</span>
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
                   [{obs.latitude.toFixed(4)}, {obs.longitude.toFixed(4)}] • Source: {obs.source}
