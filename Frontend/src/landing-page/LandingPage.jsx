@@ -11,11 +11,16 @@ import {
   Radio, 
   Headphones,
   CheckCircle2,
-  SlidersHorizontal
+  SlidersHorizontal,
+  KeyRound,
+  LifeBuoy
 } from 'lucide-react';
 import './landing.css';
+import { useApp } from '../context/AppContext';
+import CitizenEarlyWarnings from '../panels/CitizenEarlyWarnings';
 
-export default function LandingPage({ onOpenConsole }) {
+export default function LandingPage({ onOpenConsole, onTabChange }) {
+  const { currentUser, setAuthModalOpen } = useApp();
   const [formData, setFormData] = useState({
     fullName: '',
     contact: '',
@@ -49,7 +54,42 @@ export default function LandingPage({ onOpenConsole }) {
           </span>
         </div>
 
-        <div className="rokkha-nav-actions">
+        <div className="rokkha-nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {currentUser?.role === 'admin' && (
+            <button
+              type="button"
+              onClick={() => onTabChange && onTabChange('admin')}
+              className="rokkha-btn-protected"
+              style={{ background: 'linear-gradient(135deg, #e11d48, #be123c)' }}
+            >
+              <Shield size={14} /> Open Admin Panel
+            </button>
+          )}
+
+          {currentUser?.role === 'rescue_team' && (
+            <button
+              type="button"
+              onClick={() => onTabChange && onTabChange('rescue')}
+              className="rokkha-btn-protected"
+              style={{ background: 'linear-gradient(135deg, #d97706, #b45309)' }}
+            >
+              <LifeBuoy size={14} /> Open Rescue Console
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setAuthModalOpen(true)}
+            className="rokkha-btn-protected"
+            style={{ 
+              background: 'rgba(15, 23, 42, 0.8)', 
+              borderColor: 'rgba(6, 182, 212, 0.4)', 
+              color: '#38bdf8' 
+            }}
+          >
+            <KeyRound size={14} /> Fast Login / Roles
+          </button>
+
           <button type="button" onClick={onOpenConsole} className="rokkha-btn-protected">
             Get Protected <ArrowRight size={14} />
           </button>
@@ -232,6 +272,9 @@ export default function LandingPage({ onOpenConsole }) {
           </div>
         </div>
       </main>
+
+      {/* Citizen Live Flood Early Warnings & Bulletins Feed */}
+      <CitizenEarlyWarnings onSwitchRole={onTabChange} />
 
       {/* Why Choose Rokkha Section */}
       <section className="rokkha-features-section">

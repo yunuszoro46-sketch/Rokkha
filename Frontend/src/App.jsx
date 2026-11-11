@@ -18,12 +18,18 @@ import {
   ArrowLeft,
   LayoutGrid,
   SlidersHorizontal,
-  Home
+  Home,
+  LifeBuoy
 } from 'lucide-react';
 
 import { checkBackendHealth } from './services/apiClient';
 import LandingPage from './landing-page/LandingPage';
 import FeatureModulesCatalog from './features-catalog/FeatureModulesCatalog';
+import AdminPanel from './panels/AdminPanel';
+import RescuePanel from './panels/RescuePanel';
+import FastLoginBar from './components/FastLoginBar';
+import AuthModal from './auth/AuthModal';
+import { AppProvider, useApp } from './context/AppContext';
 import { Button } from './components/ui/button';
 
 // Import all 12 feature components from Frontend/feature
@@ -151,8 +157,45 @@ const FEATURES_CONFIG = [
   }
 ];
 
-export default function App() {
-  const [activeTab, setActiveTab] = useState('landing'); // 'landing' | 'catalog' | 'console'
+function MainAppContent() {
+  const { currentUser, setAuthModalOpen, fastLogin } = useApp();
+
+  const getInitialTab = () => {
+    if (typeof window === 'undefined') return 'landing';
+    const hash = window.location.hash.replace('#', '').toLowerCase();
+    if (hash === 'admin') return 'admin';
+    if (hash === 'rescue') return 'rescue';
+    if (hash === 'catalog') return 'catalog';
+    if (hash === 'console') return 'console';
+    return 'landing';
+  };
+
+  const [activeTab, setActiveTabState] = useState(getInitialTab);
+
+  const setActiveTab = (tab) => {
+    setActiveTabState(tab);
+    if (typeof window !== 'undefined') {
+      window.location.hash = tab === 'landing' ? '' : `#${tab}`;
+    }
+  };
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const newTab = getInitialTab();
+      setActiveTabState(newTab);
+      // Auto-set matching demo user if not already set
+      if (newTab === 'admin' && !currentUser) fastLogin('admin');
+      if (newTab === 'rescue' && !currentUser) fastLogin('rescue_team');
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    // Initial check on load
+    const initial = getInitialTab();
+    if (initial === 'admin' && !currentUser) fastLogin('admin');
+    if (initial === 'rescue' && !currentUser) fastLogin('rescue_team');
+
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
   const [activeFeatureId, setActiveFeatureId] = useState('weather-observations');
   const [backendHealth, setBackendHealth] = useState({ status: 'checking' });
 
@@ -174,38 +217,87 @@ export default function App() {
     setActiveTab('console');
   };
 
-  // Floating Multi-Page Switcher Dock — icons only
+  const handleRescueDockClick = () => {
+    if (!currentUser || (currentUser.role !== 'rescue_team' && currentUser.role !== 'admin')) {
+      setActiveTab('rescue');
+    } else {
+      setActiveTab('rescue');
+    }
+  };
+
+  const handleAdminDockClick = () => {
+    if (!currentUser || currentUser.role !== 'admin') {
+      setActiveTab('admin');
+    } else {
+      setActiveTab('admin');
+    }
+  };
+
+  // Floating Multi-Page Switcher Dock with fast role and module jumps
   const PageSwitcherDock = () => (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-white/95 backdrop-blur-md border-2 border-cyan-400 p-2.5 rounded-2xl shadow-[0_8px_32px_rgba(6,182,212,0.25)]">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-slate-900/95 backdrop-blur-md border border-cyan-500/40 p-2 rounded-2xl shadow-[0_10px_35px_rgba(6,182,212,0.3)]">
+      {/* 1. Public / Citizen Landing */}
       <button
         onClick={() => setActiveTab('landing')}
-        title="Landing Page"
-        className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
+        title="Public Citizen Portal (Early Warnings)"
+        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
           activeTab === 'landing'
-            ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-200'
-            : 'text-slate-400 hover:text-cyan-600 hover:bg-cyan-50'
+            ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/30 font-bold'
+            : 'text-slate-400 hover:text-cyan-400 hover:bg-slate-800'
         }`}
       >
         <Home size={17} />
       </button>
+
+      {/* 2. Rescue Operations Console */}
+      <button
+        onClick={handleRescueDockClick}
+        title="Rescue Team Operations Console"
+        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
+          activeTab === 'rescue'
+            ? 'bg-amber-500 text-slate-950 font-bold shadow-lg shadow-amber-500/30'
+            : 'text-slate-400 hover:text-amber-400 hover:bg-slate-800'
+        }`}
+      >
+        <LifeBuoy size={17} />
+      </button>
+
+      {/* 3. Admin News & Control Hub */}
+      <button
+        onClick={handleAdminDockClick}
+        title="Disaster News Admin Hub"
+        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
+          activeTab === 'admin'
+            ? 'bg-rose-500 text-white font-bold shadow-lg shadow-rose-500/30'
+            : 'text-slate-400 hover:text-rose-400 hover:bg-slate-800'
+        }`}
+      >
+        <Shield size={17} />
+      </button>
+
+      <div className="w-[1px] h-6 bg-slate-700/80 mx-1" />
+
+      {/* 4. Feature Modules Catalog */}
       <button
         onClick={() => setActiveTab('catalog')}
-        title="Feature Catalog"
-        className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
+        title="Rokkha Core Engine Modules"
+        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
           activeTab === 'catalog'
             ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-200'
-            : 'text-slate-400 hover:text-cyan-600 hover:bg-cyan-50'
+            : 'text-slate-400 hover:text-cyan-400 hover:bg-slate-800'
         }`}
       >
         <LayoutGrid size={17} />
       </button>
+
+      {/* 5. Live Sandbox Console */}
       <button
         onClick={() => setActiveTab('console')}
-        title="Live Sandbox"
-        className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
+        title="Live Modules Sandbox"
+        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
           activeTab === 'console'
             ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-200'
-            : 'text-slate-400 hover:text-cyan-600 hover:bg-cyan-50'
+            : 'text-slate-400 hover:text-cyan-400 hover:bg-slate-800'
         }`}
       >
         <SlidersHorizontal size={17} />
@@ -213,152 +305,179 @@ export default function App() {
     </div>
   );
 
-  // View 1: Landing Page
-  if (activeTab === 'landing') {
-    return (
-      <>
-        <LandingPage onOpenConsole={() => setActiveTab('catalog')} />
-        <PageSwitcherDock />
-      </>
-    );
-  }
-
-  // View 2: Feature Modules Catalog (exact screenshot match: Rokkha Core Engine + 12 categories + interactive box)
-  if (activeTab === 'catalog') {
-    return (
-      <>
-        <FeatureModulesCatalog 
-          onSelectFeature={handleLaunchFeature} 
-          onBackToLanding={() => setActiveTab('landing')}
-        />
-        <PageSwitcherDock />
-      </>
-    );
-  }
-
-  // View 3: Live Sandbox Console for chosen feature
   return (
-    <div className="min-h-screen bg-[#f0f9ff] text-slate-800 flex flex-col font-sans">
-      {/* Top Header Navbar */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-cyan-100 px-6 sm:px-10 h-[84px] flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-3.5">
-          <div 
-            onClick={() => setActiveTab('catalog')}
-            style={{
-              width: '52px',
-              height: '52px',
-              borderRadius: '14px',
-              background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 18px rgba(6,182,212,0.45)',
-              color: '#fff',
-              border: '1px solid rgba(255,255,255,0.4)',
-              cursor: 'pointer',
-              flexShrink: 0
-            }}
-          >
-            <Shield size={30} fill="currentColor" fillOpacity={0.2} />
-          </div>
-          <div className="flex items-baseline gap-2.5">
-            <span 
-              onClick={() => setActiveTab('catalog')}
-              style={{
-                fontSize: '36px',
-                fontWeight: 900,
-                letterSpacing: '-0.01em',
-                color: '#0f172a',
-                lineHeight: 1,
-                cursor: 'pointer'
-              }}
-            >
-              Rokkha
-            </span>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200 font-bold hidden sm:inline-block">
-              Live Sandbox
-            </span>
-          </div>
-        </div>
+    <>
+      <AuthModal onTabChange={setActiveTab} />
 
-        {/* Navigation Tabs */}
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="outline"
-            size="sm"
-            onClick={() => setActiveTab('catalog')}
-            className="text-xs flex items-center gap-1.5 border-cyan-300 text-cyan-800 hover:bg-cyan-50 hover:text-cyan-900 font-semibold"
-          >
-            <LayoutGrid size={13} /> Return to Catalog
-          </Button>
+      {/* View 1: Public Citizen Early Warnings Landing Page */}
+      {activeTab === 'landing' && (
+        <>
+          <FastLoginBar onTabChange={setActiveTab} activeTab="landing" />
+          <LandingPage 
+            onOpenConsole={() => setActiveTab('catalog')} 
+            onTabChange={setActiveTab} 
+          />
+          <PageSwitcherDock />
+        </>
+      )}
 
-          <Button 
-            variant="ghost"
-            size="sm"
-            onClick={() => setActiveTab('landing')}
-            className="text-xs flex items-center gap-1.5 text-slate-500 hover:text-slate-900"
-          >
-            <Home size={13} /> Landing Page
-          </Button>
-        </div>
-      </header>
+      {/* View 2: Rescue Team Operations Panel */}
+      {activeTab === 'rescue' && (
+        <RescuePanel onTabChange={setActiveTab} />
+      )}
 
-      {/* Main Console Layout */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left Sidebar Feature Directory */}
-        <aside className="w-80 bg-white border-r border-slate-200 p-4 space-y-2 overflow-y-auto hidden md:block">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-              12 Core Modules
-            </span>
-            <span className="text-[10px] text-cyan-700 font-bold px-2 py-0.5 rounded bg-cyan-50 border border-cyan-200">
-              ACTIVE
-            </span>
-          </div>
+      {/* View 3: Disaster Admin News & Control Panel */}
+      {activeTab === 'admin' && (
+        <AdminPanel onTabChange={setActiveTab} />
+      )}
 
-          <div className="space-y-1">
-            {FEATURES_CONFIG.map((feat, index) => {
-              const Icon = feat.icon;
-              const isSelected = feat.id === activeFeatureId;
+      {/* View 4: Feature Modules Catalog */}
+      {activeTab === 'catalog' && (
+        <>
+          <FastLoginBar onTabChange={setActiveTab} activeTab="catalog" />
+          <FeatureModulesCatalog 
+            onSelectFeature={handleLaunchFeature} 
+            onBackToLanding={() => setActiveTab('landing')}
+          />
+          <PageSwitcherDock />
+        </>
+      )}
 
-              return (
-                <button
-                  key={feat.id}
-                  onClick={() => setActiveFeatureId(feat.id)}
-                  className={`w-full flex items-start gap-3 p-2.5 rounded-xl text-left text-xs transition-all cursor-pointer ${
-                    isSelected 
-                      ? 'bg-cyan-50 border border-cyan-300 text-cyan-950 font-bold shadow-sm' 
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-transparent'
-                  }`}
+      {/* View 5: Live Sandbox Console */}
+      {activeTab === 'console' && (
+        <div className="min-h-screen bg-[#f0f9ff] text-slate-800 flex flex-col font-sans">
+          <FastLoginBar onTabChange={setActiveTab} activeTab="console" />
+
+          {/* Top Header Navbar */}
+          <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-cyan-100 px-6 sm:px-10 h-[72px] flex items-center justify-between shadow-sm">
+            <div className="flex items-center gap-3.5">
+              <div 
+                onClick={() => setActiveTab('catalog')}
+                style={{
+                  width: '46px',
+                  height: '46px',
+                  borderRadius: '12px',
+                  background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 4px 18px rgba(6,182,212,0.45)',
+                  color: '#fff',
+                  border: '1px solid rgba(255,255,255,0.4)',
+                  cursor: 'pointer',
+                  flexShrink: 0
+                }}
+              >
+                <Shield size={26} fill="currentColor" fillOpacity={0.2} />
+              </div>
+              <div className="flex items-baseline gap-2.5">
+                <span 
+                  onClick={() => setActiveTab('catalog')}
+                  style={{
+                    fontSize: '30px',
+                    fontWeight: 900,
+                    letterSpacing: '-0.01em',
+                    color: '#0f172a',
+                    lineHeight: 1,
+                    cursor: 'pointer'
+                  }}
                 >
-                  <div className={`p-1.5 rounded-lg ${isSelected ? 'bg-cyan-500 text-white' : 'bg-slate-100 text-slate-500'}`}>
-                    <Icon size={14} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-bold truncate">{index + 1}. {feat.name}</div>
-                    <div className="text-[10px] text-slate-500 truncate mt-0.5">{feat.purpose}</div>
-                  </div>
+                  Rokkha
+                </span>
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200 font-bold hidden sm:inline-block">
+                  Live Sandbox
+                </span>
+              </div>
+            </div>
+
+            {/* Navigation Tabs */}
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => setActiveTab('catalog')}
+                className="text-xs flex items-center gap-1.5 border-cyan-300 text-cyan-800 hover:bg-cyan-50 hover:text-cyan-900 font-semibold"
+              >
+                <LayoutGrid size={13} /> Catalog
+              </Button>
+
+              <Button 
+                variant="ghost"
+                size="sm"
+                onClick={() => setActiveTab('landing')}
+                className="text-xs flex items-center gap-1.5 text-slate-500 hover:text-slate-900"
+              >
+                <Home size={13} /> Citizen View
+              </Button>
+            </div>
+          </header>
+
+          {/* Main Console Layout */}
+          <div className="flex flex-1 overflow-hidden">
+            {/* Left Sidebar Feature Directory */}
+            <aside className="w-80 bg-white border-r border-slate-200 p-4 space-y-2 overflow-y-auto hidden md:block">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-3">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  12 Core Modules
+                </span>
+                <span className="text-[10px] text-cyan-700 font-bold px-2 py-0.5 rounded bg-cyan-50 border border-cyan-200">
+                  ACTIVE
+                </span>
+              </div>
+
+              <div className="space-y-1">
+                {FEATURES_CONFIG.map((feat, index) => {
+                  const Icon = feat.icon;
+                  const isSelected = feat.id === activeFeatureId;
+
+                  return (
+                    <button
+                      key={feat.id}
+                      onClick={() => setActiveFeatureId(feat.id)}
+                      className={`w-full flex items-start gap-3 p-2.5 rounded-xl text-left text-xs transition-all cursor-pointer ${
+                        isSelected 
+                          ? 'bg-cyan-50 border border-cyan-300 text-cyan-950 font-bold shadow-sm' 
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-transparent'
+                      }`}
+                    >
+                      <div className={`p-1.5 rounded-lg ${isSelected ? 'bg-cyan-500 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                        <Icon size={14} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold truncate">{index + 1}. {feat.name}</div>
+                        <div className="text-[10px] text-slate-500 truncate mt-0.5">{feat.purpose}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </aside>
+
+            {/* Center Workspace Content */}
+            <main className="flex-1 p-6 md:p-8 overflow-y-auto max-w-5xl mx-auto w-full">
+              <div className="mb-4 flex items-center justify-between">
+                <button 
+                  onClick={() => setActiveTab('catalog')} 
+                  className="inline-flex items-center gap-1.5 text-xs text-cyan-700 hover:text-cyan-900 font-bold cursor-pointer"
+                >
+                  <ArrowLeft size={14} /> Back to Modules Catalog
                 </button>
-              );
-            })}
-          </div>
-        </aside>
+              </div>
 
-        {/* Center Workspace Content */}
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto max-w-5xl mx-auto w-full">
-          <div className="mb-4 flex items-center justify-between">
-            <button 
-              onClick={() => setActiveTab('catalog')} 
-              className="inline-flex items-center gap-1.5 text-xs text-cyan-700 hover:text-cyan-900 font-bold cursor-pointer"
-            >
-              <ArrowLeft size={14} /> Back to Modules Catalog
-            </button>
+              <ActiveComponent />
+            </main>
           </div>
+          <PageSwitcherDock />
+        </div>
+      )}
+    </>
+  );
+}
 
-          <ActiveComponent />
-        </main>
-      </div>
-      <PageSwitcherDock />
-    </div>
+export default function App() {
+  return (
+    <AppProvider>
+      <MainAppContent />
+    </AppProvider>
   );
 }
