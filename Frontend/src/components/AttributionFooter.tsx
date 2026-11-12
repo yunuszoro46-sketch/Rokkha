@@ -17,8 +17,8 @@ export const AttributionFooter: React.FC<AttributionFooterProps> = ({
   const currentYear = isBn ? toBnNum(new Date().getFullYear()) : new Date().getFullYear();
 
   return (
-    <footer className="w-full border-t border-[#DFDDD3] bg-[#FAF9F5] text-[#11241C] py-8 mt-12">
-      <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 space-y-6">
+    <footer className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 text-[#11241C] pb-12 mt-4">
+      <div className="w-full pt-6 border-t border-[#DFDDD3] space-y-6">
         {/* Top Tier: Brand, Helplines, and Data Feeds */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           {/* Brand & Purpose */}

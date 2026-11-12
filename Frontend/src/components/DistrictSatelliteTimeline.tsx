@@ -113,40 +113,52 @@ export const DistrictSatelliteTimeline: React.FC<
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      {/* Left Column: 64-District Flood Ranking Table using shadcn/ui Table & Input */}
-      <Card className="lg:col-span-5 border-brand-limestone bg-brand-white shadow-card flex flex-col">
-        <CardHeader className="border-b border-brand-limestone pb-4">
+      {/* Left Column: 64-District Flood Frequency Table (Matching Image 2) */}
+      <Card className="lg:col-span-5 bg-white rounded-3xl border border-[#DFDDD3] p-6 shadow-sm flex flex-col">
+        <div className="border-b border-[#E5E3D8] pb-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center space-x-2">
-              <Award className="w-6 h-6 text-brand-forest" />
-              <CardTitle>{t.timeline_card_title}</CardTitle>
+              <Award className="w-5 h-5 text-[#11241C]" />
+              <h2 className="text-xl font-black text-[#11241C] tracking-tight">
+                64-District Flood Frequency
+              </h2>
             </div>
-            <Badge variant="secondary">{t.timeline_badge}</Badge>
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#EAE6DD] text-[#3D4943] border border-[#DFDDD3]">
+              2016–2024 UNOSAT
+            </span>
           </div>
-          <p className="text-base text-brand-forest/70 font-medium">
-            {t.timeline_card_sub}
+          <p className="text-xs text-[#5C6863] leading-relaxed mt-2">
+            Click any 64 districts by inspect its Copernicus Sentinel-1 satellite timeline and event history.
           </p>
-          <div className="pt-2 relative">
-            <Search className="w-4 h-4 text-brand-forest/50 absolute left-3.5 top-5 z-10" />
-            <Input
+          <div className="mt-4 relative">
+            <Search className="w-4 h-4 text-[#7C7567] absolute left-3.5 top-1/2 -translate-y-1/2 z-10" />
+            <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t.timeline_search_placeholder}
-              className="pl-10"
+              placeholder="Search 64 districts..."
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#F5EEDB] border border-[#E5DAC6] text-xs font-medium text-[#11241C] placeholder:text-[#8C8474] focus:outline-none focus:ring-2 focus:ring-[#16A34A]/30 focus:bg-white transition"
             />
           </div>
-        </CardHeader>
+        </div>
 
-        <CardContent className="p-0 flex-1 overflow-hidden">
+        <div className="p-0 flex-1 overflow-hidden mt-3">
           <div className="max-h-[460px] overflow-y-auto">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead className="w-16">{t.th_rank}</TableHead>
-                  <TableHead>{t.th_district}</TableHead>
-                  <TableHead>{t.th_events}</TableHead>
-                  <TableHead className="text-right">{t.th_peak}</TableHead>
+                <TableRow className="border-b border-[#E5E3D8] hover:bg-transparent">
+                  <TableHead className="w-14 text-[11px] font-extrabold uppercase tracking-wider text-[#65716B] py-2.5">
+                    {t.th_rank}
+                  </TableHead>
+                  <TableHead className="text-[11px] font-extrabold uppercase tracking-wider text-[#65716B] py-2.5">
+                    {t.th_district}
+                  </TableHead>
+                  <TableHead className="text-center text-[11px] font-extrabold uppercase tracking-wider text-[#65716B] py-2.5">
+                    {t.th_events}
+                  </TableHead>
+                  <TableHead className="text-right text-[11px] font-extrabold uppercase tracking-wider text-[#65716B] py-2.5">
+                    {t.th_peak}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -163,43 +175,55 @@ export const DistrictSatelliteTimeline: React.FC<
                   return (
                     <TableRow
                       key={d.pcode}
-                      data-state={isSelected ? "selected" : undefined}
                       onClick={() => onSelectDistrict?.(d.pcode, d.name)}
-                      className="cursor-pointer"
+                      className={`cursor-pointer transition-colors border-b border-[#F0EFEA] ${
+                        isSelected
+                          ? "bg-[#CDE3D2] border-y border-[#B5D3BC]"
+                          : "hover:bg-[#FAF9F5]"
+                      }`}
                     >
-                      <TableCell className="font-bold">
+                      <TableCell className="font-bold text-xs text-[#11241C] py-3">
                         #{isBn ? toBnNum(d.rank) : d.rank}
                       </TableCell>
-                      <TableCell>
-                        <div className="font-bold text-base">{dName}</div>
+                      <TableCell className="py-3">
+                        <div className="font-bold text-xs sm:text-sm text-[#11241C]">
+                          {dName}
+                        </div>
                         <div
-                          className={`text-base ${
-                            isSelected
-                              ? "text-white/70"
-                              : "text-brand-forest/60"
+                          className={`text-xs ${
+                            isSelected ? "text-[#3D4943]" : "text-[#6B7280]"
                           }`}
                         >
                           {dDiv}
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <span className="font-semibold">
-                          {isBn ? toBnNum(d.events_flooded) : d.events_flooded}
-                        </span>{" "}
-                        / {isBn ? toBnNum(d.events_observed) : d.events_observed}
+                      <TableCell className="text-center py-3">
+                        <span
+                          className={`inline-flex items-center justify-center px-2.5 py-1 rounded-lg text-xs font-semibold ${
+                            isSelected
+                              ? "bg-[#BFD6C4] text-[#11241C]"
+                              : "bg-[#EFECE5] text-[#3D4943]"
+                          }`}
+                        >
+                          {isBn ? toBnNum(d.events_flooded) : d.events_flooded} /{" "}
+                          {isBn ? toBnNum(d.events_observed) : d.events_observed}{" "}
+                          events
+                        </span>
                       </TableCell>
-                      <TableCell className="text-right">
-                        <Badge
-                          variant={
-                            maxPct >= 50
-                              ? "alert"
-                              : maxPct >= 20
-                              ? "watch"
-                              : "secondary"
-                          }
+                      <TableCell className="text-right py-3">
+                        <span
+                          className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-extrabold text-white shadow-xs ${
+                            maxPct >= 80
+                              ? "bg-[#A82525]"
+                              : maxPct >= 60
+                              ? "bg-[#B93838]"
+                              : maxPct >= 50
+                              ? "bg-[#DEA13B]"
+                              : "bg-[#E5A84B]"
+                          }`}
                         >
                           {isBn ? toBnNum(maxPct) : maxPct}%
-                        </Badge>
+                        </span>
                       </TableCell>
                     </TableRow>
                   );
@@ -207,185 +231,210 @@ export const DistrictSatelliteTimeline: React.FC<
               </TableBody>
             </Table>
           </div>
-        </CardContent>
+        </div>
       </Card>
 
-      {/* Right Column: Satellite Flood Timeline & Event Matrix (Section 3.C) */}
-      <Card className="lg:col-span-7 border-brand-limestone bg-brand-white shadow-card">
-        <CardHeader className="border-b border-brand-limestone pb-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center space-x-2">
-              <Satellite className="w-6 h-6 text-brand-forest" />
-              <CardTitle>
-                {t.timeline_right_title} {displayDistrictName}
-                {currentDistrictHistory?.rank && (
-                  <span className="ml-2 text-base font-semibold text-brand-amber">
-                    (
-                    {t.timeline_rank_of_64.replace(
-                      "{rank}",
-                      isBn
-                        ? toBnNum(currentDistrictHistory.rank)
-                        : String(currentDistrictHistory.rank)
-                    )}
-                    )
-                  </span>
-                )}
-              </CardTitle>
+      {/* Right Column: Sentinel-1 Timeline & 10 Major Flood Events Record (Matching Image 2) */}
+      <Card className="lg:col-span-7 bg-white rounded-3xl border border-[#DFDDD3] p-6 shadow-sm flex flex-col justify-between">
+        <div>
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-2 border-b border-[#E5E3D8]">
+            <div className="flex items-start gap-2.5">
+              <span className="text-lg text-[#11241C] mt-0.5">✳</span>
+              <div>
+                <div className="text-lg sm:text-xl font-black text-[#11241C] tracking-tight leading-snug">
+                  Sentinel-1 Timeline:
+                </div>
+                <div className="text-lg sm:text-xl font-black text-[#11241C] tracking-tight leading-snug">
+                  {displayDistrictName}
+                </div>
+              </div>
             </div>
+
             <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant={seasonYear === "2022" ? "default" : "secondary"}
+              <button
                 onClick={() => setSeasonYear("2022")}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition shadow-xs ${
+                  seasonYear === "2022"
+                    ? "bg-[#11241C] text-white"
+                    : "bg-white border border-[#DFDDD3] text-[#11241C] hover:bg-[#F7F6F0]"
+                }`}
               >
-                {t.timeline_btn_2022}
-              </Button>
-              <Button
-                size="sm"
-                variant={seasonYear === "2024" ? "default" : "secondary"}
+                2022 Monsoon
+              </button>
+              <button
                 onClick={() => setSeasonYear("2024")}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition shadow-xs ${
+                  seasonYear === "2024"
+                    ? "bg-[#11241C] text-white"
+                    : "bg-white border border-[#DFDDD3] text-[#11241C] hover:bg-[#F7F6F0]"
+                }`}
               >
-                {t.timeline_btn_2024}
-              </Button>
+                2024 Monsoon
+              </button>
             </div>
           </div>
-          <p className="text-base text-brand-forest/70 font-medium">
-            {t.timeline_right_sub}
-          </p>
-        </CardHeader>
 
-        <CardContent className="pt-5 space-y-5">
-          {isLoading ? (
-            <div className="py-12 text-center text-base text-brand-sage animate-pulse">
-              {t.timeline_loading}
+          <p className="text-xs text-[#5C6863] leading-relaxed mt-2 mb-3">
+            Share of observed district land covered by unusual flood water (Copernicus GFM). Gaps are days with no satellite pass, not dry days.
+          </p>
+
+          {/* Legend Matching Image 2 */}
+          <div className="flex flex-col items-end gap-1 text-[11px] text-[#4B5563] pb-1 pr-2">
+            <div className="flex items-center gap-1.5">
+              <span className="w-3.5 h-3.5 rounded-xs bg-[#D89B37]" />
+              <span className="font-bold text-[#11241C]">Flood Coverage</span>
             </div>
-          ) : isUnsupported ? (
-            <Alert variant="muted">
-              <Info className="h-5 w-5" />
-              <AlertTitle>
-                {t.timeline_radar_blind_title.replace(
-                  "{district}",
-                  displayDistrictName
-                )}
-              </AlertTitle>
-              <AlertDescription>
-                {t.timeline_radar_blind_desc}
-              </AlertDescription>
-            </Alert>
-          ) : chartData.length > 0 ? (
-            <div className="space-y-3">
+            <div className="flex items-center gap-1.5 text-[#5C6863]">
+              <span>💧</span>
+              <span>Water over district land</span>
+            </div>
+          </div>
+
+          <div className="pt-2">
+            {isLoading ? (
+              <div className="py-12 text-center text-sm text-[#5C6863] animate-pulse">
+                {t.timeline_loading}
+              </div>
+            ) : isUnsupported ? (
+              <Alert variant="muted">
+                <Info className="h-5 w-5" />
+                <AlertTitle>
+                  {t.timeline_radar_blind_title.replace(
+                    "{district}",
+                    displayDistrictName
+                  )}
+                </AlertTitle>
+                <AlertDescription>
+                  {t.timeline_radar_blind_desc}
+                </AlertDescription>
+              </Alert>
+            ) : chartData.length > 0 ? (
               <div className="h-60 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={chartData}
                     margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#EDEBE2" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#F0EFEA" vertical={false} />
                     <XAxis
                       dataKey="date"
-                      stroke="#64748B"
-                      fontSize={16}
+                      stroke="#8C938E"
+                      fontSize={11}
                       tickLine={false}
                     />
                     <YAxis
-                      stroke="#64748B"
-                      fontSize={16}
+                      stroke="#8C938E"
+                      fontSize={11}
                       unit="%"
                       tickLine={false}
-                      domain={[0, "auto"]}
+                      domain={[0, 60]}
+                      ticks={[0, 15, 30, 45, 60]}
                     />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: "#FFFFFF",
                         borderColor: "#EDEBE2",
                         borderRadius: "0.5rem",
-                        fontSize: "16px",
-                        color: "#263B32",
+                        fontSize: "12px",
+                        color: "#11241C",
                       }}
                       formatter={(val: any) => [
-                        `${isBn ? toBnNum(val) : val}${t.timeline_tooltip_flooded}`,
-                        t.timeline_tooltip_flooded_share,
+                        `${isBn ? toBnNum(val) : val}%`,
+                        "Flood Coverage",
                       ]}
                       labelFormatter={(label) =>
-                        `${t.timeline_pass_label} (${isBn ? toBnNum(seasonYear) : seasonYear}-${label})`
+                        `${seasonYear}-${label}`
                       }
                     />
                     <Bar
                       dataKey="floodedPercent"
-                      fill="#C69A50"
-                      radius={[4, 4, 0, 0]}
-                      name={t.timeline_tooltip_flooded_share}
+                      fill="#D89B37"
+                      radius={[2, 2, 0, 0]}
+                      name="Flood Coverage"
                     />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-            </div>
-          ) : (
-            <div className="p-4 text-center text-base text-brand-forest/60">
-              {t.timeline_no_passes.replace(
-                "{district}",
-                displayDistrictName
-              )}
-            </div>
-          )}
+            ) : (
+              <div className="p-4 text-center text-sm text-[#5C6863]">
+                {t.timeline_no_passes.replace(
+                  "{district}",
+                  displayDistrictName
+                )}
+              </div>
+            )}
+          </div>
+        </div>
 
-          {/* 10 Historical Flood Events Breakdown (Section 3.C) */}
-          {currentDistrictHistory?.events && (
-            <div className="pt-2 space-y-3">
-              <Separator />
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-                <span className="text-base font-bold uppercase tracking-wider text-brand-forest/80">
-                  {t.timeline_10_events_title}
-                </span>
-                <span className="text-base text-brand-forest/60">
-                  {t.timeline_grey_sub}
-                </span>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-                {currentDistrictHistory.events.map((ev: any) => {
-                  const metaEv = floodEvents.find(
-                    (e) => e.event_id === ev.event_id
-                  );
-                  const pct =
-                    ev.flooded_share !== null && ev.flooded_share !== undefined
-                      ? `${isBn ? toBnNum(Math.round(ev.flooded_share * 100)) : Math.round(ev.flooded_share * 100)}%`
-                      : t.timeline_no_data;
-                  return (
-                    <div
-                      key={ev.event_id}
-                      className={`p-3 rounded-lg border text-base flex flex-col justify-between ${
-                        ev.status === "flooded"
-                          ? "bg-brand-clay/10 border-brand-clay/30 text-brand-forest"
-                          : ev.status === "not_flooded"
-                          ? "bg-brand-warm border-brand-limestone text-brand-forest/80"
-                          : "bg-gray-100 border-gray-200 text-gray-500"
-                      }`}
-                      title={metaEv?.name || ev.event_id}
-                    >
-                      <span className="font-mono font-bold text-base truncate">
-                        {ev.event_id}
-                      </span>
-                      <div className="flex items-center justify-between mt-1.5">
-                        <span className="capitalize text-base">
-                          {ev.status === "not_observed"
-                            ? t.timeline_no_data
-                            : ev.status === "flooded"
-                            ? isBn
-                              ? "প্লাবিত"
-                              : "Flooded"
-                            : isBn
-                            ? "প্লাবিত নয়"
-                            : "Not Flooded"}
-                        </span>
-                        <span className="font-extrabold text-base">{pct}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+        {/* 10 Major Flood Events Record (2016-2024) (Matching Image 2) */}
+        {currentDistrictHistory?.events && (
+          <div className="pt-4 border-t border-[#E5E3D8] mt-4 space-y-2.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#11241C]">
+                10 MAJOR FLOOD EVENTS RECORD (2016–2024)
+              </span>
+              <span className="text-[11px] text-[#5C6863]">
+                Grey = Not observed by satellite (never implies safe)
+              </span>
             </div>
-          )}
-        </CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+              {currentDistrictHistory.events.map((ev: any) => {
+                const isFlooded = ev.status === "flooded";
+                const isNotObserved = ev.status === "not_observed";
+                const pctNum =
+                  ev.flooded_share !== null && ev.flooded_share !== undefined
+                    ? Math.round(ev.flooded_share * 100)
+                    : null;
+
+                // Color schemes strictly matching Image 2
+                let cardBg = "bg-[#F3F4F6] border-[#E5E7EB] text-[#6B7280]";
+                if (isFlooded) {
+                  if (pctNum !== null && pctNum >= 50) {
+                    cardBg = "bg-[#F87171] border-[#EF4444]/40 text-[#11241C]";
+                  } else {
+                    cardBg = "bg-[#FCA5A5] border-[#F87171]/40 text-[#11241C]";
+                  }
+                } else if (ev.status === "not_flooded") {
+                  cardBg = "bg-[#D1FAE5] border-[#A7F3D0] text-[#065F46]";
+                }
+
+                // Format event id: e.g. "2016-07-mo..."
+                const truncatedId =
+                  ev.event_id.length > 11
+                    ? `${ev.event_id.slice(0, 10)}...`
+                    : ev.event_id;
+
+                return (
+                  <div
+                    key={ev.event_id}
+                    className={`p-2.5 rounded-xl border text-xs flex flex-col justify-between min-h-[58px] transition shadow-2xs ${cardBg}`}
+                    title={ev.event_id}
+                  >
+                    <span className="font-mono text-[10px] font-semibold opacity-85 truncate">
+                      {truncatedId}
+                    </span>
+                    <div className="mt-1">
+                      {isNotObserved ? (
+                        <div className="text-[11px] font-bold leading-tight text-[#6B7280]">
+                          <div>No</div>
+                          <div>Data</div>
+                        </div>
+                      ) : isFlooded ? (
+                        <div className="text-[11px] font-extrabold leading-tight text-[#11241C]">
+                          Flooded {pctNum}%
+                        </div>
+                      ) : (
+                        <div className="text-[11px] font-extrabold leading-tight text-[#065F46]">
+                          Dry {pctNum ?? 0}%
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </Card>
     </div>
   );

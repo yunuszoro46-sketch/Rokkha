@@ -751,7 +751,7 @@ export function CitizenPortalApp({
 
       {/* Main Content Area */}
       <div
-        className={`flex-1 w-full bg-[#EDEBE2] transition-all duration-300 min-w-0 flex flex-col justify-between ${
+        className={`flex-1 w-full bg-[#EDEBE2] bg-[url('/topo-pattern.svg')] bg-repeat transition-all duration-300 min-w-0 flex flex-col justify-between ${
           activeView === "overview" || activeView === "login"
             ? "pl-0"
             : isSidebarCollapsed
@@ -988,10 +988,10 @@ export function CitizenPortalApp({
                       <Card className="bg-white rounded-2xl p-7 border border-[#E4E2D8] shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
                         <div>
                           <div className="flex items-center justify-between mb-6">
-                            <div className="w-9 h-9 rounded-full bg-[#C2410C] text-white flex items-center justify-center font-bold text-xs tracking-wider">
+                            <div className="w-9 h-9 rounded-full bg-[#11241C] text-white flex items-center justify-center font-bold text-xs tracking-wider">
                               03
                             </div>
-                            <Badge variant="outline" className="text-xs font-semibold text-[#BE123C] bg-[#FFE4E6] border-[#FECDD3] rounded-md px-2.5 py-1">
+                            <Badge variant="outline" className="text-xs font-semibold text-[#047857] bg-[#DCFCE7] border-[#BBF7D0] rounded-md px-2.5 py-1">
                               Community & API Dispatch
                             </Badge>
                           </div>
