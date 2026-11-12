@@ -205,7 +205,7 @@ main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 4%;
+  padding: 0;
   gap: 2rem;
 }
 
@@ -323,7 +323,7 @@ main {
   grid-template-columns: 0.92fr 1.08fr;
   gap: 2.5rem;
   align-items: center;
-  padding: 1.5rem 4% 2.5rem 4%;
+  padding: 1.5rem 0 2.5rem 0;
 }
 .hero-copy {
   position: relative;
@@ -466,8 +466,8 @@ h2 em {
 }
 
 .metrics {
-  width: 92%;
-  margin: 0 auto;
+  width: 100%;
+  margin: 0;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   border: 1px solid #DFDDD3;
@@ -839,49 +839,79 @@ h2 em {
   border-radius: 0.75rem;
 }
 
-/* Hydrodynamic Water Flow Animations */
+/* Hydrodynamic Water Flow & Fluid Simulation Animations */
 @keyframes riverPulse {
   0%, 100% {
-    filter: drop-shadow(0 0 6px rgba(0, 210, 255, 0.85)) drop-shadow(0 0 14px rgba(0, 180, 216, 0.55));
+    filter: drop-shadow(0 0 4px rgba(0, 180, 216, 0.7)) drop-shadow(0 0 10px rgba(0, 210, 255, 0.45));
     opacity: 0.88;
   }
   50% {
-    filter: drop-shadow(0 0 12px rgba(0, 240, 255, 1)) drop-shadow(0 0 24px rgba(0, 210, 255, 0.85));
+    filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.95)) drop-shadow(0 0 18px rgba(0, 180, 216, 0.7));
     opacity: 1;
   }
 }
 
-@keyframes riverFlowDash {
+@keyframes fluidFlowMain {
   from {
-    stroke-dashoffset: 72;
+    stroke-dashoffset: 120;
   }
   to {
     stroke-dashoffset: 0;
   }
 }
 
-@keyframes pondRipple {
+@keyframes fluidFlowSecondary {
+  from {
+    stroke-dashoffset: 96;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes waterShimmer {
   0%, 100% {
-    transform: scale(0.96);
-    opacity: 0.75;
+    opacity: 0.65;
+    transform: scale(0.98);
   }
   50% {
-    transform: scale(1.06);
+    opacity: 0.92;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes haorDepression {
+  0%, 100% {
+    opacity: 0.75;
+    transform: scale(0.97) rotate(0deg);
+  }
+  50% {
     opacity: 0.95;
+    transform: scale(1.03) rotate(0.5deg);
   }
 }
 
 .river-glow-layer {
-  animation: riverPulse 3s ease-in-out infinite;
+  animation: riverPulse 3.5s ease-in-out infinite;
 }
 
-.river-flow-animated {
-  stroke-dasharray: 8 16;
-  animation: riverFlowDash 2.2s linear infinite;
+.fluid-current-primary {
+  stroke-dasharray: 20 32;
+  animation: fluidFlowMain 1.8s linear infinite;
 }
 
-.haor-water-pool {
-  transform-origin: center;
-  animation: pondRipple 3.5s ease-in-out infinite;
+.fluid-current-secondary {
+  stroke-dasharray: 10 24;
+  animation: fluidFlowSecondary 2.4s linear infinite;
 }
+
+.haor-water-depression {
+  transform-origin: 620px 380px;
+  animation: haorDepression 4s ease-in-out infinite;
+}
+
+.water-shimmer-effect {
+  animation: waterShimmer 3s ease-in-out infinite;
+}
+
 

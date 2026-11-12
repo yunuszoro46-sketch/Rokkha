@@ -22,6 +22,7 @@ import {
 // Official shadcn/ui primitives
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -279,23 +280,14 @@ function MapArtwork({
       aria-label="Illustrated flood risk map of Bangladesh with real-time river flow"
       role="img"
     >
-      {/* Background Soft Radar Aura Circle */}
-      <div
-        className="absolute inset-0 pointer-events-none flex items-center justify-center"
-        aria-hidden="true"
-      >
-        <div className="w-[88%] h-[88%] rounded-full border border-[#D5D2C5]/50 bg-radial from-white/40 via-transparent to-transparent opacity-75" />
-        <div className="w-[62%] h-[62%] rounded-full border border-[#D5D2C5]/30" />
-      </div>
-
-      {/* Base Bangladesh District Map */}
+      {/* Base Bangladesh District Map (Kept pristine as in Image 1) */}
       <img
         src={mapAsset.src}
         alt="Flood risk map of Bangladesh"
         className="w-full h-full object-contain relative z-10"
       />
 
-      {/* Hydrodynamic River Currents & Flow Layer (Overlaid on Map) */}
+      {/* Hydrodynamic River Water Flow Streaming Strictly Between the Roots (Matching Image 2 & 3) */}
       <svg
         className="absolute inset-0 w-full h-full object-contain pointer-events-none z-20"
         viewBox="0 0 849 1131"
@@ -303,190 +295,87 @@ function MapArtwork({
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
-          <filter id="riverGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="6" result="blur" />
+          {/* Hydrodynamic Water Flow Glow Filter */}
+          <filter id="waterFlowGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="3.5" result="blur" />
             <feComposite in="SourceGraphic" in2="blur" operator="over" />
           </filter>
-          <radialGradient id="haorGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.85" />
-            <stop offset="40%" stopColor="#0099FF" stopOpacity="0.65" />
-            <stop offset="80%" stopColor="#005B96" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#001F3F" stopOpacity="0" />
-          </radialGradient>
         </defs>
 
-        {/* Haor Flood Inundation Pools (Sylhet & Sunamganj Basin) */}
-        <g className="haor-water-pool">
-          <ellipse cx="610" cy="385" rx="55" ry="38" fill="url(#haorGlow)" />
-          <ellipse cx="560" cy="445" rx="46" ry="32" fill="url(#haorGlow)" />
-          <ellipse cx="735" cy="360" rx="32" ry="22" fill="url(#haorGlow)" />
+        {/* 1. Deep Water Channel Layer (Deep Azure Flow along River Root Veins) */}
+        <g stroke="#0284C7" strokeLinecap="round" fill="none" opacity="0.88">
+          {/* Jamuna River Root */}
+          <path d="M 348 100 C 344 140, 339 180, 336 220 C 330 260, 323 300, 329 340 C 335 380, 345 420, 362 480 C 371 520, 375 535, 377 540" strokeWidth="5.5" />
+          {/* Ganges / Padma Western Root */}
+          <path d="M 195 380 C 220 405, 250 430, 280 450 C 320 465, 366 470, 398 510 C 408 525, 412 535, 414 540" strokeWidth="5" />
+          {/* Lower Padma Confluence */}
+          <path d="M 377 540 C 395 560, 424 560, 459 590 C 475 605, 485 615, 492 620" strokeWidth="7" />
+          {/* Surma River (Sylhet Root) */}
+          <path d="M 740 300 C 700 310, 650 325, 600 345 C 570 380, 550 420, 506 560 C 500 590, 495 610, 492 620" strokeWidth="4.5" />
+          {/* Kushiyara River */}
+          <path d="M 760 360 C 710 375, 650 395, 580 450 C 540 500, 510 560, 492 620" strokeWidth="4" />
+          {/* Main Lower Meghna Delta Root */}
+          <path d="M 492 620 C 520 680, 554 710, 559 740 C 545 770, 526 800, 540 880 C 545 920, 548 950, 550 960" strokeWidth="8.5" />
+          {/* Tetulia Channel Root */}
+          <path d="M 430 650 C 420 710, 443 770, 447 830 C 445 880, 442 910, 440 920" strokeWidth="5" />
+          {/* Payra River Root */}
+          <path d="M 412 620 C 419 680, 395 760, 390 840 C 388 880, 386 910, 385 930" strokeWidth="4.5" />
+          {/* Gorai / Baleshwar Root */}
+          <path d="M 228 560 C 252 590, 268 620, 301 680 C 337 740, 326 770, 330 800 C 320 850, 315 870, 310 880" strokeWidth="4" />
+          {/* Rupsha / Pasur Sundarbans Root */}
+          <path d="M 215 770 C 237 800, 250 830, 253 890 C 252 930, 251 950, 250 960" strokeWidth="4" />
+          {/* Sandwip Channel Root */}
+          <path d="M 572 710 C 625 740, 635 820, 645 900 C 650 930, 655 950, 660 960" strokeWidth="5" />
         </g>
 
-        {/* River Underglow Paths */}
-        <g filter="url(#riverGlow)" opacity="0.9" className="river-glow-layer">
-          {/* Brahmaputra / Jamuna */}
-          <path
-            d="M 380 75 Q 370 180 365 260 T 375 380 Q 380 470 410 540"
-            stroke="#00D2FF"
-            strokeWidth="11"
-            strokeLinecap="round"
-          />
-          {/* Teesta & NW Feeder */}
-          <path
-            d="M 245 130 Q 300 180 365 260"
-            stroke="#00D2FF"
-            strokeWidth="7"
-            strokeLinecap="round"
-          />
-          <path
-            d="M 175 190 Q 230 250 310 330 Q 345 360 375 380"
-            stroke="#00D2FF"
-            strokeWidth="6"
-            strokeLinecap="round"
-          />
-          {/* Ganges / Padma */}
-          <path
-            d="M 100 405 Q 170 425 240 460 T 340 500 Q 380 520 410 540"
-            stroke="#00D2FF"
-            strokeWidth="10"
-            strokeLinecap="round"
-          />
-          {/* Lower Padma to Chandpur */}
-          <path
-            d="M 410 540 Q 460 575 510 635"
-            stroke="#00D2FF"
-            strokeWidth="14"
-            strokeLinecap="round"
-          />
-          {/* Surma & Kushiyara */}
-          <path
-            d="M 825 350 Q 750 330 670 340 Q 610 360 550 420"
-            stroke="#00D2FF"
-            strokeWidth="8"
-            strokeLinecap="round"
-          />
-          <path
-            d="M 760 400 Q 690 420 620 440 Q 570 460 540 510"
-            stroke="#00D2FF"
-            strokeWidth="7"
-            strokeLinecap="round"
-          />
-          {/* Upper Meghna */}
-          <path
-            d="M 550 420 Q 540 520 510 635"
-            stroke="#00D2FF"
-            strokeWidth="10"
-            strokeLinecap="round"
-          />
-          {/* Lower Meghna Delta & Bay Outflows */}
-          <path
-            d="M 510 635 Q 520 730 505 820 Q 495 910 485 985"
-            stroke="#00D2FF"
-            strokeWidth="16"
-            strokeLinecap="round"
-          />
-          <path
-            d="M 470 660 Q 440 740 420 830 Q 410 910 405 975"
-            stroke="#00D2FF"
-            strokeWidth="10"
-            strokeLinecap="round"
-          />
-          <path
-            d="M 525 670 Q 560 760 565 850 Q 560 920 545 985"
-            stroke="#00D2FF"
-            strokeWidth="12"
-            strokeLinecap="round"
-          />
-          <path
-            d="M 545 680 Q 615 760 625 850 Q 620 920 605 975"
-            stroke="#00D2FF"
-            strokeWidth="10"
-            strokeLinecap="round"
-          />
-          {/* Sundarbans Channels */}
-          <path
-            d="M 330 610 Q 340 710 330 810 Q 320 880 315 970"
-            stroke="#00D2FF"
-            strokeWidth="7"
-            strokeLinecap="round"
-          />
-          <path
-            d="M 370 630 Q 380 730 375 830 Q 365 900 355 975"
-            stroke="#00D2FF"
-            strokeWidth="7"
-            strokeLinecap="round"
-          />
-          {/* Chittagong / Karnafuli */}
-          <path
-            d="M 750 820 Q 720 910 700 990 Q 690 1050 680 1100"
-            stroke="#00D2FF"
-            strokeWidth="8"
-            strokeLinecap="round"
-          />
+        {/* 2. Active Hydrodynamic Flow Stream (Electric Cyan Glow matching Image 3) */}
+        <g stroke="#00F0FF" strokeLinecap="round" fill="none" filter="url(#waterFlowGlow)" className="river-glow-layer">
+          <path d="M 348 100 C 344 140, 339 180, 336 220 C 330 260, 323 300, 329 340 C 335 380, 345 420, 362 480 C 371 520, 375 535, 377 540" strokeWidth="3" />
+          <path d="M 195 380 C 220 405, 250 430, 280 450 C 320 465, 366 470, 398 510 C 408 525, 412 535, 414 540" strokeWidth="2.8" />
+          <path d="M 377 540 C 395 560, 424 560, 459 590 C 475 605, 485 615, 492 620" strokeWidth="4" />
+          <path d="M 740 300 C 700 310, 650 325, 600 345 C 570 380, 550 420, 506 560 C 500 590, 495 610, 492 620" strokeWidth="2.5" />
+          <path d="M 760 360 C 710 375, 650 395, 580 450 C 540 500, 510 560, 492 620" strokeWidth="2.2" />
+          <path d="M 492 620 C 520 680, 554 710, 559 740 C 545 770, 526 800, 540 880 C 545 920, 548 950, 550 960" strokeWidth="5" />
+          <path d="M 430 650 C 420 710, 443 770, 447 830 C 445 880, 442 910, 440 920" strokeWidth="3" />
+          <path d="M 412 620 C 419 680, 395 760, 390 840 C 388 880, 386 910, 385 930" strokeWidth="2.6" />
+          <path d="M 228 560 C 252 590, 268 620, 301 680 C 337 740, 326 770, 330 800 C 320 850, 315 870, 310 880" strokeWidth="2.4" />
+          <path d="M 215 770 C 237 800, 250 830, 253 890 C 252 930, 251 950, 250 960" strokeWidth="2.4" />
+          <path d="M 572 710 C 625 740, 635 820, 645 900 C 650 930, 655 950, 660 960" strokeWidth="3" />
         </g>
 
-        {/* Core Electric Blue Water Streams */}
-        <g stroke="#00F0FF" strokeLinecap="round" fill="none">
-          <path d="M 380 75 Q 370 180 365 260 T 375 380 Q 380 470 410 540" strokeWidth="5.5" />
-          <path d="M 245 130 Q 300 180 365 260" strokeWidth="4" />
-          <path d="M 175 190 Q 230 250 310 330 Q 345 360 375 380" strokeWidth="3.5" />
-          <path d="M 100 405 Q 170 425 240 460 T 340 500 Q 380 520 410 540" strokeWidth="5.5" />
-          <path d="M 410 540 Q 460 575 510 635" strokeWidth="7.5" />
-          <path d="M 825 350 Q 750 330 670 340 Q 610 360 550 420" strokeWidth="4.5" />
-          <path d="M 760 400 Q 690 420 620 440 Q 570 460 540 510" strokeWidth="4" />
-          <path d="M 550 420 Q 540 520 510 635" strokeWidth="5.5" />
-          <path d="M 510 635 Q 520 730 505 820 Q 495 910 485 985" strokeWidth="9" />
-          <path d="M 470 660 Q 440 740 420 830 Q 410 910 405 975" strokeWidth="5" />
-          <path d="M 525 670 Q 560 760 565 850 Q 560 920 545 985" strokeWidth="6" />
-          <path d="M 545 680 Q 615 760 625 850 Q 620 920 605 975" strokeWidth="5" />
-          <path d="M 330 610 Q 340 710 330 810 Q 320 880 315 970" strokeWidth="4" />
-          <path d="M 370 630 Q 380 730 375 830 Q 365 900 355 975" strokeWidth="4" />
-          <path d="M 750 820 Q 720 910 700 990 Q 690 1050 680 1100" strokeWidth="4.5" />
-        </g>
-
-        {/* Animated Downward Hydrodynamic Flow Currents (White/Cyan Pulsing Dashes) */}
-        <g stroke="#FFFFFF" strokeLinecap="round" fill="none" className="river-flow-animated" opacity="0.95">
-          <path d="M 380 75 Q 370 180 365 260 T 375 380 Q 380 470 410 540" strokeWidth="2.5" />
-          <path d="M 245 130 Q 300 180 365 260" strokeWidth="2" />
-          <path d="M 175 190 Q 230 250 310 330 Q 345 360 375 380" strokeWidth="1.8" />
-          <path d="M 100 405 Q 170 425 240 460 T 340 500 Q 380 520 410 540" strokeWidth="2.5" />
-          <path d="M 410 540 Q 460 575 510 635" strokeWidth="3" />
-          <path d="M 825 350 Q 750 330 670 340 Q 610 360 550 420" strokeWidth="2" />
-          <path d="M 760 400 Q 690 420 620 440 Q 570 460 540 510" strokeWidth="2" />
-          <path d="M 550 420 Q 540 520 510 635" strokeWidth="2.5" />
-          <path d="M 510 635 Q 520 730 505 820 Q 495 910 485 985" strokeWidth="3.5" />
-          <path d="M 470 660 Q 440 740 420 830 Q 410 910 405 975" strokeWidth="2.2" />
-          <path d="M 525 670 Q 560 760 565 850 Q 560 920 545 985" strokeWidth="2.5" />
-          <path d="M 545 680 Q 615 760 625 850 Q 620 920 605 975" strokeWidth="2.2" />
-          <path d="M 330 610 Q 340 710 330 810 Q 320 880 315 970" strokeWidth="1.8" />
-          <path d="M 370 630 Q 380 730 375 830 Q 365 900 355 975" strokeWidth="1.8" />
-          <path d="M 750 820 Q 720 910 700 990 Q 690 1050 680 1100" strokeWidth="2" />
+        {/* 3. Streaming Velocity Particle Lines (Animated downward fluid current) */}
+        <g stroke="#FFFFFF" strokeLinecap="round" fill="none" className="fluid-current-primary" opacity="0.95">
+          <path d="M 348 100 C 344 140, 339 180, 336 220 C 330 260, 323 300, 329 340 C 335 380, 345 420, 362 480 C 371 520, 375 535, 377 540" strokeWidth="1.6" />
+          <path d="M 195 380 C 220 405, 250 430, 280 450 C 320 465, 366 470, 398 510 C 408 525, 412 535, 414 540" strokeWidth="1.4" />
+          <path d="M 377 540 C 395 560, 424 560, 459 590 C 475 605, 485 615, 492 620" strokeWidth="2.2" />
+          <path d="M 740 300 C 700 310, 650 325, 600 345 C 570 380, 550 420, 506 560 C 500 590, 495 610, 492 620" strokeWidth="1.4" />
+          <path d="M 760 360 C 710 375, 650 395, 580 450 C 540 500, 510 560, 492 620" strokeWidth="1.2" />
+          <path d="M 492 620 C 520 680, 554 710, 559 740 C 545 770, 526 800, 540 880 C 545 920, 548 950, 550 960" strokeWidth="2.6" />
+          <path d="M 430 650 C 420 710, 443 770, 447 830 C 445 880, 442 910, 440 920" strokeWidth="1.5" />
+          <path d="M 412 620 C 419 680, 395 760, 390 840 C 388 880, 386 910, 385 930" strokeWidth="1.4" />
+          <path d="M 228 560 C 252 590, 268 620, 301 680 C 337 740, 326 770, 330 800 C 320 850, 315 870, 310 880" strokeWidth="1.2" />
+          <path d="M 215 770 C 237 800, 250 830, 253 890 C 252 930, 251 950, 250 960" strokeWidth="1.2" />
+          <path d="M 572 710 C 625 740, 635 820, 645 900 C 650 930, 655 950, 660 960" strokeWidth="1.5" />
         </g>
       </svg>
 
-      {/* Legend on Bottom-Right */}
+      {/* Legend on Bottom-Left (Clean and exact as in Image 1) */}
       {!compact && (
-        <div className="absolute bottom-5 right-5 z-30 bg-[#FAF9F5]/95 backdrop-blur-md border border-[#E2E0D6] rounded-xl px-4 py-3 shadow-lg text-left">
+        <div className="absolute bottom-5 left-5 z-30 bg-[#FAF9F5]/95 backdrop-blur-sm border border-[#E2E0D6] rounded-xl px-4 py-3 shadow-md">
           <div className="font-bold text-sm text-[#12241C] mb-2">
-            {lang === "bn" ? "বন্যা ঝুঁকি স্তর" : "Flood Risk Level"}
+            {t.risk_level}
           </div>
-          <div className="flex flex-col gap-1.5 text-xs text-[#2D3A34] font-medium">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#74A57F] inline-block shadow-sm" />
-              <span>{lang === "bn" ? "কম (Low)" : "Low"}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#F4C430] inline-block shadow-sm" />
-              <span>{lang === "bn" ? "মাঝারি (Moderate)" : "Moderate"}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#F4A236] inline-block shadow-sm" />
-              <span>{lang === "bn" ? "বেশি (High)" : "High"}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#D9381E] inline-block shadow-sm" />
-              <span>{lang === "bn" ? "ভয়াবহ (Severe)" : "Severe"}</span>
-            </div>
+          <div className="flex items-center gap-1">
+            <span className="w-5 h-4 rounded-sm bg-[#2D6A4F]" />
+            <span className="w-5 h-4 rounded-sm bg-[#74A57F]" />
+            <span className="w-5 h-4 rounded-sm bg-[#B7CEB2]" />
+            <span className="w-5 h-4 rounded-sm bg-[#F3E3B2]" />
+            <span className="w-5 h-4 rounded-sm bg-[#F4A236]" />
+            <span className="w-5 h-4 rounded-sm bg-[#D96B1E]" />
+          </div>
+          <div className="flex items-center justify-between text-xs text-[#45514C] font-medium mt-1">
+            <span>{t.risk_low}</span>
+            <span>{t.risk_high}</span>
           </div>
         </div>
       )}
@@ -926,92 +815,94 @@ export function CitizenPortalApp({
         <main className="w-full flex-1 flex flex-col justify-between">
           <div className="w-full">
             {/* Top Header / Site Header */}
-            <header className="site-header w-full">
-              <a
-                href="#overview"
-                className="logo-link"
-                aria-label="Rokkha home"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigateToPage("overview");
-                }}
-              >
-                <img src={logoAsset.src} alt="Rokkha" />
-              </a>
-              <nav aria-label="Primary navigation">
+            <header className="w-full border-b border-[#DFDDD3]/50">
+              <div className="max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 site-header">
                 <a
-                  className={activeView === "overview" ? "active" : ""}
                   href="#overview"
+                  className="logo-link"
+                  aria-label="Rokkha home"
                   onClick={(e) => {
                     e.preventDefault();
                     navigateToPage("overview");
                   }}
                 >
-                  {t.nav_home}
+                  <img src={logoAsset.src} alt="Rokkha" />
                 </a>
-                <a
-                  className={activeView === "map" ? "active" : ""}
-                  href="#map"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigateToPage("map");
-                  }}
-                >
-                  {t.nav_map}
-                </a>
-                <a
-                  className={activeView === "alerts" ? "active" : ""}
-                  href="#alerts"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigateToPage("alerts");
-                  }}
-                >
-                  {t.nav_alerts}
-                </a>
-                <a
-                  className={activeView === "satellite" ? "active" : ""}
-                  href="#satellite"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigateToPage("satellite");
-                  }}
-                >
-                  {t.nav_data}
-                </a>
-                <button
-                  onClick={() => setIsAboutOpen(true)}
-                  className="text-left font-semibold text-base hover:text-[#263B32] transition"
-                >
-                  {t.nav_about}
-                </button>
-              </nav>
-              <div className="header-actions flex items-center gap-2">
-                <button
-                  onClick={toggleLanguage}
-                  className="h-11 px-3.5 rounded-lg border border-[#EDEBE2] bg-white text-sm font-bold text-[#183026] hover:bg-[#FAF9F5] shadow-sm transition flex items-center gap-1.5"
-                  title="Switch Language / ভাষা পরিবর্তন করুন"
-                >
-                  <span className={lang === "bn" ? "text-[#183026] font-extrabold" : "text-[#183026]/40"}>
-                    বাংলা
-                  </span>
-                  <span className="text-[#183026]/30">|</span>
-                  <span className={lang === "en" ? "text-[#183026] font-extrabold" : "text-[#183026]/40"}>
-                    EN
-                  </span>
-                </button>
-                <button
-                  onClick={() => setIsAboutOpen(true)}
-                  className="login hover:bg-white/80 transition"
-                >
-                  {t.btn_about_data}
-                </button>
-                <Button
-                  onClick={() => navigateToPage("map")}
-                  className="button shadow-sm"
-                >
-                  {t.btn_get_started} <Icon name="arrow" size={16} />
-                </Button>
+                <nav aria-label="Primary navigation">
+                  <a
+                    className={activeView === "overview" ? "active" : ""}
+                    href="#overview"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigateToPage("overview");
+                    }}
+                  >
+                    {t.nav_home}
+                  </a>
+                  <a
+                    className={activeView === "map" ? "active" : ""}
+                    href="#map"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigateToPage("map");
+                    }}
+                  >
+                    {t.nav_map}
+                  </a>
+                  <a
+                    className={activeView === "alerts" ? "active" : ""}
+                    href="#alerts"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigateToPage("alerts");
+                    }}
+                  >
+                    {t.nav_alerts}
+                  </a>
+                  <a
+                    className={activeView === "satellite" ? "active" : ""}
+                    href="#satellite"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigateToPage("satellite");
+                    }}
+                  >
+                    {t.nav_data}
+                  </a>
+                  <button
+                    onClick={() => setIsAboutOpen(true)}
+                    className="text-left font-semibold text-base hover:text-[#263B32] transition"
+                  >
+                    {t.nav_about}
+                  </button>
+                </nav>
+                <div className="header-actions flex items-center gap-2">
+                  <button
+                    onClick={toggleLanguage}
+                    className="h-11 px-3.5 rounded-lg border border-[#EDEBE2] bg-white text-sm font-bold text-[#183026] hover:bg-[#FAF9F5] shadow-sm transition flex items-center gap-1.5"
+                    title="Switch Language / ভাষা পরিবর্তন করুন"
+                  >
+                    <span className={lang === "bn" ? "text-[#183026] font-extrabold" : "text-[#183026]/40"}>
+                      বাংলা
+                    </span>
+                    <span className="text-[#183026]/30">|</span>
+                    <span className={lang === "en" ? "text-[#183026] font-extrabold" : "text-[#183026]/40"}>
+                      EN
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setIsAboutOpen(true)}
+                    className="login hover:bg-white/80 transition"
+                  >
+                    {t.btn_about_data}
+                  </button>
+                  <Button
+                    onClick={() => navigateToPage("map")}
+                    className="button shadow-sm"
+                  >
+                    {t.btn_get_started} <Icon name="arrow" size={16} />
+                  </Button>
+                </div>
               </div>
             </header>
 
@@ -1019,194 +910,336 @@ export function CitizenPortalApp({
             {activeView === "overview" && (
               <>
                 {/* Hero Section */}
-                <section className="hero" id="overview">
-                  <div className="hero-copy">
-                    <div className="eyebrow">
-                      <Icon name="shield" size={16} /> {t.hero_tagline}
+                <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10">
+                  <section className="hero" id="overview">
+                    <div className="hero-copy">
+                      <div className="eyebrow">
+                        <Icon name="shield" size={16} /> {t.hero_tagline}
+                      </div>
+                      <div className="hero-headline-bar">
+                        <h1>
+                          {t.hero_title_1}
+                          <br />
+                          {t.hero_title_2}
+                        </h1>
+                      </div>
+                      <p>
+                        {t.hero_desc}
+                      </p>
+                      <div className="button-row">
+                        <Button onClick={() => navigateToPage("map")} className="button gap-2">
+                          <span>{t.btn_get_started}</span>
+                          <Icon name="arrow" size={16} />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setIsAboutOpen(true)}
+                          className="button button-outline gap-2"
+                        >
+                          <Icon name="play" size={17} /> {t.btn_see_how}
+                        </Button>
+                      </div>
                     </div>
-                    <div className="hero-headline-bar">
-                      <h1>
-                        {t.hero_title_1}
-                        <br />
-                        {t.hero_title_2}
-                      </h1>
+                    <div className="hero-map">
+                      <MapArtwork lang={lang} />
                     </div>
-                    <p>
-                      {t.hero_desc}
-                    </p>
-                    <div className="button-row">
-                      <Button onClick={() => navigateToPage("map")} className="button gap-2">
-                        <span>{t.btn_get_started}</span>
-                        <Icon name="arrow" size={16} />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => setIsAboutOpen(true)}
-                        className="button button-outline gap-2"
-                      >
-                        <Icon name="play" size={17} /> {t.btn_see_how}
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="hero-map">
-                    <MapArtwork lang={lang} />
-                  </div>
-                </section>
+                  </section>
+                </div>
 
                 {/* Metrics Statistics Row */}
-                <section className="metrics" aria-label="Platform statistics">
-                  <div>
-                    <div className="metric-icon-circle">
-                      <Icon name="layers" />
+                <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 mt-6">
+                  <section className="metrics" aria-label="Platform statistics">
+                    <div>
+                      <div className="metric-icon-circle">
+                        <Icon name="layers" />
+                      </div>
+                      <strong>Previous</strong>
+                      <span>Historical Analysis</span>
                     </div>
-                    <strong>Previous</strong>
-                    <span>Historical Analysis</span>
-                  </div>
-                  <div>
-                    <div className="metric-icon-circle">
-                      <Icon name="location" />
+                    <div>
+                      <div className="metric-icon-circle">
+                        <Icon name="location" />
+                      </div>
+                      <strong>{t.metric_districts}</strong>
+                      <span>{t.metric_districts_sub}</span>
                     </div>
-                    <strong>{t.metric_districts}</strong>
-                    <span>{t.metric_districts_sub}</span>
-                  </div>
-                  <div>
-                    <div className="metric-icon-circle">
-                      <Icon name="building" />
+                    <div>
+                      <div className="metric-icon-circle">
+                        <Icon name="building" />
+                      </div>
+                      <strong>{t.metric_assets}</strong>
+                      <span>{t.metric_assets_sub}</span>
                     </div>
-                    <strong>{t.metric_assets}</strong>
-                    <span>{t.metric_assets_sub}</span>
-                  </div>
-                  <div>
-                    <div className="metric-icon-circle">
-                      <Icon name="code" />
+                    <div>
+                      <div className="metric-icon-circle">
+                        <Icon name="code" />
+                      </div>
+                      <strong>{t.metric_tests}</strong>
+                      <span>{t.metric_tests_sub}</span>
                     </div>
-                    <strong>{t.metric_tests}</strong>
-                    <span>{t.metric_tests_sub}</span>
-                  </div>
-                </section>
+                  </section>
+                </div>
 
                 {/* Core Capabilities - Built for National-Scale Flood Resilience */}
-                <section className="mt-20 mb-16" id="capabilities">
-                  <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-12">
-                    <div className="max-w-2xl">
+                <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 my-20">
+                  <section id="capabilities">
+                    <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-12">
+                      <div className="max-w-2xl">
+                        <span className="inline-block px-3.5 py-1 text-xs font-bold tracking-wider text-[#1F513F] bg-[#D8E6DF] rounded-full uppercase mb-4">
+                          CORE CAPABILITIES
+                        </span>
+                        <h2 className="text-3xl md:text-4xl font-extrabold text-[#12241C] tracking-tight leading-tight">
+                          Built for National-Scale Flood Resilience
+                        </h2>
+                      </div>
+                      <p className="max-w-md text-sm md:text-base text-[#56635D] leading-relaxed">
+                        Combining satellite radar altimetry, upstream rainfall telemetry, and hydrodynamic modeling across every river basin in Bangladesh.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                      {/* Card 1: Hydrodynamic Flow Modeling */}
+                      <Card
+                        onClick={() => navigateToPage("hydro")}
+                        className="bg-white rounded-2xl p-6 border border-[#E4E2D8] shadow-sm hover:shadow-md hover:border-[#B2D8D8] transition-all cursor-pointer flex flex-col justify-between"
+                      >
+                        <div>
+                          <div className="w-12 h-12 rounded-xl bg-[#E0F2FE] flex items-center justify-center text-[#0284C7] mb-6">
+                            <Icon name="sliders" size={22} />
+                          </div>
+                          <Badge variant="outline" className="text-[11px] font-bold tracking-wider text-[#0284C7] bg-[#E0F2FE] border-[#BAE6FD] rounded-md px-2.5 py-1 uppercase mb-4">
+                            72-HOUR LEAD TIME
+                          </Badge>
+                          <h3 className="text-lg font-bold text-[#12241C] mb-3">
+                            Hydrodynamic Flow Modeling
+                          </h3>
+                          <p className="text-xs md:text-sm text-[#5C6863] leading-relaxed">
+                            Simulates river discharge, velocity, and bank overflow across the Jamuna, Padma, Meghna, and Surma-Kushiyara networks in real time.
+                          </p>
+                        </div>
+                      </Card>
+
+                      {/* Card 2: High-Resolution Risk Mapping */}
+                      <Card
+                        onClick={() => navigateToPage("map")}
+                        className="bg-white rounded-2xl p-6 border border-[#E4E2D8] shadow-sm hover:shadow-md hover:border-[#FFCCBC] transition-all cursor-pointer flex flex-col justify-between"
+                      >
+                        <div>
+                          <div className="w-12 h-12 rounded-xl bg-[#FFEDD5] flex items-center justify-center text-[#EA580C] mb-6">
+                            <Icon name="location" size={22} />
+                          </div>
+                          <Badge variant="outline" className="text-[11px] font-bold tracking-wider text-[#EA580C] bg-[#FFEDD5] border-[#FED7AA] rounded-md px-2.5 py-1 uppercase mb-4">
+                            64 DISTRICTS & 495 UPAZILAS
+                          </Badge>
+                          <h3 className="text-lg font-bold text-[#12241C] mb-3">
+                            High-Resolution Risk Mapping
+                          </h3>
+                          <p className="text-xs md:text-sm text-[#5C6863] leading-relaxed">
+                            Dynamic choropleth and SAR inundation overlays classifying Low, Moderate, High, and Severe flood vulnerability down to union boundaries.
+                          </p>
+                        </div>
+                      </Card>
+
+                      {/* Card 3: Critical Asset & Shelter Routing */}
+                      <Card
+                        onClick={() => navigateToPage("shelters")}
+                        className="bg-white rounded-2xl p-6 border border-[#E4E2D8] shadow-sm hover:shadow-md hover:border-[#C8E6C9] transition-all cursor-pointer flex flex-col justify-between"
+                      >
+                        <div>
+                          <div className="w-12 h-12 rounded-xl bg-[#DCFCE7] flex items-center justify-center text-[#16A34A] mb-6">
+                            <Icon name="building" size={22} />
+                          </div>
+                          <Badge variant="outline" className="text-[11px] font-bold tracking-wider text-[#16A34A] bg-[#DCFCE7] border-[#BBF7D0] rounded-md px-2.5 py-1 uppercase mb-4">
+                            1,200+ MAPPED FACILITIES
+                          </Badge>
+                          <h3 className="text-lg font-bold text-[#12241C] mb-3">
+                            Critical Asset & Shelter Routing
+                          </h3>
+                          <p className="text-xs md:text-sm text-[#5C6863] leading-relaxed">
+                            Monitors elevation clearances, occupancy, and dry-road access for hospitals, schools, and multi-purpose flood shelters.
+                          </p>
+                        </div>
+                      </Card>
+
+                      {/* Card 4: Early Warning & REST APIs */}
+                      <Card
+                        onClick={() => navigateToPage("alerts")}
+                        className="bg-white rounded-2xl p-6 border border-[#E4E2D8] shadow-sm hover:shadow-md hover:border-[#D1C4E9] transition-all cursor-pointer flex flex-col justify-between"
+                      >
+                        <div>
+                          <div className="w-12 h-12 rounded-xl bg-[#EDE9FE] flex items-center justify-center text-[#7C3AED] mb-6">
+                            <Icon name="bell" size={22} />
+                          </div>
+                          <Badge variant="outline" className="text-[11px] font-bold tracking-wider text-[#7C3AED] bg-[#EDE9FE] border-[#DDD6FE] rounded-md px-2.5 py-1 uppercase mb-4">
+                            187 VERIFIED ENDPOINTS
+                          </Badge>
+                          <h3 className="text-lg font-bold text-[#12241C] mb-3">
+                            Early Warning & REST APIs
+                          </h3>
+                          <p className="text-xs md:text-sm text-[#5C6863] leading-relaxed">
+                            Dispatches localized SMS/voice warnings to citizens and provides automated webhook payloads for disaster response teams.
+                          </p>
+                        </div>
+                      </Card>
+                    </div>
+                  </section>
+                </div>
+
+                {/* End-to-End Architecture */}
+                <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 my-20">
+                  <section id="architecture">
+                    <div className="text-center max-w-3xl mx-auto mb-14">
                       <span className="inline-block px-3.5 py-1 text-xs font-bold tracking-wider text-[#1F513F] bg-[#D8E6DF] rounded-full uppercase mb-4">
-                        CORE CAPABILITIES
+                        END-TO-END ARCHITECTURE
                       </span>
-                      <h2 className="text-3xl md:text-4xl font-extrabold text-[#12241C] tracking-tight leading-tight">
-                        Built for National-Scale Flood Resilience
+                      <h2 className="text-3xl md:text-4xl font-extrabold text-[#12241C] tracking-tight leading-tight mb-4">
+                        How Rokkha Predicts & Protects
                       </h2>
+                      <p className="text-sm md:text-base text-[#56635D] leading-relaxed">
+                        Every forecast is validated against previous historical analysis and 187 automated test suites before reaching communities.
+                      </p>
                     </div>
-                    <p className="max-w-md text-sm md:text-base text-[#56635D] leading-relaxed">
-                      Combining satellite radar altimetry, upstream rainfall telemetry, and hydrodynamic modeling across every river basin in Bangladesh.
-                    </p>
-                  </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {/* Card 1: Hydrodynamic Flow Modeling */}
-                    <div
-                      onClick={() => navigateToPage("hydro")}
-                      className="bg-white rounded-2xl p-6 border border-[#E4E2D8] shadow-sm hover:shadow-md hover:border-[#B2D8D8] transition-all cursor-pointer flex flex-col justify-between"
-                    >
-                      <div>
-                        <div className="w-12 h-12 rounded-xl bg-[#E0F2FE] flex items-center justify-center text-[#0284C7] mb-6">
-                          <Icon name="sliders" size={22} />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {/* Card 01 */}
+                      <Card className="bg-white rounded-2xl p-7 border border-[#E4E2D8] shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center justify-between mb-6">
+                            <div className="w-9 h-9 rounded-full bg-[#11241C] text-white flex items-center justify-center font-bold text-xs tracking-wider">
+                              01
+                            </div>
+                            <Badge variant="outline" className="text-xs font-semibold text-[#526059] bg-[#F4F3ED] border-[#E2E0D6] rounded-md px-2.5 py-1">
+                              Satellite + Gauge Ingestion
+                            </Badge>
+                          </div>
+                          <h3 className="text-xl font-bold text-[#12241C] mb-3">
+                            Multi-Source Telemetry
+                          </h3>
+                          <p className="text-sm text-[#5C6863] leading-relaxed">
+                            Ingests Sentinel-1 SAR water masks, transboundary rainfall radar, and river gauge readings across all 64 districts.
+                          </p>
                         </div>
-                        <span className="inline-block px-2.5 py-1 text-[11px] font-bold tracking-wider text-[#0284C7] bg-[#E0F2FE] rounded-md uppercase mb-4">
-                          72-HOUR LEAD TIME
-                        </span>
-                        <h3 className="text-lg font-bold text-[#12241C] mb-3">
-                          Hydrodynamic Flow Modeling
-                        </h3>
-                        <p className="text-xs md:text-sm text-[#5C6863] leading-relaxed">
-                          Simulates river discharge, velocity, and bank overflow across the Jamuna, Padma, Meghna, and Surma-Kushiyara networks in real time.
+                      </Card>
+
+                      {/* Card 02 */}
+                      <Card className="bg-white rounded-2xl p-7 border border-[#E4E2D8] shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center justify-between mb-6">
+                            <div className="w-9 h-9 rounded-full bg-[#1F513F] text-white flex items-center justify-center font-bold text-xs tracking-wider">
+                              02
+                            </div>
+                            <Badge variant="outline" className="text-xs font-semibold text-[#0369A1] bg-[#E0F2FE] border-[#BAE6FD] rounded-md px-2.5 py-1">
+                              Hydrodynamic Engine
+                            </Badge>
+                          </div>
+                          <h3 className="text-xl font-bold text-[#12241C] mb-3">
+                            Historical & AI Simulation
+                          </h3>
+                          <p className="text-sm text-[#5C6863] leading-relaxed">
+                            Synthesizes previous historical analysis with 2D floodplain topography to pinpoint inundation depth and hospital/shelter impact.
+                          </p>
+                        </div>
+                      </Card>
+
+                      {/* Card 03 */}
+                      <Card className="bg-white rounded-2xl p-7 border border-[#E4E2D8] shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center justify-between mb-6">
+                            <div className="w-9 h-9 rounded-full bg-[#C2410C] text-white flex items-center justify-center font-bold text-xs tracking-wider">
+                              03
+                            </div>
+                            <Badge variant="outline" className="text-xs font-semibold text-[#BE123C] bg-[#FFE4E6] border-[#FECDD3] rounded-md px-2.5 py-1">
+                              Community & API Dispatch
+                            </Badge>
+                          </div>
+                          <h3 className="text-xl font-bold text-[#12241C] mb-3">
+                            Actionable Early Warnings
+                          </h3>
+                          <p className="text-sm text-[#5C6863] leading-relaxed">
+                            Delivers district-level evacuation routing, shelter readiness alerts, and REST API webhooks to emergency responders.
+                          </p>
+                        </div>
+                      </Card>
+                    </div>
+                  </section>
+                </div>
+
+                {/* Subscribe & API Access Banner */}
+                <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 my-16">
+                  <section id="subscribe">
+                    <div className="bg-[#113824] rounded-3xl p-8 lg:p-12 text-white shadow-xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center border border-[#1b4e34]">
+                      {/* Left Column */}
+                      <div className="lg:col-span-7 space-y-6">
+                        <Badge variant="outline" className="text-xs font-semibold text-white/90 bg-white/10 border-white/20 rounded-full px-3.5 py-1">
+                          Stay One Step Ahead
+                        </Badge>
+                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
+                          Subscribe to District Flood Alerts & API Access
+                        </h2>
+                        <p className="text-base text-white/80 max-w-xl leading-relaxed">
+                          Receive instant early flood predictions, river danger-level crossings, and nearest safe shelter coordinates for your district.
                         </p>
+
+                        {/* Form Row */}
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
+                          <Input
+                            type="text"
+                            placeholder="Your Name or Organization"
+                            className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl px-4 flex-1 focus:border-[#4ADE80] focus:ring-[#4ADE80]"
+                          />
+                          <div className="w-full sm:w-48">
+                            <Select defaultValue="BD6091">
+                              <SelectTrigger className="h-12 bg-white/10 border-white/20 text-white rounded-xl">
+                                <SelectValue placeholder="Sylhet District" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="BD6091">Sylhet District</SelectItem>
+                                <SelectItem value="BD6090">Sunamganj District</SelectItem>
+                                <SelectItem value="BD3026">Dhaka District</SelectItem>
+                                <SelectItem value="BD5549">Kurigram District</SelectItem>
+                                <SelectItem value="BD1004">Chittagong District</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <Button className="h-12 px-6 rounded-xl bg-[#52B74A] hover:bg-[#43A03B] text-[#0A2616] font-bold text-sm tracking-wide transition shadow-lg shrink-0">
+                            Activate Alerts →
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Right Column: Code Terminal Mockup */}
+                      <div className="lg:col-span-5">
+                        <div className="bg-[#0A1D13] rounded-2xl border border-white/10 p-5 font-mono shadow-2xl">
+                          <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/10 text-xs">
+                            <div className="flex items-center gap-2 text-white/90">
+                              <span className="w-2.5 h-2.5 rounded-full bg-[#4ADE80] inline-block" />
+                              <span className="font-semibold">GET /api/v1/forecast/basin</span>
+                            </div>
+                            <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#163824] text-[#4ADE80] border border-[#225738]">
+                              187 Tests Passing
+                            </span>
+                          </div>
+                          <pre className="text-xs text-[#86EFAC] leading-relaxed overflow-x-auto">
+{`{
+  "platform": "Rokkha Climate Intelligence",
+  "coverage_districts": 64,
+  "baseline": "Previous Historical Analysis",
+  "active_basin": "Surma-Meghna",
+  "hydrodynamic_flow_m3s": 14820,
+  "risk_distribution": {
+    "Low": 41,
+    "Moderate": 11,
+    "High": 7,
+    "Severe": 5
+  },
+  "critical_assets_monitored": 1240
+}`}
+                          </pre>
+                        </div>
                       </div>
                     </div>
-
-                    {/* Card 2: High-Resolution Risk Mapping */}
-                    <div
-                      onClick={() => navigateToPage("map")}
-                      className="bg-white rounded-2xl p-6 border border-[#E4E2D8] shadow-sm hover:shadow-md hover:border-[#FFCCBC] transition-all cursor-pointer flex flex-col justify-between"
-                    >
-                      <div>
-                        <div className="w-12 h-12 rounded-xl bg-[#FFEDD5] flex items-center justify-center text-[#EA580C] mb-6">
-                          <Icon name="location" size={22} />
-                        </div>
-                        <span className="inline-block px-2.5 py-1 text-[11px] font-bold tracking-wider text-[#EA580C] bg-[#FFEDD5] rounded-md uppercase mb-4">
-                          64 DISTRICTS & 495 UPAZILAS
-                        </span>
-                        <h3 className="text-lg font-bold text-[#12241C] mb-3">
-                          High-Resolution Risk Mapping
-                        </h3>
-                        <p className="text-xs md:text-sm text-[#5C6863] leading-relaxed">
-                          Dynamic choropleth and SAR inundation overlays classifying Low, Moderate, High, and Severe flood vulnerability down to union boundaries.
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Card 3: Critical Asset & Shelter Routing */}
-                    <div
-                      onClick={() => navigateToPage("shelters")}
-                      className="bg-white rounded-2xl p-6 border border-[#E4E2D8] shadow-sm hover:shadow-md hover:border-[#C8E6C9] transition-all cursor-pointer flex flex-col justify-between"
-                    >
-                      <div>
-                        <div className="w-12 h-12 rounded-xl bg-[#DCFCE7] flex items-center justify-center text-[#16A34A] mb-6">
-                          <Icon name="building" size={22} />
-                        </div>
-                        <span className="inline-block px-2.5 py-1 text-[11px] font-bold tracking-wider text-[#16A34A] bg-[#DCFCE7] rounded-md uppercase mb-4">
-                          1,200+ MAPPED FACILITIES
-                        </span>
-                        <h3 className="text-lg font-bold text-[#12241C] mb-3">
-                          Critical Asset & Shelter Routing
-                        </h3>
-                        <p className="text-xs md:text-sm text-[#5C6863] leading-relaxed">
-                          Monitors elevation clearances, occupancy, and dry-road access for hospitals, schools, and multi-purpose flood shelters.
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Card 4: Early Warning & REST APIs */}
-                    <div
-                      onClick={() => navigateToPage("alerts")}
-                      className="bg-white rounded-2xl p-6 border border-[#E4E2D8] shadow-sm hover:shadow-md hover:border-[#D1C4E9] transition-all cursor-pointer flex flex-col justify-between"
-                    >
-                      <div>
-                        <div className="w-12 h-12 rounded-xl bg-[#EDE9FE] flex items-center justify-center text-[#7C3AED] mb-6">
-                          <Icon name="bell" size={22} />
-                        </div>
-                        <span className="inline-block px-2.5 py-1 text-[11px] font-bold tracking-wider text-[#7C3AED] bg-[#EDE9FE] rounded-md uppercase mb-4">
-                          187 VERIFIED ENDPOINTS
-                        </span>
-                        <h3 className="text-lg font-bold text-[#12241C] mb-3">
-                          Early Warning & REST APIs
-                        </h3>
-                        <p className="text-xs md:text-sm text-[#5C6863] leading-relaxed">
-                          Dispatches localized SMS/voice warnings to citizens and provides automated webhook payloads for disaster response teams.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </section>
-
-                {/* Resilience Banner */}
-                <section className="cta">
-                  <img src="/bangladesh-river.jpg" alt="Homes beside a river in rural Bangladesh" />
-                  <div className="cta-copy">
-                    <Icon name="shield" />
-                    <div>
-                      <strong>
-                        {t.cta_title_1}
-                        <br />
-                        <span>{t.cta_title_2}</span>
-                      </strong>
-                      <p>{t.cta_desc}</p>
-                    </div>
-                  </div>
-                  <Button onClick={() => navigateToPage("map")} className="button gap-2">
-                    <span>{t.cta_btn}</span>
-                    <Icon name="arrow" size={16} />
-                  </Button>
-                </section>
+                  </section>
+                </div>
               </>
             )}
 
@@ -1762,8 +1795,47 @@ export function CitizenPortalApp({
             </DialogContent>
           </Dialog>
 
-          {/* Attribution & Licensing Footer */}
-          <AttributionFooter lang={lang} onOpenAbout={() => setIsAboutOpen(true)} />
+          {/* Bottom Footer Bar */}
+          <footer className="w-full border-t border-[#DFDDD3] bg-[#EAE8DF]/60 py-6 mt-16">
+            <div className="max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#5C6863]">
+              <div>
+                <span className="font-bold text-[#12241C]">Rokkha</span>
+                <span className="mx-2">|</span>
+                <span>Climate Intelligence for a Safer Bangladesh</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-5 font-medium">
+                <a
+                  href="#overview"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigateToPage("overview");
+                  }}
+                  className="hover:text-[#12241C] transition"
+                >
+                  Home
+                </a>
+                <a href="#capabilities" className="hover:text-[#12241C] transition">
+                  Features
+                </a>
+                <a
+                  href="#map"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigateToPage("map");
+                  }}
+                  className="hover:text-[#12241C] transition"
+                >
+                  Data & Coverage
+                </a>
+                <a href="#architecture" className="hover:text-[#12241C] transition">
+                  How It Works
+                </a>
+                <span className="text-[#88948D]">
+                  64 Districts • 1,200+ Critical Assets
+                </span>
+              </div>
+            </div>
+          </footer>
         </main>
       </div>
     </div>
