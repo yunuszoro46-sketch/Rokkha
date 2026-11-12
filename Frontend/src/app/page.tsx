@@ -432,6 +432,13 @@ export function CitizenPortalApp({
 
   useEffect(() => {
     if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const urlLang = params.get("lang");
+      if (urlLang === "bn" || urlLang === "en") {
+        setLang(urlLang);
+        localStorage.setItem("rokkha_lang", urlLang);
+        return;
+      }
       const saved = localStorage.getItem("rokkha_lang") as Language;
       if (saved === "en" || saved === "bn") setLang(saved);
     }
