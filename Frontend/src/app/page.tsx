@@ -1092,6 +1092,7 @@ export function CitizenPortalApp({
                     pointCheckResult={pointCheckResult}
                     isCheckingPoint={isCheckingPoint}
                     targetDate={targetDate}
+                    lang={lang}
                     onChangeTargetDate={setTargetDate}
                   />
                 )}
@@ -1101,7 +1102,7 @@ export function CitizenPortalApp({
                   <div className="space-y-6">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-base font-bold text-[#263B32]">
-                        Major Flood Scenarios & Forecast Timeline:
+                        {t.map_scenarios_label}
                       </span>
                       <Button
                         size="sm"
@@ -1110,7 +1111,7 @@ export function CitizenPortalApp({
                         }
                         onClick={() => setTargetDate("2022-06-18")}
                       >
-                        Sylhet Floods (2022-06-18)
+                        {t.scenario_sylhet}
                       </Button>
                       <Button
                         size="sm"
@@ -1119,7 +1120,7 @@ export function CitizenPortalApp({
                         }
                         onClick={() => setTargetDate("2024-08-22")}
                       >
-                        Feni / Eastern Floods (2024-08-22)
+                        {t.scenario_feni}
                       </Button>
                       <Button
                         size="sm"
@@ -1128,7 +1129,7 @@ export function CitizenPortalApp({
                         }
                         onClick={() => setTargetDate("2023-04-10")}
                       >
-                        Dry Season (2023-04-10)
+                        {t.scenario_dry}
                       </Button>
                     </div>
 
@@ -1136,6 +1137,7 @@ export function CitizenPortalApp({
                       alerts={alerts}
                       targetDate={targetDate}
                       isLoading={false}
+                      lang={lang}
                       onSelectDistrict={(pcode, name) => {
                         handleSelectDistrict(pcode, name);
                         navigateToPage("map");
@@ -1149,6 +1151,7 @@ export function CitizenPortalApp({
                   <DistrictSatelliteTimeline
                     districtPcode={selectedPcode}
                     districtName={selectedName}
+                    lang={lang}
                     onSelectDistrict={(pcode, name) =>
                       handleSelectDistrict(pcode, name)
                     }
@@ -1160,6 +1163,7 @@ export function CitizenPortalApp({
                   <RainRiverCharts
                     districtPcode={selectedPcode}
                     districtName={selectedName}
+                    lang={lang}
                   />
                 )}
 
@@ -1168,6 +1172,7 @@ export function CitizenPortalApp({
                   <NearestShelters
                     currentCoords={currentCoords}
                     districtName={selectedName}
+                    lang={lang}
                   />
                 )}
               </section>
@@ -1539,7 +1544,7 @@ export function CitizenPortalApp({
           </Dialog>
 
           {/* Attribution & Licensing Footer */}
-          <AttributionFooter />
+          <AttributionFooter lang={lang} />
         </main>
       </div>
     </div>

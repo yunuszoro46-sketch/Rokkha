@@ -192,6 +192,118 @@ export const UI_TEXT = {
     risk_low: "Low",
     risk_high: "High",
     loading_text: "Preparing flood intelligence",
+
+    // Section 4: District Satellite Timeline & 64 Table
+    timeline_card_title: "64-District Flood Frequency",
+    timeline_badge: "2016–2024 UNOSAT",
+    timeline_card_sub:
+      "Click any district row to inspect its Copernicus Sentinel-1 satellite timeline and event history.",
+    timeline_search_placeholder: "Filter 64 districts by name or division...",
+    th_rank: "Rank",
+    th_district: "District",
+    th_events: "Events",
+    th_peak: "Peak",
+    timeline_right_title: "Sentinel-1 Timeline:",
+    timeline_rank_of_64: "Rank #{rank} of 64",
+    timeline_btn_2022: "2022 Monsoon",
+    timeline_btn_2024: "2024 Monsoon",
+    timeline_right_sub:
+      "Share of observed district land covered by unusual flood water (Copernicus GFM). Gaps are days with no satellite pass, not dry days.",
+    timeline_loading: "Loading Copernicus Sentinel-1 satellite passes...",
+    timeline_radar_blind_title: "Satellite cannot observe floods in {district}",
+    timeline_radar_blind_desc:
+      "Sentinel-1 radar backscatter cannot map floods under hills, forest canopy, or dense city buildings (one of 8 radar-blind districts). This means no satellite data, not that the district is safe.",
+    timeline_no_passes: "No satellite passes recorded for this window in {district}.",
+    timeline_10_events_title: "10 Major Flood Events Record (2016–2024)",
+    timeline_grey_sub: "Grey = Not observed by satellite (never implies safe)",
+    timeline_no_data: "No Data",
+    timeline_tooltip_flooded: "% unusual flood water",
+    timeline_tooltip_flooded_share: "Flooded Share",
+    timeline_pass_label: "Sentinel-1 Pass",
+
+    // Section 3: Alerts Feed
+    alerts_card_title: "District Flood Early Warnings",
+    alerts_action_required: "Action Required",
+    alerts_no_warnings: "No High-Level Warnings",
+    alerts_card_sub:
+      "Districts where 24h satellite-observable flood probability exceeds watch or alert thresholds for {date}.",
+    alerts_disclaimer_title: "Public Advisory & Institutional Limitation",
+    alerts_disclaimer_desc:
+      "These alerts are machine learning estimations derived from precipitation and satellite backscatter. They are NOT official flood warnings. Official government flood forecasts and evacuation directives are issued exclusively by the Flood Forecasting and Warning Centre (FFWC) and Bangladesh Water Development Board (BWDB).",
+    alerts_checking: "Checking district early warnings...",
+    alerts_district_suffix: "District",
+    alerts_likelihood: "Likelihood",
+    alerts_registered_assets: "registered critical assets",
+    alerts_people_served: "people sheltered/served",
+    alerts_none_title: "No Districts Exceeded Alert Thresholds for {date}",
+    alerts_none_sub:
+      "Note: This indicates none of the 64 districts triggered the ML alert model on this date. It does not guarantee absence of localized waterlogging.",
+
+    // Section 5: Hydro-Meteorological Observations
+    hydro_card_title: "Hydro-Meteorological Observations:",
+    hydro_card_sub:
+      "Daily rainfall (ECMWF ERA5 / GFS) and river flow discharge (Copernicus GloFAS)",
+    hydro_tab_rain: "Daily Rainfall (mm)",
+    hydro_tab_river: "River Discharge (m³/s)",
+    hydro_loading: "Querying Copernicus ERA5 and GloFAS hydrological feeds...",
+    hydro_rainfall_label: "24h Rainfall",
+    hydro_discharge_label: "River Discharge",
+    hydro_rain_sources: "Sources: ECMWF ERA5 reanalysis + NOAA GFS",
+    hydro_rain_note: "Note: Values over 100 mm indicate severe monsoon cloudburst",
+    hydro_river_source: "Source: Copernicus GloFAS 30-day hydro-routed discharge",
+    hydro_river_site: "Gauging site: Surma River at Sunamganj",
+
+    // Section 6: Nearest Shelters
+    shelters_card_title: "Nearest Flood Shelters & Healthcare Facilities",
+    shelters_card_sub:
+      "Registered emergency shelters, clinics, and critical facilities within {radius} km of {district} ({coords}).",
+    shelters_radius_label: "Radius:",
+    shelters_filter_label: "Filter by type:",
+    shelters_type_all: "All Types",
+    shelters_type_flood: "Flood Shelters",
+    shelters_type_hospital: "Hospitals",
+    shelters_type_clinic: "Clinics",
+    shelters_type_school: "Schools",
+    shelters_loading:
+      "Querying MongoDB geospatial 2dsphere index for nearby shelters...",
+    shelters_capacity: "Capacity:",
+    shelters_people: "people",
+    shelters_not_specified: "Not specified",
+    shelters_empty:
+      "No registered shelters or hospitals within {radius} km of this coordinate. Expand the search radius above.",
+
+    // Interactive Map Inspection Card
+    map_card_title: "National Flood Risk & Ground Inspection Map",
+    map_card_hint: "(Tap any district or coordinate to inspect)",
+    map_forecast_date_label: "Forecast Date:",
+    map_legend_label: "Legend:",
+    map_inspect_header: "Point & District Inspection",
+    map_inspect_loading: "Querying satellite observations & flood hazard model...",
+    map_division_suffix: "Division",
+    map_rank_label: "Flood Rank #{rank} / 64",
+    map_forecast_24h_title: "24h Model Forecast ({date})",
+    map_radar_blindspot: "Radar Blindspot (No Forecast)",
+    map_probability_label: "Probability:",
+    map_badge_unsupported: "Unsupported",
+    map_badge_no_alert: "No Alert",
+    map_observed_satellite_label: "Observed satellite flooding:",
+    map_of_major_events: "of {total} major events",
+    map_jrc_glofas_title: "Modelled Flood Depth Hazard (JRC GloFAS):",
+    map_10yr_flood: "10-Year Return Period Flood",
+    map_100yr_flood: "100-Year Return Period Extreme Flood",
+    map_inspect_disclaimer:
+      "ML estimation for disaster awareness. FFWC issues official warnings.",
+
+    // Footer
+    footer_title: "Rokkha Flood Intelligence",
+    footer_sub: "Citizen Portal · Open Climate Safety for Bangladesh",
+    footer_desc:
+      "Built to provide actionable district-level flood awareness, shelter access, and transparent climate data to every citizen and community responder.",
+    footer_attributions_title: "Mandatory Data Attributions & Licensing",
+    footer_attributions_desc:
+      "Satellite radar observations sourced from Copernicus Sentinel-1 Global Flood Monitoring (GFM) under the Copernicus Emergency Management Service. Hydrological discharge from Copernicus GloFAS and reanalysis rainfall from ECMWF ERA5 / NOAA GFS via Open-Meteo. Historical satellite flood polygons from UNOSAT (licensed under CC BY-SA). National district administrative shapes provided by Humanitarian Data Exchange (HDX) (CC BY-IGO). Basemap cartography © OpenStreetMap contributors (ODbL) and CartoDB.",
+    footer_copyright: "Rokkha. Open Public Safety Intelligence.",
+    footer_coords_note: "Cartographic data adheres to WGS84 Geodesic Coordinates.",
   },
   bn: {
     // Top Nav
@@ -299,5 +411,117 @@ export const UI_TEXT = {
     risk_low: "কম",
     risk_high: "বেশি",
     loading_text: "বন্যা বুদ্ধিমত্তা প্রস্তুতি চলছে...",
+
+    // Section 4: District Satellite Timeline & 64 Table
+    timeline_card_title: "৬৪ জেলার বন্যা পুনরাবৃত্তি",
+    timeline_badge: "২০১৬–২০২৪ ইউনস্যাট",
+    timeline_card_sub:
+      "কপারনিকাস সেন্টিনেল-১ স্যাটেলাইট সময়রেখা ও দুর্যোগের ইতিহাস দেখতে যেকোনো জেলা ক্লিক করুন।",
+    timeline_search_placeholder: "নাম বা বিভাগ দিয়ে ৬৪ জেলা খুঁজুন...",
+    th_rank: "র‍্যাংক",
+    th_district: "জেলা",
+    th_events: "দুর্যোগ",
+    th_peak: "সর্বোচ্চ",
+    timeline_right_title: "সেন্টিনেল-১ সময়রেখা:",
+    timeline_rank_of_64: "৬৪ জেলার মধ্যে #{rank} তম",
+    timeline_btn_2022: "২০২২ বর্ষা",
+    timeline_btn_2024: "২০২৪ বর্ষা",
+    timeline_right_sub:
+      "অস্বাভাবিক প্লাবিত জমির শতকরা হার (কপারনিকাস GFM)। স্যাটেলাইট অনুপস্থিতির দিনগুলো ফাঁকা দেখানো হয়েছে, তা শুষ্ক বোঝায় না।",
+    timeline_loading: "কপারনিকাস সেন্টিনেল-১ স্যাটেলাইট উপাত্ত লোড হচ্ছে...",
+    timeline_radar_blind_title: "{district} জেলায় স্যাটেলাইট দ্বারা বন্যা নিরীক্ষণ সম্ভব নয়",
+    timeline_radar_blind_desc:
+      "পাহাড়, বনাঞ্চল বা ঘনবসতির কারণে সেন্টিনেল-১ রাডার এখানে বন্যা নিরীক্ষণ করতে পারে না (৮টি রাডার-অন্ধ জেলার একটি)। এর অর্থ হলো স্যাটেলাইট উপাত্তের অনুপস্থিতি, জেলাটি নিরাপদ তা নয়।",
+    timeline_no_passes: "এই সময়সীমায় {district} জেলায় কোনো স্যাটেলাইট পর্যবেক্ষণ রেকর্ড নেই।",
+    timeline_10_events_title: "১০টি প্রধান ঐতিহাসিক প্লাবন রেকর্ড (২০১৬–২০২৪)",
+    timeline_grey_sub: "ধূসর = স্যাটেলাইট দ্বারা অপ্রত্যক্ষিত (নিরাপদ নয়)",
+    timeline_no_data: "উপাত্ত নেই",
+    timeline_tooltip_flooded: "% অস্বাভাবিক প্লাবিত ভূমি",
+    timeline_tooltip_flooded_share: "প্লাবিত জমির হার",
+    timeline_pass_label: "সেন্টিনেল-১ পর্যবেক্ষণ",
+
+    // Section 3: Alerts Feed
+    alerts_card_title: "জেলা পর্যায়ের আগাম বন্যা সতর্কতা",
+    alerts_action_required: "জরুরি পদক্ষেপ প্রয়োজন",
+    alerts_no_warnings: "উচ্চমাত্রার সতর্কতা নেই",
+    alerts_card_sub:
+      "{date} তারিখে যেসকল জেলায় ২৪ ঘণ্টার স্যাটেলাইট প্লাবন সম্ভাবনা নজরদারি বা সতর্কতা সীমার ওপরে।",
+    alerts_disclaimer_title: "নাগরিক পরামর্শ ও প্রাতিষ্ঠানিক সীমাবদ্ধতা",
+    alerts_disclaimer_desc:
+      "এই সতর্কবার্তাগুলো বৃষ্টিপাত ও স্যাটেলাইট ব্যাকস্ক্যাটারের ওপর ভিত্তি করে তৈরি মেশিন লার্নিং অনুমান। এগুলো সরকারি কোনো আনুষ্ঠানিক ঘোষণা নয়। বাংলাদেশ পানি উন্নয়ন বোর্ডের (BWDB) বন্যা পূর্বাভাস ও সতর্কীকরণ কেন্দ্র (FFWC) থেকে আনুষ্ঠানিক বন্যা সতর্কতা ও নির্দেশনা প্রদান করা হয়।",
+    alerts_checking: "জেলা পর্যায়ের আগাম সতর্কতা যাচাই করা হচ্ছে...",
+    alerts_district_suffix: "জেলা",
+    alerts_likelihood: "সম্ভাবনা",
+    alerts_registered_assets: "নিবন্ধিত জরুরি স্থাপনা",
+    alerts_people_served: "নাগরিককে আশ্রয় বা সেবা প্রদানে সক্ষম",
+    alerts_none_title: "{date} তারিখে কোনো জেলায় সতর্কতা সীমা অতিক্রম করেনি",
+    alerts_none_sub:
+      "দ্রষ্টব্য: এই তারিখে ৬৪টি জেলার কোনোটিতেই এআই সতর্কবার্তা প্রযোজ্য হয়নি। তবে স্থানীয় জলাবদ্ধতা সম্পূর্ণ মুক্ত তা নির্দেশ করে না।",
+
+    // Section 5: Hydro-Meteorological Observations
+    hydro_card_title: "জলবায়ু ও পানিসম্পদ পর্যবেক্ষণ:",
+    hydro_card_sub:
+      "দৈনিক বৃষ্টিপাত (ECMWF ERA5 / GFS) এবং নদী অববাহিকার পানি প্রবাহ (Copernicus GloFAS)",
+    hydro_tab_rain: "দৈনিক বৃষ্টিপাত (মিমি)",
+    hydro_tab_river: "নদীর পানি প্রবাহ (ঘনমিটার/সে.)",
+    hydro_loading: "কপারনিকাস ERA5 ও GloFAS আবহাওয়া ডেটা লোড হচ্ছে...",
+    hydro_rainfall_label: "২৪ ঘণ্টার বৃষ্টিপাত",
+    hydro_discharge_label: "নদীর পানি প্রবাহ",
+    hydro_rain_sources: "উৎস: ECMWF ERA5 রিয়্যানালাইসিস + NOAA GFS",
+    hydro_rain_note: "দ্রষ্টব্য: ১০০ মিমি-র বেশি বৃষ্টিপাত অতিভারী বর্ষণ নির্দেশ করে",
+    hydro_river_source: "উৎস: কপারনিকাস GloFAS ৩০-দিনের নদী প্রবাহ মডেল",
+    hydro_river_site: "পরিমাপক কেন্দ্র: সুরমা নদী, সুনামগঞ্জ",
+
+    // Section 6: Nearest Shelters
+    shelters_card_title: "নিকটস্থ বন্যা আশ্রয়কেন্দ্র ও চিকিৎসাকেন্দ্র",
+    shelters_card_sub:
+      "{district} এর {radius} কিলোমিটারের মধ্যে নিবন্ধিত জরুরি আশ্রয়কেন্দ্র, ক্লিনিক ও সেবাকেন্দ্র ({coords})।",
+    shelters_radius_label: "অনুসন্ধান ব্যাসার্ধ:",
+    shelters_filter_label: "ধরন অনুযায়ী বাছাই:",
+    shelters_type_all: "সব ধরনের",
+    shelters_type_flood: "বন্যা আশ্রয়কেন্দ্র",
+    shelters_type_hospital: "হাসপাতাল",
+    shelters_type_clinic: "ক্লিনিক",
+    shelters_type_school: "বিদ্যালয়",
+    shelters_loading:
+      "নিকটস্থ আশ্রয়কেন্দ্রের ডেটাবেস অনুসন্ধান করা হচ্ছে...",
+    shelters_capacity: "ধারণক্ষমতা:",
+    shelters_people: "জন",
+    shelters_not_specified: "অনির্দিষ্ট",
+    shelters_empty:
+      "এই অবস্থানের {radius} কিলোমিটারের মধ্যে কোনো নিবন্ধিত আশ্রয়কেন্দ্র বা হাসপাতাল পাওয়া যায়নি। উপরের অনুসন্ধান ব্যাসার্ধ বৃদ্ধি করুন।",
+
+    // Interactive Map Inspection Card
+    map_card_title: "জাতীয় বন্যা ঝুঁকি ও মাঠ পর্যায়ের মানচিত্র",
+    map_card_hint: "(যেকোনো জেলা বা স্থানাঙ্কে ক্লিক করে তথ্য দেখুন)",
+    map_forecast_date_label: "পূর্বাভাস তারিখ:",
+    map_legend_label: "নির্দেশিকা:",
+    map_inspect_header: "স্থানাঙ্ক ও জেলা ভিত্তিক তথ্য",
+    map_inspect_loading: "স্যাটেলাইট উপাত্ত ও বন্যা মডেল যাচাই করা হচ্ছে...",
+    map_division_suffix: "বিভাগ",
+    map_rank_label: "বন্যা ঝুঁকি র‍্যাংক #{rank} / ৬৪",
+    map_forecast_24h_title: "২৪ ঘণ্টার এআই পূর্বাভাস ({date})",
+    map_radar_blindspot: "রাডার অন্ধবিন্দু (পূর্বাভাস অপ্রাপ্য)",
+    map_probability_label: "সম্ভাবনা:",
+    map_badge_unsupported: "অসমর্থিত",
+    map_badge_no_alert: "সতর্কতা নেই",
+    map_observed_satellite_label: "স্যাটেলাইটে প্লাবনের রেকর্ড:",
+    map_of_major_events: "টি প্রধান দুর্যোগের মধ্যে {times} বার",
+    map_jrc_glofas_title: "মডেল অনুযায়ী প্লাবন গভীরতার ঝুঁকি (JRC GloFAS):",
+    map_10yr_flood: "১০-বছরের বন্যা",
+    map_100yr_flood: "১০০-বছরের চরম প্লাবন",
+    map_inspect_disclaimer:
+      "দুর্যোগ সচেতনতার জন্য এআই পূর্বাভাস। সরকারি সতর্কবার্তা FFWC প্রদান করে।",
+
+    // Footer
+    footer_title: "রক্ষা বন্যা বুদ্ধিমত্তা প্ল্যাটফর্ম",
+    footer_sub: "নাগরিক পোর্টাল · বাংলাদেশের জন্য উন্মুক্ত জলবায়ু নিরাপত্তা",
+    footer_desc:
+      "বাংলাদেশের প্রতিটি নাগরিক ও দুর্যোগ মোকাবিলা কর্মীর জন্য জেলাভিত্তিক বন্যা সচেতনতা, আশ্রয়কেন্দ্র ও উন্মুক্ত জলবায়ু তথ্য সরবরাহের লক্ষ্যে নির্মিত।",
+    footer_attributions_title: "উপাত্তের স্বীকৃতি ও উন্মুক্ত লাইসেন্সসমূহ",
+    footer_attributions_desc:
+      "ইউরোপীয় ইউনিয়নের কপারনিকাস সেন্টিনেল-১ গ্লোবাল ফ্লাড মনিটরিং (GFM) থেকে সংগৃহীত স্যাটেলাইট রাডার পর্যবেক্ষণ। কপারনিকাস GloFAS থেকে পানি প্রবাহ এবং Open-Meteo-র মাধ্যমে ECMWF ERA5 / NOAA GFS থেকে বৃষ্টিপাতের উপাত্ত। UNOSAT (CC BY-SA লাইসেন্স) থেকে ঐতিহাসিক স্যাটেলাইট প্লাবন মানচিত্র। Humanitarian Data Exchange (HDX) (CC BY-IGO) প্রদত্ত বাংলাদেশের ৬৪ জেলার প্রশাসনিক সীমানা। মানচিত্র কার্টোগ্রাফি ও কপিরাইট: ওপেনস্ট্রিটম্যাপ ও কার্টোডিবি।",
+    footer_copyright: "রক্ষা। উন্মুক্ত নাগরিক নিরাপত্তা বুদ্ধিমত্তা প্ল্যাটফর্ম।",
+    footer_coords_note: "মানচিত্রের ভৌগোলিক উপাত্ত WGS84 স্থানাঙ্ক পদ্ধতি অনুসরণ করে।",
   },
 };

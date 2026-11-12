@@ -31,16 +31,29 @@ import {
   CartesianGrid,
 } from "recharts";
 import { Satellite, Info, Award, Search } from "lucide-react";
+import {
+  Language,
+  UI_TEXT,
+  DISTRICTS_BN,
+  DIVISIONS_BN,
+  toBnNum,
+} from "../lib/translations";
 
 interface DistrictSatelliteTimelineProps {
   districtPcode: string;
   districtName: string;
+  lang?: Language;
   onSelectDistrict?: (pcode: string, name: string) => void;
 }
 
 export const DistrictSatelliteTimeline: React.FC<
   DistrictSatelliteTimelineProps
-> = ({ districtPcode, districtName, onSelectDistrict }) => {
+> = ({ districtPcode, districtName, lang = "en", onSelectDistrict }) => {
+  const t = UI_TEXT[lang] || UI_TEXT.en;
+  const isBn = lang === "bn";
+  const displayDistrictName = isBn
+    ? DISTRICTS_BN[districtPcode] || districtName
+    : districtName;
   const [observations, setObservations] = useState<SatelliteObservation[]>([]);
   const [rankedDistricts, setRankedDistricts] = useState<any[]>([]);
   const [floodEvents, setFloodEvents] = useState<any[]>([]);
@@ -106,13 +119,12 @@ export const DistrictSatelliteTimeline: React.FC<
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center space-x-2">
               <Award className="w-6 h-6 text-brand-forest" />
-              <CardTitle>64-District Flood Frequency</CardTitle>
+              <CardTitle>{t.timeline_card_title}</CardTitle>
             </div>
-            <Badge variant="secondary">2016–2024 UNOSAT</Badge>
+            <Badge variant="secondary">{t.timeline_badge}</Badge>
           </div>
           <p className="text-base text-brand-forest/70 font-medium">
-            Click any district row to inspect its Copernicus Sentinel-1
-            satellite timeline and event history.
+            {t.timeline_card_sub}
           </p>
           <div className="pt-2 relative">
             <Search className="w-4 h-4 text-brand-forest/50 absolute left-3.5 top-5 z-10" />
@@ -120,7 +132,7 @@ export const DistrictSatelliteTimeline: React.FC<
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Filter 64 districts by name or division..."
+              placeholder={t.timeline_search_placeholder}
               className="pl-10"
             />
           </div>
@@ -131,16 +143,23 @@ export const DistrictSatelliteTimeline: React.FC<
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-16">Rank</TableHead>
-                  <TableHead>District</TableHead>
-                  <TableHead>Events</TableHead>
-                  <TableHead className="text-right">Peak</TableHead>
+                  <TableHead className="w-16">{t.th_rank}</TableHead>
+                  <TableHead>{t.th_district}</TableHead>
+                  <TableHead>{t.th_events}</TableHead>
+                  <TableHead className="text-right">{t.th_peak}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredDistricts.map((d) => {
                   const isSelected = d.pcode === districtPcode;
                   const maxPct = Math.round((d.max_flooded_share || 0) * 100);
+                  const dName = isBn
+                    ? DISTRICTS_BN[d.pcode] || d.name
+                    : d.name;
+                  const dDiv = isBn
+                    ? DIVISIONS_BN[d.division] || d.division
+                    : d.division;
+
                   return (
                     <TableRow
                       key={d.pcode}
@@ -148,9 +167,11 @@ export const DistrictSatelliteTimeline: React.FC<
                       onClick={() => onSelectDistrict?.(d.pcode, d.name)}
                       className="cursor-pointer"
                     >
-                      <TableCell className="font-bold">#{d.rank}</TableCell>
+                      <TableCell className="font-bold">
+                        #{isBn ? toBnNum(d.rank) : d.rank}
+                      </TableCell>
                       <TableCell>
-                        <div className="font-bold text-base">{d.name}</div>
+                        <div className="font-bold text-base">{dName}</div>
                         <div
                           className={`text-base ${
                             isSelected
@@ -158,14 +179,14 @@ export const DistrictSatelliteTimeline: React.FC<
                               : "text-brand-forest/60"
                           }`}
                         >
-                          {d.division}
+                          {dDiv}
                         </div>
                       </TableCell>
                       <TableCell>
                         <span className="font-semibold">
-                          {d.events_flooded}
+                          {isBn ? toBnNum(d.events_flooded) : d.events_flooded}
                         </span>{" "}
-                        / {d.events_observed}
+                        / {isBn ? toBnNum(d.events_observed) : d.events_observed}
                       </TableCell>
                       <TableCell className="text-right">
                         <Badge
@@ -177,7 +198,7 @@ export const DistrictSatelliteTimeline: React.FC<
                               : "secondary"
                           }
                         >
-                          {maxPct}%
+                          {isBn ? toBnNum(maxPct) : maxPct}%
                         </Badge>
                       </TableCell>
                     </TableRow>
@@ -196,10 +217,17 @@ export const DistrictSatelliteTimeline: React.FC<
             <div className="flex items-center space-x-2">
               <Satellite className="w-6 h-6 text-brand-forest" />
               <CardTitle>
-                Sentinel-1 Timeline: {districtName}
+                {t.timeline_right_title} {displayDistrictName}
                 {currentDistrictHistory?.rank && (
                   <span className="ml-2 text-base font-semibold text-brand-amber">
-                    (Rank #{currentDistrictHistory.rank} of 64)
+                    (
+                    {t.timeline_rank_of_64.replace(
+                      "{rank}",
+                      isBn
+                        ? toBnNum(currentDistrictHistory.rank)
+                        : String(currentDistrictHistory.rank)
+                    )}
+                    )
                   </span>
                 )}
               </CardTitle>
@@ -210,39 +238,38 @@ export const DistrictSatelliteTimeline: React.FC<
                 variant={seasonYear === "2022" ? "default" : "secondary"}
                 onClick={() => setSeasonYear("2022")}
               >
-                2022 Monsoon
+                {t.timeline_btn_2022}
               </Button>
               <Button
                 size="sm"
                 variant={seasonYear === "2024" ? "default" : "secondary"}
                 onClick={() => setSeasonYear("2024")}
               >
-                2024 Monsoon
+                {t.timeline_btn_2024}
               </Button>
             </div>
           </div>
           <p className="text-base text-brand-forest/70 font-medium">
-            Share of observed district land covered by unusual flood water
-            (Copernicus GFM). Gaps are days with no satellite pass, not dry days.
+            {t.timeline_right_sub}
           </p>
         </CardHeader>
 
         <CardContent className="pt-5 space-y-5">
           {isLoading ? (
             <div className="py-12 text-center text-base text-brand-sage animate-pulse">
-              Loading Copernicus Sentinel-1 satellite passes...
+              {t.timeline_loading}
             </div>
           ) : isUnsupported ? (
             <Alert variant="muted">
               <Info className="h-5 w-5" />
               <AlertTitle>
-                Satellite cannot observe floods in {districtName}
+                {t.timeline_radar_blind_title.replace(
+                  "{district}",
+                  displayDistrictName
+                )}
               </AlertTitle>
               <AlertDescription>
-                Sentinel-1 radar backscatter cannot map floods under hills,
-                forest canopy, or dense city buildings (one of 8 radar-blind
-                districts). This means <strong>no satellite data</strong>, not
-                that the district is safe.
+                {t.timeline_radar_blind_desc}
               </AlertDescription>
             </Alert>
           ) : chartData.length > 0 ? (
@@ -276,18 +303,18 @@ export const DistrictSatelliteTimeline: React.FC<
                         color: "#263B32",
                       }}
                       formatter={(val: any) => [
-                        `${val}% unusual flood water`,
-                        "Flooded Share",
+                        `${isBn ? toBnNum(val) : val}${t.timeline_tooltip_flooded}`,
+                        t.timeline_tooltip_flooded_share,
                       ]}
                       labelFormatter={(label) =>
-                        `Sentinel-1 Pass (${seasonYear}-${label})`
+                        `${t.timeline_pass_label} (${isBn ? toBnNum(seasonYear) : seasonYear}-${label})`
                       }
                     />
                     <Bar
                       dataKey="floodedPercent"
                       fill="#C69A50"
                       radius={[4, 4, 0, 0]}
-                      name="Flooded Share (%)"
+                      name={t.timeline_tooltip_flooded_share}
                     />
                   </BarChart>
                 </ResponsiveContainer>
@@ -295,7 +322,10 @@ export const DistrictSatelliteTimeline: React.FC<
             </div>
           ) : (
             <div className="p-4 text-center text-base text-brand-forest/60">
-              No satellite passes recorded for this window in {districtName}.
+              {t.timeline_no_passes.replace(
+                "{district}",
+                displayDistrictName
+              )}
             </div>
           )}
 
@@ -305,10 +335,10 @@ export const DistrictSatelliteTimeline: React.FC<
               <Separator />
               <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
                 <span className="text-base font-bold uppercase tracking-wider text-brand-forest/80">
-                  10 Major Flood Events Record (2016–2024)
+                  {t.timeline_10_events_title}
                 </span>
                 <span className="text-base text-brand-forest/60">
-                  Grey = Not observed by satellite (never implies safe)
+                  {t.timeline_grey_sub}
                 </span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
@@ -318,8 +348,8 @@ export const DistrictSatelliteTimeline: React.FC<
                   );
                   const pct =
                     ev.flooded_share !== null && ev.flooded_share !== undefined
-                      ? `${Math.round(ev.flooded_share * 100)}%`
-                      : "No Data";
+                      ? `${isBn ? toBnNum(Math.round(ev.flooded_share * 100)) : Math.round(ev.flooded_share * 100)}%`
+                      : t.timeline_no_data;
                   return (
                     <div
                       key={ev.event_id}
@@ -338,8 +368,14 @@ export const DistrictSatelliteTimeline: React.FC<
                       <div className="flex items-center justify-between mt-1.5">
                         <span className="capitalize text-base">
                           {ev.status === "not_observed"
-                            ? "No Data"
-                            : ev.status.replace("_", " ")}
+                            ? t.timeline_no_data
+                            : ev.status === "flooded"
+                            ? isBn
+                              ? "প্লাবিত"
+                              : "Flooded"
+                            : isBn
+                            ? "প্লাবিত নয়"
+                            : "Not Flooded"}
                         </span>
                         <span className="font-extrabold text-base">{pct}</span>
                       </div>

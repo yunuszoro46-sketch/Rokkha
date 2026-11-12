@@ -13,6 +13,13 @@ import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Separator } from "./ui/separator";
+import {
+  Language,
+  UI_TEXT,
+  DISTRICTS_BN,
+  DIVISIONS_BN,
+  toBnNum,
+} from "../lib/translations";
 
 interface LeafletFloodMapProps {
   predictions: DistrictPrediction[];
@@ -23,6 +30,7 @@ interface LeafletFloodMapProps {
   pointCheckResult: PointFloodCheck | null;
   isCheckingPoint: boolean;
   targetDate?: string;
+  lang?: Language;
   onChangeTargetDate?: (date: string) => void;
 }
 
@@ -35,8 +43,12 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
   pointCheckResult,
   isCheckingPoint,
   targetDate = "2022-06-18",
+  lang = "en",
   onChangeTargetDate,
 }) => {
+  const t = UI_TEXT[lang] || UI_TEXT.en;
+  const isBn = lang === "bn";
+  const displayTargetDate = isBn ? toBnNum(targetDate) : targetDate;
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const districtLayerRef = useRef<L.GeoJSON | null>(null);
@@ -202,11 +214,11 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
           <div className="flex items-center space-x-2">
             <MapPin className="w-5 h-5 text-brand-forest" />
             <h2 className="font-bold text-2xl text-brand-forest">
-              National Flood Risk & Ground Inspection Map
+              {t.map_card_title}
             </h2>
           </div>
           <span className="text-base text-brand-forest/60">
-            (Tap any district or coordinate to inspect)
+            {t.map_card_hint}
           </span>
         </div>
 
@@ -214,7 +226,7 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
         {onChangeTargetDate && (
           <div className="flex flex-wrap items-center gap-2 text-base">
             <span className="font-medium text-brand-forest/70">
-              Forecast Date:
+              {t.map_forecast_date_label}
             </span>
             <Input
               type="date"
@@ -228,21 +240,21 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
                 variant={targetDate === "2022-06-18" ? "default" : "secondary"}
                 onClick={() => onChangeTargetDate("2022-06-18")}
               >
-                Sylhet (2022-06-18)
+                {t.scenario_sylhet}
               </Button>
               <Button
                 size="sm"
                 variant={targetDate === "2024-08-22" ? "default" : "secondary"}
                 onClick={() => onChangeTargetDate("2024-08-22")}
               >
-                Feni / Eastern (2024-08-22)
+                {t.scenario_feni}
               </Button>
               <Button
                 size="sm"
                 variant={targetDate === "2023-04-10" ? "default" : "secondary"}
                 onClick={() => onChangeTargetDate("2023-04-10")}
               >
-                Dry (2023-04-10)
+                {t.scenario_dry}
               </Button>
             </div>
           </div>
@@ -250,20 +262,19 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
 
         {/* Legend using shadcn/ui Badge */}
         <div className="flex flex-wrap items-center gap-2 text-base">
-          <span className="font-medium text-brand-forest/70 mr-1">Legend:</span>
+          <span className="font-medium text-brand-forest/70 mr-1">{t.map_legend_label}</span>
           <Badge variant="alert" className="gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-brand-clay"></span> Alert
+            <span className="w-2.5 h-2.5 rounded-full bg-brand-clay"></span> {t.map_legend_alert}
           </Badge>
           <Badge variant="watch" className="gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-brand-amber"></span> Watch
+            <span className="w-2.5 h-2.5 rounded-full bg-brand-amber"></span> {t.map_legend_watch}
           </Badge>
           <Badge variant="none" className="gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-brand-sage"></span> No
-            Active Alert
+            <span className="w-2.5 h-2.5 rounded-full bg-brand-sage"></span> {t.map_legend_normal}
           </Badge>
           <Badge variant="unsupported" className="gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-gray-400"></span>{" "}
-            Unsupported / Radar Blind
+            {t.map_legend_unsupported}
           </Badge>
         </div>
       </div>
@@ -279,12 +290,12 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
               <div className="flex items-center space-x-1.5">
                 <Crosshair className="w-4 h-4 text-brand-amber" />
                 <h4 className="font-bold text-base uppercase tracking-wider text-brand-forest">
-                  Point & District Inspection
+                  {t.map_inspect_header}
                 </h4>
               </div>
               <span className="text-base font-mono text-brand-forest/60">
-                {inspectedPoint.lat.toFixed(4)}°N,{" "}
-                {inspectedPoint.lng.toFixed(4)}°E
+                {isBn ? toBnNum(inspectedPoint.lat.toFixed(4)) : inspectedPoint.lat.toFixed(4)}°N,{" "}
+                {isBn ? toBnNum(inspectedPoint.lng.toFixed(4)) : inspectedPoint.lng.toFixed(4)}°E
               </span>
             </div>
             <Separator className="mb-2.5" />
@@ -293,7 +304,7 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
               <div className="py-2 text-base text-brand-sage flex items-center space-x-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-brand-amber animate-ping"></span>
                 <span>
-                  Querying satellite observations & flood hazard model...
+                  {t.map_inspect_loading}
                 </span>
               </div>
             ) : pointCheckResult?.district ? (
@@ -301,15 +312,18 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <span className="font-extrabold text-2xl text-brand-forest">
-                      {pointCheckResult.district.name}
+                      {isBn ? (DISTRICTS_BN[pointCheckResult.district.pcode] || pointCheckResult.district.name) : pointCheckResult.district.name}
                     </span>
                     <span className="text-brand-forest/60 ml-1.5">
-                      ({pointCheckResult.district.division} Division)
+                      ({isBn ? (DIVISIONS_BN[pointCheckResult.district.division] || pointCheckResult.district.division) : pointCheckResult.district.division} {t.map_division_suffix})
                     </span>
                   </div>
                   {pointCheckResult.district.flood_rank && (
                     <Badge variant="secondary">
-                      Flood Rank #{pointCheckResult.district.flood_rank} / 64
+                      {t.map_rank_label.replace(
+                        "{rank}",
+                        isBn ? toBnNum(pointCheckResult.district.flood_rank) : String(pointCheckResult.district.flood_rank)
+                      )}
                     </Badge>
                   )}
                 </div>
@@ -319,14 +333,14 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
                   <div className="p-3 rounded-lg bg-brand-warm border border-brand-limestone flex items-center justify-between gap-2">
                     <div>
                       <div className="text-base uppercase font-bold text-brand-forest/60">
-                        24h Model Forecast ({targetDate})
+                        {t.map_forecast_24h_title.replace("{date}", displayTargetDate)}
                       </div>
                       <div className="font-bold text-brand-forest mt-0.5">
                         {currentPred.status === "unsupported"
-                          ? "Radar Blindspot (No Forecast)"
-                          : `Probability: ${formatProbability(
-                              currentPred.probability
-                            )}`}
+                          ? t.map_radar_blindspot
+                          : `${t.map_probability_label} ${
+                              isBn ? toBnNum(formatProbability(currentPred.probability)) : formatProbability(currentPred.probability)
+                            }`}
                       </div>
                     </div>
                     <Badge
@@ -342,10 +356,12 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
                       className="uppercase"
                     >
                       {currentPred.status === "unsupported"
-                        ? "Unsupported"
+                        ? t.map_badge_unsupported
                         : currentPred.alert_level === "none"
-                        ? "No Alert"
-                        : currentPred.alert_level}
+                        ? t.map_badge_no_alert
+                        : currentPred.alert_level === "alert"
+                        ? isBn ? "অ্যালার্ট" : "ALERT"
+                        : isBn ? "নজরদারি" : "WATCH"}
                     </Badge>
                   </div>
                 )}
@@ -353,11 +369,12 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
                 {pointCheckResult.cell?.observed && (
                   <div className="p-2.5 rounded bg-brand-warm border border-brand-limestone flex items-center justify-between">
                     <span className="text-brand-forest/80">
-                      Observed satellite flooding:
+                      {t.map_observed_satellite_label}
                     </span>
                     <span className="font-bold text-brand-forest">
-                      {pointCheckResult.cell.observed.times_flooded} of{" "}
-                      {pointCheckResult.cell.observed.times_observed} major events
+                      {t.map_of_major_events
+                        .replace("{times}", isBn ? toBnNum(pointCheckResult.cell.observed.times_flooded) : String(pointCheckResult.cell.observed.times_flooded))
+                        .replace("{total}", isBn ? toBnNum(pointCheckResult.cell.observed.times_observed) : String(pointCheckResult.cell.observed.times_observed))}
                     </span>
                   </div>
                 )}
@@ -366,7 +383,7 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
                   pointCheckResult.cell.hazard.length > 0 && (
                     <div className="space-y-1.5">
                       <div className="text-base font-semibold text-brand-forest/70 uppercase">
-                        Modelled Flood Hazard (JRC GloFAS):
+                        {t.map_jrc_glofas_title}
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         {pointCheckResult.cell.hazard.map((h, i) => (
@@ -375,10 +392,10 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
                             className="p-2 rounded bg-brand-limestone/60 text-base flex flex-col"
                           >
                             <span className="text-brand-forest/70">
-                              {h.return_period_years}-Year Return Period
+                              {isBn ? toBnNum(h.return_period_years) : h.return_period_years}-{isBn ? "বছরের বন্যা" : "Year Return Period"}
                             </span>
                             <span className="font-bold text-brand-forest">
-                              Depth: {h.depth_label}
+                              {isBn ? "গভীরতা: " : "Depth: "}{isBn ? (h.depth_label.includes("Over 3m") ? "৩ মিটারের বেশি" : h.depth_label.includes("1-3m") ? "১ থেকে ৩ মিটার" : "০.৫ থেকে ১ মিটার") : h.depth_label}
                             </span>
                           </div>
                         ))}
@@ -388,15 +405,13 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
 
                 {pointCheckResult.cell?.permanent_water && (
                   <div className="text-base text-brand-sage font-medium flex items-center gap-1.5">
-                    <Waves className="w-4 h-4" /> Point lies on permanent
-                    river/waterway.
+                    <Waves className="w-4 h-4" /> {isBn ? "স্থানাঙ্কটি স্থায়ী নদী বা জলাশয়ের ওপর অবস্থিত।" : "Point lies on permanent river/waterway."}
                   </div>
                 )}
               </div>
             ) : (
               <div className="text-base text-brand-forest/70">
-                Point is outside Bangladesh administrative boundaries. Click any
-                district on the map to inspect.
+                {isBn ? "স্থানাঙ্কটি বাংলাদেশের প্রশাসনিক সীমানার বাইরে। মানচিত্রের যেকোনো জেলায় ক্লিক করুন।" : "Point is outside Bangladesh administrative boundaries. Click any district on the map to inspect."}
               </div>
             )}
           </Card>

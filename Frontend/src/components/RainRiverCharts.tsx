@@ -16,16 +16,30 @@ import { CloudRain } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getSiteRain, getSiteRiver } from "@/services/api";
+import {
+  Language,
+  UI_TEXT,
+  DISTRICTS_BN,
+  toBnNum,
+} from "../lib/translations";
 
 interface RainRiverChartsProps {
   districtPcode: string;
   districtName: string;
+  lang?: Language;
 }
 
 export const RainRiverCharts: React.FC<RainRiverChartsProps> = ({
   districtPcode,
   districtName,
+  lang = "en",
 }) => {
+  const t = UI_TEXT[lang] || UI_TEXT.en;
+  const isBn = lang === "bn";
+  const displayDistrictName = isBn
+    ? DISTRICTS_BN[districtPcode] || districtName
+    : districtName;
+
   const [activeTab, setActiveTab] = useState<"rain" | "river">("rain");
   const [rainData, setRainData] = useState<any[]>([]);
   const [riverData, setRiverData] = useState<any[]>([]);
@@ -103,18 +117,18 @@ export const RainRiverCharts: React.FC<RainRiverChartsProps> = ({
             <div className="flex items-center space-x-2">
               <CloudRain className="w-6 h-6 text-[#20362B]" />
               <CardTitle>
-                Hydro-Meteorological Observations: {districtName}
+                {t.hydro_card_title} {displayDistrictName}
               </CardTitle>
             </div>
             <p className="text-base text-[#1A2820]/70 font-normal">
-              Daily rainfall (ECMWF ERA5 / GFS) and river flow discharge (Copernicus GloFAS)
+              {t.hydro_card_sub}
             </p>
           </div>
 
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
             <TabsList className="bg-[#EDEBE2]/60">
-              <TabsTrigger value="rain">Daily Rainfall (mm)</TabsTrigger>
-              <TabsTrigger value="river">River Discharge (m³/s)</TabsTrigger>
+              <TabsTrigger value="rain">{t.hydro_tab_rain}</TabsTrigger>
+              <TabsTrigger value="river">{t.hydro_tab_river}</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
@@ -123,7 +137,7 @@ export const RainRiverCharts: React.FC<RainRiverChartsProps> = ({
       <CardContent className="pt-5">
         {isLoading ? (
           <div className="py-10 text-center text-base text-[#78958A] animate-pulse">
-            Querying Copernicus ERA5 and GloFAS hydrological feeds...
+            {t.hydro_loading}
           </div>
         ) : activeTab === "rain" ? (
           <div className="space-y-3">
@@ -141,21 +155,24 @@ export const RainRiverCharts: React.FC<RainRiverChartsProps> = ({
                       fontSize: "16px",
                       color: "#1A2820",
                     }}
-                    formatter={(val: any) => [`${val} mm`, "24h Rainfall"]}
-                    labelFormatter={(label) => `Date: ${label}`}
+                    formatter={(val: any) => [
+                      `${isBn ? toBnNum(val) : val} ${isBn ? "মিমি" : "mm"}`,
+                      t.hydro_rainfall_label,
+                    ]}
+                    labelFormatter={(label) => `${isBn ? "তারিখ: " : "Date: "}${label}`}
                   />
                   <Bar
                     dataKey="precipitation"
                     fill="#5C9287"
                     radius={[4, 4, 0, 0]}
-                    name="Precipitation (mm)"
+                    name={t.hydro_rainfall_label}
                   />
                 </BarChart>
               </ResponsiveContainer>
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2 text-base text-[#1A2820]/60 pt-2 border-t border-[#EDEBE2]">
-              <span>Sources: ECMWF ERA5 reanalysis + NOAA GFS</span>
-              <span>Note: Values over 100 mm indicate severe monsoon cloudburst</span>
+              <span>{t.hydro_rain_sources}</span>
+              <span>{t.hydro_rain_note}</span>
             </div>
           </div>
         ) : (
@@ -174,8 +191,11 @@ export const RainRiverCharts: React.FC<RainRiverChartsProps> = ({
                       fontSize: "16px",
                       color: "#1A2820",
                     }}
-                    formatter={(val: any) => [`${val} m³/s`, "River Flow"]}
-                    labelFormatter={(label) => `Date: ${label}`}
+                    formatter={(val: any) => [
+                      `${isBn ? toBnNum(val) : val} ${isBn ? "ঘনমিটার/সে." : "m³/s"}`,
+                      t.hydro_discharge_label,
+                    ]}
+                    labelFormatter={(label) => `${isBn ? "তারিখ: " : "Date: "}${label}`}
                   />
                   <Line
                     type="monotone"
@@ -183,14 +203,14 @@ export const RainRiverCharts: React.FC<RainRiverChartsProps> = ({
                     stroke="#234533"
                     strokeWidth={2.5}
                     dot={{ r: 3, fill: "#234533" }}
-                    name="Discharge (m³/s)"
+                    name={t.hydro_discharge_label}
                   />
                 </LineChart>
               </ResponsiveContainer>
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2 text-base text-[#1A2820]/60 pt-2 border-t border-[#EDEBE2]">
-              <span>Station: Surma River Basin (GloFAS Gauge)</span>
-              <span>Critical danger threshold: &gt; 5,500 m³/s</span>
+              <span>{t.hydro_river_site}</span>
+              <span>{t.hydro_river_source}</span>
             </div>
           </div>
         )}

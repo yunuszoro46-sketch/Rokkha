@@ -1,7 +1,18 @@
 import React from "react";
 import logoAsset from "@/assets/logo.png";
+import { Language, UI_TEXT, toBnNum } from "../lib/translations";
 
-export const AttributionFooter: React.FC = () => {
+interface AttributionFooterProps {
+  lang?: Language;
+}
+
+export const AttributionFooter: React.FC<AttributionFooterProps> = ({
+  lang = "en",
+}) => {
+  const t = UI_TEXT[lang] || UI_TEXT.en;
+  const isBn = lang === "bn";
+  const currentYear = isBn ? toBnNum(new Date().getFullYear()) : new Date().getFullYear();
+
   return (
     <footer className="w-full border-t border-brand-limestone bg-brand-white text-brand-forest/80 py-10">
       <div className="w-full px-[4%] space-y-6">
@@ -14,50 +25,35 @@ export const AttributionFooter: React.FC = () => {
             />
             <div>
               <div className="font-extrabold text-brand-forest text-2xl tracking-tight">
-                Rokkha Flood Intelligence
+                {t.footer_title}
               </div>
               <div className="text-base text-brand-forest/60">
-                Citizen Portal · Open Climate Safety for Bangladesh
+                {t.footer_sub}
               </div>
             </div>
           </div>
 
           <div className="text-base text-brand-forest/70 max-w-md">
-            Built to provide actionable district-level flood awareness, shelter
-            access, and transparent climate data to every citizen and community
-            responder.
+            {t.footer_desc}
           </div>
         </div>
 
         {/* Mandatory Attribution & Licenses per Backend API Guide */}
         <div className="space-y-2 text-base text-brand-forest/60">
           <div className="font-bold uppercase tracking-wider text-brand-forest/70 text-base">
-            Mandatory Data Attributions & Licensing
+            {t.footer_attributions_title}
           </div>
           <p className="leading-relaxed">
-            Satellite radar observations sourced from{" "}
-            <strong>
-              Copernicus Sentinel-1 Global Flood Monitoring (GFM)
-            </strong>{" "}
-            under the Copernicus Emergency Management Service. Hydrological
-            discharge from <strong>Copernicus GloFAS</strong> and reanalysis
-            rainfall from <strong>ECMWF ERA5 / NOAA GFS</strong> via{" "}
-            <strong>Open-Meteo</strong>. Historical satellite flood polygons
-            from <strong>UNOSAT</strong> (licensed under CC BY-SA). National
-            district administrative shapes provided by{" "}
-            <strong>Humanitarian Data Exchange (HDX)</strong> (CC BY-IGO).
-            Basemap cartography &copy;{" "}
-            <strong>OpenStreetMap contributors</strong> (ODbL) and CartoDB.
+            {t.footer_attributions_desc}
           </p>
         </div>
 
         <div className="pt-4 border-t border-brand-limestone flex flex-col sm:flex-row items-center justify-between text-base text-brand-forest/60 gap-2">
           <div>
-            &copy; {new Date().getFullYear()} Rokkha. Open Public Safety
-            Intelligence.
+            &copy; {currentYear} {t.footer_copyright}
           </div>
           <div className="font-medium text-brand-forest/70">
-            Cartographic data adheres to WGS84 Geodesic Coordinates.
+            {t.footer_coords_note}
           </div>
         </div>
       </div>
