@@ -276,90 +276,45 @@ function MapArtwork({
   const t = UI_TEXT[lang];
   return (
     <div
-      className={`map-art ${compact ? "map-art-compact" : ""} relative overflow-hidden`}
+      className={`map-art ${compact ? "map-art-compact" : ""} relative overflow-hidden flex items-center justify-center`}
       aria-label="Illustrated flood risk map of Bangladesh with real-time river flow"
       role="img"
     >
-      {/* Base Bangladesh District Map (Kept pristine as in Image 1) */}
+      {/* Background Soft Radar Aura Circle (Matching Image 2) */}
+      <div
+        className="absolute inset-0 pointer-events-none flex items-center justify-center z-0"
+        aria-hidden="true"
+      >
+        <div className="w-[88%] h-[88%] rounded-full border border-[#D5D2C5]/50 bg-gradient-to-br from-white/40 via-transparent to-transparent opacity-75" />
+        <div className="w-[64%] h-[64%] rounded-full border border-[#D5D2C5]/30" />
+      </div>
+
+      {/* Base Bangladesh District & River Network Map (Natural, organic river flow without artificial vector overlays) */}
       <img
         src={mapAsset.src}
         alt="Flood risk map of Bangladesh"
-        className="w-full h-full object-contain relative z-10"
+        className="w-full h-full object-contain relative z-10 select-none pointer-events-none"
       />
 
-      {/* Hydrodynamic River Water Flow Streaming Strictly Between the Roots (Matching Image 2 & 3) */}
-      <svg
-        className="absolute inset-0 w-full h-full object-contain pointer-events-none z-20"
-        viewBox="0 0 849 1131"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <defs>
-          {/* Hydrodynamic Water Flow Glow Filter */}
-          <filter id="waterFlowGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="3.5" result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-          </filter>
-        </defs>
+      {/* Floating Active Flood Alert Badge (Matching Image 2 Top-Right) */}
+      {!compact && (
+        <div className="absolute top-6 right-6 z-30 bg-white/95 backdrop-blur-md border border-[#E2E0D6] rounded-2xl p-3.5 shadow-lg flex flex-col gap-2 min-w-[140px]">
+          <div className="flex items-center gap-2">
+            <span className="w-6 h-6 rounded-lg bg-[#FEE2E2] flex items-center justify-center text-[#DC2626]">
+              <Waves size={14} className="animate-pulse" />
+            </span>
+            <span className="text-xs font-bold text-[#991B1B] tracking-wide uppercase">
+              {lang === "bn" ? "বন্যা সতর্কতা" : "Flood Alert"}
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-[#1F2937]">
+            <MapPin size={13} className="text-[#DC2626]" />
+            <span>{lang === "bn" ? "সিলেট অববাহিকা" : "Sylhet Basin"}</span>
+          </div>
+        </div>
+      )}
 
-        {/* 1. Deep Water Channel Layer (Deep Azure Flow along River Root Veins) */}
-        <g stroke="#0284C7" strokeLinecap="round" fill="none" opacity="0.88">
-          {/* Jamuna River Root */}
-          <path d="M 348 100 C 344 140, 339 180, 336 220 C 330 260, 323 300, 329 340 C 335 380, 345 420, 362 480 C 371 520, 375 535, 377 540" strokeWidth="5.5" />
-          {/* Ganges / Padma Western Root */}
-          <path d="M 195 380 C 220 405, 250 430, 280 450 C 320 465, 366 470, 398 510 C 408 525, 412 535, 414 540" strokeWidth="5" />
-          {/* Lower Padma Confluence */}
-          <path d="M 377 540 C 395 560, 424 560, 459 590 C 475 605, 485 615, 492 620" strokeWidth="7" />
-          {/* Surma River (Sylhet Root) */}
-          <path d="M 740 300 C 700 310, 650 325, 600 345 C 570 380, 550 420, 506 560 C 500 590, 495 610, 492 620" strokeWidth="4.5" />
-          {/* Kushiyara River */}
-          <path d="M 760 360 C 710 375, 650 395, 580 450 C 540 500, 510 560, 492 620" strokeWidth="4" />
-          {/* Main Lower Meghna Delta Root */}
-          <path d="M 492 620 C 520 680, 554 710, 559 740 C 545 770, 526 800, 540 880 C 545 920, 548 950, 550 960" strokeWidth="8.5" />
-          {/* Tetulia Channel Root */}
-          <path d="M 430 650 C 420 710, 443 770, 447 830 C 445 880, 442 910, 440 920" strokeWidth="5" />
-          {/* Payra River Root */}
-          <path d="M 412 620 C 419 680, 395 760, 390 840 C 388 880, 386 910, 385 930" strokeWidth="4.5" />
-          {/* Gorai / Baleshwar Root */}
-          <path d="M 228 560 C 252 590, 268 620, 301 680 C 337 740, 326 770, 330 800 C 320 850, 315 870, 310 880" strokeWidth="4" />
-          {/* Rupsha / Pasur Sundarbans Root */}
-          <path d="M 215 770 C 237 800, 250 830, 253 890 C 252 930, 251 950, 250 960" strokeWidth="4" />
-          {/* Sandwip Channel Root */}
-          <path d="M 572 710 C 625 740, 635 820, 645 900 C 650 930, 655 950, 660 960" strokeWidth="5" />
-        </g>
-
-        {/* 2. Active Hydrodynamic Flow Stream (Electric Cyan Glow matching Image 3) */}
-        <g stroke="#00F0FF" strokeLinecap="round" fill="none" filter="url(#waterFlowGlow)" className="river-glow-layer">
-          <path d="M 348 100 C 344 140, 339 180, 336 220 C 330 260, 323 300, 329 340 C 335 380, 345 420, 362 480 C 371 520, 375 535, 377 540" strokeWidth="3" />
-          <path d="M 195 380 C 220 405, 250 430, 280 450 C 320 465, 366 470, 398 510 C 408 525, 412 535, 414 540" strokeWidth="2.8" />
-          <path d="M 377 540 C 395 560, 424 560, 459 590 C 475 605, 485 615, 492 620" strokeWidth="4" />
-          <path d="M 740 300 C 700 310, 650 325, 600 345 C 570 380, 550 420, 506 560 C 500 590, 495 610, 492 620" strokeWidth="2.5" />
-          <path d="M 760 360 C 710 375, 650 395, 580 450 C 540 500, 510 560, 492 620" strokeWidth="2.2" />
-          <path d="M 492 620 C 520 680, 554 710, 559 740 C 545 770, 526 800, 540 880 C 545 920, 548 950, 550 960" strokeWidth="5" />
-          <path d="M 430 650 C 420 710, 443 770, 447 830 C 445 880, 442 910, 440 920" strokeWidth="3" />
-          <path d="M 412 620 C 419 680, 395 760, 390 840 C 388 880, 386 910, 385 930" strokeWidth="2.6" />
-          <path d="M 228 560 C 252 590, 268 620, 301 680 C 337 740, 326 770, 330 800 C 320 850, 315 870, 310 880" strokeWidth="2.4" />
-          <path d="M 215 770 C 237 800, 250 830, 253 890 C 252 930, 251 950, 250 960" strokeWidth="2.4" />
-          <path d="M 572 710 C 625 740, 635 820, 645 900 C 650 930, 655 950, 660 960" strokeWidth="3" />
-        </g>
-
-        {/* 3. Streaming Velocity Particle Lines (Animated downward fluid current) */}
-        <g stroke="#FFFFFF" strokeLinecap="round" fill="none" className="fluid-current-primary" opacity="0.95">
-          <path d="M 348 100 C 344 140, 339 180, 336 220 C 330 260, 323 300, 329 340 C 335 380, 345 420, 362 480 C 371 520, 375 535, 377 540" strokeWidth="1.6" />
-          <path d="M 195 380 C 220 405, 250 430, 280 450 C 320 465, 366 470, 398 510 C 408 525, 412 535, 414 540" strokeWidth="1.4" />
-          <path d="M 377 540 C 395 560, 424 560, 459 590 C 475 605, 485 615, 492 620" strokeWidth="2.2" />
-          <path d="M 740 300 C 700 310, 650 325, 600 345 C 570 380, 550 420, 506 560 C 500 590, 495 610, 492 620" strokeWidth="1.4" />
-          <path d="M 760 360 C 710 375, 650 395, 580 450 C 540 500, 510 560, 492 620" strokeWidth="1.2" />
-          <path d="M 492 620 C 520 680, 554 710, 559 740 C 545 770, 526 800, 540 880 C 545 920, 548 950, 550 960" strokeWidth="2.6" />
-          <path d="M 430 650 C 420 710, 443 770, 447 830 C 445 880, 442 910, 440 920" strokeWidth="1.5" />
-          <path d="M 412 620 C 419 680, 395 760, 390 840 C 388 880, 386 910, 385 930" strokeWidth="1.4" />
-          <path d="M 228 560 C 252 590, 268 620, 301 680 C 337 740, 326 770, 330 800 C 320 850, 315 870, 310 880" strokeWidth="1.2" />
-          <path d="M 215 770 C 237 800, 250 830, 253 890 C 252 930, 251 950, 250 960" strokeWidth="1.2" />
-          <path d="M 572 710 C 625 740, 635 820, 645 900 C 650 930, 655 950, 660 960" strokeWidth="1.5" />
-        </g>
-      </svg>
-
-      {/* Legend on Bottom-Left (Clean and exact as in Image 1) */}
+      {/* Legend on Bottom-Left (Clean and exact as in Image 1 & 2) */}
       {!compact && (
         <div className="absolute bottom-5 left-5 z-30 bg-[#FAF9F5]/95 backdrop-blur-sm border border-[#E2E0D6] rounded-xl px-4 py-3 shadow-md">
           <div className="font-bold text-sm text-[#12241C] mb-2">
@@ -980,110 +935,6 @@ export function CitizenPortalApp({
                   </section>
                 </div>
 
-                {/* Core Capabilities - Built for National-Scale Flood Resilience */}
-                <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 my-20">
-                  <section id="capabilities">
-                    <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-12">
-                      <div className="max-w-2xl">
-                        <span className="inline-block px-3.5 py-1 text-xs font-bold tracking-wider text-[#1F513F] bg-[#D8E6DF] rounded-full uppercase mb-4">
-                          CORE CAPABILITIES
-                        </span>
-                        <h2 className="text-3xl md:text-4xl font-extrabold text-[#12241C] tracking-tight leading-tight">
-                          Built for National-Scale Flood Resilience
-                        </h2>
-                      </div>
-                      <p className="max-w-md text-sm md:text-base text-[#56635D] leading-relaxed">
-                        Combining satellite radar altimetry, upstream rainfall telemetry, and hydrodynamic modeling across every river basin in Bangladesh.
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                      {/* Card 1: Hydrodynamic Flow Modeling */}
-                      <Card
-                        onClick={() => navigateToPage("hydro")}
-                        className="bg-white rounded-2xl p-6 border border-[#E4E2D8] shadow-sm hover:shadow-md hover:border-[#B2D8D8] transition-all cursor-pointer flex flex-col justify-between"
-                      >
-                        <div>
-                          <div className="w-12 h-12 rounded-xl bg-[#E0F2FE] flex items-center justify-center text-[#0284C7] mb-6">
-                            <Icon name="sliders" size={22} />
-                          </div>
-                          <Badge variant="outline" className="text-[11px] font-bold tracking-wider text-[#0284C7] bg-[#E0F2FE] border-[#BAE6FD] rounded-md px-2.5 py-1 uppercase mb-4">
-                            72-HOUR LEAD TIME
-                          </Badge>
-                          <h3 className="text-lg font-bold text-[#12241C] mb-3">
-                            Hydrodynamic Flow Modeling
-                          </h3>
-                          <p className="text-xs md:text-sm text-[#5C6863] leading-relaxed">
-                            Simulates river discharge, velocity, and bank overflow across the Jamuna, Padma, Meghna, and Surma-Kushiyara networks in real time.
-                          </p>
-                        </div>
-                      </Card>
-
-                      {/* Card 2: High-Resolution Risk Mapping */}
-                      <Card
-                        onClick={() => navigateToPage("map")}
-                        className="bg-white rounded-2xl p-6 border border-[#E4E2D8] shadow-sm hover:shadow-md hover:border-[#FFCCBC] transition-all cursor-pointer flex flex-col justify-between"
-                      >
-                        <div>
-                          <div className="w-12 h-12 rounded-xl bg-[#FFEDD5] flex items-center justify-center text-[#EA580C] mb-6">
-                            <Icon name="location" size={22} />
-                          </div>
-                          <Badge variant="outline" className="text-[11px] font-bold tracking-wider text-[#EA580C] bg-[#FFEDD5] border-[#FED7AA] rounded-md px-2.5 py-1 uppercase mb-4">
-                            64 DISTRICTS & 495 UPAZILAS
-                          </Badge>
-                          <h3 className="text-lg font-bold text-[#12241C] mb-3">
-                            High-Resolution Risk Mapping
-                          </h3>
-                          <p className="text-xs md:text-sm text-[#5C6863] leading-relaxed">
-                            Dynamic choropleth and SAR inundation overlays classifying Low, Moderate, High, and Severe flood vulnerability down to union boundaries.
-                          </p>
-                        </div>
-                      </Card>
-
-                      {/* Card 3: Critical Asset & Shelter Routing */}
-                      <Card
-                        onClick={() => navigateToPage("shelters")}
-                        className="bg-white rounded-2xl p-6 border border-[#E4E2D8] shadow-sm hover:shadow-md hover:border-[#C8E6C9] transition-all cursor-pointer flex flex-col justify-between"
-                      >
-                        <div>
-                          <div className="w-12 h-12 rounded-xl bg-[#DCFCE7] flex items-center justify-center text-[#16A34A] mb-6">
-                            <Icon name="building" size={22} />
-                          </div>
-                          <Badge variant="outline" className="text-[11px] font-bold tracking-wider text-[#16A34A] bg-[#DCFCE7] border-[#BBF7D0] rounded-md px-2.5 py-1 uppercase mb-4">
-                            1,200+ MAPPED FACILITIES
-                          </Badge>
-                          <h3 className="text-lg font-bold text-[#12241C] mb-3">
-                            Critical Asset & Shelter Routing
-                          </h3>
-                          <p className="text-xs md:text-sm text-[#5C6863] leading-relaxed">
-                            Monitors elevation clearances, occupancy, and dry-road access for hospitals, schools, and multi-purpose flood shelters.
-                          </p>
-                        </div>
-                      </Card>
-
-                      {/* Card 4: Early Warning & REST APIs */}
-                      <Card
-                        onClick={() => navigateToPage("alerts")}
-                        className="bg-white rounded-2xl p-6 border border-[#E4E2D8] shadow-sm hover:shadow-md hover:border-[#D1C4E9] transition-all cursor-pointer flex flex-col justify-between"
-                      >
-                        <div>
-                          <div className="w-12 h-12 rounded-xl bg-[#EDE9FE] flex items-center justify-center text-[#7C3AED] mb-6">
-                            <Icon name="bell" size={22} />
-                          </div>
-                          <Badge variant="outline" className="text-[11px] font-bold tracking-wider text-[#7C3AED] bg-[#EDE9FE] border-[#DDD6FE] rounded-md px-2.5 py-1 uppercase mb-4">
-                            187 VERIFIED ENDPOINTS
-                          </Badge>
-                          <h3 className="text-lg font-bold text-[#12241C] mb-3">
-                            Early Warning & REST APIs
-                          </h3>
-                          <p className="text-xs md:text-sm text-[#5C6863] leading-relaxed">
-                            Dispatches localized SMS/voice warnings to citizens and provides automated webhook payloads for disaster response teams.
-                          </p>
-                        </div>
-                      </Card>
-                    </div>
-                  </section>
-                </div>
 
                 {/* End-to-End Architecture */}
                 <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 my-20">
@@ -1245,7 +1096,7 @@ export function CitizenPortalApp({
 
             {/* DEDICATED FEATURE PAGES (map, alerts, satellite, hydro, shelters) */}
             {activeView !== "overview" && (
-              <section className="w-full py-10 px-[4%] space-y-8">
+              <section className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-10 space-y-8">
                 {/* Page Header & Global Context Controls */}
                 <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 border-b border-[#EDEBE2] pb-6">
                   <div className="space-y-2 max-w-3xl">
