@@ -843,14 +843,7 @@ export function CitizenPortalApp({
                     {t.btn_about_data}
                   </button>
                   <Button
-                    variant="outline"
-                    onClick={() => setIsLoginOpen(true)}
-                    className="h-11 px-4 rounded-xl border-[#DFDDD3] bg-white text-sm font-bold text-[#183026] hover:bg-[#FAF9F5] shadow-sm transition"
-                  >
-                    {lang === "bn" ? "প্রবেশ / লগইন" : "Portal Access"}
-                  </Button>
-                  <Button
-                    onClick={() => navigateToPage("map")}
+                    onClick={() => navigateToPage("login")}
                     className="button shadow-sm"
                   >
                     {t.btn_get_started} <Icon name="arrow" size={16} />
@@ -880,7 +873,7 @@ export function CitizenPortalApp({
                         {t.hero_desc}
                       </p>
                       <div className="button-row">
-                        <Button onClick={() => navigateToPage("map")} className="button gap-2">
+                        <Button onClick={() => navigateToPage("login")} className="button gap-2">
                           <span>{t.btn_get_started}</span>
                           <Icon name="arrow" size={16} />
                         </Button>

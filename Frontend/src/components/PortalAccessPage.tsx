@@ -8,13 +8,11 @@ import {
   MapPin,
   Eye,
   EyeOff,
-  ArrowRight,
   X,
-  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Language, UI_TEXT } from "@/lib/translations";
+import { Language } from "@/lib/translations";
 
 interface PortalAccessPageProps {
   isOpen?: boolean;
@@ -41,11 +39,11 @@ export function PortalAccessPage({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    // Simulate instantaneous local auth session
+    // Instant local authentication
     setTimeout(() => {
       setIsSubmitting(false);
       onLoginSuccess();
-    }, 400);
+    }, 350);
   };
 
   const handleGuestAccess = () => {
@@ -63,16 +61,16 @@ export function PortalAccessPage({
           backgroundImage: "url('/satellite-flood-bg.jpg')",
         }}
       />
-      {/* Dark Translucent Backdrop Overlay */}
-      <div className="fixed inset-0 bg-[#06140E]/75 backdrop-blur-[4px]" />
+      {/* Backdrop Overlay */}
+      <div className="fixed inset-0 bg-[#06140E]/60 backdrop-blur-[3px]" />
 
-      {/* Main Glassmorphic Portal Access Card */}
-      <div className="relative z-10 w-full max-w-[490px] my-auto bg-[#13261C]/90 backdrop-blur-2xl border border-white/15 rounded-3xl p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.6)] text-white animate-in fade-in zoom-in-95 duration-200">
-        {/* Optional Close Button */}
+      {/* Main Form Card - Warm Cream Color (#EDEBE2) matching User Reference Image 2 */}
+      <div className="relative z-10 w-full max-w-[490px] my-auto bg-[#EDEBE2] border border-[#D5D2C5] rounded-3xl p-6 sm:p-8 shadow-[0_25px_60px_rgba(0,0,0,0.45)] text-[#12241C] animate-in fade-in zoom-in-95 duration-200">
+        {/* Close Button */}
         {onClose && (
           <button
             onClick={onClose}
-            className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white flex items-center justify-center transition"
+            className="absolute top-5 right-5 w-8 h-8 rounded-full bg-[#DFDDD3] hover:bg-[#D5D2C5] text-[#3E4D45] hover:text-[#12241C] flex items-center justify-center transition shadow-sm"
             aria-label="Close portal modal"
           >
             <X size={16} />
@@ -82,30 +80,30 @@ export function PortalAccessPage({
         {/* Rokkha Brand Header */}
         <div className="flex flex-col items-center text-center mb-6">
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="w-8 h-8 rounded-lg bg-[#2E5E44] border border-[#4ADE80]/40 flex items-center justify-center text-[#4ADE80] shadow-md">
-              <Shield size={19} className="fill-[#4ADE80]/20" />
+            <span className="w-8 h-8 rounded-lg bg-[#D8EADB] border border-[#23583A]/30 flex items-center justify-center text-[#1E5638] shadow-sm">
+              <Shield size={19} className="fill-[#23583A]/20" />
             </span>
-            <span className="text-xl font-extrabold tracking-tight text-white">
+            <span className="text-xl font-extrabold tracking-tight text-[#12241C]">
               Rokkha
             </span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-black text-[#12241C] tracking-tight">
             Portal Access
           </h2>
-          <p className="text-xs sm:text-sm text-gray-300/90 mt-1">
+          <p className="text-xs sm:text-sm text-[#4E5C55] mt-1">
             Access Live Flood Intelligence & Resource Dispatch
           </p>
         </div>
 
         {/* Tab Switcher: LOG IN vs REGISTER / JOIN */}
-        <div className="grid grid-cols-2 p-1 bg-black/40 rounded-xl border border-white/10 mb-5">
+        <div className="grid grid-cols-2 p-1 bg-[#DFDDD3] rounded-xl border border-[#D0CDC0] mb-5">
           <button
             type="button"
             onClick={() => setTab("login")}
             className={`py-2 text-xs sm:text-sm font-bold rounded-lg transition-all ${
               tab === "login"
-                ? "bg-[#284234] text-white shadow-sm border border-white/10"
-                : "text-gray-400 hover:text-white"
+                ? "bg-white text-[#12241C] shadow-sm"
+                : "text-[#5C6863] hover:text-[#12241C]"
             }`}
           >
             LOG IN
@@ -115,8 +113,8 @@ export function PortalAccessPage({
             onClick={() => setTab("register")}
             className={`py-2 text-xs sm:text-sm font-bold rounded-lg transition-all ${
               tab === "register"
-                ? "bg-[#284234] text-white shadow-sm border border-white/10"
-                : "text-gray-400 hover:text-white"
+                ? "bg-white text-[#12241C] shadow-sm"
+                : "text-[#5C6863] hover:text-[#12241C]"
             }`}
           >
             REGISTER / JOIN
@@ -129,7 +127,7 @@ export function PortalAccessPage({
             <>
               {/* Join as: Role Selector */}
               <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-2">
+                <label className="block text-xs font-semibold text-[#3B4740] mb-2">
                   Join as:
                 </label>
                 <div className="grid grid-cols-2 gap-3">
@@ -138,11 +136,11 @@ export function PortalAccessPage({
                     onClick={() => setRole("rescuer")}
                     className={`py-2.5 px-3 rounded-xl border text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all ${
                       role === "rescuer"
-                        ? "border-[#4ADE80] bg-[#1F4532] text-white shadow-[0_0_15px_rgba(74,222,128,0.25)]"
-                        : "border-white/15 bg-white/5 text-gray-300 hover:bg-white/10"
+                        ? "border-[#16A34A] bg-[#DCFCE7] text-[#15803D] shadow-sm"
+                        : "border-[#DFDDD3] bg-white text-[#526058] hover:bg-[#F5F3EC]"
                     }`}
                   >
-                    <LifeBuoy size={16} className={role === "rescuer" ? "text-[#4ADE80]" : ""} />
+                    <LifeBuoy size={16} className={role === "rescuer" ? "text-[#16A34A]" : ""} />
                     <span>RESCUER</span>
                   </button>
                   <button
@@ -150,11 +148,11 @@ export function PortalAccessPage({
                     onClick={() => setRole("user")}
                     className={`py-2.5 px-3 rounded-xl border text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all ${
                       role === "user"
-                        ? "border-[#4ADE80] bg-[#1F4532] text-white shadow-[0_0_15px_rgba(74,222,128,0.25)]"
-                        : "border-white/15 bg-white/5 text-gray-300 hover:bg-white/10"
+                        ? "border-[#16A34A] bg-[#DCFCE7] text-[#15803D] shadow-sm"
+                        : "border-[#DFDDD3] bg-white text-[#526058] hover:bg-[#F5F3EC]"
                     }`}
                   >
-                    <User size={16} className={role === "user" ? "text-[#4ADE80]" : ""} />
+                    <User size={16} className={role === "user" ? "text-[#16A34A]" : ""} />
                     <span>USER</span>
                   </button>
                 </div>
@@ -162,7 +160,7 @@ export function PortalAccessPage({
 
               {/* Full Name */}
               <div>
-                <label className="block text-xs font-medium text-gray-300 mb-1.5">
+                <label className="block text-xs font-semibold text-[#3B4740] mb-1.5">
                   Full Name
                 </label>
                 <Input
@@ -171,7 +169,7 @@ export function PortalAccessPage({
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Full Name"
-                  className="bg-[#183225]/80 border-white/15 text-white placeholder:text-gray-400 h-11 rounded-xl focus-visible:ring-[#4ADE80]"
+                  className="bg-white border-[#DFDDD3] text-[#12241C] placeholder:text-[#88948D] h-11 rounded-xl focus-visible:ring-[#16A34A]"
                 />
               </div>
             </>
@@ -179,7 +177,7 @@ export function PortalAccessPage({
 
           {/* Mobile / Email */}
           <div>
-            <label className="block text-xs font-medium text-gray-300 mb-1.5">
+            <label className="block text-xs font-semibold text-[#3B4740] mb-1.5">
               Mobile / Email
             </label>
             <Input
@@ -188,14 +186,14 @@ export function PortalAccessPage({
               value={contact}
               onChange={(e) => setContact(e.target.value)}
               placeholder="+880 ... or email"
-              className="bg-[#183225]/80 border-white/15 text-white placeholder:text-gray-400 h-11 rounded-xl focus-visible:ring-[#4ADE80]"
+              className="bg-white border-[#DFDDD3] text-[#12241C] placeholder:text-[#88948D] h-11 rounded-xl focus-visible:ring-[#16A34A]"
             />
           </div>
 
           {tab === "register" && (
             /* Access Location */
             <div>
-              <label className="block text-xs font-medium text-gray-300 mb-1.5">
+              <label className="block text-xs font-semibold text-[#3B4740] mb-1.5">
                 Access Location
               </label>
               <div className="relative">
@@ -205,11 +203,11 @@ export function PortalAccessPage({
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   placeholder="District / Sub-district / Village"
-                  className="bg-[#183225]/80 border-white/15 text-white placeholder:text-gray-400 h-11 rounded-xl pr-10 focus-visible:ring-[#4ADE80]"
+                  className="bg-white border-[#DFDDD3] text-[#12241C] placeholder:text-[#88948D] h-11 rounded-xl pr-10 focus-visible:ring-[#16A34A]"
                 />
                 <MapPin
                   size={16}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#6B7280] pointer-events-none"
                 />
               </div>
             </div>
@@ -217,7 +215,7 @@ export function PortalAccessPage({
 
           {/* Security Password */}
           <div>
-            <label className="block text-xs font-medium text-gray-300 mb-1.5">
+            <label className="block text-xs font-semibold text-[#3B4740] mb-1.5">
               Security Password
             </label>
             <div className="relative">
@@ -227,12 +225,12 @@ export function PortalAccessPage({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Security Password"
-                className="bg-[#183225]/80 border-white/15 text-white placeholder:text-gray-400 h-11 rounded-xl pr-10 focus-visible:ring-[#4ADE80]"
+                className="bg-white border-[#DFDDD3] text-[#12241C] placeholder:text-[#88948D] h-11 rounded-xl pr-10 focus-visible:ring-[#16A34A]"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#12241C] transition"
               >
                 {showPassword ? <Eye size={16} /> : <EyeOff size={16} />}
               </button>
@@ -243,7 +241,7 @@ export function PortalAccessPage({
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="w-full h-12 bg-[#16A34A] hover:bg-[#15803D] text-white font-bold text-base rounded-xl transition-all shadow-lg hover:shadow-[#16A34A]/30 mt-2"
+            className="w-full h-12 bg-[#16A34A] hover:bg-[#15803D] text-white font-bold text-base rounded-xl transition-all shadow-md mt-2"
           >
             {isSubmitting ? (
               <span>Authenticating...</span>
@@ -256,15 +254,15 @@ export function PortalAccessPage({
         </form>
 
         {/* Footer Switcher & Guest Link */}
-        <div className="mt-5 pt-4 border-t border-white/10 text-center space-y-2">
-          <p className="text-xs text-gray-300">
+        <div className="mt-5 pt-4 border-t border-[#DFDDD3] text-center space-y-2">
+          <p className="text-xs text-[#526058]">
             {tab === "register" ? (
               <>
                 Already have an account?{" "}
                 <button
                   type="button"
                   onClick={() => setTab("login")}
-                  className="text-[#4ADE80] font-bold hover:underline"
+                  className="text-[#16A34A] font-bold hover:underline"
                 >
                   Log In
                 </button>
@@ -275,7 +273,7 @@ export function PortalAccessPage({
                 <button
                   type="button"
                   onClick={() => setTab("register")}
-                  className="text-[#4ADE80] font-bold hover:underline"
+                  className="text-[#16A34A] font-bold hover:underline"
                 >
                   Register
                 </button>
@@ -286,7 +284,7 @@ export function PortalAccessPage({
             <button
               type="button"
               onClick={handleGuestAccess}
-              className="text-xs font-semibold text-gray-400 hover:text-white underline underline-offset-4 transition"
+              className="text-xs font-semibold text-[#4B5563] hover:text-[#111827] underline underline-offset-4 transition"
             >
               Access Public Guest Map (No login needed)
             </button>
