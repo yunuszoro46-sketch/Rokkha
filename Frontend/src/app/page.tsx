@@ -837,12 +837,6 @@ export function CitizenPortalApp({
                       EN
                     </span>
                   </button>
-                  <button
-                    onClick={() => setIsAboutOpen(true)}
-                    className="login hover:bg-white/80 transition"
-                  >
-                    {t.btn_about_data}
-                  </button>
                   <Button
                     onClick={() => navigateToPage("login")}
                     className="button shadow-sm"
@@ -1617,6 +1611,7 @@ export function CitizenPortalApp({
           navigateToPage("map");
         }}
         lang={lang}
+        onToggleLanguage={toggleLanguage}
       />
     </div>
     </>
