@@ -12,7 +12,7 @@
 
 ## 🌐 Live Deployment
 
-- **Live Citizen Portal**: [https://rokkha-portal.vercel.app](https://rokkha-portal.vercel.app)
+- **Live Citizen Portal**: [https://rokkha-app.vercel.app](https://rokkha-app.vercel.app)
 - **Bilingual Interface**: Instant toggle between **বাংলা** (Bengali) and **English** with deep-linking support (`?lang=bn`).
 - **Official Repository**: [yunuszoro46-sketch/Rokkha (production branch)](https://github.com/yunuszoro46-sketch/Rokkha/tree/production)
 
