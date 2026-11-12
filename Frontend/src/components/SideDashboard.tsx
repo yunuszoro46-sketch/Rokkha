@@ -2,6 +2,7 @@
 
 import React from "react";
 import logoAsset from "@/assets/logo.png";
+import { Language, UI_TEXT, toBnNum } from "@/lib/translations";
 import {
   Home,
   Map,
@@ -30,6 +31,7 @@ interface SideDashboardProps {
   isBackendConnected: boolean;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
+  lang?: Language;
 }
 
 export const SideDashboard: React.FC<SideDashboardProps> = ({
@@ -40,38 +42,46 @@ export const SideDashboard: React.FC<SideDashboardProps> = ({
   isBackendConnected,
   isCollapsed,
   onToggleCollapse,
+  lang = "en",
 }) => {
+  const t = UI_TEXT[lang];
+
   // Navigation items strictly mapped to Frontend API Guide sections
   const navItems = [
     {
       id: "overview" as CitizenView,
-      label: "Platform Overview",
+      label: t.side_overview,
       icon: Home,
     },
     {
       id: "map" as CitizenView,
-      label: "Flood Map & Point Check",
+      label: t.side_map,
       icon: Map,
     },
     {
       id: "alerts" as CitizenView,
-      label: "Forecast & Early Warnings",
+      label: t.side_alerts,
       icon: AlertOctagon,
-      badge: activeAlertCount > 0 ? activeAlertCount : undefined,
+      badge:
+        activeAlertCount > 0
+          ? lang === "bn"
+            ? toBnNum(activeAlertCount)
+            : activeAlertCount
+          : undefined,
     },
     {
       id: "satellite" as CitizenView,
-      label: "District Ranking & Satellite",
+      label: t.side_satellite,
       icon: Satellite,
     },
     {
       id: "hydro" as CitizenView,
-      label: "Rain & River Gauges",
+      label: t.side_hydro,
       icon: CloudRain,
     },
     {
       id: "shelters" as CitizenView,
-      label: "Nearest Emergency Shelters",
+      label: t.side_shelters,
       icon: LifeBuoy,
     },
   ];
@@ -173,7 +183,7 @@ export const SideDashboard: React.FC<SideDashboardProps> = ({
         >
           <Info size={22} className="text-white/75 flex-shrink-0" />
           {!isCollapsed && (
-            <span className="text-left truncate">About &amp; Data Limits</span>
+            <span className="text-left truncate">{t.side_about}</span>
           )}
         </button>
 
@@ -186,9 +196,7 @@ export const SideDashboard: React.FC<SideDashboardProps> = ({
             <span className="w-2.5 h-2.5 rounded-full bg-[#22C55E] shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>
             {!isCollapsed && (
               <span className="font-medium text-base text-white/90 tracking-wide">
-                {isBackendConnected
-                  ? "Live Satellite & Sensor Feed"
-                  : "National Early Warning Active"}
+                {isBackendConnected ? t.side_status_feed : t.side_status_active}
               </span>
             )}
           </div>

@@ -54,6 +54,13 @@ import logoAsset from "@/assets/logo.png";
 import { mapOutline } from "@/assets/bangladesh-map-outline";
 import { internalDivisionBorders } from "@/assets/bangladesh_division_borders";
 import {
+  Language,
+  UI_TEXT,
+  toBnNum,
+  DISTRICTS_BN,
+  DIVISIONS_BN,
+} from "@/lib/translations";
+import {
   DistrictPrediction,
   AlertItem,
   PointFloodCheck,
@@ -283,38 +290,75 @@ function MapArtwork({ compact = false }: { compact?: boolean }) {
 }
 
 const PAGE_METADATA: Record<
-  Exclude<CitizenView, "overview">,
-  { eyebrow: string; title: string; subtitle: string }
+  Language,
+  Record<
+    Exclude<CitizenView, "overview">,
+    { eyebrow: string; title: string; subtitle: string }
+  >
 > = {
-  map: {
-    eyebrow: "GEOSPATIAL FLOOD ENGINE",
-    title: "Flood Map & Point Check",
-    subtitle:
-      "Inspect all 64 Bangladesh districts, 24-hour ML flood probabilities, JRC modelled flood depth, and historical satellite inundation at any coordinate.",
+  en: {
+    map: {
+      eyebrow: "GEOSPATIAL FLOOD ENGINE",
+      title: "Flood Map & Point Check",
+      subtitle:
+        "Inspect all 64 Bangladesh districts, 24-hour ML flood probabilities, JRC modelled flood depth, and historical satellite inundation at any coordinate.",
+    },
+    alerts: {
+      eyebrow: "24-HOUR ML FORECAST",
+      title: "Forecast & Early Warnings",
+      subtitle:
+        "District-level flood watch and alert notifications with exposed critical assets and population capacity.",
+    },
+    satellite: {
+      eyebrow: "COPERNICUS SENTINEL-1 & UNOSAT",
+      title: "District Ranking & Satellite Timeline",
+      subtitle:
+        "Compare all 64 districts by historical flood frequency (2016–2024) and inspect daily Sentinel-1 radar flood coverage.",
+    },
+    hydro: {
+      eyebrow: "ERA5 RAINFALL & GLOFAS DISCHARGE",
+      title: "Rain & River Gauges",
+      subtitle:
+        "Daily precipitation and river basin discharge hydrographs driving district flood risk.",
+    },
+    shelters: {
+      eyebrow: "2DSPHERE GEOSPATIAL INDEX",
+      title: "Nearest Emergency Shelters",
+      subtitle:
+        "Locate registered flood shelters, hospitals, clinics, and schools near any district or map coordinate.",
+    },
   },
-  alerts: {
-    eyebrow: "24-HOUR ML FORECAST",
-    title: "Forecast & Early Warnings",
-    subtitle:
-      "District-level flood watch and alert notifications with exposed critical assets and population capacity.",
-  },
-  satellite: {
-    eyebrow: "COPERNICUS SENTINEL-1 & UNOSAT",
-    title: "District Ranking & Satellite Timeline",
-    subtitle:
-      "Compare all 64 districts by historical flood frequency (2016–2024) and inspect daily Sentinel-1 radar flood coverage.",
-  },
-  hydro: {
-    eyebrow: "ERA5 RAINFALL & GLOFAS DISCHARGE",
-    title: "Rain & River Gauges",
-    subtitle:
-      "Daily precipitation and river basin discharge hydrographs driving district flood risk.",
-  },
-  shelters: {
-    eyebrow: "2DSPHERE GEOSPATIAL INDEX",
-    title: "Nearest Emergency Shelters",
-    subtitle:
-      "Locate registered flood shelters, hospitals, clinics, and schools near any district or map coordinate.",
+  bn: {
+    map: {
+      eyebrow: "ভূস্থানিক বন্যা ইঞ্জিন",
+      title: "বন্যা মানচিত্র ও পয়েন্ট চেক",
+      subtitle:
+        "বাংলাদেশের সকল ৬৪ জেলা, ২৪ ঘণ্টার এআই বন্যার পূর্বাভাস, প্লাবনের গভীরতা এবং স্যাটেলাইট ঐতিহাসিক বিস্তার সরাসরি যাচাই করুন।",
+    },
+    alerts: {
+      eyebrow: "২৪ ঘণ্টার মেশিন লার্নিং পূর্বাভাস",
+      title: "পূর্বাভাস ও আগাম সতর্কতা",
+      subtitle:
+        "জেলা-ভিত্তিক আগাম বন্যা সতর্কতা এবং ঝুঁকিপূর্ণ জরুরি অবকাঠামো ও জনসংখ্যার সক্ষমতা নিরীক্ষণ।",
+    },
+    satellite: {
+      eyebrow: "কোপার্নিকাস সেন্টিনেল-১ ও ইউনোস্যাট",
+      title: "জেলা র‍্যাঙ্কিং ও স্যাটেলাইট টাইমলাইন",
+      subtitle:
+        "ঐতিহাসিক বন্যার পুনরাবৃত্তির ভিত্তিতে ৬৪ জেলার তুলনা এবং সেন্টিনেল-১ রাডার স্যাটেলাইট কভারেজ পর্যবেক্ষণ।",
+    },
+    hydro: {
+      eyebrow: "ইআরএ৫ বৃষ্টিপাত ও গ্লোফাস ডিসচার্জ",
+      title: "বৃষ্টিপাত ও নদীর পরিমাপক",
+      subtitle:
+        "দৈনিক বৃষ্টিপাত এবং নদী অববাহিকার পানি প্রবাহের গ্রাফ—যা বন্যা ঝুঁকি নির্দেশ করে।",
+    },
+    shelters: {
+      eyebrow: "টু-ডি-স্ফিয়ার ভূস্থানিক সূচক",
+      title: "নিকটস্থ জরুরি আশ্রয়কেন্দ্র",
+      subtitle:
+        "যে কোনো জেলা বা মানচিত্রের অবস্থানের কাছাকাছি নিবন্ধিত বন্যা আশ্রয়কেন্দ্র, হাসপাতাল ও বিদ্যালয় খুঁজুন।",
+    },
   },
 };
 
@@ -383,6 +427,23 @@ export function CitizenPortalApp({
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isDistrictReportOpen, setIsDistrictReportOpen] = useState(false);
   const [modelStatus, setModelStatus] = useState<ModelStatus | null>(null);
+  const [lang, setLang] = useState<Language>("en");
+  const t = UI_TEXT[lang];
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("rokkha_lang") as Language;
+      if (saved === "en" || saved === "bn") setLang(saved);
+    }
+  }, []);
+
+  const toggleLanguage = () => {
+    const next = lang === "en" ? "bn" : "en";
+    setLang(next);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("rokkha_lang", next);
+    }
+  };
 
   // Deep linking: auto-open district report if URL query parameter is present
   useEffect(() => {
@@ -433,6 +494,14 @@ export function CitizenPortalApp({
     const pred = predictions.find((p) => p.pcode === selectedPcode);
     const center = DISTRICT_CENTERS[selectedPcode] || [24.9602, 91.3992];
 
+    const isBn = lang === "bn";
+    const displayName = isBn
+      ? DISTRICTS_BN[selectedPcode] || selectedName
+      : selectedName;
+    const displayDivision = isBn
+      ? DIVISIONS_BN[meta?.division || ""] || meta?.division || "বাংলাদেশ"
+      : meta?.division || hist?.division || "Bangladesh";
+
     const rank = hist?.rank ?? 1;
     const eventsObserved = hist?.events_observed ?? 6;
     const eventsFlooded = hist?.events_flooded ?? 0;
@@ -447,59 +516,80 @@ export function CitizenPortalApp({
       pred?.alert_level === "watch" || eventsFlooded >= 2 || rank <= 25;
 
     const riskBadge = isHighRisk
-      ? { text: "CRITICAL ALERT", color: "bg-[#C9443A] text-white" }
+      ? {
+          text: isBn ? "জরুরি সতর্কতা (অ্যালার্ট)" : "CRITICAL ALERT",
+          color: "bg-[#C9443A] text-white",
+        }
       : isWatch
-      ? { text: "FLOOD WATCH", color: "bg-[#E08A24] text-white" }
-      : { text: "NORMAL ADVISORY", color: "bg-[#22C55E] text-white" };
+      ? {
+          text: isBn ? "নজরদারি (ওয়াচ)" : "FLOOD WATCH",
+          color: "bg-[#E08A24] text-white",
+        }
+      : {
+          text: isBn ? "স্বাভাবিক পরামর্শ" : "NORMAL ADVISORY",
+          color: "bg-[#22C55E] text-white",
+        };
 
     const formattedProb =
       pred?.probability !== null && pred?.probability !== undefined
-        ? `${Math.round(pred.probability * 100)}%`
+        ? isBn
+          ? `${toBnNum(Math.round(pred.probability * 100))}%`
+          : `${Math.round(pred.probability * 100)}%`
         : eventsFlooded >= 4
-        ? ">90%"
-        : "<25%";
+        ? (isBn ? ">৯০%" : ">90%")
+        : (isBn ? "<২৫%" : "<25%");
 
     const candidateShelters = [
       {
-        name: `${selectedName} Multipurpose Cyclone & Flood Shelter`,
-        type: "Flood Shelter",
+        name: isBn
+          ? `${displayName} বহুমুখী ঘূর্ণিঝড় ও বন্যা আশ্রয়কেন্দ্র`
+          : `${selectedName} Multipurpose Cyclone & Flood Shelter`,
+        type: isBn ? "বন্যা আশ্রয়কেন্দ্র" : "Flood Shelter",
         capacity: 1200,
-        distance: "1.4 km",
-        contact: "Upazila Disaster Management Office",
+        distance: isBn ? "১.৪ কিমি" : "1.4 km",
+        contact: isBn
+          ? "উপজেলা দুর্যোগ ব্যবস্থাপনা কার্যালয়"
+          : "Upazila Disaster Management Office",
       },
       {
-        name: `${selectedName} District 250-Bed Sadar Hospital`,
-        type: "Emergency Hospital",
+        name: isBn
+          ? `${displayName} জেলা ২৫০-শয্যার সদর হাসপাতাল`
+          : `${selectedName} District 250-Bed Sadar Hospital`,
+        type: isBn ? "জরুরি হাসপাতাল" : "Emergency Hospital",
         capacity: 2400,
-        distance: "3.2 km",
-        contact: "Civil Surgeon Office / 999",
+        distance: isBn ? "৩.২ কিমি" : "3.2 km",
+        contact: isBn ? "সিভিল সার্জন কার্যালয় / ৯৯৯" : "Civil Surgeon Office / 999",
       },
       {
-        name: `${selectedName} Government Pilot High School Relief Camp`,
-        type: "Community Shelter",
+        name: isBn
+          ? `${displayName} সরকারি পাইলট উচ্চ বিদ্যালয় ত্রাণ কেন্দ্র`
+          : `${selectedName} Government Pilot High School Relief Camp`,
+        type: isBn ? "কমিউনিটি আশ্রয়কেন্দ্র" : "Community Shelter",
         capacity: 850,
-        distance: "4.8 km",
-        contact: "Union Parishad Relief Cell",
+        distance: isBn ? "৪.৮ কিমি" : "4.8 km",
+        contact: isBn
+          ? "ইউনিয়ন পরিষদ ত্রাণ সেল"
+          : "Union Parishad Relief Cell",
       },
     ];
 
     return {
-      name: selectedName,
-      division: meta?.division || hist?.division || "Bangladesh",
+      name: displayName,
+      division: displayDivision,
       pcode: selectedPcode,
       lat: center[0],
       lng: center[1],
       rank,
       eventsObserved,
       eventsFlooded,
-      maxFloodedShare,
+      maxFloodedShare: isBn ? toBnNum(maxFloodedShare) : maxFloodedShare,
       floodedEventIds,
       prediction: pred,
       riskBadge,
       probabilityText: formattedProb,
       shelters: candidateShelters,
     };
-  }, [selectedPcode, selectedName, predictions]);
+  }, [selectedPcode, selectedName, predictions, lang]);
 
   // Initial check & data load + 3000ms Bangladesh Map Outline Loading Screen
   useEffect(() => {
@@ -605,6 +695,7 @@ export function CitizenPortalApp({
         isBackendConnected={isBackendConnected}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        lang={lang}
       />
 
       {/* Main Content Area (offset by widened left sidebar) */}
@@ -637,7 +728,7 @@ export function CitizenPortalApp({
                     navigateToPage("overview");
                   }}
                 >
-                  Home
+                  {t.nav_home}
                 </a>
                 <a
                   className={activeView === "map" ? "active" : ""}
@@ -647,7 +738,7 @@ export function CitizenPortalApp({
                     navigateToPage("map");
                   }}
                 >
-                  Live Risk Map
+                  {t.nav_map}
                 </a>
                 <a
                   className={activeView === "alerts" ? "active" : ""}
@@ -657,7 +748,7 @@ export function CitizenPortalApp({
                     navigateToPage("alerts");
                   }}
                 >
-                  Early Warnings
+                  {t.nav_alerts}
                 </a>
                 <a
                   className={activeView === "satellite" ? "active" : ""}
@@ -667,27 +758,40 @@ export function CitizenPortalApp({
                     navigateToPage("satellite");
                   }}
                 >
-                  Data & Coverage
+                  {t.nav_data}
                 </a>
                 <button
                   onClick={() => setIsAboutOpen(true)}
                   className="text-left font-semibold text-base hover:text-[#263B32] transition"
                 >
-                  About & Limits
+                  {t.nav_about}
                 </button>
               </nav>
-              <div className="header-actions">
+              <div className="header-actions flex items-center gap-2">
+                <button
+                  onClick={toggleLanguage}
+                  className="h-11 px-3.5 rounded-lg border border-[#EDEBE2] bg-white text-sm font-bold text-[#183026] hover:bg-[#FAF9F5] shadow-sm transition flex items-center gap-1.5"
+                  title="Switch Language / ভাষা পরিবর্তন করুন"
+                >
+                  <span className={lang === "bn" ? "text-[#183026] font-extrabold" : "text-[#183026]/40"}>
+                    বাংলা
+                  </span>
+                  <span className="text-[#183026]/30">|</span>
+                  <span className={lang === "en" ? "text-[#183026] font-extrabold" : "text-[#183026]/40"}>
+                    EN
+                  </span>
+                </button>
                 <button
                   onClick={() => setIsAboutOpen(true)}
                   className="login hover:bg-white/80 transition"
                 >
-                  About Data
+                  {t.btn_about_data}
                 </button>
                 <Button
                   onClick={() => navigateToPage("map")}
                   className="button shadow-sm"
                 >
-                  Get Started <Icon name="arrow" size={16} />
+                  {t.btn_get_started} <Icon name="arrow" size={16} />
                 </Button>
               </div>
             </header>
@@ -699,22 +803,21 @@ export function CitizenPortalApp({
                 <section className="hero" id="overview">
                   <div className="hero-copy">
                     <div className="eyebrow">
-                      <Icon name="shield" size={16} /> Climate Intelligence for a Safer Bangladesh
+                      <Icon name="shield" size={16} /> {t.hero_tagline}
                     </div>
                     <div className="hero-headline-bar">
                       <h1>
-                        Predict. Prepare.
+                        {t.hero_title_1}
                         <br />
-                        Protect.
+                        {t.hero_title_2}
                       </h1>
                     </div>
                     <p>
-                      Rokkha is a climate intelligence platform for flood analysis, risk mapping, and early
-                      prediction—helping communities and organizations stay one step ahead.
+                      {t.hero_desc}
                     </p>
                     <div className="button-row">
                       <Button onClick={() => navigateToPage("map")} className="button gap-2">
-                        <span>Get Started</span>
+                        <span>{t.btn_get_started}</span>
                         <Icon name="arrow" size={16} />
                       </Button>
                       <Button
@@ -722,7 +825,7 @@ export function CitizenPortalApp({
                         onClick={() => setIsAboutOpen(true)}
                         className="button button-outline gap-2"
                       >
-                        <Icon name="play" size={17} /> See How It Works
+                        <Icon name="play" size={17} /> {t.btn_see_how}
                       </Button>
                     </div>
                   </div>
@@ -737,41 +840,29 @@ export function CitizenPortalApp({
                     <div className="metric-icon-circle">
                       <Icon name="layers" />
                     </div>
-                    <strong>9 Years</strong>
-                    <span>
-                      Historical Analysis
-                      <br />
-                      (2016 – 2024)
-                    </span>
+                    <strong>{t.metric_years}</strong>
+                    <span>{t.metric_years_sub}</span>
                   </div>
                   <div>
                     <div className="metric-icon-circle">
                       <Icon name="location" />
                     </div>
-                    <strong>64</strong>
-                    <span>Districts Covered</span>
+                    <strong>{t.metric_districts}</strong>
+                    <span>{t.metric_districts_sub}</span>
                   </div>
                   <div>
                     <div className="metric-icon-circle">
                       <Icon name="building" />
                     </div>
-                    <strong>1,200+</strong>
-                    <span>
-                      Critical Assets
-                      <br />
-                      (Hospitals, Schools, Shelters)
-                    </span>
+                    <strong>{t.metric_assets}</strong>
+                    <span>{t.metric_assets_sub}</span>
                   </div>
                   <div>
                     <div className="metric-icon-circle">
                       <Icon name="code" />
                     </div>
-                    <strong>187</strong>
-                    <span>
-                      Automated Tests
-                      <br />
-                      (REST APIs &amp; Core Modules)
-                    </span>
+                    <strong>{t.metric_tests}</strong>
+                    <span>{t.metric_tests_sub}</span>
                   </div>
                 </section>
 
@@ -892,13 +983,13 @@ export function CitizenPortalApp({
                 <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 border-b border-[#EDEBE2] pb-6">
                   <div className="space-y-2 max-w-3xl">
                     <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#EDEBE2] text-[#263B32] text-base font-bold uppercase tracking-wider">
-                      {PAGE_METADATA[activeView].eyebrow}
+                      {PAGE_METADATA[lang][activeView].eyebrow}
                     </div>
                     <h1 className="text-5xl font-extrabold text-[#263B32] tracking-tight leading-tight">
-                      {PAGE_METADATA[activeView].title}
+                      {PAGE_METADATA[lang][activeView].title}
                     </h1>
                     <p className="text-base text-[#263B32]/75 leading-relaxed">
-                      {PAGE_METADATA[activeView].subtitle}
+                      {PAGE_METADATA[lang][activeView].subtitle}
                     </p>
                   </div>
 
@@ -907,19 +998,21 @@ export function CitizenPortalApp({
                     <div className="flex items-center gap-2">
                       <MapPin className="w-5 h-5 text-[#263B32]" />
                       <span className="text-base font-bold text-[#263B32]">
-                        District:
+                        {t.label_district}
                       </span>
                       <Select
                         value={selectedPcode}
                         onValueChange={(val) => handleSelectDistrict(val)}
                       >
                         <SelectTrigger className="w-48">
-                          <SelectValue placeholder="Select District" />
+                          <SelectValue placeholder={t.placeholder_select_district} />
                         </SelectTrigger>
                         <SelectContent>
                           {ALL_DISTRICTS.map((d) => (
                             <SelectItem key={d.pcode} value={d.pcode}>
-                              {d.name} ({d.division})
+                              {lang === "bn"
+                                ? `${DISTRICTS_BN[d.pcode] || d.name} (${DIVISIONS_BN[d.division] || d.division})`
+                                : `${d.name} (${d.division})`}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -930,7 +1023,7 @@ export function CitizenPortalApp({
                       <div className="flex flex-wrap items-center gap-2">
                         <Calendar className="w-5 h-5 text-[#263B32]" />
                         <span className="text-base font-bold text-[#263B32]">
-                          Date:
+                          {t.label_date}
                         </span>
                         <Input
                           type="date"
@@ -951,9 +1044,9 @@ export function CitizenPortalApp({
                         title={`View comprehensive flood report for ${selectedName}`}
                       >
                         <FileText className="w-4 h-4 text-[#78958A]" />
-                        <span>My District Report</span>
+                        <span>{t.btn_my_district}</span>
                         <span className="text-xs px-2 py-0.5 rounded-full bg-[#78958A]/30 text-white font-bold">
-                          {selectedName}
+                          {lang === "bn" ? (DISTRICTS_BN[selectedPcode] || selectedName) : selectedName}
                         </span>
                       </Button>
 
@@ -965,7 +1058,7 @@ export function CitizenPortalApp({
                         title="Detect GPS location and select nearest district"
                       >
                         <Crosshair className="w-4 h-4 text-[#263B32]" />
-                        <span className="hidden xl:inline text-sm font-semibold">GPS</span>
+                        <span className="hidden xl:inline text-sm font-semibold">{t.btn_gps}</span>
                       </Button>
                     </div>
                   </Card>
@@ -1153,16 +1246,16 @@ export function CitizenPortalApp({
                   <div>
                     <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-[#183026] text-[#EDEBE2] text-xs font-bold uppercase tracking-wider mb-2">
                       <ShieldCheck className="w-3.5 h-3.5 text-[#22C55E]" />
-                      Official Local Risk Report
+                      {t.report_tag}
                     </div>
                     <DialogTitle className="text-3xl font-extrabold text-[#11241C] flex items-center gap-3">
-                      <span>{districtReport.name} District</span>
+                      <span>{districtReport.name}</span>
                       <span className="text-base font-medium px-3 py-1 rounded-lg bg-[#EDEBE2] text-[#263B32]">
-                        {districtReport.division} Division
+                        {districtReport.division}
                       </span>
                     </DialogTitle>
                     <DialogDescription className="text-base text-[#263B32]/75 mt-1">
-                      Geo-Centroid: {districtReport.lat.toFixed(4)}°N, {districtReport.lng.toFixed(4)}°E • PCODE: {districtReport.pcode} • Target Date: {targetDate}
+                      {lang === "bn" ? "ভূ-কেন্দ্রবিন্দু:" : "Geo-Centroid:"} {districtReport.lat.toFixed(4)}°N, {districtReport.lng.toFixed(4)}°E • PCODE: {districtReport.pcode} • {lang === "bn" ? "তারিখ:" : "Target Date:"} {targetDate}
                     </DialogDescription>
                   </div>
 
@@ -1176,7 +1269,7 @@ export function CitizenPortalApp({
                       className="border-[#E2E0D6] text-[#263B32] hover:bg-[#EDEBE2] flex items-center gap-1.5"
                     >
                       <Printer className="w-4 h-4" />
-                      <span>Print Report</span>
+                      <span>{t.btn_print}</span>
                     </Button>
                     <Button
                       variant="outline"
@@ -1186,7 +1279,7 @@ export function CitizenPortalApp({
                       title="Detect GPS location"
                     >
                       <Crosshair className="w-4 h-4" />
-                      <span>GPS Detect</span>
+                      <span>{t.btn_gps_detect}</span>
                     </Button>
                   </div>
                 </div>
@@ -1197,20 +1290,24 @@ export function CitizenPortalApp({
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="p-4 rounded-xl bg-white border border-[#EDEBE2] shadow-sm">
                     <div className="text-sm font-semibold text-[#263B32]/70 uppercase tracking-wider mb-1">
-                      National Flood Rank
+                      {t.kpi_rank}
                     </div>
                     <div className="text-3xl font-extrabold text-[#11241C]">
-                      #{districtReport.rank}
-                      <span className="text-sm font-normal text-[#263B32]/60 ml-1">/ 64</span>
+                      #{lang === "bn" ? toBnNum(districtReport.rank) : districtReport.rank}
+                      <span className="text-sm font-normal text-[#263B32]/60 ml-1">/ {lang === "bn" ? "৬৪" : "64"}</span>
                     </div>
                     <div className="text-xs text-[#263B32]/65 mt-1 font-medium">
-                      {districtReport.rank <= 10 ? "Top 10 highest risk" : districtReport.rank <= 30 ? "Moderate risk belt" : "Low flood frequency"}
+                      {districtReport.rank <= 10
+                        ? t.kpi_rank_sub_top
+                        : districtReport.rank <= 30
+                        ? t.kpi_rank_sub_mid
+                        : t.kpi_rank_sub_low}
                     </div>
                   </div>
 
                   <div className="p-4 rounded-xl bg-white border border-[#EDEBE2] shadow-sm">
                     <div className="text-sm font-semibold text-[#263B32]/70 uppercase tracking-wider mb-1">
-                      24H ML Forecast
+                      {t.kpi_forecast}
                     </div>
                     <div className="flex items-center gap-2 mt-1">
                       <span className={`text-xs px-2.5 py-1 rounded-md font-bold uppercase ${districtReport.riskBadge.color}`}>
@@ -1218,32 +1315,34 @@ export function CitizenPortalApp({
                       </span>
                     </div>
                     <div className="text-xs text-[#263B32]/65 mt-2 font-medium">
-                      Model Probability: {districtReport.probabilityText}
+                      {lang === "bn" ? "মডেল সম্ভাবনা:" : "Model Probability:"} {districtReport.probabilityText}
                     </div>
                   </div>
 
                   <div className="p-4 rounded-xl bg-white border border-[#EDEBE2] shadow-sm">
                     <div className="text-sm font-semibold text-[#263B32]/70 uppercase tracking-wider mb-1">
-                      Satellite Flood Events
+                      {t.kpi_events}
                     </div>
                     <div className="text-3xl font-extrabold text-[#11241C]">
-                      {districtReport.eventsFlooded}
-                      <span className="text-sm font-normal text-[#263B32]/60 ml-1">/ {districtReport.eventsObserved}</span>
+                      {lang === "bn" ? toBnNum(districtReport.eventsFlooded) : districtReport.eventsFlooded}
+                      <span className="text-sm font-normal text-[#263B32]/60 ml-1">
+                        / {lang === "bn" ? toBnNum(districtReport.eventsObserved) : districtReport.eventsObserved}
+                      </span>
                     </div>
                     <div className="text-xs text-[#263B32]/65 mt-1 font-medium">
-                      Major historical events inundated
+                      {t.kpi_events_sub}
                     </div>
                   </div>
 
                   <div className="p-4 rounded-xl bg-white border border-[#EDEBE2] shadow-sm">
                     <div className="text-sm font-semibold text-[#263B32]/70 uppercase tracking-wider mb-1">
-                      Peak Inundated Land
+                      {t.kpi_land}
                     </div>
                     <div className="text-3xl font-extrabold text-[#11241C]">
                       {districtReport.maxFloodedShare}
                     </div>
                     <div className="text-xs text-[#263B32]/65 mt-1 font-medium">
-                      Max recorded land coverage
+                      {t.kpi_land_sub}
                     </div>
                   </div>
                 </div>
@@ -1253,31 +1352,31 @@ export function CitizenPortalApp({
                   <div className="flex items-center gap-2">
                     <Waves className="w-5 h-5 text-[#2A7256]" />
                     <h3 className="font-extrabold text-2xl text-[#11241C]">
-                      Modelled Flood Depth Hazard (JRC GloFAS)
+                      {t.sec_hazard}
                     </h3>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="p-4 rounded-lg bg-[#FAF9F5] border border-[#EDEBE2]">
                       <div className="text-sm font-bold text-[#263B32] mb-1">
-                        10-Year Return Period Flood
+                        {t.ret_10yr}
                       </div>
                       <div className="text-2xl font-extrabold text-[#183026]">
-                        {districtReport.eventsFlooded >= 4 ? "1 to 3 meters" : "0.5 to 1 meter"}
+                        {districtReport.eventsFlooded >= 4 ? t.ret_10yr_depth_high : t.ret_10yr_depth_low}
                       </div>
                       <div className="text-xs text-[#263B32]/70 mt-1">
-                        Expected water depth in non-embanked lower terraces
+                        {t.ret_10yr_sub}
                       </div>
                     </div>
 
                     <div className="p-4 rounded-lg bg-[#FAF9F5] border border-[#EDEBE2]">
                       <div className="text-sm font-bold text-[#263B32] mb-1">
-                        100-Year Return Period Extreme Flood
+                        {t.ret_100yr}
                       </div>
                       <div className="text-2xl font-extrabold text-[#C9443A]">
-                        {districtReport.eventsFlooded >= 4 ? "Over 3 meters" : "1 to 3 meters"}
+                        {districtReport.eventsFlooded >= 4 ? t.ret_100yr_depth_high : t.ret_100yr_depth_low}
                       </div>
                       <div className="text-xs text-[#263B32]/70 mt-1">
-                        Catastrophic regional surge or unprecedented basin breach
+                        {t.ret_100yr_sub}
                       </div>
                     </div>
                   </div>
@@ -1285,7 +1384,9 @@ export function CitizenPortalApp({
                   {districtReport.floodedEventIds.length > 0 && (
                     <div className="pt-2">
                       <span className="text-sm font-bold text-[#263B32]">
-                        Historical Disaster Events Captured by Satellite:
+                        {lang === "bn"
+                          ? "স্যাটেলাইটে প্লাবিত প্রধান ঐতিহাসিক দুর্যোগসমূহ:"
+                          : "Historical Disaster Events Captured by Satellite:"}
                       </span>
                       <div className="flex flex-wrap gap-2 mt-2">
                         {districtReport.floodedEventIds.map((eid) => (
@@ -1307,7 +1408,7 @@ export function CitizenPortalApp({
                     <div className="flex items-center gap-2">
                       <Building2 className="w-5 h-5 text-[#2A7256]" />
                       <h3 className="font-extrabold text-2xl text-[#11241C]">
-                        Critical Assets & Emergency Shelters
+                        {t.sec_shelters}
                       </h3>
                     </div>
                     <Button
@@ -1319,7 +1420,7 @@ export function CitizenPortalApp({
                       }}
                       className="text-sm text-[#2A7256] hover:text-[#183026] font-bold flex items-center gap-1"
                     >
-                      <span>Explore All in {districtReport.name}</span>
+                      <span>{t.sec_shelters_all} {districtReport.name}</span>
                       <ExternalLink className="w-3.5 h-3.5" />
                     </Button>
                   </div>
@@ -1335,7 +1436,7 @@ export function CitizenPortalApp({
                             {shelter.name}
                           </div>
                           <div className="text-xs text-[#263B32]/70">
-                            {shelter.type} • Capacity: {shelter.capacity.toLocaleString()} persons • Contact: {shelter.contact}
+                            {shelter.type} • {lang === "bn" ? `ধারণক্ষমতা: ${toBnNum(shelter.capacity)} জন` : `Capacity: ${shelter.capacity.toLocaleString()} persons`} • {lang === "bn" ? `যোগাযোগ: ${shelter.contact}` : `Contact: ${shelter.contact}`}
                           </div>
                         </div>
                         <div className="text-sm font-bold text-[#183026] self-start sm:self-center px-2.5 py-1 rounded bg-[#EDEBE2]">
@@ -1351,7 +1452,7 @@ export function CitizenPortalApp({
                   <div className="flex items-center gap-2">
                     <Phone className="w-5 h-5 text-[#22C55E]" />
                     <h3 className="font-extrabold text-2xl text-white">
-                      Official Emergency Helplines & Action Protocol
+                      {t.sec_helplines}
                     </h3>
                   </div>
 
@@ -1360,42 +1461,50 @@ export function CitizenPortalApp({
                       href="tel:999"
                       className="p-3 rounded-lg bg-white/10 hover:bg-white/20 transition text-center border border-white/10 block"
                     >
-                      <div className="text-2xl font-extrabold text-white">999</div>
-                      <div className="text-xs text-white/70 font-medium mt-0.5">National Emergency (Police, Fire, Ambulance)</div>
+                      <div className="text-2xl font-extrabold text-white">
+                        {lang === "bn" ? "৯৯৯" : "999"}
+                      </div>
+                      <div className="text-xs text-white/70 font-medium mt-0.5">{t.helpline_999}</div>
                     </a>
 
                     <a
                       href="tel:1090"
                       className="p-3 rounded-lg bg-white/10 hover:bg-white/20 transition text-center border border-white/10 block"
                     >
-                      <div className="text-2xl font-extrabold text-[#22C55E]">1090</div>
-                      <div className="text-xs text-white/70 font-medium mt-0.5">Disaster & Flood Warning (Toll-Free IVR)</div>
+                      <div className="text-2xl font-extrabold text-[#22C55E]">
+                        {lang === "bn" ? "১০৯০" : "1090"}
+                      </div>
+                      <div className="text-xs text-white/70 font-medium mt-0.5">{t.helpline_1090}</div>
                     </a>
 
                     <a
                       href="tel:109"
                       className="p-3 rounded-lg bg-white/10 hover:bg-white/20 transition text-center border border-white/10 block"
                     >
-                      <div className="text-2xl font-extrabold text-white">109</div>
-                      <div className="text-xs text-white/70 font-medium mt-0.5">Helpline for Women & Children</div>
+                      <div className="text-2xl font-extrabold text-white">
+                        {lang === "bn" ? "১০৯" : "109"}
+                      </div>
+                      <div className="text-xs text-white/70 font-medium mt-0.5">{t.helpline_109}</div>
                     </a>
 
                     <a
                       href="tel:+880249350158"
                       className="p-3 rounded-lg bg-white/10 hover:bg-white/20 transition text-center border border-white/10 block"
                     >
-                      <div className="text-base font-extrabold text-white mt-1">Red Crescent</div>
-                      <div className="text-xs text-white/70 font-medium mt-0.5">+880-2-49350158 Disaster Cell</div>
+                      <div className="text-base font-extrabold text-white mt-1">
+                        {lang === "bn" ? "রেড ক্রিসেন্ট" : "Red Crescent"}
+                      </div>
+                      <div className="text-xs text-white/70 font-medium mt-0.5">{t.helpline_red_crescent}</div>
                     </a>
                   </div>
 
                   <div className="p-4 rounded-lg bg-white/5 border border-white/10 space-y-2 text-sm text-white/85">
-                    <div className="font-bold text-white text-base">Citizen Flood Preparedness Protocol:</div>
+                    <div className="font-bold text-white text-base">{t.protocol_title}</div>
                     <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm">
-                      <li>Store 3–5 days of clean drinking water, halogen water purification tablets, and dry rations (chira, gur, biscuits).</li>
-                      <li>Pack national identity cards, land deeds, and prescription medications into double-sealed watertight plastic pouches.</li>
-                      <li>Identify the fastest elevated walkway route to your assigned community shelter before water cuts off feeder roads.</li>
-                      <li>Turn off primary household electrical main breakers if standing flood water enters dwelling plinth level.</li>
+                      <li>{t.protocol_1}</li>
+                      <li>{t.protocol_2}</li>
+                      <li>{t.protocol_3}</li>
+                      <li>{t.protocol_4}</li>
                     </ul>
                   </div>
                 </div>
@@ -1403,10 +1512,12 @@ export function CitizenPortalApp({
 
               <DialogFooter className="pt-2 flex flex-row items-center justify-between border-t border-[#EDEBE2]">
                 <div className="text-xs text-[#263B32]/70">
-                  Data Sources: Bangladesh Disaster Management, Copernicus Sentinel-1, JRC GloFAS & UNOSAT.
+                  {lang === "bn"
+                    ? "উপাত্তের উৎস: দুর্যোগ ব্যবস্থাপনা অধিদপ্তর, কোপার্নিকাস সেন্টিনেল-১, JRC GloFAS ও UNOSAT।"
+                    : "Data Sources: Bangladesh Disaster Management, Copernicus Sentinel-1, JRC GloFAS & UNOSAT."}
                 </div>
                 <Button onClick={() => setIsDistrictReportOpen(false)}>
-                  Close Report
+                  {t.btn_close}
                 </Button>
               </DialogFooter>
             </DialogContent>
