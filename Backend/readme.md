@@ -636,7 +636,7 @@ Planned items are not claims of completed functionality.
 | Improve the model on new floods | Tried once (neighbour inputs): no gain, not adopted. Open: upstream and cross-border rain and river data |
 | New satellite passes for live use (fetched by the daily update) | Done |
 | Check the model on 2025, a year never used so far | Done (section 13) |
-| Check on 2026 (kept untouched for the next model change) | Planned |
+| Check on 2026 (kept untouched for the next model change) | Data stored 12 Nov 2026 (rain 1 Mar–5 Nov, river 15 Feb–10 Nov, satellite passes); **not measured yet on purpose** |
 | Authentication and rate limiting before any public use | Planned |
 
 ## 13. The flood model: design and measured results
