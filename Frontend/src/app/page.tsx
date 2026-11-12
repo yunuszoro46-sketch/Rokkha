@@ -701,22 +701,28 @@ export function CitizenPortalApp({
           isPageLoading ? "page-loading" : ""
         }`}
       >
-      {/* 1. Left Side Dashboard Rail - Multi-Page Navigation */}
-      <SideDashboard
-        activeView={activeView}
-        onSelectView={navigateToPage}
-        onOpenAbout={() => setIsAboutOpen(true)}
-        activeAlertCount={alerts.length}
-        isBackendConnected={isBackendConnected}
-        isCollapsed={isSidebarCollapsed}
-        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-        lang={lang}
-      />
+      {/* 1. Left Side Dashboard Rail - Multi-Page Navigation (only shown on functional pages, hidden on landing/overview) */}
+      {activeView !== "overview" && (
+        <SideDashboard
+          activeView={activeView}
+          onSelectView={navigateToPage}
+          onOpenAbout={() => setIsAboutOpen(true)}
+          activeAlertCount={alerts.length}
+          isBackendConnected={isBackendConnected}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          lang={lang}
+        />
+      )}
 
-      {/* Main Content Area (offset by widened left sidebar) */}
+      {/* Main Content Area */}
       <div
         className={`flex-1 w-full bg-[#EDEBE2] transition-all duration-300 min-w-0 flex flex-col justify-between ${
-          isSidebarCollapsed ? "pl-20" : "pl-20 md:pl-80"
+          activeView === "overview"
+            ? "pl-0"
+            : isSidebarCollapsed
+            ? "pl-20"
+            : "pl-20 md:pl-80"
         }`}
       >
         <main className="w-full flex-1 flex flex-col justify-between">
@@ -855,8 +861,8 @@ export function CitizenPortalApp({
                     <div className="metric-icon-circle">
                       <Icon name="layers" />
                     </div>
-                    <strong>{t.metric_years}</strong>
-                    <span>{t.metric_years_sub}</span>
+                    <strong>Previous</strong>
+                    <span>Historical Analysis</span>
                   </div>
                   <div>
                     <div className="metric-icon-circle">
