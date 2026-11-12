@@ -21,15 +21,15 @@ export const AttributionFooter: React.FC<AttributionFooterProps> = ({
       <div className="w-full pt-6 border-t border-[#DFDDD3] space-y-6">
         {/* Top Tier: Brand, Helplines, and Data Feeds */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          {/* Brand & Purpose */}
-          <div className="flex items-center gap-3">
+          {/* Brand & Purpose: Rokkha Flood Intelligence bottom of logo Rokkha */}
+          <div className="flex flex-col items-start gap-1">
             <img
               src={logoAsset.src}
               alt="Rokkha"
-              className="h-10 w-auto object-contain shrink-0"
+              className="h-9 w-auto object-contain shrink-0"
             />
             <div>
-              <div className="font-extrabold text-[#11241C] text-lg sm:text-xl tracking-tight leading-tight">
+              <div className="font-extrabold text-[#11241C] text-base sm:text-lg tracking-tight leading-tight mt-1">
                 {t.footer_title}
               </div>
               <div className="text-xs sm:text-sm text-[#5C6863] mt-0.5">
@@ -39,8 +39,8 @@ export const AttributionFooter: React.FC<AttributionFooterProps> = ({
           </div>
 
           {/* Actionable Emergency Helplines (Citizen 1-tap call) */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-            <span className="text-xs sm:text-sm font-bold text-[#11241C]/80 flex items-center gap-1.5 shrink-0">
+          <div className="flex flex-col sm:flex-row sm:items-start gap-2.5 sm:gap-3">
+            <span className="text-xs sm:text-sm font-bold text-[#11241C]/80 flex items-center gap-1.5 shrink-0 whitespace-nowrap pt-1.5">
               <PhoneCall className="w-4 h-4 text-[#C93B2B]" />
               {t.footer_helplines_title}:
             </span>
