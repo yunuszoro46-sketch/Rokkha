@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import logoAsset from "@/assets/logo.png";
 import {
   Shield,
   LifeBuoy,
@@ -54,18 +55,18 @@ export function PortalAccessPage({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
-      {/* Background Image: Satellite Flood Radar with Street Flow */}
+      {/* Background Image: Satellite Flood Radar with Street Flow on Both Sides */}
       <div
-        className="fixed inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 scale-105"
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage: "url('/satellite-flood-bg.jpg')",
         }}
       />
       {/* Backdrop Overlay */}
-      <div className="fixed inset-0 bg-[#06140E]/60 backdrop-blur-[3px]" />
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-[2px]" />
 
       {/* Main Form Card - Warm Cream Color (#EDEBE2) matching User Reference Image 2 */}
-      <div className="relative z-10 w-full max-w-[490px] my-auto bg-[#EDEBE2] border border-[#D5D2C5] rounded-3xl p-6 sm:p-8 shadow-[0_25px_60px_rgba(0,0,0,0.45)] text-[#12241C] animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative z-10 w-full max-w-[490px] my-auto bg-[#EDEBE2] border border-[#D5D2C5] rounded-3xl p-6 sm:p-8 shadow-[0_25px_60px_rgba(0,0,0,0.5)] text-[#12241C] animate-in fade-in zoom-in-95 duration-200">
         {/* Close Button */}
         {onClose && (
           <button
@@ -77,15 +78,14 @@ export function PortalAccessPage({
           </button>
         )}
 
-        {/* Rokkha Brand Header */}
-        <div className="flex flex-col items-center text-center mb-6">
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="w-8 h-8 rounded-lg bg-[#D8EADB] border border-[#23583A]/30 flex items-center justify-center text-[#1E5638] shadow-sm">
-              <Shield size={19} className="fill-[#23583A]/20" />
-            </span>
-            <span className="text-xl font-extrabold tracking-tight text-[#12241C]">
-              Rokkha
-            </span>
+        {/* Rokkha Official Brand Header (Matching Image 2) */}
+        <div className="flex flex-col items-center text-center mb-5">
+          <div className="flex items-center justify-center mb-2">
+            <img
+              src={logoAsset.src}
+              alt="Rokkha"
+              className="h-11 w-auto object-contain"
+            />
           </div>
           <h2 className="text-2xl sm:text-3xl font-black text-[#12241C] tracking-tight">
             Portal Access
