@@ -1540,7 +1540,7 @@ export function CitizenPortalApp({
           </Dialog>
 
           {/* Attribution & Licensing Footer */}
-          <AttributionFooter lang={lang} />
+          <AttributionFooter lang={lang} onOpenAbout={() => setIsAboutOpen(true)} />
         </main>
       </div>
     </div>

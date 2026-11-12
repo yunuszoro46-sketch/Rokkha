@@ -338,16 +338,17 @@ export const UI_TEXT = {
     map_inspect_disclaimer:
       "ML estimation for disaster awareness. FFWC issues official warnings.",
 
-    // Footer
+    // Clean & Meaningful Footer
     footer_title: "Rokkha Flood Intelligence",
     footer_sub: "Citizen Portal · Open Climate Safety for Bangladesh",
-    footer_desc:
-      "Built to provide actionable district-level flood awareness, shelter access, and transparent climate data to every citizen and community responder.",
-    footer_attributions_title: "Mandatory Data Attributions & Licensing",
-    footer_attributions_desc:
-      "Satellite radar observations sourced from Copernicus Sentinel-1 Global Flood Monitoring (GFM) under the Copernicus Emergency Management Service. Hydrological discharge from Copernicus GloFAS and reanalysis rainfall from ECMWF ERA5 / NOAA GFS via Open-Meteo. Historical satellite flood polygons from UNOSAT (licensed under CC BY-SA). National district administrative shapes provided by Humanitarian Data Exchange (HDX) (CC BY-IGO). Basemap cartography © OpenStreetMap contributors (ODbL) and CartoDB.",
+    footer_helplines_title: "Emergency Helplines",
+    footer_sources_title: "Verified Data Feeds",
+    footer_about_link: "Data Transparency & Limits",
     footer_copyright: "Rokkha. Open Public Safety Intelligence.",
-    footer_coords_note: "Cartographic data adheres to WGS84 Geodesic Coordinates.",
+    footer_coords_note: "WGS84 Geodesic Coordinates",
+    footer_helpline_999: "999 (National Emergency)",
+    footer_helpline_1090: "1090 (Flood & Disaster IVR)",
+    footer_helpline_109: "109 (Women & Child Helpline)",
   },
   bn: {
     // Top Nav
@@ -601,15 +602,16 @@ export const UI_TEXT = {
     map_inspect_disclaimer:
       "দুর্যোগ সচেতনতার জন্য এআই পূর্বাভাস। সরকারি সতর্কবার্তা FFWC প্রদান করে।",
 
-    // Footer
+    // Clean & Meaningful Footer
     footer_title: "রক্ষা বন্যা বুদ্ধিমত্তা প্ল্যাটফর্ম",
     footer_sub: "নাগরিক পোর্টাল · বাংলাদেশের জন্য উন্মুক্ত জলবায়ু নিরাপত্তা",
-    footer_desc:
-      "বাংলাদেশের প্রতিটি নাগরিক ও দুর্যোগ মোকাবিলা কর্মীর জন্য জেলাভিত্তিক বন্যা সচেতনতা, আশ্রয়কেন্দ্র ও উন্মুক্ত জলবায়ু তথ্য সরবরাহের লক্ষ্যে নির্মিত।",
-    footer_attributions_title: "উপাত্তের স্বীকৃতি ও উন্মুক্ত লাইসেন্সসমূহ",
-    footer_attributions_desc:
-      "ইউরোপীয় ইউনিয়নের কপারনিকাস সেন্টিনেল-১ গ্লোবাল ফ্লাড মনিটরিং (GFM) থেকে সংগৃহীত স্যাটেলাইট রাডার পর্যবেক্ষণ। কপারনিকাস GloFAS থেকে পানি প্রবাহ এবং Open-Meteo-র মাধ্যমে ECMWF ERA5 / NOAA GFS থেকে বৃষ্টিপাতের উপাত্ত। UNOSAT (CC BY-SA লাইসেন্স) থেকে ঐতিহাসিক স্যাটেলাইট প্লাবন মানচিত্র। Humanitarian Data Exchange (HDX) (CC BY-IGO) প্রদত্ত বাংলাদেশের ৬৪ জেলার প্রশাসনিক সীমানা। মানচিত্র কার্টোগ্রাফি ও কপিরাইট: ওপেনস্ট্রিটম্যাপ ও কার্টোডিবি।",
+    footer_helplines_title: "জরুরি সরকারি হটলাইন",
+    footer_sources_title: "যাচাইকৃত উপাত্তের উৎস",
+    footer_about_link: "উপাত্তের স্বচ্ছতা ও সীমাবদ্ধতা",
     footer_copyright: "রক্ষা। উন্মুক্ত নাগরিক নিরাপত্তা বুদ্ধিমত্তা প্ল্যাটফর্ম।",
-    footer_coords_note: "মানচিত্রের ভৌগোলিক উপাত্ত WGS84 স্থানাঙ্ক পদ্ধতি অনুসরণ করে।",
+    footer_coords_note: "WGS84 ভূস্থানিক স্থানাঙ্ক ব্যবস্থা",
+    footer_helpline_999: "৯৯৯ (জাতীয় জরুরি সেবা)",
+    footer_helpline_1090: "১০৯০ (বন্যা ও দুর্যোগ আইভিআর)",
+    footer_helpline_109: "১০৯ (নারী ও শিশু সুরক্ষা হেল্পলাইন)",
   },
 };
