@@ -17,6 +17,7 @@ import {
   Crosshair,
   ExternalLink,
   ShieldCheck,
+  Shield,
 } from "lucide-react";
 
 // Official shadcn/ui primitives
@@ -1006,81 +1007,39 @@ export function CitizenPortalApp({
                   </section>
                 </div>
 
-                {/* Subscribe & API Access Banner */}
-                <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 my-16">
-                  <section id="subscribe">
-                    <div className="bg-[#113824] rounded-3xl p-8 lg:p-12 text-white shadow-xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center border border-[#1b4e34]">
-                      {/* Left Column */}
-                      <div className="lg:col-span-7 space-y-6">
-                        <Badge variant="outline" className="text-xs font-semibold text-white/90 bg-white/10 border-white/20 rounded-full px-3.5 py-1">
-                          Stay One Step Ahead
-                        </Badge>
-                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
-                          Subscribe to District Flood Alerts & API Access
-                        </h2>
-                        <p className="text-base text-white/80 max-w-xl leading-relaxed">
-                          Receive instant early flood predictions, river danger-level crossings, and nearest safe shelter coordinates for your district.
+                {/* Banner Card: Building a more flood-resilient Bangladesh (Matching Image 2) */}
+                <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 my-10">
+                  <div className="bg-white rounded-3xl border border-[#DFDDD3] p-5 sm:p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="flex flex-col sm:flex-row items-center gap-5 w-full md:w-auto">
+                      <img
+                        src="/bangladesh-river.jpg"
+                        alt="Bangladesh flood resilience"
+                        className="w-full sm:w-64 h-24 rounded-2xl object-cover shadow-sm"
+                      />
+                      <div className="space-y-1 text-center sm:text-left">
+                        <div className="flex items-center justify-center sm:justify-start gap-1.5 text-base sm:text-lg font-extrabold text-[#11241C]">
+                          <Shield size={16} className="text-[#16A34A] shrink-0" />
+                          <span>
+                            {lang === "bn"
+                              ? "বন্যা-সহনশীল বাংলাদেশ বিনির্মাণে"
+                              : "Building a more flood-resilient Bangladesh"}
+                          </span>
+                        </div>
+                        <p className="text-xs sm:text-sm text-[#5C6863]">
+                          {lang === "bn"
+                            ? "উপাত্ত, পূর্বাভাস ও প্রস্তুতি—নিরাপদ জনগোষ্ঠীর লক্ষ্যে একসাথে।"
+                            : "Data, prediction, and preparedness—together for safer communities."}
                         </p>
-
-                        {/* Form Row */}
-                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
-                          <Input
-                            type="text"
-                            placeholder="Your Name or Organization"
-                            className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl px-4 flex-1 focus:border-[#4ADE80] focus:ring-[#4ADE80]"
-                          />
-                          <div className="w-full sm:w-48">
-                            <Select defaultValue="BD6091">
-                              <SelectTrigger className="h-12 bg-white/10 border-white/20 text-white rounded-xl">
-                                <SelectValue placeholder="Sylhet District" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="BD6091">Sylhet District</SelectItem>
-                                <SelectItem value="BD6090">Sunamganj District</SelectItem>
-                                <SelectItem value="BD3026">Dhaka District</SelectItem>
-                                <SelectItem value="BD5549">Kurigram District</SelectItem>
-                                <SelectItem value="BD1004">Chittagong District</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <Button className="h-12 px-6 rounded-xl bg-[#52B74A] hover:bg-[#43A03B] text-[#0A2616] font-bold text-sm tracking-wide transition shadow-lg shrink-0">
-                            Activate Alerts →
-                          </Button>
-                        </div>
-                      </div>
-
-                      {/* Right Column: Code Terminal Mockup */}
-                      <div className="lg:col-span-5">
-                        <div className="bg-[#0A1D13] rounded-2xl border border-white/10 p-5 font-mono shadow-2xl">
-                          <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/10 text-xs">
-                            <div className="flex items-center gap-2 text-white/90">
-                              <span className="w-2.5 h-2.5 rounded-full bg-[#4ADE80] inline-block" />
-                              <span className="font-semibold">GET /api/v1/forecast/basin</span>
-                            </div>
-                            <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#163824] text-[#4ADE80] border border-[#225738]">
-                              187 Tests Passing
-                            </span>
-                          </div>
-                          <pre className="text-xs text-[#86EFAC] leading-relaxed overflow-x-auto">
-{`{
-  "platform": "Rokkha Climate Intelligence",
-  "coverage_districts": 64,
-  "baseline": "Previous Historical Analysis",
-  "active_basin": "Surma-Meghna",
-  "hydrodynamic_flow_m3s": 14820,
-  "risk_distribution": {
-    "Low": 41,
-    "Moderate": 11,
-    "High": 7,
-    "Severe": 5
-  },
-  "critical_assets_monitored": 1240
-}`}
-                          </pre>
-                        </div>
                       </div>
                     </div>
-                  </section>
+                    <Button
+                      onClick={() => navigateToPage("login")}
+                      className="bg-[#122B1E] hover:bg-[#0C1F15] text-white font-bold text-sm px-6 h-11 rounded-xl shadow-md shrink-0 flex items-center gap-2"
+                    >
+                      <span>{t.btn_get_started}</span>
+                      <Icon name="arrow" size={16} />
+                    </Button>
+                  </div>
                 </div>
               </>
             )}
@@ -1642,47 +1601,8 @@ export function CitizenPortalApp({
             </DialogContent>
           </Dialog>
 
-          {/* Bottom Footer Bar */}
-          <footer className="w-full border-t border-[#DFDDD3] bg-[#EAE8DF]/60 py-6 mt-16">
-            <div className="max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#5C6863]">
-              <div>
-                <span className="font-bold text-[#12241C]">Rokkha</span>
-                <span className="mx-2">|</span>
-                <span>Climate Intelligence for a Safer Bangladesh</span>
-              </div>
-              <div className="flex flex-wrap items-center gap-5 font-medium">
-                <a
-                  href="#overview"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigateToPage("overview");
-                  }}
-                  className="hover:text-[#12241C] transition"
-                >
-                  Home
-                </a>
-                <a href="#capabilities" className="hover:text-[#12241C] transition">
-                  Features
-                </a>
-                <a
-                  href="#map"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigateToPage("map");
-                  }}
-                  className="hover:text-[#12241C] transition"
-                >
-                  Data & Coverage
-                </a>
-                <a href="#architecture" className="hover:text-[#12241C] transition">
-                  How It Works
-                </a>
-                <span className="text-[#88948D]">
-                  64 Districts • 1,200+ Critical Assets
-                </span>
-              </div>
-            </div>
-          </footer>
+          {/* Bottom Footer Bar matching Image 2 */}
+          <AttributionFooter lang={lang} onOpenAbout={() => setIsAboutOpen(true)} />
         </main>
       </div>
       {/* Portal Access Login/Register Modal & Page (Matching User Reference Image) */}
