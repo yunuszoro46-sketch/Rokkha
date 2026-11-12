@@ -196,60 +196,60 @@ function Icon({
   );
 }
 
-const capabilities: Array<{
+const getCapabilities = (t: any): Array<{
   icon: IconName;
   title: string;
   body: string;
   featured?: boolean;
   targetView: CitizenView;
-}> = [
+}> => [
   {
     icon: "chart",
-    title: "Historical Analysis",
-    body: "Analyze past flood events from 2016 to 2024",
+    title: t.cap_1_title,
+    body: t.cap_1_desc,
     targetView: "satellite",
   },
   {
     icon: "layers",
-    title: "Flood Hazard Mapping",
-    body: "Identify and visualize flood-prone areas",
+    title: t.cap_2_title,
+    body: t.cap_2_desc,
     featured: true,
     targetView: "map",
   },
   {
     icon: "location",
-    title: "Geographical Analysis",
-    body: "Explore rivers, canals and vulnerable regions",
+    title: t.cap_3_title,
+    body: t.cap_3_desc,
     targetView: "map",
   },
   {
     icon: "building",
-    title: "Asset Management",
-    body: "Track hospitals, schools, shelters and other critical assets",
+    title: t.cap_4_title,
+    body: t.cap_4_desc,
     targetView: "shelters",
   },
   {
     icon: "users",
-    title: "Population Exposure",
-    body: "Assess people and property at risk",
+    title: t.cap_5_title,
+    body: t.cap_5_desc,
     targetView: "alerts",
   },
   {
     icon: "cloud",
-    title: "Weather & River Data",
-    body: "Collect and integrate real-time environmental data",
+    title: t.cap_6_title,
+    body: t.cap_6_desc,
     targetView: "hydro",
   },
   {
     icon: "database",
-    title: "Integrated Database",
-    body: "MongoDB-powered, scalable and reliable data management",
+    title: t.cap_7_title,
+    body: t.cap_7_desc,
     targetView: "shelters",
   },
   {
     icon: "code",
-    title: "REST APIs",
-    body: "Secure and well-tested APIs (187 automated tests)",
+    title: t.cap_8_title,
+    body: t.cap_8_desc,
     targetView: "alerts",
   },
 ];
@@ -884,17 +884,16 @@ export function CitizenPortalApp({
                 {/* Core Capabilities (8 Cards - Clickable to jump to their page) */}
                 <section className="capabilities" id="capabilities">
                   <div className="section-label">
-                    <span /> Core Capabilities <span />
+                    <span /> {t.cap_label} <span />
                   </div>
                   <h2>
-                    A Complete <em>Flood Intelligence</em> Platform
+                    {t.cap_title}
                   </h2>
                   <p className="section-intro">
-                    From historical analysis to real-time data and future prediction, Rokkha brings essential
-                    tools together for smarter, faster, and more resilient decisions.
+                    {t.cap_sub}
                   </p>
                   <div className="capability-grid">
-                    {capabilities.map(({ icon, title, body, featured, targetView }) => (
+                    {getCapabilities(t).map(({ icon, title, body, featured, targetView }) => (
                       <article
                         className={`${featured ? "featured" : ""} cursor-pointer`}
                         key={title}
@@ -924,46 +923,43 @@ export function CitizenPortalApp({
                         <i />
                         <i />
                       </div>
-                      <MapArtwork compact />
+                      <MapArtwork compact lang={lang} />
                       <div className="map-pin">
-                        <span>Risk: High</span>
+                        <span>{t.mock_risk_high}</span>
                         <b />
                       </div>
                     </div>
                     <div className="forecast">
                       <strong>
-                        <Icon name="cloud" size={16} /> Flood Forecast
+                        <Icon name="cloud" size={16} /> {t.mock_forecast_title}
                       </strong>
-                      <span>Next 24 hours</span>
-                      <small>Risk Level</small>
-                      <b>High</b>
-                      <small>Affected Area (est.)</small>
-                      <b>≈ 312 km²</b>
+                      <span>{t.mock_forecast_time}</span>
+                      <small>{t.mock_risk_level}</small>
+                      <b>{t.mock_high}</b>
+                      <small>{t.mock_affected_area}</small>
+                      <b>{t.mock_area_val}</b>
                     </div>
                   </div>
                   <div className="prediction-copy">
-                    <div className="up-next">ϟ Up next</div>
+                    <div className="up-next">ϟ {t.up_next_badge}</div>
                     <h2>
-                      Towards{" "}
+                      {t.up_next_title_1}{" "}
                       <em>
-                        24-Hour
-                        <br />
-                        Flood Prediction
+                        {t.up_next_title_2}
                       </em>
                     </h2>
                     <p>
-                      We are developing an ML-based prediction model to forecast flood risk up to 24 hours
-                      ahead, with automated alerts and real-time data updates.
+                      {t.up_next_desc}
                     </p>
                     <ul>
                       <li>
-                        <Icon name="check" size={15} /> ML model training & evaluation
+                        <Icon name="check" size={15} /> {t.up_next_check_1}
                       </li>
                       <li>
-                        <Icon name="check" size={15} /> Prediction API & automated alerts
+                        <Icon name="check" size={15} /> {t.up_next_check_2}
                       </li>
                       <li>
-                        <Icon name="check" size={15} /> Scheduled weather-data collection
+                        <Icon name="check" size={15} /> {t.up_next_check_3}
                       </li>
                     </ul>
                   </div>
@@ -976,15 +972,15 @@ export function CitizenPortalApp({
                     <Icon name="shield" />
                     <div>
                       <strong>
-                        Building a more
+                        {t.cta_title_1}
                         <br />
-                        <span>flood-resilient Bangladesh</span>
+                        <span>{t.cta_title_2}</span>
                       </strong>
-                      <p>Data, prediction, and preparedness—together for safer communities.</p>
+                      <p>{t.cta_desc}</p>
                     </div>
                   </div>
                   <Button onClick={() => navigateToPage("map")} className="button gap-2">
-                    <span>Get Started</span>
+                    <span>{t.cta_btn}</span>
                     <Icon name="arrow" size={16} />
                   </Button>
                 </section>

@@ -127,9 +127,53 @@ export const UI_TEXT = {
     metric_tests_sub: "Automated Tests & Verifications",
 
     // Capabilities Section
+    cap_label: "Core Capabilities",
     cap_title: "A Complete Flood Intelligence Platform",
     cap_sub:
-      "Engineered for humanitarian responders, municipal authorities, and vulnerable communities across Bangladesh.",
+      "From historical analysis to real-time data and future prediction, Rokkha brings essential tools together for smarter, faster, and more resilient decisions.",
+
+    // 8 Core Capability Cards
+    cap_1_title: "Historical Analysis",
+    cap_1_desc: "Analyze past flood events from 2016 to 2024",
+    cap_2_title: "Flood Hazard Mapping",
+    cap_2_desc: "Identify and visualize flood-prone areas",
+    cap_3_title: "Geographical Analysis",
+    cap_3_desc: "Explore rivers, canals and vulnerable regions",
+    cap_4_title: "Asset Management",
+    cap_4_desc: "Track hospitals, schools, shelters and other critical assets",
+    cap_5_title: "Population Exposure",
+    cap_5_desc: "Assess people and property at risk",
+    cap_6_title: "Weather & River Data",
+    cap_6_desc: "Collect and integrate real-time environmental data",
+    cap_7_title: "Integrated Database",
+    cap_7_desc: "MongoDB-powered, scalable and reliable data management",
+    cap_8_title: "REST APIs",
+    cap_8_desc: "Secure and well-tested APIs (187 automated tests)",
+
+    // Up next section (24-Hour ML Prediction)
+    up_next_badge: "Up next",
+    up_next_title_1: "Towards",
+    up_next_title_2: "24-Hour Flood Prediction",
+    up_next_desc:
+      "We are developing an ML-based prediction model to forecast flood risk up to 24 hours ahead, with automated alerts and real-time data updates.",
+    up_next_check_1: "ML model training & evaluation",
+    up_next_check_2: "Prediction API & automated alerts",
+    up_next_check_3: "Scheduled weather-data collection",
+
+    // Preview mockup card
+    mock_risk_high: "Risk: High",
+    mock_forecast_title: "Flood Forecast",
+    mock_forecast_time: "Next 24 hours",
+    mock_risk_level: "Risk Level",
+    mock_high: "High",
+    mock_affected_area: "Affected Area (est.)",
+    mock_area_val: "≈ 312 km²",
+
+    // CTA Section
+    cta_title_1: "Building a more",
+    cta_title_2: "flood-resilient Bangladesh",
+    cta_desc: "Data, prediction, and preparedness—together for safer communities.",
+    cta_btn: "Get Started",
 
     // Context Card
     label_district: "District:",
@@ -345,9 +389,53 @@ export const UI_TEXT = {
     metric_tests_sub: "স্বয়ংক্রিয় পরীক্ষা ও সঠিকতা যাচাই",
 
     // Capabilities Section
+    cap_label: "প্রধান সুবিধাসমূহ",
     cap_title: "একটি স্বয়ংসম্পূর্ণ বন্যা বুদ্ধিমত্তা প্ল্যাটফর্ম",
     cap_sub:
-      "বাংলাদেশের দুর্যোগ মোকাবিলা কর্মী, স্থানীয় কর্তৃপক্ষ এবং ঝুঁকিপূর্ণ জনগণের জন্য বিশেষভাবে নকশা করা।",
+      "ঐতিহাসিক বিশ্লেষণ থেকে শুরু করে রিয়েল-টাইম উপাত্ত এবং ভবিষ্যৎ পূর্বাভাস—ঝুঁকি মোকাবিলা ও দ্রুত কার্যকর সিদ্ধান্ত নিতে রক্ষার সমন্বিত উদ্যোগ।",
+
+    // 8 Core Capability Cards
+    cap_1_title: "ঐতিহাসিক বিশ্লেষণ",
+    cap_1_desc: "২০১৬ থেকে ২০২৪ সালের অতীতের প্রধান বন্যা দুর্যোগ বিশ্লেষণ",
+    cap_2_title: "বন্যা ঝুঁকি মানচিত্রায়ন",
+    cap_2_desc: "বন্যাপ্রবণ এলাকা চিহ্নিতকরণ এবং সরাসরি ভিজ্যুয়ালাইজেশন",
+    cap_3_title: "ভৌগোলিক বিশ্লেষণ",
+    cap_3_desc: "নদী, খাল এবং চরম প্লাবনঝুঁকিপূর্ণ অঞ্চলের ভৌগোলিক অনুসন্ধান",
+    cap_4_title: "সম্পদ ও স্থাপনা ব্যবস্থাপনা",
+    cap_4_desc: "হাসপাতাল, বিদ্যালয়, আশ্রয়কেন্দ্র ও অন্যান্য জরুরি স্থাপনা ট্র্যাকিং",
+    cap_5_title: "জনসংখ্যা ও ঝুঁকি পরিমাপ",
+    cap_5_desc: "ঝুঁকিতে থাকা মানুষ ও ঘরবাড়ির সম্ভাব্য ক্ষতির মূল্যায়ন",
+    cap_6_title: "আবহাওয়া ও নদীর উপাত্ত",
+    cap_6_desc: "রিয়েল-টাইম বৃষ্টিপাত ও নদীর পানি প্রবাহ উপাত্ত সংগ্রহ ও একীভূতকরণ",
+    cap_7_title: "সমন্বিত ডেটাবেস",
+    cap_7_desc: "মঙ্গোডিবি (MongoDB) চালিত উচ্চ গতিসম্পন্ন ও নির্ভরযোগ্য তথ্য ব্যবস্থাপনা",
+    cap_8_title: "রেস্ট এপিআই (REST APIs)",
+    cap_8_desc: "নিরাপদ ও স্বয়ংক্রিয়ভাবে পরীক্ষিত ওপেন এপিআই (১৮৭টি টেস্ট ভেরিফায়েড)",
+
+    // Up next section (24-Hour ML Prediction)
+    up_next_badge: "পরবর্তী লক্ষ্য",
+    up_next_title_1: "অগ্রযাত্রা",
+    up_next_title_2: "২৪ ঘণ্টার বন্যা পূর্বাভাসের লক্ষ্যে",
+    up_next_desc:
+      "আমরা একটি মেশিন লার্নিং (এআই) মডেল প্রস্তুত করছি যা ২৪ ঘণ্টা আগেই বন্যার পূর্বাভাস দিতে পারে—সাথে স্বয়ংক্রিয় সতর্কবার্তা ও রিয়েল-টাইম ডেটা আপডেট।",
+    up_next_check_1: "মেশিন লার্নিং মডেল প্রশিক্ষণ ও সঠিকতা যাচাই",
+    up_next_check_2: "পূর্বাভাস এপিআই ও স্বয়ংক্রিয় সতর্কবার্তা",
+    up_next_check_3: "নিয়মিত স্বয়ংক্রিয় আবহাওয়া উপাত্ত সংগ্রহ",
+
+    // Preview mockup card
+    mock_risk_high: "ঝুঁকি: উচ্চ",
+    mock_forecast_title: "বন্যা পূর্বাভাস",
+    mock_forecast_time: "পরবর্তী ২৪ ঘণ্টা",
+    mock_risk_level: "ঝুঁকির মাত্রা",
+    mock_high: "উচ্চ",
+    mock_affected_area: "প্লাবিত এলাকা (আনুমানিক)",
+    mock_area_val: "≈ ৩১২ বর্গ কিমি",
+
+    // CTA Section
+    cta_title_1: "বন্যা সহনশীল",
+    cta_title_2: "বাংলাদেশ গড়ে তোলার প্রত্যয়ে",
+    cta_desc: "উপাত্ত, পূর্বাভাস ও প্রস্তুতি—নিরাপদ জনপদের জন্য একসাথে।",
+    cta_btn: "শুরু করুন",
 
     // Context Card
     label_district: "জেলা:",
