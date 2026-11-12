@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import logoAsset from "@/assets/logo.png";
 import {
   LifeBuoy,
@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 import { Language } from "@/lib/translations";
 
 interface PortalAccessPageProps {
@@ -32,7 +33,6 @@ interface PortalAccessPageProps {
   onClose?: () => void;
   onLoginSuccess: () => void;
   lang?: Language;
-  onToggleLanguage?: () => void;
 }
 
 export function PortalAccessPage({
@@ -40,7 +40,6 @@ export function PortalAccessPage({
   onClose,
   onLoginSuccess,
   lang = "en",
-  onToggleLanguage,
 }: PortalAccessPageProps) {
   const [tab, setTab] = useState<string>("register");
   const [role, setRole] = useState<"rescuer" | "user">("rescuer");
@@ -50,19 +49,6 @@ export function PortalAccessPage({
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentLang, setCurrentLang] = useState<Language>(lang);
-
-  useEffect(() => {
-    setCurrentLang(lang);
-  }, [lang]);
-
-  const isBn = currentLang === "bn";
-
-  const handleToggleLang = () => {
-    const next = currentLang === "en" ? "bn" : "en";
-    setCurrentLang(next);
-    onToggleLanguage?.();
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,33 +80,16 @@ export function PortalAccessPage({
 
       {/* Main Login Card - shadcn Card with Warm Cream Theme (#EDEBE2) */}
       <Card className="relative z-10 w-full max-w-[490px] my-auto bg-[#EDEBE2] border-[#D5D2C5] rounded-3xl p-6 sm:p-8 shadow-[0_25px_60px_rgba(0,0,0,0.5)] text-[#12241C] animate-in fade-in zoom-in-95 duration-200">
-        {/* Top Header Actions: EN | BN System & Close Button */}
-        <div className="absolute top-5 right-5 flex items-center gap-2 z-20">
+        {/* Close Button */}
+        {onClose && (
           <button
-            type="button"
-            onClick={handleToggleLang}
-            className="h-8 px-2.5 rounded-full border border-[#DFDDD3] bg-white hover:bg-[#FAF9F5] text-xs font-bold text-[#183026] shadow-xs transition flex items-center gap-1 cursor-pointer"
-            title="Switch Language / ভাষা পরিবর্তন করুন"
+            onClick={onClose}
+            className="absolute top-5 right-5 w-8 h-8 rounded-full bg-[#DFDDD3] hover:bg-[#D5D2C5] text-[#3E4D45] hover:text-[#12241C] flex items-center justify-center transition shadow-sm"
+            aria-label="Close portal modal"
           >
-            <span className={!isBn ? "text-[#183026] font-extrabold" : "text-[#183026]/40"}>
-              EN
-            </span>
-            <span className="text-[#183026]/30">|</span>
-            <span className={isBn ? "text-[#183026] font-extrabold" : "text-[#183026]/40"}>
-              BN
-            </span>
+            <X size={16} />
           </button>
-
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="w-8 h-8 rounded-full bg-[#DFDDD3] hover:bg-[#D5D2C5] text-[#3E4D45] hover:text-[#12241C] flex items-center justify-center transition shadow-xs cursor-pointer"
-              aria-label="Close portal modal"
-            >
-              <X size={16} />
-            </button>
-          )}
-        </div>
+        )}
 
         {/* Card Header with Official Rokkha Brand Logo */}
         <CardHeader className="p-0 text-center mb-5 space-y-1">
@@ -132,12 +101,10 @@ export function PortalAccessPage({
             />
           </div>
           <CardTitle className="text-2xl sm:text-3xl font-black text-[#12241C] tracking-tight">
-            {isBn ? "পোর্টাল এক্সেস" : "Portal Access"}
+            Portal Access
           </CardTitle>
           <CardDescription className="text-xs sm:text-sm text-[#4E5C55] font-normal">
-            {isBn
-              ? "সরাসরি বন্যা তথ্য ও জরুরি সহায়তা গ্রহণ"
-              : "Access Live Flood Intelligence & Resource Dispatch"}
+            Access Live Flood Intelligence & Resource Dispatch
           </CardDescription>
         </CardHeader>
 
@@ -153,13 +120,13 @@ export function PortalAccessPage({
                 value="login"
                 className="text-xs sm:text-sm font-bold rounded-lg data-[state=active]:bg-white data-[state=active]:text-[#12241C] data-[state=active]:shadow-sm text-[#5C6863]"
               >
-                {isBn ? "লগইন" : "LOG IN"}
+                LOG IN
               </TabsTrigger>
               <TabsTrigger
                 value="register"
                 className="text-xs sm:text-sm font-bold rounded-lg data-[state=active]:bg-white data-[state=active]:text-[#12241C] data-[state=active]:shadow-sm text-[#5C6863]"
               >
-                {isBn ? "নিবন্ধন / যোগ দিন" : "REGISTER / JOIN"}
+                REGISTER / JOIN
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -171,7 +138,7 @@ export function PortalAccessPage({
                 {/* Join as: Role Selector with shadcn Buttons */}
                 <div>
                   <label className="block text-xs font-semibold text-[#3B4740] mb-2">
-                    {isBn ? "ভূমিকা নির্বাচন করুন:" : "Join as:"}
+                    Join as:
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <Button
@@ -185,7 +152,7 @@ export function PortalAccessPage({
                       }`}
                     >
                       <LifeBuoy size={16} className={role === "rescuer" ? "text-[#16A34A]" : ""} />
-                      <span>{isBn ? "উদ্ধারকারী" : "RESCUER"}</span>
+                      <span>RESCUER</span>
                     </Button>
                     <Button
                       type="button"
@@ -198,7 +165,7 @@ export function PortalAccessPage({
                       }`}
                     >
                       <UserIcon size={16} className={role === "user" ? "text-[#16A34A]" : ""} />
-                      <span>{isBn ? "নাগরিক ব্যবহারকারী" : "USER"}</span>
+                      <span>USER</span>
                     </Button>
                   </div>
                 </div>
@@ -206,14 +173,14 @@ export function PortalAccessPage({
                 {/* Full Name Input */}
                 <div>
                   <label className="block text-xs font-semibold text-[#3B4740] mb-1.5">
-                    {isBn ? "পূর্ণ নাম" : "Full Name"}
+                    Full Name
                   </label>
                   <Input
                     type="text"
                     required
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder={isBn ? "আপনার পূর্ণ নাম" : "Full Name"}
+                    placeholder="Full Name"
                     className="bg-white border-[#DFDDD3] text-[#12241C] placeholder:text-[#88948D] h-11 rounded-xl focus-visible:ring-[#16A34A]"
                   />
                 </div>
@@ -223,7 +190,7 @@ export function PortalAccessPage({
             {/* Mobile / Email Input */}
             <div>
               <label className="block text-xs font-semibold text-[#3B4740] mb-1.5">
-                {isBn ? "মোবাইল / ইমেইল" : "Mobile / Email"}
+                Mobile / Email
               </label>
               <Input
                 type="text"
@@ -239,7 +206,7 @@ export function PortalAccessPage({
               /* Access Location Input */
               <div>
                 <label className="block text-xs font-semibold text-[#3B4740] mb-1.5">
-                  {isBn ? "অবস্থান / এলাকা" : "Access Location"}
+                  Access Location
                 </label>
                 <div className="relative">
                   <Input
@@ -247,7 +214,7 @@ export function PortalAccessPage({
                     required
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
-                    placeholder={isBn ? "জেলা / উপজেলা / গ্রাম" : "District / Sub-district / Village"}
+                    placeholder="District / Sub-district / Village"
                     className="bg-white border-[#DFDDD3] text-[#12241C] placeholder:text-[#88948D] h-11 rounded-xl pr-10 focus-visible:ring-[#16A34A]"
                   />
                   <MapPin
@@ -261,7 +228,7 @@ export function PortalAccessPage({
             {/* Security Password Input */}
             <div>
               <label className="block text-xs font-semibold text-[#3B4740] mb-1.5">
-                {isBn ? "নিরাপত্তা পাসওয়ার্ড" : "Security Password"}
+                Security Password
               </label>
               <div className="relative">
                 <Input
@@ -269,13 +236,13 @@ export function PortalAccessPage({
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder={isBn ? "পাসওয়ার্ড" : "Security Password"}
+                  placeholder="Security Password"
                   className="bg-white border-[#DFDDD3] text-[#12241C] placeholder:text-[#88948D] h-11 rounded-xl pr-10 focus-visible:ring-[#16A34A]"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#12241C] transition cursor-pointer"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#12241C] transition"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <Eye size={16} /> : <EyeOff size={16} />}
@@ -287,14 +254,14 @@ export function PortalAccessPage({
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full h-12 bg-[#16A34A] hover:bg-[#15803D] text-white font-bold text-base rounded-xl transition-all shadow-md mt-2 cursor-pointer"
+              className="w-full h-12 bg-[#16A34A] hover:bg-[#15803D] text-white font-bold text-base rounded-xl transition-all shadow-md mt-2"
             >
               {isSubmitting ? (
-                <span>{isBn ? "যাচাই করা হচ্ছে..." : "Authenticating..."}</span>
+                <span>Authenticating...</span>
               ) : tab === "register" ? (
-                <span>{isBn ? "নিবন্ধন ও প্রবেশ" : "Register & Access"}</span>
+                <span>Register & Access</span>
               ) : (
-                <span>{isBn ? "লগইন ও প্রবেশ" : "Log In & Access"}</span>
+                <span>Log In & Access</span>
               )}
             </Button>
           </form>
@@ -305,24 +272,24 @@ export function PortalAccessPage({
           <p className="text-xs text-[#526058]">
             {tab === "register" ? (
               <>
-                {isBn ? "ইতিমধ্যে অ্যাকাউন্ট আছে?" : "Already have an account?"}{" "}
+                Already have an account?{" "}
                 <button
                   type="button"
                   onClick={() => setTab("login")}
-                  className="text-[#16A34A] font-bold hover:underline cursor-pointer"
+                  className="text-[#16A34A] font-bold hover:underline"
                 >
-                  {isBn ? "লগইন করুন" : "Log In"}
+                  Log In
                 </button>
               </>
             ) : (
               <>
-                {isBn ? "নতুন অ্যাকাউন্ট প্রয়োজন?" : "Don't have an account?"}{" "}
+                Don&apos;t have an account?{" "}
                 <button
                   type="button"
                   onClick={() => setTab("register")}
-                  className="text-[#16A34A] font-bold hover:underline cursor-pointer"
+                  className="text-[#16A34A] font-bold hover:underline"
                 >
-                  {isBn ? "নিবন্ধন করুন" : "Register"}
+                  Register
                 </button>
               </>
             )}
@@ -331,11 +298,9 @@ export function PortalAccessPage({
             <button
               type="button"
               onClick={handleGuestAccess}
-              className="text-xs font-semibold text-[#4B5563] hover:text-[#111827] underline underline-offset-4 transition cursor-pointer"
+              className="text-xs font-semibold text-[#4B5563] hover:text-[#111827] underline underline-offset-4 transition"
             >
-              {isBn
-                ? "গেস্ট ম্যাপে সরাসরি প্রবেশ (লগইন ছাড়াই)"
-                : "Access Public Guest Map (No login needed)"}
+              Access Public Guest Map (No login needed)
             </button>
           </div>
         </CardFooter>

@@ -101,23 +101,22 @@ export const SideDashboard: React.FC<SideDashboardProps> = ({
             onClick={() => onSelectView("overview")}
           >
             {isCollapsed ? (
-              <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+              <div className="w-11 h-11 rounded-xl bg-white p-1 flex items-center justify-center flex-shrink-0 shadow-sm">
                 <img
                   src={logoAsset.src}
                   alt="Rokkha"
-                  className="w-8 h-8 object-contain"
+                  className="w-full h-full object-contain"
                 />
               </div>
             ) : (
-              <div className="flex items-center space-x-2.5">
-                <img
-                  src={logoAsset.src}
-                  alt="Rokkha"
-                  className="h-8 w-auto object-contain"
-                />
-                <span className="font-extrabold text-xl text-white tracking-tight">
-                  Rokkha Portal
-                </span>
+              <div className="flex items-center space-x-3">
+                <div className="bg-white rounded-xl px-3.5 py-2 shadow-sm flex items-center">
+                  <img
+                    src={logoAsset.src}
+                    alt="Rokkha"
+                    className="h-9 w-auto object-contain"
+                  />
+                </div>
               </div>
             )}
           </div>

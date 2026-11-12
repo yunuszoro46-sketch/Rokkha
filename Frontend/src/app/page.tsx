@@ -17,7 +17,6 @@ import {
   Crosshair,
   ExternalLink,
   ShieldCheck,
-  Shield,
 } from "lucide-react";
 
 // Official shadcn/ui primitives
@@ -751,7 +750,7 @@ export function CitizenPortalApp({
 
       {/* Main Content Area */}
       <div
-        className={`flex-1 w-full bg-[#EDEBE2] bg-[url('/topo-pattern.svg')] bg-repeat transition-all duration-300 min-w-0 flex flex-col justify-between ${
+        className={`flex-1 w-full bg-[#EDEBE2] transition-all duration-300 min-w-0 flex flex-col justify-between ${
           activeView === "overview" || activeView === "login"
             ? "pl-0"
             : isSidebarCollapsed
@@ -836,6 +835,12 @@ export function CitizenPortalApp({
                     <span className={lang === "en" ? "text-[#183026] font-extrabold" : "text-[#183026]/40"}>
                       EN
                     </span>
+                  </button>
+                  <button
+                    onClick={() => setIsAboutOpen(true)}
+                    className="login hover:bg-white/80 transition"
+                  >
+                    {t.btn_about_data}
                   </button>
                   <Button
                     onClick={() => navigateToPage("login")}
@@ -982,10 +987,10 @@ export function CitizenPortalApp({
                       <Card className="bg-white rounded-2xl p-7 border border-[#E4E2D8] shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
                         <div>
                           <div className="flex items-center justify-between mb-6">
-                            <div className="w-9 h-9 rounded-full bg-[#11241C] text-white flex items-center justify-center font-bold text-xs tracking-wider">
+                            <div className="w-9 h-9 rounded-full bg-[#C2410C] text-white flex items-center justify-center font-bold text-xs tracking-wider">
                               03
                             </div>
-                            <Badge variant="outline" className="text-xs font-semibold text-[#047857] bg-[#DCFCE7] border-[#BBF7D0] rounded-md px-2.5 py-1">
+                            <Badge variant="outline" className="text-xs font-semibold text-[#BE123C] bg-[#FFE4E6] border-[#FECDD3] rounded-md px-2.5 py-1">
                               Community & API Dispatch
                             </Badge>
                           </div>
@@ -1001,109 +1006,126 @@ export function CitizenPortalApp({
                   </section>
                 </div>
 
-                {/* Banner Card: Building a more flood-resilient Bangladesh (Matching Image 2) */}
+                {/* 64-District Flood Frequency & Sentinel-1 Timeline (Matching User Image 1) */}
                 <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 my-10">
-                  <div className="bg-white rounded-3xl border border-[#DFDDD3] p-5 sm:p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
-                    <div className="flex flex-col sm:flex-row items-center gap-5 w-full md:w-auto">
-                      <img
-                        src="/bangladesh-river.jpg"
-                        alt="Bangladesh flood resilience"
-                        className="w-full sm:w-64 h-24 rounded-2xl object-cover shadow-sm"
-                      />
-                      <div className="space-y-1 text-center sm:text-left">
-                        <div className="flex items-center justify-center sm:justify-start gap-1.5 text-base sm:text-lg font-extrabold text-[#11241C]">
-                          <Shield size={16} className="text-[#16A34A] shrink-0" />
-                          <span>
-                            {lang === "bn"
-                              ? "বন্যা-সহনশীল বাংলাদেশ বিনির্মাণে"
-                              : "Building a more flood-resilient Bangladesh"}
-                          </span>
-                        </div>
-                        <p className="text-xs sm:text-sm text-[#5C6863]">
-                          {lang === "bn"
-                            ? "উপাত্ত, পূর্বাভাস ও প্রস্তুতি—নিরাপদ জনগোষ্ঠীর লক্ষ্যে একসাথে।"
-                            : "Data, prediction, and preparedness—together for safer communities."}
-                        </p>
+                  <DistrictSatelliteTimeline
+                    districtPcode={selectedPcode}
+                    districtName={selectedName}
+                    lang={lang}
+                    onSelectDistrict={(pcode, name) =>
+                      handleSelectDistrict(pcode, name)
+                    }
+                  />
+                </div>
+
+                {/* District Early Warnings & Alert Feed (Matching User Image 2) */}
+                <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 my-10">
+                  <AlertsFeed
+                    alerts={alerts}
+                    targetDate={targetDate}
+                    isLoading={false}
+                    lang={lang}
+                    onSelectDistrict={(pcode, name) => {
+                      handleSelectDistrict(pcode, name);
+                      navigateToPage("map");
+                    }}
+                  />
+                </div>
+
+                {/* Resilience Banner (Matching User Image 3) */}
+                <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 my-16">
+                  <section className="cta">
+                    <img src="/bangladesh-river.jpg" alt="Homes beside a river in rural Bangladesh" />
+                    <div className="cta-copy">
+                      <Icon name="shield" />
+                      <div>
+                        <strong>
+                          {t.cta_title_1}
+                          <br />
+                          <span>{t.cta_title_2}</span>
+                        </strong>
+                        <p>{t.cta_desc}</p>
                       </div>
                     </div>
-                    <Button
-                      onClick={() => navigateToPage("login")}
-                      className="bg-[#122B1E] hover:bg-[#0C1F15] text-white font-bold text-sm px-6 h-11 rounded-xl shadow-md shrink-0 flex items-center gap-2"
-                    >
-                      <span>{t.btn_get_started}</span>
+                    <Button onClick={() => navigateToPage("map")} className="button gap-2">
+                      <span>{t.cta_btn}</span>
                       <Icon name="arrow" size={16} />
                     </Button>
-                  </div>
+                  </section>
                 </div>
               </>
             )}
 
             {/* DEDICATED FEATURE PAGES (map, alerts, satellite, hydro, shelters) */}
             {activeView !== "overview" && activeView !== "login" && (
-              <section className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-8 space-y-6">
+              <section className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-10 space-y-8">
                 {/* Page Header & Global Context Controls */}
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-2">
-                  <div className="space-y-2 max-w-2xl">
-                    <h1 className="text-3xl sm:text-4xl font-extrabold text-[#11241B] tracking-tight leading-tight">
+                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 border-b border-[#EDEBE2] pb-6">
+                  <div className="space-y-2 max-w-3xl">
+                    <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#EDEBE2] text-[#263B32] text-base font-bold uppercase tracking-wider">
+                      {PAGE_METADATA[lang][activeView].eyebrow}
+                    </div>
+                    <h1 className="text-5xl font-extrabold text-[#263B32] tracking-tight leading-tight">
                       {PAGE_METADATA[lang][activeView].title}
                     </h1>
-                    <p className="text-sm text-[#4E5C55] leading-relaxed">
+                    <p className="text-base text-[#263B32]/75 leading-relaxed">
                       {PAGE_METADATA[lang][activeView].subtitle}
                     </p>
                   </div>
 
-                  {/* Active District & Date Context Bar matching Image 2 */}
-                  <Card className="p-3.5 border-[#DFDDD3] bg-white rounded-2xl shadow-sm flex flex-col gap-2.5 shrink-0">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <div className="flex items-center gap-1.5">
-                        <MapPin className="w-4 h-4 text-[#5C6863]" />
-                        <span className="text-xs font-bold text-[#12241C]">
-                          {t.label_district}:
-                        </span>
-                        <Select
-                          value={selectedPcode}
-                          onValueChange={(val) => handleSelectDistrict(val)}
-                        >
-                          <SelectTrigger className="h-8.5 w-48 text-xs font-semibold bg-[#FAF9F5] border-[#DFDDD3] rounded-lg">
-                            <SelectValue placeholder={t.placeholder_select_district} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {ALL_DISTRICTS.map((d) => (
-                              <SelectItem key={d.pcode} value={d.pcode}>
-                                {lang === "bn"
-                                  ? `${DISTRICTS_BN[d.pcode] || d.name} (${DIVISIONS_BN[d.division] || d.division})`
-                                  : `${d.name} (${d.division})`}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {(activeView === "map" || activeView === "alerts") && (
-                        <div className="flex items-center gap-1.5">
-                          <Calendar className="w-4 h-4 text-[#5C6863]" />
-                          <span className="text-xs font-bold text-[#12241C]">
-                            {t.label_date}:
-                          </span>
-                          <Input
-                            type="date"
-                            value={targetDate}
-                            onChange={(e) => setTargetDate(e.target.value)}
-                            className="h-8.5 w-36 font-mono text-xs bg-[#FAF9F5] border-[#DFDDD3] rounded-lg"
-                          />
-                        </div>
-                      )}
+                  {/* Active District & Date Context Bar */}
+                  <Card className="p-4 border-[#EDEBE2] bg-white shadow-sm flex flex-wrap items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-5 h-5 text-[#263B32]" />
+                      <span className="text-base font-bold text-[#263B32]">
+                        {t.label_district}
+                      </span>
+                      <Select
+                        value={selectedPcode}
+                        onValueChange={(val) => handleSelectDistrict(val)}
+                      >
+                        <SelectTrigger className="w-48">
+                          <SelectValue placeholder={t.placeholder_select_district} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ALL_DISTRICTS.map((d) => (
+                            <SelectItem key={d.pcode} value={d.pcode}>
+                              {lang === "bn"
+                                ? `${DISTRICTS_BN[d.pcode] || d.name} (${DIVISIONS_BN[d.division] || d.division})`
+                                : `${d.name} (${d.division})`}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
 
+                    {(activeView === "map" || activeView === "alerts") && (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Calendar className="w-5 h-5 text-[#263B32]" />
+                        <span className="text-base font-bold text-[#263B32]">
+                          {t.label_date}
+                        </span>
+                        <Input
+                          type="date"
+                          value={targetDate}
+                          onChange={(e) => setTargetDate(e.target.value)}
+                          className="w-44 font-mono"
+                        />
+                      </div>
+                    )}
+
+                    <div className="h-6 w-px bg-[#EDEBE2] hidden sm:block" />
+
+                    {/* My District Report Section */}
                     <div className="flex items-center gap-2">
                       <Button
                         onClick={() => setIsDistrictReportOpen(true)}
-                        className="bg-[#122B1E] hover:bg-[#0C1F15] text-white font-bold text-xs px-3 h-8.5 rounded-lg flex items-center gap-2 shadow-sm transition-all"
+                        className="bg-[#183026] hover:bg-[#11241C] text-[#EDEBE2] font-semibold text-base px-3.5 py-2 h-11 rounded-lg flex items-center gap-2 shadow-sm transition-all"
                         title={`View comprehensive flood report for ${selectedName}`}
                       >
-                        <FileText className="w-3.5 h-3.5 text-[#4ADE80]" />
+                        <FileText className="w-4 h-4 text-[#78958A]" />
                         <span>{t.btn_my_district}</span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/20 text-white font-semibold">
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-[#78958A]/30 text-white font-bold">
                           {lang === "bn" ? (DISTRICTS_BN[selectedPcode] || selectedName) : selectedName}
                         </span>
                       </Button>
@@ -1112,11 +1134,11 @@ export function CitizenPortalApp({
                         variant="outline"
                         size="sm"
                         onClick={handleDetectMyLocation}
-                        className="h-8.5 px-3 border-[#DFDDD3] text-[#12241C] hover:bg-[#FAF9F5] flex items-center gap-1.5 text-xs font-semibold rounded-lg"
+                        className="h-11 px-3 border-[#EDEBE2] text-[#263B32] hover:bg-[#FAF9F5] flex items-center gap-1.5"
                         title="Detect GPS location and select nearest district"
                       >
-                        <Crosshair className="w-3.5 h-3.5 text-[#12241C]" />
-                        <span>{t.btn_gps}</span>
+                        <Crosshair className="w-4 h-4 text-[#263B32]" />
+                        <span className="hidden xl:inline text-sm font-semibold">{t.btn_gps}</span>
                       </Button>
                     </div>
                   </Card>
@@ -1142,18 +1164,15 @@ export function CitizenPortalApp({
 
                 {/* PAGE 3: FORECAST & EARLY WARNINGS */}
                 {activeView === "alerts" && (
-                  <div className="space-y-5">
-                    <div className="flex flex-wrap items-center gap-2 text-xs">
-                      <span className="font-bold text-[#12241C] text-xs">
-                        {lang === "bn" ? "পূর্বাভাস দৃশ্যপট:" : "Scenario Timeline:"}
+                  <div className="space-y-6">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-base font-bold text-[#263B32]">
+                        {t.map_scenarios_label}
                       </span>
                       <Button
                         size="sm"
-                        variant={targetDate === "2022-06-18" ? "default" : "outline"}
-                        className={
-                          targetDate === "2022-06-18"
-                            ? "bg-[#122B1E] hover:bg-[#0C1F15] text-white font-bold h-8 px-3 rounded-lg text-xs shadow-sm"
-                            : "bg-white border-[#DFDDD3] text-[#12241C] hover:bg-[#FAF9F5] h-8 px-3 rounded-lg text-xs font-medium shadow-sm"
+                        variant={
+                          targetDate === "2022-06-18" ? "default" : "secondary"
                         }
                         onClick={() => setTargetDate("2022-06-18")}
                       >
@@ -1161,11 +1180,8 @@ export function CitizenPortalApp({
                       </Button>
                       <Button
                         size="sm"
-                        variant={targetDate === "2024-08-22" ? "default" : "outline"}
-                        className={
-                          targetDate === "2024-08-22"
-                            ? "bg-[#122B1E] hover:bg-[#0C1F15] text-white font-bold h-8 px-3 rounded-lg text-xs shadow-sm"
-                            : "bg-white border-[#DFDDD3] text-[#12241C] hover:bg-[#FAF9F5] h-8 px-3 rounded-lg text-xs font-medium shadow-sm"
+                        variant={
+                          targetDate === "2024-08-22" ? "default" : "secondary"
                         }
                         onClick={() => setTargetDate("2024-08-22")}
                       >
@@ -1173,11 +1189,8 @@ export function CitizenPortalApp({
                       </Button>
                       <Button
                         size="sm"
-                        variant={targetDate === "2023-04-10" ? "default" : "outline"}
-                        className={
-                          targetDate === "2023-04-10"
-                            ? "bg-[#122B1E] hover:bg-[#0C1F15] text-white font-bold h-8 px-3 rounded-lg text-xs shadow-sm"
-                            : "bg-white border-[#DFDDD3] text-[#12241C] hover:bg-[#FAF9F5] h-8 px-3 rounded-lg text-xs font-medium shadow-sm"
+                        variant={
+                          targetDate === "2023-04-10" ? "default" : "secondary"
                         }
                         onClick={() => setTargetDate("2023-04-10")}
                       >
@@ -1595,7 +1608,7 @@ export function CitizenPortalApp({
             </DialogContent>
           </Dialog>
 
-          {/* Bottom Footer Bar matching Image 2 */}
+          {/* Attribution & Licensing Footer */}
           <AttributionFooter lang={lang} onOpenAbout={() => setIsAboutOpen(true)} />
         </main>
       </div>
@@ -1611,7 +1624,6 @@ export function CitizenPortalApp({
           navigateToPage("map");
         }}
         lang={lang}
-        onToggleLanguage={toggleLanguage}
       />
     </div>
     </>

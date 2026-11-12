@@ -196,10 +196,7 @@ main {
   min-height: 100vh;
   margin: 0 auto;
   overflow: hidden;
-  background-color: #EDEBE2;
-  background-image: url('/topo-pattern.svg');
-  background-repeat: repeat;
-  background-size: 600px 600px;
+  background: #EDEBE2;
 }
 
 .site-header {
