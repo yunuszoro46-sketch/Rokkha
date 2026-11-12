@@ -1087,74 +1087,70 @@ export function CitizenPortalApp({
 
             {/* DEDICATED FEATURE PAGES (map, alerts, satellite, hydro, shelters) */}
             {activeView !== "overview" && activeView !== "login" && (
-              <section className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-10 space-y-8">
+              <section className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-8 space-y-6">
                 {/* Page Header & Global Context Controls */}
-                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 border-b border-[#EDEBE2] pb-6">
-                  <div className="space-y-2 max-w-3xl">
-                    <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#EDEBE2] text-[#263B32] text-base font-bold uppercase tracking-wider">
-                      {PAGE_METADATA[lang][activeView].eyebrow}
-                    </div>
-                    <h1 className="text-5xl font-extrabold text-[#263B32] tracking-tight leading-tight">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-2">
+                  <div className="space-y-2 max-w-2xl">
+                    <h1 className="text-3xl sm:text-4xl font-extrabold text-[#11241B] tracking-tight leading-tight">
                       {PAGE_METADATA[lang][activeView].title}
                     </h1>
-                    <p className="text-base text-[#263B32]/75 leading-relaxed">
+                    <p className="text-sm text-[#4E5C55] leading-relaxed">
                       {PAGE_METADATA[lang][activeView].subtitle}
                     </p>
                   </div>
 
-                  {/* Active District & Date Context Bar */}
-                  <Card className="p-4 border-[#EDEBE2] bg-white shadow-sm flex flex-wrap items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-5 h-5 text-[#263B32]" />
-                      <span className="text-base font-bold text-[#263B32]">
-                        {t.label_district}
-                      </span>
-                      <Select
-                        value={selectedPcode}
-                        onValueChange={(val) => handleSelectDistrict(val)}
-                      >
-                        <SelectTrigger className="w-48">
-                          <SelectValue placeholder={t.placeholder_select_district} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {ALL_DISTRICTS.map((d) => (
-                            <SelectItem key={d.pcode} value={d.pcode}>
-                              {lang === "bn"
-                                ? `${DISTRICTS_BN[d.pcode] || d.name} (${DIVISIONS_BN[d.division] || d.division})`
-                                : `${d.name} (${d.division})`}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                  {/* Active District & Date Context Bar matching Image 2 */}
+                  <Card className="p-3.5 border-[#DFDDD3] bg-white rounded-2xl shadow-sm flex flex-col gap-2.5 shrink-0">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="flex items-center gap-1.5">
+                        <MapPin className="w-4 h-4 text-[#5C6863]" />
+                        <span className="text-xs font-bold text-[#12241C]">
+                          {t.label_district}:
+                        </span>
+                        <Select
+                          value={selectedPcode}
+                          onValueChange={(val) => handleSelectDistrict(val)}
+                        >
+                          <SelectTrigger className="h-8.5 w-48 text-xs font-semibold bg-[#FAF9F5] border-[#DFDDD3] rounded-lg">
+                            <SelectValue placeholder={t.placeholder_select_district} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {ALL_DISTRICTS.map((d) => (
+                              <SelectItem key={d.pcode} value={d.pcode}>
+                                {lang === "bn"
+                                  ? `${DISTRICTS_BN[d.pcode] || d.name} (${DIVISIONS_BN[d.division] || d.division})`
+                                  : `${d.name} (${d.division})`}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {(activeView === "map" || activeView === "alerts") && (
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="w-4 h-4 text-[#5C6863]" />
+                          <span className="text-xs font-bold text-[#12241C]">
+                            {t.label_date}:
+                          </span>
+                          <Input
+                            type="date"
+                            value={targetDate}
+                            onChange={(e) => setTargetDate(e.target.value)}
+                            className="h-8.5 w-36 font-mono text-xs bg-[#FAF9F5] border-[#DFDDD3] rounded-lg"
+                          />
+                        </div>
+                      )}
                     </div>
 
-                    {(activeView === "map" || activeView === "alerts") && (
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Calendar className="w-5 h-5 text-[#263B32]" />
-                        <span className="text-base font-bold text-[#263B32]">
-                          {t.label_date}
-                        </span>
-                        <Input
-                          type="date"
-                          value={targetDate}
-                          onChange={(e) => setTargetDate(e.target.value)}
-                          className="w-44 font-mono"
-                        />
-                      </div>
-                    )}
-
-                    <div className="h-6 w-px bg-[#EDEBE2] hidden sm:block" />
-
-                    {/* My District Report Section */}
                     <div className="flex items-center gap-2">
                       <Button
                         onClick={() => setIsDistrictReportOpen(true)}
-                        className="bg-[#183026] hover:bg-[#11241C] text-[#EDEBE2] font-semibold text-base px-3.5 py-2 h-11 rounded-lg flex items-center gap-2 shadow-sm transition-all"
+                        className="bg-[#122B1E] hover:bg-[#0C1F15] text-white font-bold text-xs px-3 h-8.5 rounded-lg flex items-center gap-2 shadow-sm transition-all"
                         title={`View comprehensive flood report for ${selectedName}`}
                       >
-                        <FileText className="w-4 h-4 text-[#78958A]" />
+                        <FileText className="w-3.5 h-3.5 text-[#4ADE80]" />
                         <span>{t.btn_my_district}</span>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-[#78958A]/30 text-white font-bold">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/20 text-white font-semibold">
                           {lang === "bn" ? (DISTRICTS_BN[selectedPcode] || selectedName) : selectedName}
                         </span>
                       </Button>
@@ -1163,11 +1159,11 @@ export function CitizenPortalApp({
                         variant="outline"
                         size="sm"
                         onClick={handleDetectMyLocation}
-                        className="h-11 px-3 border-[#EDEBE2] text-[#263B32] hover:bg-[#FAF9F5] flex items-center gap-1.5"
+                        className="h-8.5 px-3 border-[#DFDDD3] text-[#12241C] hover:bg-[#FAF9F5] flex items-center gap-1.5 text-xs font-semibold rounded-lg"
                         title="Detect GPS location and select nearest district"
                       >
-                        <Crosshair className="w-4 h-4 text-[#263B32]" />
-                        <span className="hidden xl:inline text-sm font-semibold">{t.btn_gps}</span>
+                        <Crosshair className="w-3.5 h-3.5 text-[#12241C]" />
+                        <span>{t.btn_gps}</span>
                       </Button>
                     </div>
                   </Card>
@@ -1193,15 +1189,18 @@ export function CitizenPortalApp({
 
                 {/* PAGE 3: FORECAST & EARLY WARNINGS */}
                 {activeView === "alerts" && (
-                  <div className="space-y-6">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-base font-bold text-[#263B32]">
-                        {t.map_scenarios_label}
+                  <div className="space-y-5">
+                    <div className="flex flex-wrap items-center gap-2 text-xs">
+                      <span className="font-bold text-[#12241C] text-xs">
+                        {lang === "bn" ? "পূর্বাভাস দৃশ্যপট:" : "Scenario Timeline:"}
                       </span>
                       <Button
                         size="sm"
-                        variant={
-                          targetDate === "2022-06-18" ? "default" : "secondary"
+                        variant={targetDate === "2022-06-18" ? "default" : "outline"}
+                        className={
+                          targetDate === "2022-06-18"
+                            ? "bg-[#122B1E] hover:bg-[#0C1F15] text-white font-bold h-8 px-3 rounded-lg text-xs shadow-sm"
+                            : "bg-white border-[#DFDDD3] text-[#12241C] hover:bg-[#FAF9F5] h-8 px-3 rounded-lg text-xs font-medium shadow-sm"
                         }
                         onClick={() => setTargetDate("2022-06-18")}
                       >
@@ -1209,8 +1208,11 @@ export function CitizenPortalApp({
                       </Button>
                       <Button
                         size="sm"
-                        variant={
-                          targetDate === "2024-08-22" ? "default" : "secondary"
+                        variant={targetDate === "2024-08-22" ? "default" : "outline"}
+                        className={
+                          targetDate === "2024-08-22"
+                            ? "bg-[#122B1E] hover:bg-[#0C1F15] text-white font-bold h-8 px-3 rounded-lg text-xs shadow-sm"
+                            : "bg-white border-[#DFDDD3] text-[#12241C] hover:bg-[#FAF9F5] h-8 px-3 rounded-lg text-xs font-medium shadow-sm"
                         }
                         onClick={() => setTargetDate("2024-08-22")}
                       >
@@ -1218,8 +1220,11 @@ export function CitizenPortalApp({
                       </Button>
                       <Button
                         size="sm"
-                        variant={
-                          targetDate === "2023-04-10" ? "default" : "secondary"
+                        variant={targetDate === "2023-04-10" ? "default" : "outline"}
+                        className={
+                          targetDate === "2023-04-10"
+                            ? "bg-[#122B1E] hover:bg-[#0C1F15] text-white font-bold h-8 px-3 rounded-lg text-xs shadow-sm"
+                            : "bg-white border-[#DFDDD3] text-[#12241C] hover:bg-[#FAF9F5] h-8 px-3 rounded-lg text-xs font-medium shadow-sm"
                         }
                         onClick={() => setTargetDate("2023-04-10")}
                       >
