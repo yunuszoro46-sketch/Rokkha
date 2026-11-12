@@ -1006,80 +1006,25 @@ export function CitizenPortalApp({
                   </section>
                 </div>
 
-                {/* Subscribe & API Access Banner */}
+                {/* Resilience Banner */}
                 <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 my-16">
-                  <section id="subscribe">
-                    <div className="bg-[#113824] rounded-3xl p-8 lg:p-12 text-white shadow-xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center border border-[#1b4e34]">
-                      {/* Left Column */}
-                      <div className="lg:col-span-7 space-y-6">
-                        <Badge variant="outline" className="text-xs font-semibold text-white/90 bg-white/10 border-white/20 rounded-full px-3.5 py-1">
-                          Stay One Step Ahead
-                        </Badge>
-                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
-                          Subscribe to District Flood Alerts & API Access
-                        </h2>
-                        <p className="text-base text-white/80 max-w-xl leading-relaxed">
-                          Receive instant early flood predictions, river danger-level crossings, and nearest safe shelter coordinates for your district.
-                        </p>
-
-                        {/* Form Row */}
-                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
-                          <Input
-                            type="text"
-                            placeholder="Your Name or Organization"
-                            className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl px-4 flex-1 focus:border-[#4ADE80] focus:ring-[#4ADE80]"
-                          />
-                          <div className="w-full sm:w-48">
-                            <Select defaultValue="BD6091">
-                              <SelectTrigger className="h-12 bg-white/10 border-white/20 text-white rounded-xl">
-                                <SelectValue placeholder="Sylhet District" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="BD6091">Sylhet District</SelectItem>
-                                <SelectItem value="BD6090">Sunamganj District</SelectItem>
-                                <SelectItem value="BD3026">Dhaka District</SelectItem>
-                                <SelectItem value="BD5549">Kurigram District</SelectItem>
-                                <SelectItem value="BD1004">Chittagong District</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <Button className="h-12 px-6 rounded-xl bg-[#52B74A] hover:bg-[#43A03B] text-[#0A2616] font-bold text-sm tracking-wide transition shadow-lg shrink-0">
-                            Activate Alerts →
-                          </Button>
-                        </div>
-                      </div>
-
-                      {/* Right Column: Code Terminal Mockup */}
-                      <div className="lg:col-span-5">
-                        <div className="bg-[#0A1D13] rounded-2xl border border-white/10 p-5 font-mono shadow-2xl">
-                          <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/10 text-xs">
-                            <div className="flex items-center gap-2 text-white/90">
-                              <span className="w-2.5 h-2.5 rounded-full bg-[#4ADE80] inline-block" />
-                              <span className="font-semibold">GET /api/v1/forecast/basin</span>
-                            </div>
-                            <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#163824] text-[#4ADE80] border border-[#225738]">
-                              187 Tests Passing
-                            </span>
-                          </div>
-                          <pre className="text-xs text-[#86EFAC] leading-relaxed overflow-x-auto">
-{`{
-  "platform": "Rokkha Climate Intelligence",
-  "coverage_districts": 64,
-  "baseline": "Previous Historical Analysis",
-  "active_basin": "Surma-Meghna",
-  "hydrodynamic_flow_m3s": 14820,
-  "risk_distribution": {
-    "Low": 41,
-    "Moderate": 11,
-    "High": 7,
-    "Severe": 5
-  },
-  "critical_assets_monitored": 1240
-}`}
-                          </pre>
-                        </div>
+                  <section className="cta">
+                    <img src="/bangladesh-river.jpg" alt="Homes beside a river in rural Bangladesh" />
+                    <div className="cta-copy">
+                      <Icon name="shield" />
+                      <div>
+                        <strong>
+                          {t.cta_title_1}
+                          <br />
+                          <span>{t.cta_title_2}</span>
+                        </strong>
+                        <p>{t.cta_desc}</p>
                       </div>
                     </div>
+                    <Button onClick={() => navigateToPage("map")} className="button gap-2">
+                      <span>{t.cta_btn}</span>
+                      <Icon name="arrow" size={16} />
+                    </Button>
                   </section>
                 </div>
               </>
