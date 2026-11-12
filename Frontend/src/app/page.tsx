@@ -254,7 +254,14 @@ const capabilities: Array<{
   },
 ];
 
-function MapArtwork({ compact = false }: { compact?: boolean }) {
+function MapArtwork({
+  compact = false,
+  lang = "en",
+}: {
+  compact?: boolean;
+  lang?: Language;
+}) {
+  const t = UI_TEXT[lang];
   return (
     <div
       className={`map-art ${compact ? "map-art-compact" : ""}`}
@@ -269,7 +276,7 @@ function MapArtwork({ compact = false }: { compact?: boolean }) {
       {!compact && (
         <div className="absolute bottom-5 left-5 bg-[#FAF9F5]/95 backdrop-blur-sm border border-[#E2E0D6] rounded-xl px-4 py-3 shadow-md">
           <div className="font-bold text-base text-[#12241C] mb-2">
-            Risk Level
+            {t.risk_level}
           </div>
           <div className="flex items-center gap-1">
             <span className="w-5 h-4 rounded-sm bg-[#2D6A4F]" />
@@ -280,8 +287,8 @@ function MapArtwork({ compact = false }: { compact?: boolean }) {
             <span className="w-5 h-4 rounded-sm bg-[#D96B1E]" />
           </div>
           <div className="flex items-center justify-between text-base text-[#45514C] font-medium mt-1">
-            <span>Low</span>
-            <span>High</span>
+            <span>{t.risk_low}</span>
+            <span>{t.risk_high}</span>
           </div>
         </div>
       )}
@@ -362,7 +369,8 @@ const PAGE_METADATA: Record<
   },
 };
 
-function LoadingScreen() {
+function LoadingScreen({ lang = "en" }: { lang?: Language }) {
+  const t = UI_TEXT[lang] || UI_TEXT.en;
   return (
     <div
       className="loading-screen"
@@ -393,7 +401,7 @@ function LoadingScreen() {
             />
           </svg>
         </div>
-        <p>Preparing flood intelligence</p>
+        <p>{t.loading_text}</p>
         <div className="loading-dots" aria-hidden="true">
           <i />
           <i />
@@ -687,7 +695,7 @@ export function CitizenPortalApp({
 
   return (
     <>
-      {isPageLoading && <LoadingScreen />}
+      {isPageLoading && <LoadingScreen lang={lang} />}
       <div
         className={`min-h-screen bg-[#EDEBE2] flex ${
           isPageLoading ? "page-loading" : ""
@@ -837,7 +845,7 @@ export function CitizenPortalApp({
                     </div>
                   </div>
                   <div className="hero-map">
-                    <MapArtwork />
+                    <MapArtwork lang={lang} />
                   </div>
                 </section>
 

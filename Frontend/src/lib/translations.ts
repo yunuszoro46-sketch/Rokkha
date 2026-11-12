@@ -187,6 +187,11 @@ export const UI_TEXT = {
       "Identify the fastest elevated walkway route to your assigned community shelter before water cuts off feeder roads.",
     protocol_4:
       "Turn off primary household electrical main breakers if standing flood water enters dwelling plinth level.",
+    // Map Artwork Legend
+    risk_level: "Risk Level",
+    risk_low: "Low",
+    risk_high: "High",
+    loading_text: "Preparing flood intelligence",
   },
   bn: {
     // Top Nav
@@ -288,5 +293,11 @@ export const UI_TEXT = {
       "রাস্তাঘাট পানিতে ডুবে যাওয়ার আগেই আপনার নিকটতম আশ্রয়কেন্দ্রে যাওয়ার উঁচু পথ আগে থেকেই চিনে রাখুন।",
     protocol_4:
       "বসতবাড়ির ঘরের মেঝেতে পানি ঢুকে পড়লে বাড়ির প্রধান বিদ্যুৎ সংযোগ (মেইন সুইচ) দ্রুত বন্ধ করে দিন।",
+
+    // Map Artwork Legend
+    risk_level: "ঝুঁকির মাত্রা",
+    risk_low: "কম",
+    risk_high: "বেশি",
+    loading_text: "বন্যা বুদ্ধিমত্তা প্রস্তুতি চলছে...",
   },
 };
