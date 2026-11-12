@@ -21,7 +21,8 @@ export type CitizenView =
   | "alerts"
   | "satellite"
   | "hydro"
-  | "shelters";
+  | "shelters"
+  | "login";
 
 interface SideDashboardProps {
   activeView: CitizenView;

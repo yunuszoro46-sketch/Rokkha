@@ -47,6 +47,7 @@ import { DistrictSatelliteTimeline } from "@/components/DistrictSatelliteTimelin
 import { RainRiverCharts } from "@/components/RainRiverCharts";
 import { NearestShelters } from "@/components/NearestShelters";
 import { AttributionFooter } from "@/components/AttributionFooter";
+import { PortalAccessPage } from "@/components/PortalAccessPage";
 import districtGeoData from "@/data/bangladesh_districts.json";
 import districtFloodHistory from "@/data/district_flood_history.json";
 import benchmarkData from "@/data/benchmark_predictions.json";
@@ -329,7 +330,7 @@ function MapArtwork({
 const PAGE_METADATA: Record<
   Language,
   Record<
-    Exclude<CitizenView, "overview">,
+    Exclude<CitizenView, "overview" | "login">,
     { eyebrow: string; title: string; subtitle: string }
   >
 > = {
@@ -463,6 +464,7 @@ export function CitizenPortalApp({
   const [pointCheckResult, setPointCheckResult] = useState<PointFloodCheck | null>(null);
   const [isCheckingPoint, setIsCheckingPoint] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isDistrictReportOpen, setIsDistrictReportOpen] = useState(false);
   const [modelStatus, setModelStatus] = useState<ModelStatus | null>(null);
   const [lang, setLang] = useState<Language>("en");
@@ -707,7 +709,8 @@ export function CitizenPortalApp({
         path === "alerts" ||
         path === "satellite" ||
         path === "hydro" ||
-        path === "shelters"
+        path === "shelters" ||
+        path === "login"
       ) {
         setActiveView(path);
       } else {
@@ -732,7 +735,7 @@ export function CitizenPortalApp({
         }`}
       >
       {/* 1. Left Side Dashboard Rail - Multi-Page Navigation (only shown on functional pages, hidden on landing/overview) */}
-      {activeView !== "overview" && (
+      {activeView !== "overview" && activeView !== "login" && (
         <SideDashboard
           activeView={activeView}
           onSelectView={navigateToPage}
@@ -748,7 +751,7 @@ export function CitizenPortalApp({
       {/* Main Content Area */}
       <div
         className={`flex-1 w-full bg-[#EDEBE2] transition-all duration-300 min-w-0 flex flex-col justify-between ${
-          activeView === "overview"
+          activeView === "overview" || activeView === "login"
             ? "pl-0"
             : isSidebarCollapsed
             ? "pl-20"
@@ -759,7 +762,7 @@ export function CitizenPortalApp({
           <div className="w-full">
             {/* Top Header / Site Header */}
             <header className="w-full border-b border-[#DFDDD3]/50">
-              <div className="max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 site-header">
+              <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 site-header">
                 <a
                   href="#overview"
                   className="logo-link"
@@ -839,6 +842,13 @@ export function CitizenPortalApp({
                   >
                     {t.btn_about_data}
                   </button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsLoginOpen(true)}
+                    className="h-11 px-4 rounded-xl border-[#DFDDD3] bg-white text-sm font-bold text-[#183026] hover:bg-[#FAF9F5] shadow-sm transition"
+                  >
+                    {lang === "bn" ? "প্রবেশ / লগইন" : "Portal Access"}
+                  </Button>
                   <Button
                     onClick={() => navigateToPage("map")}
                     className="button shadow-sm"
@@ -1083,7 +1093,7 @@ export function CitizenPortalApp({
             )}
 
             {/* DEDICATED FEATURE PAGES (map, alerts, satellite, hydro, shelters) */}
-            {activeView !== "overview" && (
+            {activeView !== "overview" && activeView !== "login" && (
               <section className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-10 space-y-8">
                 {/* Page Header & Global Context Controls */}
                 <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 border-b border-[#EDEBE2] pb-6">
@@ -1677,6 +1687,19 @@ export function CitizenPortalApp({
           </footer>
         </main>
       </div>
+      {/* Portal Access Login/Register Modal & Page (Matching User Reference Image) */}
+      <PortalAccessPage
+        isOpen={isLoginOpen || activeView === "login"}
+        onClose={() => {
+          setIsLoginOpen(false);
+          if (activeView === "login") navigateToPage("overview");
+        }}
+        onLoginSuccess={() => {
+          setIsLoginOpen(false);
+          navigateToPage("map");
+        }}
+        lang={lang}
+      />
     </div>
     </>
   );
