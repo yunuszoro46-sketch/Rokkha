@@ -107,7 +107,6 @@ const DISTRICT_CENTERS: Record<string, [number, number]> =
 
 type IconName =
   | "arrow"
-  | "bell"
   | "building"
   | "chart"
   | "check"
@@ -119,17 +118,10 @@ type IconName =
   | "menu"
   | "play"
   | "shield"
-  | "sliders"
   | "users";
 
 const iconPaths: Record<IconName, ReactNode> = {
   arrow: <path d="M5 12h14M13 6l6 6-6 6" />,
-  bell: (
-    <>
-      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-    </>
-  ),
   building: (
     <path d="M4 21V5h10v16M14 9h6v12M8 9h2M8 13h2M8 17h2M17 13h1M17 17h1M2 21h20" />
   ),
@@ -171,9 +163,6 @@ const iconPaths: Record<IconName, ReactNode> = {
       <path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z" />
       <path d="m9 12 2 2 4-5" />
     </>
-  ),
-  sliders: (
-    <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" />
   ),
   users: (
     <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8" />
@@ -275,218 +264,31 @@ function MapArtwork({
   const t = UI_TEXT[lang];
   return (
     <div
-      className={`map-art ${compact ? "map-art-compact" : ""} relative overflow-hidden`}
-      aria-label="Illustrated flood risk map of Bangladesh with real-time river flow"
+      className={`map-art ${compact ? "map-art-compact" : ""}`}
+      aria-label="Illustrated flood risk map of Bangladesh"
       role="img"
     >
-      {/* Background Soft Radar Aura Circle */}
-      <div
-        className="absolute inset-0 pointer-events-none flex items-center justify-center"
-        aria-hidden="true"
-      >
-        <div className="w-[88%] h-[88%] rounded-full border border-[#D5D2C5]/50 bg-radial from-white/40 via-transparent to-transparent opacity-75" />
-        <div className="w-[62%] h-[62%] rounded-full border border-[#D5D2C5]/30" />
-      </div>
-
-      {/* Base Bangladesh District Map */}
       <img
         src={mapAsset.src}
         alt="Flood risk map of Bangladesh"
-        className="w-full h-full object-contain relative z-10"
+        className="w-full h-full object-contain"
       />
-
-      {/* Hydrodynamic River Currents & Flow Layer (Overlaid on Map) */}
-      <svg
-        className="absolute inset-0 w-full h-full object-contain pointer-events-none z-20"
-        viewBox="0 0 849 1131"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <defs>
-          <filter id="riverGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="6" result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-          </filter>
-          <radialGradient id="haorGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.85" />
-            <stop offset="40%" stopColor="#0099FF" stopOpacity="0.65" />
-            <stop offset="80%" stopColor="#005B96" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#001F3F" stopOpacity="0" />
-          </radialGradient>
-        </defs>
-
-        {/* Haor Flood Inundation Pools (Sylhet & Sunamganj Basin) */}
-        <g className="haor-water-pool">
-          <ellipse cx="610" cy="385" rx="55" ry="38" fill="url(#haorGlow)" />
-          <ellipse cx="560" cy="445" rx="46" ry="32" fill="url(#haorGlow)" />
-          <ellipse cx="735" cy="360" rx="32" ry="22" fill="url(#haorGlow)" />
-        </g>
-
-        {/* River Underglow Paths */}
-        <g filter="url(#riverGlow)" opacity="0.9" className="river-glow-layer">
-          {/* Brahmaputra / Jamuna */}
-          <path
-            d="M 380 75 Q 370 180 365 260 T 375 380 Q 380 470 410 540"
-            stroke="#00D2FF"
-            strokeWidth="11"
-            strokeLinecap="round"
-          />
-          {/* Teesta & NW Feeder */}
-          <path
-            d="M 245 130 Q 300 180 365 260"
-            stroke="#00D2FF"
-            strokeWidth="7"
-            strokeLinecap="round"
-          />
-          <path
-            d="M 175 190 Q 230 250 310 330 Q 345 360 375 380"
-            stroke="#00D2FF"
-            strokeWidth="6"
-            strokeLinecap="round"
-          />
-          {/* Ganges / Padma */}
-          <path
-            d="M 100 405 Q 170 425 240 460 T 340 500 Q 380 520 410 540"
-            stroke="#00D2FF"
-            strokeWidth="10"
-            strokeLinecap="round"
-          />
-          {/* Lower Padma to Chandpur */}
-          <path
-            d="M 410 540 Q 460 575 510 635"
-            stroke="#00D2FF"
-            strokeWidth="14"
-            strokeLinecap="round"
-          />
-          {/* Surma & Kushiyara */}
-          <path
-            d="M 825 350 Q 750 330 670 340 Q 610 360 550 420"
-            stroke="#00D2FF"
-            strokeWidth="8"
-            strokeLinecap="round"
-          />
-          <path
-            d="M 760 400 Q 690 420 620 440 Q 570 460 540 510"
-            stroke="#00D2FF"
-            strokeWidth="7"
-            strokeLinecap="round"
-          />
-          {/* Upper Meghna */}
-          <path
-            d="M 550 420 Q 540 520 510 635"
-            stroke="#00D2FF"
-            strokeWidth="10"
-            strokeLinecap="round"
-          />
-          {/* Lower Meghna Delta & Bay Outflows */}
-          <path
-            d="M 510 635 Q 520 730 505 820 Q 495 910 485 985"
-            stroke="#00D2FF"
-            strokeWidth="16"
-            strokeLinecap="round"
-          />
-          <path
-            d="M 470 660 Q 440 740 420 830 Q 410 910 405 975"
-            stroke="#00D2FF"
-            strokeWidth="10"
-            strokeLinecap="round"
-          />
-          <path
-            d="M 525 670 Q 560 760 565 850 Q 560 920 545 985"
-            stroke="#00D2FF"
-            strokeWidth="12"
-            strokeLinecap="round"
-          />
-          <path
-            d="M 545 680 Q 615 760 625 850 Q 620 920 605 975"
-            stroke="#00D2FF"
-            strokeWidth="10"
-            strokeLinecap="round"
-          />
-          {/* Sundarbans Channels */}
-          <path
-            d="M 330 610 Q 340 710 330 810 Q 320 880 315 970"
-            stroke="#00D2FF"
-            strokeWidth="7"
-            strokeLinecap="round"
-          />
-          <path
-            d="M 370 630 Q 380 730 375 830 Q 365 900 355 975"
-            stroke="#00D2FF"
-            strokeWidth="7"
-            strokeLinecap="round"
-          />
-          {/* Chittagong / Karnafuli */}
-          <path
-            d="M 750 820 Q 720 910 700 990 Q 690 1050 680 1100"
-            stroke="#00D2FF"
-            strokeWidth="8"
-            strokeLinecap="round"
-          />
-        </g>
-
-        {/* Core Electric Blue Water Streams */}
-        <g stroke="#00F0FF" strokeLinecap="round" fill="none">
-          <path d="M 380 75 Q 370 180 365 260 T 375 380 Q 380 470 410 540" strokeWidth="5.5" />
-          <path d="M 245 130 Q 300 180 365 260" strokeWidth="4" />
-          <path d="M 175 190 Q 230 250 310 330 Q 345 360 375 380" strokeWidth="3.5" />
-          <path d="M 100 405 Q 170 425 240 460 T 340 500 Q 380 520 410 540" strokeWidth="5.5" />
-          <path d="M 410 540 Q 460 575 510 635" strokeWidth="7.5" />
-          <path d="M 825 350 Q 750 330 670 340 Q 610 360 550 420" strokeWidth="4.5" />
-          <path d="M 760 400 Q 690 420 620 440 Q 570 460 540 510" strokeWidth="4" />
-          <path d="M 550 420 Q 540 520 510 635" strokeWidth="5.5" />
-          <path d="M 510 635 Q 520 730 505 820 Q 495 910 485 985" strokeWidth="9" />
-          <path d="M 470 660 Q 440 740 420 830 Q 410 910 405 975" strokeWidth="5" />
-          <path d="M 525 670 Q 560 760 565 850 Q 560 920 545 985" strokeWidth="6" />
-          <path d="M 545 680 Q 615 760 625 850 Q 620 920 605 975" strokeWidth="5" />
-          <path d="M 330 610 Q 340 710 330 810 Q 320 880 315 970" strokeWidth="4" />
-          <path d="M 370 630 Q 380 730 375 830 Q 365 900 355 975" strokeWidth="4" />
-          <path d="M 750 820 Q 720 910 700 990 Q 690 1050 680 1100" strokeWidth="4.5" />
-        </g>
-
-        {/* Animated Downward Hydrodynamic Flow Currents (White/Cyan Pulsing Dashes) */}
-        <g stroke="#FFFFFF" strokeLinecap="round" fill="none" className="river-flow-animated" opacity="0.95">
-          <path d="M 380 75 Q 370 180 365 260 T 375 380 Q 380 470 410 540" strokeWidth="2.5" />
-          <path d="M 245 130 Q 300 180 365 260" strokeWidth="2" />
-          <path d="M 175 190 Q 230 250 310 330 Q 345 360 375 380" strokeWidth="1.8" />
-          <path d="M 100 405 Q 170 425 240 460 T 340 500 Q 380 520 410 540" strokeWidth="2.5" />
-          <path d="M 410 540 Q 460 575 510 635" strokeWidth="3" />
-          <path d="M 825 350 Q 750 330 670 340 Q 610 360 550 420" strokeWidth="2" />
-          <path d="M 760 400 Q 690 420 620 440 Q 570 460 540 510" strokeWidth="2" />
-          <path d="M 550 420 Q 540 520 510 635" strokeWidth="2.5" />
-          <path d="M 510 635 Q 520 730 505 820 Q 495 910 485 985" strokeWidth="3.5" />
-          <path d="M 470 660 Q 440 740 420 830 Q 410 910 405 975" strokeWidth="2.2" />
-          <path d="M 525 670 Q 560 760 565 850 Q 560 920 545 985" strokeWidth="2.5" />
-          <path d="M 545 680 Q 615 760 625 850 Q 620 920 605 975" strokeWidth="2.2" />
-          <path d="M 330 610 Q 340 710 330 810 Q 320 880 315 970" strokeWidth="1.8" />
-          <path d="M 370 630 Q 380 730 375 830 Q 365 900 355 975" strokeWidth="1.8" />
-          <path d="M 750 820 Q 720 910 700 990 Q 690 1050 680 1100" strokeWidth="2" />
-        </g>
-      </svg>
-
-      {/* Legend on Bottom-Right */}
       {!compact && (
-        <div className="absolute bottom-5 right-5 z-30 bg-[#FAF9F5]/95 backdrop-blur-md border border-[#E2E0D6] rounded-xl px-4 py-3 shadow-lg text-left">
-          <div className="font-bold text-sm text-[#12241C] mb-2">
-            {lang === "bn" ? "বন্যা ঝুঁকি স্তর" : "Flood Risk Level"}
+        <div className="absolute bottom-5 left-5 bg-[#FAF9F5]/95 backdrop-blur-sm border border-[#E2E0D6] rounded-xl px-4 py-3 shadow-md">
+          <div className="font-bold text-base text-[#12241C] mb-2">
+            {t.risk_level}
           </div>
-          <div className="flex flex-col gap-1.5 text-xs text-[#2D3A34] font-medium">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#74A57F] inline-block shadow-sm" />
-              <span>{lang === "bn" ? "কম (Low)" : "Low"}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#F4C430] inline-block shadow-sm" />
-              <span>{lang === "bn" ? "মাঝারি (Moderate)" : "Moderate"}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#F4A236] inline-block shadow-sm" />
-              <span>{lang === "bn" ? "বেশি (High)" : "High"}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#D9381E] inline-block shadow-sm" />
-              <span>{lang === "bn" ? "ভয়াবহ (Severe)" : "Severe"}</span>
-            </div>
+          <div className="flex items-center gap-1">
+            <span className="w-5 h-4 rounded-sm bg-[#2D6A4F]" />
+            <span className="w-5 h-4 rounded-sm bg-[#74A57F]" />
+            <span className="w-5 h-4 rounded-sm bg-[#B7CEB2]" />
+            <span className="w-5 h-4 rounded-sm bg-[#F3E3B2]" />
+            <span className="w-5 h-4 rounded-sm bg-[#F4A236]" />
+            <span className="w-5 h-4 rounded-sm bg-[#D96B1E]" />
+          </div>
+          <div className="flex items-center justify-between text-base text-[#45514C] font-medium mt-1">
+            <span>{t.risk_low}</span>
+            <span>{t.risk_high}</span>
           </div>
         </div>
       )}
@@ -899,28 +701,22 @@ export function CitizenPortalApp({
           isPageLoading ? "page-loading" : ""
         }`}
       >
-      {/* 1. Left Side Dashboard Rail - Multi-Page Navigation (only shown on functional pages, hidden on landing/overview) */}
-      {activeView !== "overview" && (
-        <SideDashboard
-          activeView={activeView}
-          onSelectView={navigateToPage}
-          onOpenAbout={() => setIsAboutOpen(true)}
-          activeAlertCount={alerts.length}
-          isBackendConnected={isBackendConnected}
-          isCollapsed={isSidebarCollapsed}
-          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          lang={lang}
-        />
-      )}
+      {/* 1. Left Side Dashboard Rail - Multi-Page Navigation */}
+      <SideDashboard
+        activeView={activeView}
+        onSelectView={navigateToPage}
+        onOpenAbout={() => setIsAboutOpen(true)}
+        activeAlertCount={alerts.length}
+        isBackendConnected={isBackendConnected}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        lang={lang}
+      />
 
-      {/* Main Content Area */}
+      {/* Main Content Area (offset by widened left sidebar) */}
       <div
         className={`flex-1 w-full bg-[#EDEBE2] transition-all duration-300 min-w-0 flex flex-col justify-between ${
-          activeView === "overview"
-            ? "pl-0"
-            : isSidebarCollapsed
-            ? "pl-20"
-            : "pl-20 md:pl-80"
+          isSidebarCollapsed ? "pl-20" : "pl-20 md:pl-80"
         }`}
       >
         <main className="w-full flex-1 flex flex-col justify-between">
@@ -1059,8 +855,8 @@ export function CitizenPortalApp({
                     <div className="metric-icon-circle">
                       <Icon name="layers" />
                     </div>
-                    <strong>Previous</strong>
-                    <span>Historical Analysis</span>
+                    <strong>{t.metric_years}</strong>
+                    <span>{t.metric_years_sub}</span>
                   </div>
                   <div>
                     <div className="metric-icon-circle">
@@ -1085,106 +881,87 @@ export function CitizenPortalApp({
                   </div>
                 </section>
 
-                {/* Core Capabilities - Built for National-Scale Flood Resilience */}
-                <section className="mt-20 mb-16" id="capabilities">
-                  <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-12">
-                    <div className="max-w-2xl">
-                      <span className="inline-block px-3.5 py-1 text-xs font-bold tracking-wider text-[#1F513F] bg-[#D8E6DF] rounded-full uppercase mb-4">
-                        CORE CAPABILITIES
-                      </span>
-                      <h2 className="text-3xl md:text-4xl font-extrabold text-[#12241C] tracking-tight leading-tight">
-                        Built for National-Scale Flood Resilience
-                      </h2>
-                    </div>
-                    <p className="max-w-md text-sm md:text-base text-[#56635D] leading-relaxed">
-                      Combining satellite radar altimetry, upstream rainfall telemetry, and hydrodynamic modeling across every river basin in Bangladesh.
-                    </p>
+                {/* Core Capabilities (8 Cards - Clickable to jump to their page) */}
+                <section className="capabilities" id="capabilities">
+                  <div className="section-label">
+                    <span /> {t.cap_label} <span />
                   </div>
+                  <h2>
+                    {t.cap_title}
+                  </h2>
+                  <p className="section-intro">
+                    {t.cap_sub}
+                  </p>
+                  <div className="capability-grid">
+                    {getCapabilities(t).map(({ icon, title, body, featured, targetView }) => (
+                      <article
+                        className={`${featured ? "featured" : ""} cursor-pointer`}
+                        key={title}
+                        onClick={() => navigateToPage(targetView)}
+                      >
+                        <Icon name={icon} />
+                        <h3>{title}</h3>
+                        <p>{body}</p>
+                      </article>
+                    ))}
+                  </div>
+                </section>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {/* Card 1: Hydrodynamic Flow Modeling */}
-                    <div
-                      onClick={() => navigateToPage("hydro")}
-                      className="bg-white rounded-2xl p-6 border border-[#E4E2D8] shadow-sm hover:shadow-md hover:border-[#B2D8D8] transition-all cursor-pointer flex flex-col justify-between"
-                    >
-                      <div>
-                        <div className="w-12 h-12 rounded-xl bg-[#E0F2FE] flex items-center justify-center text-[#0284C7] mb-6">
-                          <Icon name="sliders" size={22} />
-                        </div>
-                        <span className="inline-block px-2.5 py-1 text-[11px] font-bold tracking-wider text-[#0284C7] bg-[#E0F2FE] rounded-md uppercase mb-4">
-                          72-HOUR LEAD TIME
-                        </span>
-                        <h3 className="text-lg font-bold text-[#12241C] mb-3">
-                          Hydrodynamic Flow Modeling
-                        </h3>
-                        <p className="text-xs md:text-sm text-[#5C6863] leading-relaxed">
-                          Simulates river discharge, velocity, and bank overflow across the Jamuna, Padma, Meghna, and Surma-Kushiyara networks in real time.
-                        </p>
+                {/* 24-Hour Flood Prediction Showcase */}
+                <section className="prediction">
+                  <div className="dashboard-card">
+                    <aside>
+                      <span>⌂</span>
+                      <Icon name="layers" size={16} />
+                      <Icon name="chart" size={16} />
+                      <Icon name="location" size={16} />
+                      <Icon name="users" size={16} />
+                    </aside>
+                    <div className="dashboard-map">
+                      <div className="browser-dots">
+                        <i />
+                        <i />
+                        <i />
+                      </div>
+                      <MapArtwork compact lang={lang} />
+                      <div className="map-pin">
+                        <span>{t.mock_risk_high}</span>
+                        <b />
                       </div>
                     </div>
-
-                    {/* Card 2: High-Resolution Risk Mapping */}
-                    <div
-                      onClick={() => navigateToPage("map")}
-                      className="bg-white rounded-2xl p-6 border border-[#E4E2D8] shadow-sm hover:shadow-md hover:border-[#FFCCBC] transition-all cursor-pointer flex flex-col justify-between"
-                    >
-                      <div>
-                        <div className="w-12 h-12 rounded-xl bg-[#FFEDD5] flex items-center justify-center text-[#EA580C] mb-6">
-                          <Icon name="location" size={22} />
-                        </div>
-                        <span className="inline-block px-2.5 py-1 text-[11px] font-bold tracking-wider text-[#EA580C] bg-[#FFEDD5] rounded-md uppercase mb-4">
-                          64 DISTRICTS & 495 UPAZILAS
-                        </span>
-                        <h3 className="text-lg font-bold text-[#12241C] mb-3">
-                          High-Resolution Risk Mapping
-                        </h3>
-                        <p className="text-xs md:text-sm text-[#5C6863] leading-relaxed">
-                          Dynamic choropleth and SAR inundation overlays classifying Low, Moderate, High, and Severe flood vulnerability down to union boundaries.
-                        </p>
-                      </div>
+                    <div className="forecast">
+                      <strong>
+                        <Icon name="cloud" size={16} /> {t.mock_forecast_title}
+                      </strong>
+                      <span>{t.mock_forecast_time}</span>
+                      <small>{t.mock_risk_level}</small>
+                      <b>{t.mock_high}</b>
+                      <small>{t.mock_affected_area}</small>
+                      <b>{t.mock_area_val}</b>
                     </div>
-
-                    {/* Card 3: Critical Asset & Shelter Routing */}
-                    <div
-                      onClick={() => navigateToPage("shelters")}
-                      className="bg-white rounded-2xl p-6 border border-[#E4E2D8] shadow-sm hover:shadow-md hover:border-[#C8E6C9] transition-all cursor-pointer flex flex-col justify-between"
-                    >
-                      <div>
-                        <div className="w-12 h-12 rounded-xl bg-[#DCFCE7] flex items-center justify-center text-[#16A34A] mb-6">
-                          <Icon name="building" size={22} />
-                        </div>
-                        <span className="inline-block px-2.5 py-1 text-[11px] font-bold tracking-wider text-[#16A34A] bg-[#DCFCE7] rounded-md uppercase mb-4">
-                          1,200+ MAPPED FACILITIES
-                        </span>
-                        <h3 className="text-lg font-bold text-[#12241C] mb-3">
-                          Critical Asset & Shelter Routing
-                        </h3>
-                        <p className="text-xs md:text-sm text-[#5C6863] leading-relaxed">
-                          Monitors elevation clearances, occupancy, and dry-road access for hospitals, schools, and multi-purpose flood shelters.
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Card 4: Early Warning & REST APIs */}
-                    <div
-                      onClick={() => navigateToPage("alerts")}
-                      className="bg-white rounded-2xl p-6 border border-[#E4E2D8] shadow-sm hover:shadow-md hover:border-[#D1C4E9] transition-all cursor-pointer flex flex-col justify-between"
-                    >
-                      <div>
-                        <div className="w-12 h-12 rounded-xl bg-[#EDE9FE] flex items-center justify-center text-[#7C3AED] mb-6">
-                          <Icon name="bell" size={22} />
-                        </div>
-                        <span className="inline-block px-2.5 py-1 text-[11px] font-bold tracking-wider text-[#7C3AED] bg-[#EDE9FE] rounded-md uppercase mb-4">
-                          187 VERIFIED ENDPOINTS
-                        </span>
-                        <h3 className="text-lg font-bold text-[#12241C] mb-3">
-                          Early Warning & REST APIs
-                        </h3>
-                        <p className="text-xs md:text-sm text-[#5C6863] leading-relaxed">
-                          Dispatches localized SMS/voice warnings to citizens and provides automated webhook payloads for disaster response teams.
-                        </p>
-                      </div>
-                    </div>
+                  </div>
+                  <div className="prediction-copy">
+                    <div className="up-next">ϟ {t.up_next_badge}</div>
+                    <h2>
+                      {t.up_next_title_1}{" "}
+                      <em>
+                        {t.up_next_title_2}
+                      </em>
+                    </h2>
+                    <p>
+                      {t.up_next_desc}
+                    </p>
+                    <ul>
+                      <li>
+                        <Icon name="check" size={15} /> {t.up_next_check_1}
+                      </li>
+                      <li>
+                        <Icon name="check" size={15} /> {t.up_next_check_2}
+                      </li>
+                      <li>
+                        <Icon name="check" size={15} /> {t.up_next_check_3}
+                      </li>
+                    </ul>
                   </div>
                 </section>
 
