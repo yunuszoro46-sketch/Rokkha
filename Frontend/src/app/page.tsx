@@ -296,41 +296,29 @@ function MapArtwork({
         className="w-full h-full object-contain relative z-10 select-none pointer-events-none"
       />
 
-      {/* Floating Active Flood Alert Badge (Matching Image 2 Top-Right) */}
+      {/* Flood Risk Level Legend on Bottom-Left (Matching Image 2) */}
       {!compact && (
-        <div className="absolute top-6 right-6 z-30 bg-white/95 backdrop-blur-md border border-[#E2E0D6] rounded-2xl p-3.5 shadow-lg flex flex-col gap-2 min-w-[140px]">
-          <div className="flex items-center gap-2">
-            <span className="w-6 h-6 rounded-lg bg-[#FEE2E2] flex items-center justify-center text-[#DC2626]">
-              <Waves size={14} className="animate-pulse" />
-            </span>
-            <span className="text-xs font-bold text-[#991B1B] tracking-wide uppercase">
-              {lang === "bn" ? "বন্যা সতর্কতা" : "Flood Alert"}
-            </span>
+        <div className="absolute bottom-5 left-5 z-30 bg-white/95 backdrop-blur-sm border border-[#E2E0D6] rounded-2xl p-4 shadow-md min-w-[130px]">
+          <div className="font-bold text-xs text-[#1F2937] mb-2.5">
+            {lang === "bn" ? "বন্যা ঝুঁকির মাত্রা" : "Flood Risk Level"}
           </div>
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-[#1F2937]">
-            <MapPin size={13} className="text-[#DC2626]" />
-            <span>{lang === "bn" ? "সিলেট অববাহিকা" : "Sylhet Basin"}</span>
-          </div>
-        </div>
-      )}
-
-      {/* Legend on Bottom-Left (Clean and exact as in Image 1 & 2) */}
-      {!compact && (
-        <div className="absolute bottom-5 left-5 z-30 bg-[#FAF9F5]/95 backdrop-blur-sm border border-[#E2E0D6] rounded-xl px-4 py-3 shadow-md">
-          <div className="font-bold text-sm text-[#12241C] mb-2">
-            {t.risk_level}
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="w-5 h-4 rounded-sm bg-[#2D6A4F]" />
-            <span className="w-5 h-4 rounded-sm bg-[#74A57F]" />
-            <span className="w-5 h-4 rounded-sm bg-[#B7CEB2]" />
-            <span className="w-5 h-4 rounded-sm bg-[#F3E3B2]" />
-            <span className="w-5 h-4 rounded-sm bg-[#F4A236]" />
-            <span className="w-5 h-4 rounded-sm bg-[#D96B1E]" />
-          </div>
-          <div className="flex items-center justify-between text-xs text-[#45514C] font-medium mt-1">
-            <span>{t.risk_low}</span>
-            <span>{t.risk_high}</span>
+          <div className="flex flex-col gap-2 text-xs font-medium text-[#374151]">
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-[#5A9E75] inline-block shadow-sm" />
+              <span>{lang === "bn" ? "কম (Low)" : "Low"}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-[#F5C242] inline-block shadow-sm" />
+              <span>{lang === "bn" ? "মাঝারি (Moderate)" : "Moderate"}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-[#E88C30] inline-block shadow-sm" />
+              <span>{lang === "bn" ? "বেশি (High)" : "High"}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-[#D9381E] inline-block shadow-sm" />
+              <span>{lang === "bn" ? "ভয়াবহ (Severe)" : "Severe"}</span>
+            </div>
           </div>
         </div>
       )}
