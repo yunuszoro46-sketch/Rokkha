@@ -513,3 +513,135 @@ export async function getSiteRiver(siteId: string, startDate?: string, endDate?:
   }
   return null;
 }
+
+/**
+ * Get hourly rain forecast + total precipitation for a site (Section 3.E)
+ */
+export async function getRainForecast(siteId: string) {
+  try {
+    const res = await fetch(`${API_BASE}/ingestion/rain-forecast?site_id=${siteId}`);
+    if (res.ok) return await res.json();
+  } catch {
+    // fallback
+  }
+  return null;
+}
+
+/**
+ * Get recent preliminary rain observations (GFS) for a site (Section 3.E)
+ */
+export async function getRecentRain(siteId: string, startDate?: string, endDate?: string) {
+  try {
+    let url = `${API_BASE}/ingestion/rain-recent?site_id=${siteId}`;
+    if (startDate) url += `&start_date=${startDate}`;
+    if (endDate) url += `&end_date=${endDate}`;
+    const res = await fetch(url);
+    if (res.ok) return await res.json();
+  } catch {
+    // fallback
+  }
+  return null;
+}
+
+/**
+ * Get registered rain or river gauge monitoring sites (Section 3.E)
+ */
+export async function getIngestionSites(kind?: "district" | "river") {
+  try {
+    let url = `${API_BASE}/ingestion/sites`;
+    if (kind) url += `?kind=${kind}`;
+    const res = await fetch(url);
+    if (res.ok) return await res.json();
+  } catch {
+    // fallback
+  }
+  return [];
+}
+
+/**
+ * Get macro asset exposure summary report across registered assets (Section 3.B)
+ */
+export async function getAssetsExposure(
+  districtPcode?: string,
+  assetType?: string,
+  criticality?: string
+) {
+  try {
+    const params = new URLSearchParams();
+    if (districtPcode) params.append("district_pcode", districtPcode);
+    if (assetType) params.append("asset_type", assetType);
+    if (criticality) params.append("criticality", criticality);
+    const qs = params.toString() ? `?${params.toString()}` : "";
+    const res = await fetch(`${API_BASE}/assets/exposure${qs}`);
+    if (res.ok) return await res.json();
+  } catch {
+    // fallback
+  }
+  return null;
+}
+
+/**
+ * Get single asset details (Section 3.A)
+ */
+export async function getAssetDetail(id: string) {
+  try {
+    const res = await fetch(`${API_BASE}/assets/${id}`);
+    if (res.ok) return await res.json();
+  } catch {
+    // fallback
+  }
+  return null;
+}
+
+/**
+ * Get single asset flood exposure with flags & return periods (Section 3.B)
+ */
+export async function getAssetExposure(id: string) {
+  try {
+    const res = await fetch(`${API_BASE}/assets/${id}/exposure`);
+    if (res.ok) return await res.json();
+  } catch {
+    // fallback
+  }
+  return null;
+}
+
+/**
+ * Get detailed flood event history for one district (Section 3.C)
+ */
+export async function getDistrictDetail(pcode: string) {
+  try {
+    const res = await fetch(`${API_BASE}/geospatial/flood/districts/${pcode}`);
+    if (res.ok) return await res.json();
+  } catch {
+    // fallback
+  }
+  const hist = ((floodHistoryData as any).districts || []).find(
+    (d: any) => d.pcode === pcode
+  );
+  return hist || null;
+}
+
+/**
+ * Find nearest rivers and canals to a point (Dhaka District, Section 3.D)
+ */
+export async function getNearestWaterways(
+  lng: number,
+  lat: number,
+  waterwayTypes: string[] = ["river", "canal"]
+) {
+  try {
+    const res = await fetch(`${API_BASE}/geospatial/waterways/nearest`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        point: { type: "Point", coordinates: [lng, lat] },
+        waterway_types: waterwayTypes,
+      }),
+    });
+    if (res.ok) return await res.json();
+  } catch {
+    // fallback
+  }
+  return null;
+}
