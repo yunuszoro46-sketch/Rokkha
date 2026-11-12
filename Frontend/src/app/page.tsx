@@ -22,6 +22,7 @@ import {
 // Official shadcn/ui primitives
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -46,6 +47,7 @@ import { DistrictSatelliteTimeline } from "@/components/DistrictSatelliteTimelin
 import { RainRiverCharts } from "@/components/RainRiverCharts";
 import { NearestShelters } from "@/components/NearestShelters";
 import { AttributionFooter } from "@/components/AttributionFooter";
+import { PortalAccessPage } from "@/components/PortalAccessPage";
 import districtGeoData from "@/data/bangladesh_districts.json";
 import districtFloodHistory from "@/data/district_flood_history.json";
 import benchmarkData from "@/data/benchmark_predictions.json";
@@ -107,6 +109,7 @@ const DISTRICT_CENTERS: Record<string, [number, number]> =
 
 type IconName =
   | "arrow"
+  | "bell"
   | "building"
   | "chart"
   | "check"
@@ -118,10 +121,17 @@ type IconName =
   | "menu"
   | "play"
   | "shield"
+  | "sliders"
   | "users";
 
 const iconPaths: Record<IconName, ReactNode> = {
   arrow: <path d="M5 12h14M13 6l6 6-6 6" />,
+  bell: (
+    <>
+      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+    </>
+  ),
   building: (
     <path d="M4 21V5h10v16M14 9h6v12M8 9h2M8 13h2M8 17h2M17 13h1M17 17h1M2 21h20" />
   ),
@@ -163,6 +173,9 @@ const iconPaths: Record<IconName, ReactNode> = {
       <path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z" />
       <path d="m9 12 2 2 4-5" />
     </>
+  ),
+  sliders: (
+    <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" />
   ),
   users: (
     <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8" />
@@ -264,31 +277,49 @@ function MapArtwork({
   const t = UI_TEXT[lang];
   return (
     <div
-      className={`map-art ${compact ? "map-art-compact" : ""}`}
-      aria-label="Illustrated flood risk map of Bangladesh"
+      className={`map-art ${compact ? "map-art-compact" : ""} relative overflow-hidden flex items-center justify-center`}
+      aria-label="Illustrated flood risk map of Bangladesh with real-time river flow"
       role="img"
     >
+      {/* Background Soft Radar Aura Circle (Matching Image 2) */}
+      <div
+        className="absolute inset-0 pointer-events-none flex items-center justify-center z-0"
+        aria-hidden="true"
+      >
+        <div className="w-[88%] h-[88%] rounded-full border border-[#D5D2C5]/50 bg-gradient-to-br from-white/40 via-transparent to-transparent opacity-75" />
+        <div className="w-[64%] h-[64%] rounded-full border border-[#D5D2C5]/30" />
+      </div>
+
+      {/* Base Bangladesh District & River Network Map (Natural, organic river flow without artificial vector overlays) */}
       <img
         src={mapAsset.src}
         alt="Flood risk map of Bangladesh"
-        className="w-full h-full object-contain"
+        className="w-full h-full object-contain relative z-10 select-none pointer-events-none"
       />
+
+      {/* Flood Risk Level Legend on Bottom-Left (Matching Image 2) */}
       {!compact && (
-        <div className="absolute bottom-5 left-5 bg-[#FAF9F5]/95 backdrop-blur-sm border border-[#E2E0D6] rounded-xl px-4 py-3 shadow-md">
-          <div className="font-bold text-base text-[#12241C] mb-2">
-            {t.risk_level}
+        <div className="absolute bottom-5 left-5 z-30 bg-white/95 backdrop-blur-sm border border-[#E2E0D6] rounded-2xl p-4 shadow-md min-w-[130px]">
+          <div className="font-bold text-xs text-[#1F2937] mb-2.5">
+            {lang === "bn" ? "বন্যা ঝুঁকির মাত্রা" : "Flood Risk Level"}
           </div>
-          <div className="flex items-center gap-1">
-            <span className="w-5 h-4 rounded-sm bg-[#2D6A4F]" />
-            <span className="w-5 h-4 rounded-sm bg-[#74A57F]" />
-            <span className="w-5 h-4 rounded-sm bg-[#B7CEB2]" />
-            <span className="w-5 h-4 rounded-sm bg-[#F3E3B2]" />
-            <span className="w-5 h-4 rounded-sm bg-[#F4A236]" />
-            <span className="w-5 h-4 rounded-sm bg-[#D96B1E]" />
-          </div>
-          <div className="flex items-center justify-between text-base text-[#45514C] font-medium mt-1">
-            <span>{t.risk_low}</span>
-            <span>{t.risk_high}</span>
+          <div className="flex flex-col gap-2 text-xs font-medium text-[#374151]">
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-[#5A9E75] inline-block shadow-sm" />
+              <span>{lang === "bn" ? "কম (Low)" : "Low"}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-[#F5C242] inline-block shadow-sm" />
+              <span>{lang === "bn" ? "মাঝারি (Moderate)" : "Moderate"}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-[#E88C30] inline-block shadow-sm" />
+              <span>{lang === "bn" ? "বেশি (High)" : "High"}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-[#D9381E] inline-block shadow-sm" />
+              <span>{lang === "bn" ? "ভয়াবহ (Severe)" : "Severe"}</span>
+            </div>
           </div>
         </div>
       )}
@@ -299,7 +330,7 @@ function MapArtwork({
 const PAGE_METADATA: Record<
   Language,
   Record<
-    Exclude<CitizenView, "overview">,
+    Exclude<CitizenView, "overview" | "login">,
     { eyebrow: string; title: string; subtitle: string }
   >
 > = {
@@ -433,6 +464,7 @@ export function CitizenPortalApp({
   const [pointCheckResult, setPointCheckResult] = useState<PointFloodCheck | null>(null);
   const [isCheckingPoint, setIsCheckingPoint] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isDistrictReportOpen, setIsDistrictReportOpen] = useState(false);
   const [modelStatus, setModelStatus] = useState<ModelStatus | null>(null);
   const [lang, setLang] = useState<Language>("en");
@@ -677,7 +709,8 @@ export function CitizenPortalApp({
         path === "alerts" ||
         path === "satellite" ||
         path === "hydro" ||
-        path === "shelters"
+        path === "shelters" ||
+        path === "login"
       ) {
         setActiveView(path);
       } else {
@@ -701,113 +734,121 @@ export function CitizenPortalApp({
           isPageLoading ? "page-loading" : ""
         }`}
       >
-      {/* 1. Left Side Dashboard Rail - Multi-Page Navigation */}
-      <SideDashboard
-        activeView={activeView}
-        onSelectView={navigateToPage}
-        onOpenAbout={() => setIsAboutOpen(true)}
-        activeAlertCount={alerts.length}
-        isBackendConnected={isBackendConnected}
-        isCollapsed={isSidebarCollapsed}
-        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-        lang={lang}
-      />
+      {/* 1. Left Side Dashboard Rail - Multi-Page Navigation (only shown on functional pages, hidden on landing/overview) */}
+      {activeView !== "overview" && activeView !== "login" && (
+        <SideDashboard
+          activeView={activeView}
+          onSelectView={navigateToPage}
+          onOpenAbout={() => setIsAboutOpen(true)}
+          activeAlertCount={alerts.length}
+          isBackendConnected={isBackendConnected}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          lang={lang}
+        />
+      )}
 
-      {/* Main Content Area (offset by widened left sidebar) */}
+      {/* Main Content Area */}
       <div
         className={`flex-1 w-full bg-[#EDEBE2] transition-all duration-300 min-w-0 flex flex-col justify-between ${
-          isSidebarCollapsed ? "pl-20" : "pl-20 md:pl-80"
+          activeView === "overview" || activeView === "login"
+            ? "pl-0"
+            : isSidebarCollapsed
+            ? "pl-20"
+            : "pl-20 md:pl-80"
         }`}
       >
         <main className="w-full flex-1 flex flex-col justify-between">
           <div className="w-full">
             {/* Top Header / Site Header */}
-            <header className="site-header w-full">
-              <a
-                href="#overview"
-                className="logo-link"
-                aria-label="Rokkha home"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigateToPage("overview");
-                }}
-              >
-                <img src={logoAsset.src} alt="Rokkha" />
-              </a>
-              <nav aria-label="Primary navigation">
+            <header className="w-full border-b border-[#DFDDD3]/50">
+              <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 site-header">
                 <a
-                  className={activeView === "overview" ? "active" : ""}
                   href="#overview"
+                  className="logo-link"
+                  aria-label="Rokkha home"
                   onClick={(e) => {
                     e.preventDefault();
                     navigateToPage("overview");
                   }}
                 >
-                  {t.nav_home}
+                  <img src={logoAsset.src} alt="Rokkha" />
                 </a>
-                <a
-                  className={activeView === "map" ? "active" : ""}
-                  href="#map"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigateToPage("map");
-                  }}
-                >
-                  {t.nav_map}
-                </a>
-                <a
-                  className={activeView === "alerts" ? "active" : ""}
-                  href="#alerts"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigateToPage("alerts");
-                  }}
-                >
-                  {t.nav_alerts}
-                </a>
-                <a
-                  className={activeView === "satellite" ? "active" : ""}
-                  href="#satellite"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigateToPage("satellite");
-                  }}
-                >
-                  {t.nav_data}
-                </a>
-                <button
-                  onClick={() => setIsAboutOpen(true)}
-                  className="text-left font-semibold text-base hover:text-[#263B32] transition"
-                >
-                  {t.nav_about}
-                </button>
-              </nav>
-              <div className="header-actions flex items-center gap-2">
-                <button
-                  onClick={toggleLanguage}
-                  className="h-11 px-3.5 rounded-lg border border-[#EDEBE2] bg-white text-sm font-bold text-[#183026] hover:bg-[#FAF9F5] shadow-sm transition flex items-center gap-1.5"
-                  title="Switch Language / ভাষা পরিবর্তন করুন"
-                >
-                  <span className={lang === "bn" ? "text-[#183026] font-extrabold" : "text-[#183026]/40"}>
-                    বাংলা
-                  </span>
-                  <span className="text-[#183026]/30">|</span>
-                  <span className={lang === "en" ? "text-[#183026] font-extrabold" : "text-[#183026]/40"}>
-                    EN
-                  </span>
-                </button>
-                <button
-                  onClick={() => setIsAboutOpen(true)}
-                  className="login hover:bg-white/80 transition"
-                >
-                  {t.btn_about_data}
-                </button>
-                <Button
-                  onClick={() => navigateToPage("map")}
-                  className="button shadow-sm"
-                >
-                  {t.btn_get_started} <Icon name="arrow" size={16} />
-                </Button>
+                <nav aria-label="Primary navigation">
+                  <a
+                    className={activeView === "overview" ? "active" : ""}
+                    href="#overview"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigateToPage("overview");
+                    }}
+                  >
+                    {t.nav_home}
+                  </a>
+                  <a
+                    className={activeView === "map" ? "active" : ""}
+                    href="#map"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigateToPage("map");
+                    }}
+                  >
+                    {t.nav_map}
+                  </a>
+                  <a
+                    className={activeView === "alerts" ? "active" : ""}
+                    href="#alerts"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigateToPage("alerts");
+                    }}
+                  >
+                    {t.nav_alerts}
+                  </a>
+                  <a
+                    className={activeView === "satellite" ? "active" : ""}
+                    href="#satellite"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigateToPage("satellite");
+                    }}
+                  >
+                    {t.nav_data}
+                  </a>
+                  <button
+                    onClick={() => setIsAboutOpen(true)}
+                    className="text-left font-semibold text-base hover:text-[#263B32] transition"
+                  >
+                    {t.nav_about}
+                  </button>
+                </nav>
+                <div className="header-actions flex items-center gap-2">
+                  <button
+                    onClick={toggleLanguage}
+                    className="h-11 px-3.5 rounded-lg border border-[#EDEBE2] bg-white text-sm font-bold text-[#183026] hover:bg-[#FAF9F5] shadow-sm transition flex items-center gap-1.5"
+                    title="Switch Language / ভাষা পরিবর্তন করুন"
+                  >
+                    <span className={lang === "bn" ? "text-[#183026] font-extrabold" : "text-[#183026]/40"}>
+                      বাংলা
+                    </span>
+                    <span className="text-[#183026]/30">|</span>
+                    <span className={lang === "en" ? "text-[#183026] font-extrabold" : "text-[#183026]/40"}>
+                      EN
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setIsAboutOpen(true)}
+                    className="login hover:bg-white/80 transition"
+                  >
+                    {t.btn_about_data}
+                  </button>
+                  <Button
+                    onClick={() => navigateToPage("login")}
+                    className="button shadow-sm"
+                  >
+                    {t.btn_get_started} <Icon name="arrow" size={16} />
+                  </Button>
+                </div>
               </div>
             </header>
 
@@ -815,181 +856,238 @@ export function CitizenPortalApp({
             {activeView === "overview" && (
               <>
                 {/* Hero Section */}
-                <section className="hero" id="overview">
-                  <div className="hero-copy">
-                    <div className="eyebrow">
-                      <Icon name="shield" size={16} /> {t.hero_tagline}
+                <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10">
+                  <section className="hero" id="overview">
+                    <div className="hero-copy">
+                      <div className="eyebrow">
+                        <Icon name="shield" size={16} /> {t.hero_tagline}
+                      </div>
+                      <div className="hero-headline-bar">
+                        <h1>
+                          {t.hero_title_1}
+                          <br />
+                          {t.hero_title_2}
+                        </h1>
+                      </div>
+                      <p>
+                        {t.hero_desc}
+                      </p>
+                      <div className="button-row">
+                        <Button onClick={() => navigateToPage("login")} className="button gap-2">
+                          <span>{t.btn_get_started}</span>
+                          <Icon name="arrow" size={16} />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setIsAboutOpen(true)}
+                          className="button button-outline gap-2"
+                        >
+                          <Icon name="play" size={17} /> {t.btn_see_how}
+                        </Button>
+                      </div>
                     </div>
-                    <div className="hero-headline-bar">
-                      <h1>
-                        {t.hero_title_1}
-                        <br />
-                        {t.hero_title_2}
-                      </h1>
+                    <div className="hero-map">
+                      <MapArtwork lang={lang} />
                     </div>
-                    <p>
-                      {t.hero_desc}
-                    </p>
-                    <div className="button-row">
-                      <Button onClick={() => navigateToPage("map")} className="button gap-2">
-                        <span>{t.btn_get_started}</span>
-                        <Icon name="arrow" size={16} />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => setIsAboutOpen(true)}
-                        className="button button-outline gap-2"
-                      >
-                        <Icon name="play" size={17} /> {t.btn_see_how}
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="hero-map">
-                    <MapArtwork lang={lang} />
-                  </div>
-                </section>
+                  </section>
+                </div>
 
                 {/* Metrics Statistics Row */}
-                <section className="metrics" aria-label="Platform statistics">
-                  <div>
-                    <div className="metric-icon-circle">
-                      <Icon name="layers" />
-                    </div>
-                    <strong>{t.metric_years}</strong>
-                    <span>{t.metric_years_sub}</span>
-                  </div>
-                  <div>
-                    <div className="metric-icon-circle">
-                      <Icon name="location" />
-                    </div>
-                    <strong>{t.metric_districts}</strong>
-                    <span>{t.metric_districts_sub}</span>
-                  </div>
-                  <div>
-                    <div className="metric-icon-circle">
-                      <Icon name="building" />
-                    </div>
-                    <strong>{t.metric_assets}</strong>
-                    <span>{t.metric_assets_sub}</span>
-                  </div>
-                  <div>
-                    <div className="metric-icon-circle">
-                      <Icon name="code" />
-                    </div>
-                    <strong>{t.metric_tests}</strong>
-                    <span>{t.metric_tests_sub}</span>
-                  </div>
-                </section>
-
-                {/* Core Capabilities (8 Cards - Clickable to jump to their page) */}
-                <section className="capabilities" id="capabilities">
-                  <div className="section-label">
-                    <span /> {t.cap_label} <span />
-                  </div>
-                  <h2>
-                    {t.cap_title}
-                  </h2>
-                  <p className="section-intro">
-                    {t.cap_sub}
-                  </p>
-                  <div className="capability-grid">
-                    {getCapabilities(t).map(({ icon, title, body, featured, targetView }) => (
-                      <article
-                        className={`${featured ? "featured" : ""} cursor-pointer`}
-                        key={title}
-                        onClick={() => navigateToPage(targetView)}
-                      >
-                        <Icon name={icon} />
-                        <h3>{title}</h3>
-                        <p>{body}</p>
-                      </article>
-                    ))}
-                  </div>
-                </section>
-
-                {/* 24-Hour Flood Prediction Showcase */}
-                <section className="prediction">
-                  <div className="dashboard-card">
-                    <aside>
-                      <span>⌂</span>
-                      <Icon name="layers" size={16} />
-                      <Icon name="chart" size={16} />
-                      <Icon name="location" size={16} />
-                      <Icon name="users" size={16} />
-                    </aside>
-                    <div className="dashboard-map">
-                      <div className="browser-dots">
-                        <i />
-                        <i />
-                        <i />
-                      </div>
-                      <MapArtwork compact lang={lang} />
-                      <div className="map-pin">
-                        <span>{t.mock_risk_high}</span>
-                        <b />
-                      </div>
-                    </div>
-                    <div className="forecast">
-                      <strong>
-                        <Icon name="cloud" size={16} /> {t.mock_forecast_title}
-                      </strong>
-                      <span>{t.mock_forecast_time}</span>
-                      <small>{t.mock_risk_level}</small>
-                      <b>{t.mock_high}</b>
-                      <small>{t.mock_affected_area}</small>
-                      <b>{t.mock_area_val}</b>
-                    </div>
-                  </div>
-                  <div className="prediction-copy">
-                    <div className="up-next">ϟ {t.up_next_badge}</div>
-                    <h2>
-                      {t.up_next_title_1}{" "}
-                      <em>
-                        {t.up_next_title_2}
-                      </em>
-                    </h2>
-                    <p>
-                      {t.up_next_desc}
-                    </p>
-                    <ul>
-                      <li>
-                        <Icon name="check" size={15} /> {t.up_next_check_1}
-                      </li>
-                      <li>
-                        <Icon name="check" size={15} /> {t.up_next_check_2}
-                      </li>
-                      <li>
-                        <Icon name="check" size={15} /> {t.up_next_check_3}
-                      </li>
-                    </ul>
-                  </div>
-                </section>
-
-                {/* Resilience Banner */}
-                <section className="cta">
-                  <img src="/bangladesh-river.jpg" alt="Homes beside a river in rural Bangladesh" />
-                  <div className="cta-copy">
-                    <Icon name="shield" />
+                <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 mt-6">
+                  <section className="metrics" aria-label="Platform statistics">
                     <div>
-                      <strong>
-                        {t.cta_title_1}
-                        <br />
-                        <span>{t.cta_title_2}</span>
-                      </strong>
-                      <p>{t.cta_desc}</p>
+                      <div className="metric-icon-circle">
+                        <Icon name="layers" />
+                      </div>
+                      <strong>Previous</strong>
+                      <span>Historical Analysis</span>
                     </div>
-                  </div>
-                  <Button onClick={() => navigateToPage("map")} className="button gap-2">
-                    <span>{t.cta_btn}</span>
-                    <Icon name="arrow" size={16} />
-                  </Button>
-                </section>
+                    <div>
+                      <div className="metric-icon-circle">
+                        <Icon name="location" />
+                      </div>
+                      <strong>{t.metric_districts}</strong>
+                      <span>{t.metric_districts_sub}</span>
+                    </div>
+                    <div>
+                      <div className="metric-icon-circle">
+                        <Icon name="building" />
+                      </div>
+                      <strong>{t.metric_assets}</strong>
+                      <span>{t.metric_assets_sub}</span>
+                    </div>
+                    <div>
+                      <div className="metric-icon-circle">
+                        <Icon name="code" />
+                      </div>
+                      <strong>{t.metric_tests}</strong>
+                      <span>{t.metric_tests_sub}</span>
+                    </div>
+                  </section>
+                </div>
+
+
+                {/* End-to-End Architecture */}
+                <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 my-20">
+                  <section id="architecture">
+                    <div className="text-center max-w-3xl mx-auto mb-14">
+                      <span className="inline-block px-3.5 py-1 text-xs font-bold tracking-wider text-[#1F513F] bg-[#D8E6DF] rounded-full uppercase mb-4">
+                        END-TO-END ARCHITECTURE
+                      </span>
+                      <h2 className="text-3xl md:text-4xl font-extrabold text-[#12241C] tracking-tight leading-tight mb-4">
+                        How Rokkha Predicts & Protects
+                      </h2>
+                      <p className="text-sm md:text-base text-[#56635D] leading-relaxed">
+                        Every forecast is validated against previous historical analysis and 187 automated test suites before reaching communities.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {/* Card 01 */}
+                      <Card className="bg-white rounded-2xl p-7 border border-[#E4E2D8] shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center justify-between mb-6">
+                            <div className="w-9 h-9 rounded-full bg-[#11241C] text-white flex items-center justify-center font-bold text-xs tracking-wider">
+                              01
+                            </div>
+                            <Badge variant="outline" className="text-xs font-semibold text-[#526059] bg-[#F4F3ED] border-[#E2E0D6] rounded-md px-2.5 py-1">
+                              Satellite + Gauge Ingestion
+                            </Badge>
+                          </div>
+                          <h3 className="text-xl font-bold text-[#12241C] mb-3">
+                            Multi-Source Telemetry
+                          </h3>
+                          <p className="text-sm text-[#5C6863] leading-relaxed">
+                            Ingests Sentinel-1 SAR water masks, transboundary rainfall radar, and river gauge readings across all 64 districts.
+                          </p>
+                        </div>
+                      </Card>
+
+                      {/* Card 02 */}
+                      <Card className="bg-white rounded-2xl p-7 border border-[#E4E2D8] shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center justify-between mb-6">
+                            <div className="w-9 h-9 rounded-full bg-[#1F513F] text-white flex items-center justify-center font-bold text-xs tracking-wider">
+                              02
+                            </div>
+                            <Badge variant="outline" className="text-xs font-semibold text-[#0369A1] bg-[#E0F2FE] border-[#BAE6FD] rounded-md px-2.5 py-1">
+                              Hydrodynamic Engine
+                            </Badge>
+                          </div>
+                          <h3 className="text-xl font-bold text-[#12241C] mb-3">
+                            Historical & AI Simulation
+                          </h3>
+                          <p className="text-sm text-[#5C6863] leading-relaxed">
+                            Synthesizes previous historical analysis with 2D floodplain topography to pinpoint inundation depth and hospital/shelter impact.
+                          </p>
+                        </div>
+                      </Card>
+
+                      {/* Card 03 */}
+                      <Card className="bg-white rounded-2xl p-7 border border-[#E4E2D8] shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center justify-between mb-6">
+                            <div className="w-9 h-9 rounded-full bg-[#C2410C] text-white flex items-center justify-center font-bold text-xs tracking-wider">
+                              03
+                            </div>
+                            <Badge variant="outline" className="text-xs font-semibold text-[#BE123C] bg-[#FFE4E6] border-[#FECDD3] rounded-md px-2.5 py-1">
+                              Community & API Dispatch
+                            </Badge>
+                          </div>
+                          <h3 className="text-xl font-bold text-[#12241C] mb-3">
+                            Actionable Early Warnings
+                          </h3>
+                          <p className="text-sm text-[#5C6863] leading-relaxed">
+                            Delivers district-level evacuation routing, shelter readiness alerts, and REST API webhooks to emergency responders.
+                          </p>
+                        </div>
+                      </Card>
+                    </div>
+                  </section>
+                </div>
+
+                {/* Subscribe & API Access Banner */}
+                <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 my-16">
+                  <section id="subscribe">
+                    <div className="bg-[#113824] rounded-3xl p-8 lg:p-12 text-white shadow-xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center border border-[#1b4e34]">
+                      {/* Left Column */}
+                      <div className="lg:col-span-7 space-y-6">
+                        <Badge variant="outline" className="text-xs font-semibold text-white/90 bg-white/10 border-white/20 rounded-full px-3.5 py-1">
+                          Stay One Step Ahead
+                        </Badge>
+                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
+                          Subscribe to District Flood Alerts & API Access
+                        </h2>
+                        <p className="text-base text-white/80 max-w-xl leading-relaxed">
+                          Receive instant early flood predictions, river danger-level crossings, and nearest safe shelter coordinates for your district.
+                        </p>
+
+                        {/* Form Row */}
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
+                          <Input
+                            type="text"
+                            placeholder="Your Name or Organization"
+                            className="bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl px-4 flex-1 focus:border-[#4ADE80] focus:ring-[#4ADE80]"
+                          />
+                          <div className="w-full sm:w-48">
+                            <Select defaultValue="BD6091">
+                              <SelectTrigger className="h-12 bg-white/10 border-white/20 text-white rounded-xl">
+                                <SelectValue placeholder="Sylhet District" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="BD6091">Sylhet District</SelectItem>
+                                <SelectItem value="BD6090">Sunamganj District</SelectItem>
+                                <SelectItem value="BD3026">Dhaka District</SelectItem>
+                                <SelectItem value="BD5549">Kurigram District</SelectItem>
+                                <SelectItem value="BD1004">Chittagong District</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <Button className="h-12 px-6 rounded-xl bg-[#52B74A] hover:bg-[#43A03B] text-[#0A2616] font-bold text-sm tracking-wide transition shadow-lg shrink-0">
+                            Activate Alerts →
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Right Column: Code Terminal Mockup */}
+                      <div className="lg:col-span-5">
+                        <div className="bg-[#0A1D13] rounded-2xl border border-white/10 p-5 font-mono shadow-2xl">
+                          <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/10 text-xs">
+                            <div className="flex items-center gap-2 text-white/90">
+                              <span className="w-2.5 h-2.5 rounded-full bg-[#4ADE80] inline-block" />
+                              <span className="font-semibold">GET /api/v1/forecast/basin</span>
+                            </div>
+                            <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#163824] text-[#4ADE80] border border-[#225738]">
+                              187 Tests Passing
+                            </span>
+                          </div>
+                          <pre className="text-xs text-[#86EFAC] leading-relaxed overflow-x-auto">
+{`{
+  "platform": "Rokkha Climate Intelligence",
+  "coverage_districts": 64,
+  "baseline": "Previous Historical Analysis",
+  "active_basin": "Surma-Meghna",
+  "hydrodynamic_flow_m3s": 14820,
+  "risk_distribution": {
+    "Low": 41,
+    "Moderate": 11,
+    "High": 7,
+    "Severe": 5
+  },
+  "critical_assets_monitored": 1240
+}`}
+                          </pre>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                </div>
               </>
             )}
 
             {/* DEDICATED FEATURE PAGES (map, alerts, satellite, hydro, shelters) */}
-            {activeView !== "overview" && (
-              <section className="w-full py-10 px-[4%] space-y-8">
+            {activeView !== "overview" && activeView !== "login" && (
+              <section className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-10 space-y-8">
                 {/* Page Header & Global Context Controls */}
                 <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 border-b border-[#EDEBE2] pb-6">
                   <div className="space-y-2 max-w-3xl">
@@ -1543,6 +1641,19 @@ export function CitizenPortalApp({
           <AttributionFooter lang={lang} onOpenAbout={() => setIsAboutOpen(true)} />
         </main>
       </div>
+      {/* Portal Access Login/Register Modal & Page (Matching User Reference Image) */}
+      <PortalAccessPage
+        isOpen={isLoginOpen || activeView === "login"}
+        onClose={() => {
+          setIsLoginOpen(false);
+          if (activeView === "login") navigateToPage("overview");
+        }}
+        onLoginSuccess={() => {
+          setIsLoginOpen(false);
+          navigateToPage("map");
+        }}
+        lang={lang}
+      />
     </div>
     </>
   );
