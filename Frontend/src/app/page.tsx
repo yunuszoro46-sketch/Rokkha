@@ -568,6 +568,12 @@ export function CitizenPortalApp({
       ? (hist.max_flooded_share * 100).toFixed(1) + "%"
       : "N/A";
     const floodedEventIds: string[] = hist?.flooded_event_ids || [];
+    const shareText = (share: number | null | undefined) =>
+      share === null || share === undefined
+        ? isBn ? "তথ্য নেই" : "not available"
+        : isBn
+        ? `${toBnNum((share * 100).toFixed(0))}%`
+        : `${(share * 100).toFixed(0)}%`;
 
     // The badge and the probability come only from the model's prediction for
     // this day. Without one, say so: flood history is not a forecast.
@@ -625,6 +631,9 @@ export function CitizenPortalApp({
       prediction: pred,
       riskBadge,
       probabilityText: formattedProb,
+      // Share of the district inside the modelled flood zones (from the backend, via the saved copy).
+      hazardShare10: shareText(hist?.hazard_share_10yr),
+      hazardShare100: shareText(hist?.hazard_share_100yr),
     };
   }, [selectedPcode, selectedName, predictions, lang]);
 
@@ -692,6 +701,9 @@ export function CitizenPortalApp({
   const handleLogOut = () => {
     logOut().finally(() => setAccountUser(null));
   };
+
+  // The backend makes one forecast per UTC day (daily update, about 09:30 in Bangladesh).
+  const todayUtc = new Date().toISOString().slice(0, 10);
 
   const isForecastLoading = forecastLoadedFor !== targetDate;
   const hasForecast = predictions.length > 0;
@@ -1256,6 +1268,18 @@ export function CitizenPortalApp({
                       >
                         {t.scenario_dry}
                       </Button>
+                      <Button
+                        size="sm"
+                        variant={targetDate === todayUtc ? "default" : "outline"}
+                        className={
+                          targetDate === todayUtc
+                            ? "bg-[#122B1E] hover:bg-[#0C1F15] text-white font-bold h-8 px-3 rounded-lg text-xs shadow-sm"
+                            : "bg-white border-[#DFDDD3] text-[#12241C] hover:bg-[#FAF9F5] h-8 px-3 rounded-lg text-xs font-medium shadow-sm"
+                        }
+                        onClick={() => setTargetDate(todayUtc)}
+                      >
+                        {lang === "bn" ? "আজ" : "Today"}
+                      </Button>
                     </div>
 
                     <AlertsFeed
@@ -1507,7 +1531,7 @@ export function CitizenPortalApp({
                         {t.ret_10yr}
                       </div>
                       <div className="text-2xl font-extrabold text-[#183026]">
-                        {districtReport.eventsFlooded >= 4 ? t.ret_10yr_depth_high : t.ret_10yr_depth_low}
+                        {districtReport.hazardShare10}
                       </div>
                       <div className="text-xs text-[#263B32]/70 mt-1">
                         {t.ret_10yr_sub}
@@ -1519,7 +1543,7 @@ export function CitizenPortalApp({
                         {t.ret_100yr}
                       </div>
                       <div className="text-2xl font-extrabold text-[#C9443A]">
-                        {districtReport.eventsFlooded >= 4 ? t.ret_100yr_depth_high : t.ret_100yr_depth_low}
+                        {districtReport.hazardShare100}
                       </div>
                       <div className="text-xs text-[#263B32]/70 mt-1">
                         {t.ret_100yr_sub}

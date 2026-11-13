@@ -320,7 +320,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 1
+      "rank": 1,
+      "hazard_share_10yr": 0.6629,
+      "hazard_share_100yr": 0.7752
     },
     {
       "pcode": "BD4572",
@@ -399,7 +401,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 2
+      "rank": 2,
+      "hazard_share_10yr": 0.5448,
+      "hazard_share_100yr": 0.6412
     },
     {
       "pcode": "BD3048",
@@ -478,7 +482,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 3
+      "rank": 3,
+      "hazard_share_10yr": 0.5019,
+      "hazard_share_100yr": 0.58
     },
     {
       "pcode": "BD5010",
@@ -557,7 +563,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 4
+      "rank": 4,
+      "hazard_share_10yr": 0.4215,
+      "hazard_share_100yr": 0.5898
     },
     {
       "pcode": "BD4539",
@@ -636,7 +644,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 5
+      "rank": 5,
+      "hazard_share_10yr": 0.5605,
+      "hazard_share_100yr": 0.9032
     },
     {
       "pcode": "BD2012",
@@ -715,7 +725,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 6
+      "rank": 6,
+      "hazard_share_10yr": 0.4364,
+      "hazard_share_100yr": 0.7334
     },
     {
       "pcode": "BD5088",
@@ -794,7 +806,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 7
+      "rank": 7,
+      "hazard_share_10yr": 0.8331,
+      "hazard_share_100yr": 0.9826
     },
     {
       "pcode": "BD6036",
@@ -873,7 +887,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 8
+      "rank": 8,
+      "hazard_share_10yr": 0.4491,
+      "hazard_share_100yr": 0.5481
     },
     {
       "pcode": "BD5076",
@@ -952,7 +968,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 9
+      "rank": 9,
+      "hazard_share_10yr": 0.5888,
+      "hazard_share_100yr": 0.9397
     },
     {
       "pcode": "BD4561",
@@ -1031,7 +1049,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 10
+      "rank": 10,
+      "hazard_share_10yr": 0.1408,
+      "hazard_share_100yr": 0.2308
     },
     {
       "pcode": "BD3093",
@@ -1110,7 +1130,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 11
+      "rank": 11,
+      "hazard_share_10yr": 0.2569,
+      "hazard_share_100yr": 0.6871
     },
     {
       "pcode": "BD5069",
@@ -1189,7 +1211,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 12
+      "rank": 12,
+      "hazard_share_10yr": 0.4162,
+      "hazard_share_100yr": 0.8845
     },
     {
       "pcode": "BD3068",
@@ -1268,7 +1292,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 13
+      "rank": 13,
+      "hazard_share_10yr": 0.2372,
+      "hazard_share_100yr": 0.4021
     },
     {
       "pcode": "BD5038",
@@ -1346,7 +1372,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 14
+      "rank": 14,
+      "hazard_share_10yr": 0.2197,
+      "hazard_share_100yr": 0.3081
     },
     {
       "pcode": "BD6091",
@@ -1424,7 +1452,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 15
+      "rank": 15,
+      "hazard_share_10yr": 0.516,
+      "hazard_share_100yr": 0.6571
     },
     {
       "pcode": "BD3056",
@@ -1502,7 +1532,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 16
+      "rank": 16,
+      "hazard_share_10yr": 0.6396,
+      "hazard_share_100yr": 0.9405
     },
     {
       "pcode": "BD4589",
@@ -1580,7 +1612,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 17
+      "rank": 17,
+      "hazard_share_10yr": 0.1028,
+      "hazard_share_100yr": 0.5305
     },
     {
       "pcode": "BD5532",
@@ -1658,7 +1692,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 18
+      "rank": 18,
+      "hazard_share_10yr": 0.6657,
+      "hazard_share_100yr": 0.8575
     },
     {
       "pcode": "BD5549",
@@ -1736,7 +1772,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 19
+      "rank": 19,
+      "hazard_share_10yr": 0.6542,
+      "hazard_share_100yr": 0.8506
     },
     {
       "pcode": "BD6058",
@@ -1814,7 +1852,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 20
+      "rank": 20,
+      "hazard_share_10yr": 0.2882,
+      "hazard_share_100yr": 0.3612
     },
     {
       "pcode": "BD4087",
@@ -1892,7 +1932,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 21
+      "rank": 21,
+      "hazard_share_10yr": 0.2298,
+      "hazard_share_100yr": 0.2699
     },
     {
       "pcode": "BD4050",
@@ -1970,7 +2012,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 22
+      "rank": 22,
+      "hazard_share_10yr": 0.3673,
+      "hazard_share_100yr": 0.8819
     },
     {
       "pcode": "BD3067",
@@ -2048,7 +2092,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 23
+      "rank": 23,
+      "hazard_share_10yr": 0.7003,
+      "hazard_share_100yr": 0.8748
     },
     {
       "pcode": "BD5552",
@@ -2126,7 +2172,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 24
+      "rank": 24,
+      "hazard_share_10yr": 0.4248,
+      "hazard_share_100yr": 0.6505
     },
     {
       "pcode": "BD4047",
@@ -2204,7 +2252,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 25
+      "rank": 25,
+      "hazard_share_10yr": 0.2385,
+      "hazard_share_100yr": 0.3136
     },
     {
       "pcode": "BD5585",
@@ -2282,7 +2332,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 26
+      "rank": 26,
+      "hazard_share_10yr": 0.2897,
+      "hazard_share_100yr": 0.458
     },
     {
       "pcode": "BD3033",
@@ -2360,7 +2412,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 27
+      "rank": 27,
+      "hazard_share_10yr": 0.1357,
+      "hazard_share_100yr": 0.282
     },
     {
       "pcode": "BD1078",
@@ -2437,7 +2491,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 28
+      "rank": 28,
+      "hazard_share_10yr": 0.23,
+      "hazard_share_100yr": 0.4777
     },
     {
       "pcode": "BD3059",
@@ -2514,7 +2570,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 29
+      "rank": 29,
+      "hazard_share_10yr": 0.7973,
+      "hazard_share_100yr": 0.8313
     },
     {
       "pcode": "BD3026",
@@ -2591,7 +2649,9 @@
           "status": "not_flooded"
         }
       ],
-      "rank": 30
+      "rank": 30,
+      "hazard_share_10yr": 0.5431,
+      "hazard_share_100yr": 0.7957
     },
     {
       "pcode": "BD1079",
@@ -2668,7 +2728,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 31
+      "rank": 31,
+      "hazard_share_10yr": 0.0815,
+      "hazard_share_100yr": 0.687
     },
     {
       "pcode": "BD1006",
@@ -2745,7 +2807,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 32
+      "rank": 32,
+      "hazard_share_10yr": 0.4398,
+      "hazard_share_100yr": 0.7602
     },
     {
       "pcode": "BD2019",
@@ -2822,7 +2886,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 33
+      "rank": 33,
+      "hazard_share_10yr": 0.4397,
+      "hazard_share_100yr": 0.6288
     },
     {
       "pcode": "BD4041",
@@ -2899,7 +2965,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 34
+      "rank": 34,
+      "hazard_share_10yr": 0.2142,
+      "hazard_share_100yr": 0.3031
     },
     {
       "pcode": "BD1004",
@@ -2976,7 +3044,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 35
+      "rank": 35,
+      "hazard_share_10yr": 0.041,
+      "hazard_share_100yr": 0.5767
     },
     {
       "pcode": "BD3035",
@@ -3053,7 +3123,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 36
+      "rank": 36,
+      "hazard_share_10yr": 0.5278,
+      "hazard_share_100yr": 0.9712
     },
     {
       "pcode": "BD4001",
@@ -3130,7 +3202,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 37
+      "rank": 37,
+      "hazard_share_10yr": 0.1193,
+      "hazard_share_100yr": 0.3365
     },
     {
       "pcode": "BD4065",
@@ -3207,7 +3281,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 38
+      "rank": 38,
+      "hazard_share_10yr": 0.5476,
+      "hazard_share_100yr": 0.8066
     },
     {
       "pcode": "BD5064",
@@ -3283,7 +3359,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 39
+      "rank": 39,
+      "hazard_share_10yr": 0.436,
+      "hazard_share_100yr": 0.5399
     },
     {
       "pcode": "BD3029",
@@ -3359,7 +3437,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 40
+      "rank": 40,
+      "hazard_share_10yr": 0.5596,
+      "hazard_share_100yr": 0.8587
     },
     {
       "pcode": "BD2030",
@@ -3435,7 +3515,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 41
+      "rank": 41,
+      "hazard_share_10yr": 0.1416,
+      "hazard_share_100yr": 0.2453
     },
     {
       "pcode": "BD3054",
@@ -3511,7 +3593,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 42
+      "rank": 42,
+      "hazard_share_10yr": 0.7388,
+      "hazard_share_100yr": 0.8818
     },
     {
       "pcode": "BD5081",
@@ -3587,7 +3671,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 43
+      "rank": 43,
+      "hazard_share_10yr": 0.4951,
+      "hazard_share_100yr": 0.7136
     },
     {
       "pcode": "BD2022",
@@ -3663,7 +3749,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 44
+      "rank": 44,
+      "hazard_share_10yr": 0.1299,
+      "hazard_share_100yr": 0.1672
     },
     {
       "pcode": "BD5070",
@@ -3739,7 +3827,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 45
+      "rank": 45,
+      "hazard_share_10yr": 0.4677,
+      "hazard_share_100yr": 0.6667
     },
     {
       "pcode": "BD3086",
@@ -3815,7 +3905,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 46
+      "rank": 46,
+      "hazard_share_10yr": 0.6594,
+      "hazard_share_100yr": 0.821
     },
     {
       "pcode": "BD2051",
@@ -3891,7 +3983,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 47
+      "rank": 47,
+      "hazard_share_10yr": 0.3806,
+      "hazard_share_100yr": 0.601
     },
     {
       "pcode": "BD1042",
@@ -3967,7 +4061,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 48
+      "rank": 48,
+      "hazard_share_10yr": 0.2689,
+      "hazard_share_100yr": 0.9398
     },
     {
       "pcode": "BD2015",
@@ -4043,7 +4139,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 49
+      "rank": 49,
+      "hazard_share_10yr": 0.1028,
+      "hazard_share_100yr": 0.181
     },
     {
       "pcode": "BD2013",
@@ -4119,7 +4217,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 50
+      "rank": 50,
+      "hazard_share_10yr": 0.5003,
+      "hazard_share_100yr": 0.7599
     },
     {
       "pcode": "BD4055",
@@ -4195,7 +4295,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 51
+      "rank": 51,
+      "hazard_share_10yr": 0.5135,
+      "hazard_share_100yr": 0.8731
     },
     {
       "pcode": "BD3082",
@@ -4271,7 +4373,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 52
+      "rank": 52,
+      "hazard_share_10yr": 0.5476,
+      "hazard_share_100yr": 0.9496
     },
     {
       "pcode": "BD4044",
@@ -4347,7 +4451,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 53
+      "rank": 53,
+      "hazard_share_10yr": 0.1765,
+      "hazard_share_100yr": 0.5243
     },
     {
       "pcode": "BD5573",
@@ -4422,7 +4528,9 @@
           "status": "not_flooded"
         }
       ],
-      "rank": 54
+      "rank": 54,
+      "hazard_share_10yr": 0.2334,
+      "hazard_share_100yr": 0.3335
     },
     {
       "pcode": "BD1009",
@@ -4497,7 +4605,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 55
+      "rank": 55,
+      "hazard_share_10yr": 0.3388,
+      "hazard_share_100yr": 0.3991
     },
     {
       "pcode": "BD2075",
@@ -4572,7 +4682,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 56
+      "rank": 56,
+      "hazard_share_10yr": 0.1907,
+      "hazard_share_100yr": 0.3399
     },
     {
       "pcode": "BD5577",
@@ -4647,7 +4759,9 @@
           "status": "not_flooded"
         }
       ],
-      "rank": 57
+      "rank": 57,
+      "hazard_share_10yr": 0.0975,
+      "hazard_share_100yr": 0.1488
     },
     {
       "pcode": "BD5527",
@@ -4722,7 +4836,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 58
+      "rank": 58,
+      "hazard_share_10yr": 0.1684,
+      "hazard_share_100yr": 0.256
     },
     {
       "pcode": "BD4018",
@@ -4797,7 +4913,9 @@
           "status": "flooded"
         }
       ],
-      "rank": 59
+      "rank": 59,
+      "hazard_share_10yr": 0.2761,
+      "hazard_share_100yr": 0.5339
     },
     {
       "pcode": "BD4057",
@@ -4872,7 +4990,9 @@
           "status": "not_flooded"
         }
       ],
-      "rank": 60
+      "rank": 60,
+      "hazard_share_10yr": 0.2488,
+      "hazard_share_100yr": 0.7433
     },
     {
       "pcode": "BD5594",
@@ -4946,7 +5066,9 @@
           "status": "not_flooded"
         }
       ],
-      "rank": 61
+      "rank": 61,
+      "hazard_share_10yr": 0.0309,
+      "hazard_share_100yr": 0.0406
     },
     {
       "pcode": "BD2084",
@@ -5020,7 +5142,9 @@
           "status": "not_flooded"
         }
       ],
-      "rank": 62
+      "rank": 62,
+      "hazard_share_10yr": 0.0989,
+      "hazard_share_100yr": 0.1143
     },
     {
       "pcode": "BD2046",
@@ -5092,7 +5216,9 @@
           "status": "not_flooded"
         }
       ],
-      "rank": 63
+      "rank": 63,
+      "hazard_share_10yr": 0.0233,
+      "hazard_share_100yr": 0.0291
     },
     {
       "pcode": "BD2003",
@@ -5164,7 +5290,9 @@
           "status": "not_flooded"
         }
       ],
-      "rank": 64
+      "rank": 64,
+      "hazard_share_10yr": 0.0114,
+      "hazard_share_100yr": 0.0153
     }
   ]
 }

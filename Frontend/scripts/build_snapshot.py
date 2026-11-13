@@ -81,7 +81,12 @@ def main():
             if district.get(key) != live.get(key):
                 raise SystemExit(f"district_flood_history.json disagrees with the backend for "
                                  f"{district['name']} ({key}). Copy Backend/data/flood/district_flood_history.json.")
-    print("district_flood_history.json: agrees with the backend")
+        # Modelled hazard shares come from the backend's district rows (static values).
+        for key in ("hazard_share_10yr", "hazard_share_100yr"):
+            district[key] = live.get(key)
+    (DATA / "district_flood_history.json").write_text(
+        json.dumps(history, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print("district_flood_history.json: agrees with the backend; hazard shares added")
     meta = json.loads((DATA / "flood_model_meta.json").read_text(encoding="utf-8"))
     if meta.get("model_version") != model_version:
         raise SystemExit("flood_model_meta.json is from another model. "

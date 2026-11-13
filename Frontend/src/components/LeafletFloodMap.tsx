@@ -102,6 +102,7 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
   const t = UI_TEXT[lang] || UI_TEXT.en;
   const isBn = lang === "bn";
   const displayTargetDate = isBn ? toBnNum(targetDate) : targetDate;
+  const todayUtc = new Date().toISOString().slice(0, 10);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const districtLayerRef = useRef<L.GeoJSON | null>(null);
@@ -477,6 +478,13 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
                 onClick={() => onChangeTargetDate("2023-04-10")}
               >
                 {t.scenario_dry}
+              </Button>
+              <Button
+                size="sm"
+                variant={targetDate === todayUtc ? "default" : "secondary"}
+                onClick={() => onChangeTargetDate(todayUtc)}
+              >
+                {isBn ? "আজ" : "Today"}
               </Button>
             </div>
           </div>

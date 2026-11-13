@@ -28,6 +28,7 @@ export const DataSourceBanner: React.FC<{ lang?: Language }> = ({ lang = "en" })
   const day = SAMPLE_GENERATED_AT.slice(0, 10);
   const names = parts.map((p) => PART_NAMES[p][isBn ? "bn" : "en"]).join(", ");
   const dates = SAMPLE_DATES.join(", ");
+  const forecastFromSample = parts.includes("predictions") || parts.includes("alerts");
 
   return (
     <div
@@ -37,8 +38,16 @@ export const DataSourceBanner: React.FC<{ lang?: Language }> = ({ lang = "en" })
       <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
       <span>
         {isBn
-          ? `সংরক্ষিত নমুনা (${toBnNum(day)}), সরাসরি তথ্য নয়। সার্ভারের সাথে সংযোগ হয়নি, তাই সংরক্ষিত ফলাফল দেখানো হচ্ছে: ${names}। পূর্বাভাস আছে শুধু এই তারিখগুলোর: ${toBnNum(dates)}। আশ্রয়কেন্দ্রের তালিকা সংযোগ ছাড়া দেখানো হয় না।`
-          : `Saved sample from ${day}, not live. The backend could not be reached, so stored results are shown for: ${names}. Forecasts exist only for ${dates}. Shelters are not shown without a connection.`}
+          ? `সংরক্ষিত নমুনা (${toBnNum(day)}), সরাসরি তথ্য নয়। সার্ভার থেকে এই তথ্যগুলো পাওয়া যায়নি, তাই সংরক্ষিত ফলাফল দেখানো হচ্ছে: ${names}।`
+          : `Saved sample from ${day}, not live. The backend did not answer for: ${names}. Stored results are shown for those.`}
+        {forecastFromSample &&
+          (isBn
+            ? ` সংরক্ষিত পূর্বাভাস আছে শুধু এই তারিখগুলোর: ${toBnNum(dates)}।`
+            : ` Saved forecasts exist only for ${dates}.`)}
+        {parts.includes("shelters") &&
+          (isBn
+            ? " আশ্রয়কেন্দ্রের তালিকা সংযোগ ছাড়া দেখানো হয় না।"
+            : " Shelters are not shown without a connection.")}
       </span>
     </div>
   );
