@@ -284,7 +284,12 @@ How to show it:
 | `GET` | `/geospatial/flood/events` | the 10 flood events (name, dates, flooded km²) |
 | `POST` | `/geospatial/flood/check` | flood info for any point: `{"point": {"type": "Point", "coordinates": [lng, lat]}}` |
 
-District row: `{"rank": 1, "pcode": "BD6090", "name": "Sunamganj", "division": "Sylhet", "events_observed": 6, "events_flooded": 6, "max_flooded_share": 0.818}`
+District row: `{"rank": 1, "pcode": "BD6090", "name": "Sunamganj", "division": "Sylhet", "events_observed": 6, "events_flooded": 6, "max_flooded_share": 0.818, "hazard_share_10yr": 0.66, "hazard_share_100yr": 0.78}`
+
+`hazard_share_10yr` / `hazard_share_100yr` (new) are the share (0–1) of the district's land inside the
+**modelled** 10-year and 100-year river-flood zones (JRC hazard map). Show them as "66 % of the district lies in
+the 10-year flood zone". They are modelled hazard, not observed flooding: keep them apart from
+`events_flooded`. A district has no single "flood depth"; depth exists only for a point (`/flood/check`).
 
 **Choropleth map:** the district shapes are in the repo at
 `Backend/data/boundaries/bangladesh_districts.geojson` (64 features, ~1 MB,

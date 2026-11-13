@@ -638,6 +638,12 @@ class DistrictFloodSummary(BaseModel):
     # Largest share (0–1) of the district's observed land under flood water.
     max_flooded_share: float | None
 
+    # MODELLED hazard (not observed): share (0–1) of the district's land inside
+    # the JRC 10-year and 100-year river-flood zones. null = not computed.
+    hazard_share_10yr: float | None = None
+
+    hazard_share_100yr: float | None = None
+
 
 class DistrictFloodRankingResponse(BaseModel):
 

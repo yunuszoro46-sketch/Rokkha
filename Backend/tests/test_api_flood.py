@@ -311,3 +311,31 @@ def test_keraniganj_modelled_hazard_without_observed_flood(client):
         "depth_label": "3 to 10 m"
     }
     assert cell["times_flooded"] == 0
+
+
+# ==========================================
+# MODELLED HAZARD SHARE PER DISTRICT
+# ==========================================
+
+def test_district_rows_carry_the_modelled_hazard_shares(client):
+
+    rows = client.get("/api/v1/geospatial/flood/districts").json()["districts"]
+
+    assert len(rows) == 64
+    for row in rows:
+        assert 0 <= row["hazard_share_10yr"] <= row["hazard_share_100yr"] <= 1
+
+    # A haor district lies far more inside the modelled flood zone than a hill district.
+    by_name = {row["name"]: row for row in rows}
+    assert by_name["Sunamganj"]["hazard_share_100yr"] > 0.5
+    assert by_name["Bandarban"]["hazard_share_100yr"] < 0.2
+
+
+def test_hazard_shares_are_the_ones_the_model_uses(client):
+
+    from app.modules.prediction.repository import get_static
+
+    detail = client.get("/api/v1/geospatial/flood/districts/BD6090").json()
+
+    assert detail["hazard_share_10yr"] == get_static()["BD6090"]["hazard_share_10yr"]
+    assert detail["hazard_share_100yr"] == get_static()["BD6090"]["hazard_share_100yr"]

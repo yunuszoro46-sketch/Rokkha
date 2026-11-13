@@ -188,7 +188,7 @@ Rokkha/
     ├── docs/
     │   └── FRONTEND_API_GUIDE.md  guide for the frontend developer
     ├── scripts/                   rebuild the data files from their sources
-    ├── tests/                     319 automated tests
+    ├── tests/                     321 automated tests
     ├── ml/                        (placeholder)
     ├── pytest.ini
     ├── requirements.txt           pinned API dependencies
@@ -660,7 +660,7 @@ Allowed by default: `http://localhost:3000` and `http://localhost:5173`. Add oth
 python -m pytest -v
 ```
 
-Expected: **319 passed**.
+Expected: **321 passed**.
 
 Tests that store data use a **separate local test MongoDB in Docker**, never Atlas:
 

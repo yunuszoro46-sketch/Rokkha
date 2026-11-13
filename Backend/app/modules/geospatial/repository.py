@@ -128,6 +128,7 @@ DISTRICTS_FILE = DATA_DIR / "boundaries" / "bangladesh_districts.geojson"
 FLOOD_HISTORY_FILE = DATA_DIR / "flood" / "district_flood_history.json"
 
 FLOOD_GRID_FILE = DATA_DIR / "flood" / "flood_grid.npz"
+DISTRICT_STATIC_FILE = DATA_DIR / "ml" / "district_static.json"
 
 FLOOD_ATTRIBUTION = (
     "Observed floods: UNOSAT (United Nations Satellite Centre), CC BY-SA. "
@@ -159,6 +160,23 @@ def get_satellite_observations() -> dict:
     # Copernicus GFM flood observations per district and Sentinel-1 pass,
     # built offline by scripts/build_gfm_labels.py.
     return _read_satellite_observations(satellite_observations_version())
+
+
+@lru_cache(maxsize=1)
+def get_district_hazard_shares() -> dict[str, dict]:
+
+    # Share (0-1) of each district's land inside the modelled 10-year and
+    # 100-year river-flood zones (JRC hazard map), computed offline by
+    # scripts/build_district_static.py. Keyed by pcode.
+    rows = json.loads(DISTRICT_STATIC_FILE.read_text(encoding="utf-8"))["districts"]
+
+    return {
+        row["pcode"]: {
+            "hazard_share_10yr": row["hazard_share_10yr"],
+            "hazard_share_100yr": row["hazard_share_100yr"],
+        }
+        for row in rows
+    }
 
 
 @lru_cache(maxsize=1)
