@@ -10,7 +10,10 @@ you need to build screens on top of it.
 
 > **Start with section 4** if you want to know what a user can see and do.
 >
-> **Not built yet:** user accounts / login, notifications (SMS, push,
+> **New:** user accounts and login, with a flood report for the user's
+> saved location (section 3 H).
+>
+> **Not built yet:** admin and rescue roles, notifications (SMS, push,
 > email) and Bangla text. Don't design screens that depend on them as if
 > they were real.
 
@@ -399,6 +402,61 @@ One alert (in `alerts[]`, highest probability first):
 - **Always show** that this is a model estimate and **not an official flood warning** (official warnings come
   from FFWC/BWDB). The text is in `limitations`; `attribution` must be visible too.
 
+### H. Accounts and "my location" report
+
+| Method | Path | What it does |
+|---|---|---|
+| `POST` | `/auth/register` | body `{"name", "email", "password"}` → 201 with a login (below). 409 if the email already has an account |
+| `POST` | `/auth/login` | body `{"email", "password"}` → 200 with a login. 401 "Wrong email or password." 429 after 5 wrong passwords in 15 minutes |
+| `POST` | `/auth/logout` | ends this login (204) |
+| `GET` | `/auth/me` | the logged-in user |
+| `DELETE` | `/auth/me` | deletes the account and everything stored for it (204) |
+| `PUT` | `/auth/me/location` | body `{"location": {"type": "Point", "coordinates": [lng, lat]}, "label": "Home"}` → the user, now with `district`. 422 outside Bangladesh |
+| `DELETE` | `/auth/me/location` | removes the saved place |
+| `GET` | `/auth/me/report?target_date=` | the flood report for the saved place (default day: today). 409 if no place is saved yet |
+
+A login (from register and login):
+
+```json
+{"token": "kJ3...long random text...", "token_type": "bearer", "expires_at": "2026-12-13T06:20:00Z",
+ "user": {"id": "...", "name": "Rahima Begum", "email": "rahima@example.org",
+          "location": null, "location_label": null, "district": null,
+          "location_updated_at": null, "created_at": "2026-11-13T06:20:00Z"}}
+```
+
+- Keep the `token` (for example in `localStorage`) and send it with every call in this section:
+  `Authorization: Bearer <token>`. On any **401**, forget the token and show the login form.
+- Rules for the form: name 1–80 characters, password 8–128 characters, email must look like an email. Other
+  input → 422 with the usual `detail` list.
+- To save the place, use the phone's GPS (`navigator.geolocation`) or a tap on the map. Ask the user before
+  saving it: a home location is personal data. Only that user can read it back.
+
+The report:
+
+```json
+{"target_date": "2022-06-18",
+ "location": {"type": "Point", "coordinates": [91.1428, 24.8474]}, "location_label": "Home",
+ "district": {"pcode": "BD6090", "name": "Sunamganj", "division": "Sylhet"},
+ "forecast_status": "available",
+ "forecast": {"pcode": "BD6090", "status": "predicted", "probability": 0.83, "alert_level": "alert", "...": "same as one item of /predictions"},
+ "alert_thresholds": {"watch": 0.1818, "alert": 0.375},
+ "flood_history": {"district": {"rank": 1, "events_observed": 6, "events_flooded": 6, "...": "..."},
+                   "cell": {"times_observed": 7, "times_flooded": 7, "hazard": ["..."], "...": "same as /geospatial/flood/check"}},
+ "nearest_assets": [{"asset": {"name": "...", "asset_type": "flood_shelter", "...": "..."}, "distance_meters": 812.4, "distance_kilometers": 0.81}],
+ "nearest_assets_radius_meters": 25000,
+ "attribution": ["..."], "limitations": ["..."]}
+```
+
+(The numbers above only show the shape.)
+
+- `forecast_status: "no_forecast_for_this_day"` → `forecast` is `null`. Show "No forecast for this day yet",
+  **not** "safe". The backend never puts another day's forecast there.
+- The forecast is for the **district**; `flood_history.cell` is about the **exact spot**. Show them as two
+  separate blocks and never merge them into one "risk score".
+- `nearest_assets` lists only places registered in the backend, within 25 km, nearest first. An empty list
+  means "none registered yet", not "no shelter exists".
+- Still no roles: every account is a normal user. Admin and rescue logins do not exist yet.
+
 ### G. Small tools (optional)
 
 `POST /geospatial/spatial-analysis/distance`, `.../linestring-length`,
@@ -423,6 +481,7 @@ and who each screen is for.
 
 | What the user gets | Call | Show it like this |
 |---|---|---|
+| **My place report** (after login): forecast for my district, flood history of my exact spot, nearest registered places | `GET /auth/me/report?target_date=` (section 3 H) | Two blocks: "Forecast for <district>" and "This spot in past floods" |
 | **Flood risk for my district** today or on a chosen date | `GET /predictions?target_date=` | "Sunamganj: 42% flood probability". Above 0.95 write "more than 95%". Colour by `alert_level` |
 | **Find my district** from the phone's location | `POST /geospatial/flood/check` with the GPS point | Use the returned `district.pcode` to pick the right prediction. Outside Bangladesh both parts are `null` |
 | **Alerts** | `GET /alerts?target_date=` | One card per district with the ready-made `message`. `count: 0` = "No district reached the alert level", not "safe" |
@@ -460,7 +519,7 @@ Rules for every citizen screen:
 
 ### For an admin only
 
-Creating, changing and deleting assets (`POST`, `PATCH`, `DELETE /assets`). **There is no login yet**, so
+Creating, changing and deleting assets (`POST`, `PATCH`, `DELETE /assets`). **There are no roles yet** (every account is a normal user), so
 the backend cannot tell an admin from a visitor. Keep these forms out of the public pages. Hiding a form is not
 security; real protection comes with the login work.
 
@@ -469,7 +528,8 @@ security; real protection comes with the login work.
 | Missing | What it means for your screens |
 |---|---|
 | Notifications (SMS, push, email) | An alert exists only when someone opens the app. Don't show "you will be notified" |
-| User accounts | No saved "my district" on the server. You can remember it in the browser (`localStorage`) |
+| Admin and rescue roles | Accounts exist (section 3 H), but every account is a normal user. Don't build screens that trust a "role" chosen in the browser |
+| Password reset, email check | No email is sent. A forgotten password cannot be recovered yet |
 | Bangla text | `message` and all names are in English. Translate fixed labels in the frontend; keep district names as they are until a Bangla name list exists |
 | Upazila or village detail | Only districts. Don't zoom the risk colours below district level |
 | Other hazards (cyclone, heat, erosion) | Floods only |
@@ -498,7 +558,7 @@ data and then predicts. Show `data_through` and, from `features`, `days_since_la
 pass: 1 day ago") so users can see how fresh the inputs are; when it is `null`, no pass from the last 30 days
 was available and the prediction is weaker. In the dry season (now) expect no alerts.
 
-**Coming next:** a scheduled daily update, and login / rate limits before any public use.
+**Coming next:** a scheduled daily update, and admin / rescue roles with rate limits before any public use.
 
 Questions or a field you need that isn't there? Ask the backend developer —
 `/docs` always shows the current, exact shapes.
