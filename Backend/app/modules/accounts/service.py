@@ -71,6 +71,14 @@ class NoLocation(Exception):
     pass
 
 
+class UserNotFound(Exception):
+    pass
+
+
+class OwnRole(Exception):
+    pass
+
+
 # ==========================================
 # PASSWORDS
 # ==========================================
@@ -193,6 +201,30 @@ async def logout(token: str) -> None:
 async def delete_account(user: dict) -> None:
 
     await repository.delete_user(user["id"])
+
+
+# ==========================================
+# ROLES (admin only)
+# ==========================================
+
+async def list_users(limit: int) -> dict:
+
+    users = await repository.list_users(limit)
+
+    return {"count": len(users), "users": users}
+
+
+async def set_role(admin: dict, user_id: str, role: str) -> dict:
+
+    # An admin cannot change their own role: otherwise the last admin could
+    # lock everyone out by mistake.
+    if user_id == admin["id"]:
+        raise OwnRole()
+
+    if await repository.find_user(user_id) is None:
+        raise UserNotFound()
+
+    return await repository.update_user(user_id, {"role": role})
 
 
 # ==========================================

@@ -133,6 +133,10 @@ class AssetResponse(BaseModel):
 
     notes: str | None
 
+    # Where the record came from when it was imported, e.g. "OpenStreetMap"
+    # (see scripts/import_osm_facilities.py). null = entered by hand.
+    source: str | None = None
+
     # Filled in automatically from the location (64 districts, HDX).
     district: AssetDistrict
 

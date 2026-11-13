@@ -21,9 +21,6 @@ __pycache__/
 *.swo
 *~
 
-# Download cache of offline data scripts (rebuildable)
-Backend/data/labels/.cache/
-
 # Node / Next.js / Frontend
 node_modules/
 Frontend/node_modules/

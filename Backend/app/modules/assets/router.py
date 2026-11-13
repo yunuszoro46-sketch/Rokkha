@@ -1,4 +1,6 @@
-from fastapi import APIRouter, HTTPException, Query, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+
+from app.modules.accounts.router import admin_on_public_server
 
 from app.modules.assets.schemas import (
     AssetCreate,
@@ -47,10 +49,13 @@ CriticalityFilter = Query(default=None)
 DistrictFilter = Query(default=None, description="District code, e.g. BD3026 for Dhaka")
 
 
+# Creating, changing and deleting assets: open on a developer's machine, admin
+# only on a public server (see admin_on_public_server).
 @router.post(
     "",
     response_model=AssetResponse,
-    status_code=status.HTTP_201_CREATED
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(admin_on_public_server)]
 )
 async def create_asset(data: AssetCreate):
 
@@ -165,7 +170,8 @@ async def get_asset(asset_id: str):
 
 @router.patch(
     "/{asset_id}",
-    response_model=AssetResponse
+    response_model=AssetResponse,
+    dependencies=[Depends(admin_on_public_server)]
 )
 async def update_asset(asset_id: str, data: AssetUpdate):
 
@@ -187,7 +193,8 @@ async def update_asset(asset_id: str, data: AssetUpdate):
 
 @router.delete(
     "/{asset_id}",
-    status_code=status.HTTP_204_NO_CONTENT
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(admin_on_public_server)]
 )
 async def delete_asset(asset_id: str):
 

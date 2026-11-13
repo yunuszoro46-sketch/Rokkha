@@ -1,7 +1,8 @@
 # Runs the daily flood update every morning without anyone's laptop:
 # new rain, river and satellite data, then today's predictions and alerts.
-# Everything it produces is stored in MongoDB Atlas, where the hosted backend
-# (Render) reads it. Nothing is committed back to the repository.
+# Rain, river flow and predictions are stored in MongoDB Atlas, where the hosted
+# backend (Render) reads them. New satellite passes are files, so the job commits
+# them (Backend/data/labels) back to main; Render then redeploys with them.
 #
 # One-time setup: GitHub > repository Settings > Secrets and variables >
 # Actions > New repository secret, name MONGODB_URI, value = the Atlas
@@ -19,7 +20,8 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  # Needed to commit the new satellite passes.
+  contents: write
 
 concurrency:
   group: daily-update
@@ -69,8 +71,26 @@ jobs:
           echo "::error::The backend did not start or could not reach MongoDB Atlas (check Atlas Network Access)."
           exit 1
 
-      # The satellite step rebuilds data/labels/district_flood_observations.json from
-      # the last two months only. That is enough for today's prediction (it uses the
-      # last 30 days) and the file is thrown away with this machine: never commit it.
+      # Step 4 of the script fetches this month's and last month's satellite passes
+      # into data/labels/.cache and rebuilds data/labels/district_flood_observations.json
+      # from every cached month, exactly as on a developer's machine.
       - name: Daily update
         run: python scripts/daily_update.py
+
+      - name: Commit new satellite passes
+        run: |
+          git add data/labels
+          if git diff --cached --quiet; then
+            echo "No new satellite passes today."
+            exit 0
+          fi
+          git config user.name "rokkha-daily-update"
+          git config user.email "actions@users.noreply.github.com"
+          git commit -m "Daily update: satellite passes to $(date -u +%Y-%m-%d)"
+          # Someone may have pushed while the job ran: put this commit on top and try again.
+          for attempt in 1 2 3; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep 5
+          done
+          echo "::error::Could not push the new satellite passes."
+          exit 1
