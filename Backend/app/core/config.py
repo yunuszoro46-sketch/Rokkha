@@ -31,6 +31,13 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173",
     ]
 
+    # Set to true on a server the public can reach. Requests that change
+    # shared data (assets, ingestion runs, predictions, weather, locations)
+    # are then refused with 403; reading, the point checks and user
+    # accounts keep working. Until admin logins exist, this is what stops a
+    # stranger from deleting assets or using up the Open-Meteo call budget.
+    PUBLIC_READ_ONLY: bool = False
+
     model_config = SettingsConfigDict(
         env_file=".env",
         extra="ignore"

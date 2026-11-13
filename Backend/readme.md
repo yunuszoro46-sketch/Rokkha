@@ -99,7 +99,8 @@ establish flood risk.
 | Daily update script (refresh data, predict today, list alerts) | Implemented (start it by hand or with cron) |
 | Trained flood model with measured results | Implemented: better than the baselines on 2023–2024 and again on 2025; weak on new floods (see [section 13](#13-the-flood-model-design-and-measured-results)) |
 | User accounts: register, log in, save a home location, flood report for it (`/auth`) | Implemented (passwords hashed with scrypt; login slowed after 5 wrong passwords) |
-| Roles (admin, rescue), protection of the write endpoints, general rate limiting | Not implemented |
+| Read-only mode for a public server (`PUBLIC_READ_ONLY`) and a Render deploy file (`render.yaml`) | Implemented; the service itself must be created in the Render dashboard |
+| Roles (admin, rescue), general rate limiting | Not implemented |
 
 Weather observations are submitted through the API. The weather module does **not** fetch live weather.
 
@@ -187,7 +188,7 @@ Rokkha/
     ├── docs/
     │   └── FRONTEND_API_GUIDE.md  guide for the frontend developer
     ├── scripts/                   rebuild the data files from their sources
-    ├── tests/                     308 automated tests
+    ├── tests/                     313 automated tests
     ├── ml/                        (placeholder)
     ├── pytest.ini
     ├── requirements.txt           pinned API dependencies
@@ -273,6 +274,43 @@ If MongoDB is unreachable, the server does not start (see section 10).
 - Health: http://127.0.0.1:8000/api/v1/health → `{"status": "healthy"}`
 - Database: http://127.0.0.1:8000/api/v1/health/database → `{"database": "MongoDB", "status": "connected"}`
 - OpenAPI schema: http://127.0.0.1:8000/openapi.json
+
+### Hosting on Render
+
+The file `render.yaml` in the repository root describes the hosted backend, so nothing has to be typed into
+Render except the database secret.
+
+1. On [render.com](https://render.com) choose **New > Blueprint** and pick this GitHub repository.
+2. Render reads `render.yaml` and asks for one value: **`MONGODB_URI`**. Paste the Atlas connection string there
+   (the same one as in `Backend/.env`). It is stored by Render as a secret and never enters the repository.
+3. In MongoDB Atlas, under **Network Access**, allow the hosted server to connect. Render's free plan has no
+   fixed address list that is easy to maintain, so the simple choice is "allow access from anywhere"
+   (`0.0.0.0/0`); the database is then protected by its user name and password only, so that password must be
+   long and random.
+4. When the deploy is green, open `https://<service-name>.onrender.com/api/v1/health`. It must answer
+   `{"status": "healthy"}`. If the deploy fails with a MongoDB timeout, step 3 is missing.
+5. In Vercel, set the frontend's `NEXT_PUBLIC_API_URL` to `https://<service-name>.onrender.com/api/v1` and
+   redeploy the frontend.
+
+What the hosted copy is set to do (all in `render.yaml`):
+
+| Setting | Value | Why |
+| --- | --- | --- |
+| `PUBLIC_READ_ONLY` | `true` | Anyone on the internet can reach this server and there are no admin logins yet. In this mode every request that would change shared data (assets, ingestion runs, predictions, weather, saved locations) is refused with **403**. Reading, the point checks and user accounts work normally |
+| `CORS_ORIGINS` | the Vercel address and localhost | Only these websites may call the API from a browser. Add the address here if the frontend moves |
+| Start command | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` | One process, no `--reload` |
+| Region | Singapore | Closest to Bangladesh |
+
+Limits to know:
+
+- **Memory.** The free plan gives 512 MB. Measured on 13 November 2026, the backend uses about 165 MB after
+  start and about 400 MB once the flood grid is loaded (first point check), with a peak of 426 MB. That fits,
+  but with little room: many logins at the same moment could push it over, and Render would restart it.
+- **Sleep.** A free service sleeps after 15 minutes without requests; the next request then takes about a
+  minute. Open the site a few minutes before a demo.
+- **New data still comes from a developer's machine.** The daily update (ingestion and predictions) is run
+  locally against the same Atlas database, so new predictions appear on the hosted server by themselves. New
+  satellite passes are a file in the repository: they reach the hosted server when that file is committed.
 
 ## 6. API endpoints
 
@@ -618,7 +656,7 @@ Allowed by default: `http://localhost:3000` and `http://localhost:5173`. Add oth
 python -m pytest -v
 ```
 
-Expected: **308 passed**.
+Expected: **313 passed**.
 
 Tests that store data use a **separate local test MongoDB in Docker**, never Atlas:
 
@@ -633,6 +671,7 @@ test. Use another test server with `TEST_MONGODB_URI=mongodb://host:port`.
 | Test file | Covers |
 | --- | --- |
 | `test_api_accounts.py` | Register, log in and out, wrong passwords, home location, report for it, account deletion |
+| `test_public_read_only.py` | Read-only mode: changes refused, reading, point checks and accounts still work |
 | `test_api_geospatial.py` | Geometry tools, locations, health, CORS |
 | `test_api_boundaries.py` | Dhaka boundaries |
 | `test_api_waterways.py` | Rivers, canals, nearest waterway |
