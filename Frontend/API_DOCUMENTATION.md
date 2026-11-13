@@ -402,11 +402,38 @@ Next 7-day hourly precipitation forecast from NOAA GFS.
 
 ---
 
+### 3.6. Accounts and "My Place" report (added 13 Nov 2026)
+
+Implemented in `src/services/auth.ts`; full shapes in `Backend/docs/FRONTEND_API_GUIDE.md`, section 3 H.
+
+| Method | Path | Purpose |
+|---|---|---|
+| `POST` | `/auth/register` | `{"name", "email", "password"}` → login token + user (409 if the email exists) |
+| `POST` | `/auth/login` | `{"email", "password"}` → login token + user (401 wrong, 429 after 5 wrong tries) |
+| `POST` | `/auth/logout` | end this login |
+| `GET` / `DELETE` | `/auth/me` | read / delete the account |
+| `PUT` / `DELETE` | `/auth/me/location` | save / remove the user's place (GeoJSON Point inside Bangladesh) |
+| `GET` | `/auth/me/report?target_date=` | district forecast, flood history of the exact spot, registered places within 25 km |
+
+All except register and login need `Authorization: Bearer <token>`.
+
+### 3.7. Saved sample rules (added 13 Nov 2026)
+
+- When the backend cannot be reached, functions in `src/services/api.ts` use the files in `src/data` and call
+  `markSample()`; the yellow `DataSourceBanner` then tells the user the data is a saved sample, not live.
+- The sample is rebuilt only by `python scripts/build_snapshot.py` (backend running). Never edit those JSON
+  files by hand and never add made-up values to a fallback.
+- A day without a forecast returns an empty list and the page says "No forecast for this day". Another day's
+  predictions are never shown in its place.
+- Accounts have no sample: without the backend, login reports that the server could not be reached.
+
+---
+
 ## 4. Current Backend Non-Existent Features
 
 The following features **do NOT exist in the backend today**. The frontend must NOT simulate or fabricate responses for them without clear disclaimer indicators:
 
-1. **User Authentication & Accounts:** No login, JWT, OAuth, or user session endpoints.
+1. **Roles:** every account is a normal user. No admin or rescue role, no password reset, no email check.
 2. **Citizen SOS / Rescue Dispatch:** No SOS dispatch, responder queue, or rescue mission schemas.
 3. **Automated Notification Subscriptions:** No email, SMS, or push webhook notification engines.
 4. **Official Warning Authority:** The backend produces ML probability estimates; official disaster warnings must reference FFWC / BWDB.
