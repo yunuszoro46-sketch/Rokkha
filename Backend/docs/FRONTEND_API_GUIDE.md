@@ -19,6 +19,19 @@ you need to build screens on top of it.
 
 ---
 
+## 0. The hosted backend
+
+The backend runs at **`https://rokkha-backend.onrender.com/api/v1`** (interactive docs:
+`https://rokkha-backend.onrender.com/docs`). Production builds of the portal use it through
+`Frontend/.env.production`.
+
+- It is **read-only**: `POST`/`PATCH`/`DELETE` on assets, ingestion runs, predictions, weather and saved
+  locations answer **403** there. Reading, the point checks (`/geospatial/flood/check` and similar) and
+  accounts (`/auth/...`) work. To add assets or create predictions, use a local backend (section 1).
+- It **sleeps after 15 minutes** without requests; the first call after that can take about a minute.
+- Only `https://rokkha-app.vercel.app` and `localhost:3000` may call it from a browser. Ask the backend
+  developer to add another address.
+
 ## 1. Run the backend on your machine
 
 You need Python 3.12+ and Git.
