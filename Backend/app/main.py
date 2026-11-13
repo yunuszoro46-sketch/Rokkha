@@ -1,7 +1,8 @@
 """
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 
 from app.core.config import settings
 from app.core.database import Database
@@ -75,7 +76,8 @@ app.include_router(
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
@@ -153,7 +155,39 @@ async def database_health():
         )
 
 
+# ==========================================
+# READ-ONLY MODE FOR A PUBLIC SERVER
+# ==========================================
+# With PUBLIC_READ_ONLY=true only these non-GET requests are allowed:
+# user accounts, and POST endpoints that only calculate and store nothing.
+READ_ONLY_ALLOWED = (
+    "/auth/",
+    "/geospatial/flood/check",
+    "/geospatial/boundaries/locate",
+    "/geospatial/waterways/nearest",
+    "/geospatial/spatial-analysis/",
+    "/assets/within",
+)
+
+
+@app.middleware("http")
+async def read_only_guard(request: Request, call_next):
+
+    if settings.PUBLIC_READ_ONLY and request.method not in ("GET", "HEAD", "OPTIONS"):
+
+        path = request.url.path.removeprefix(settings.API_V1_PREFIX)
+
+        if not path.startswith(READ_ONLY_ALLOWED):
+            return JSONResponse(
+                status_code=403,
+                content={"detail": "This public server is read-only: stored data cannot be changed here."},
+            )
+
+    return await call_next(request)
+
+
 # Let the frontend (running on another address) call this API from a browser.
+# (Added after the guard above, so it wraps it: a 403 still carries the CORS headers.)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,

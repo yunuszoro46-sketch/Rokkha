@@ -722,6 +722,46 @@ class DistrictSatelliteObservationsResponse(BaseModel):
     limitations: list[str]
 
 
+class DistrictLatestObservation(BaseModel):
+
+    pcode: str
+
+    name: str
+
+    division: str
+
+    # false: the radar can never map this district well enough (hills,
+    # forest, city). Show "cannot be observed", not "dry".
+    observable: bool
+
+    # The newest pass on or before the asked day that saw at least half the
+    # district, if one exists within max_age_days. null = no recent pass.
+    observation: SatelliteObservation | None
+
+    # Days between that pass and the asked day (0 = same day).
+    days_ago: int | None
+
+
+class LatestSatelliteObservationsResponse(BaseModel):
+
+    date: dt.date
+
+    max_age_days: int
+
+    # Always "observed": satellite measurements, not a forecast or a model.
+    kind: str
+
+    # Districts that have an observation.
+    count: int
+
+    districts: list[DistrictLatestObservation]
+
+    label_rule: dict[str, Any]
+
+    attribution: str
+
+    limitations: list[str]
+
 class FloodCheckRequest(BaseModel):
 
     point: GeoJSONPoint
