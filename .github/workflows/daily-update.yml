@@ -1,0 +1,76 @@
+# Runs the daily flood update every morning without anyone's laptop:
+# new rain, river and satellite data, then today's predictions and alerts.
+# Everything it produces is stored in MongoDB Atlas, where the hosted backend
+# (Render) reads it. Nothing is committed back to the repository.
+#
+# One-time setup: GitHub > repository Settings > Secrets and variables >
+# Actions > New repository secret, name MONGODB_URI, value = the Atlas
+# connection string (the same one as in Backend/.env and on Render).
+#
+# Details: Backend/readme.md, "Daily use".
+
+name: Daily flood update
+
+on:
+  schedule:
+    # 03:30 UTC = 09:30 in Bangladesh. GitHub may start it some minutes late.
+    - cron: "30 3 * * *"
+  # Also lets you start it by hand: Actions tab > Daily flood update > Run workflow.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: daily-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    defaults:
+      run:
+        working-directory: Backend
+
+    env:
+      MONGODB_URI: ${{ secrets.MONGODB_URI }}
+      MONGODB_DATABASE: climate_shield
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: Backend/requirements-dev.txt
+
+      # requirements-dev.txt = the API's packages plus the tools that read satellite files.
+      - name: Install packages
+        run: pip install -r requirements-dev.txt
+
+      - name: Start the backend
+        run: |
+          if [ -z "$MONGODB_URI" ]; then
+            echo "::error::The repository secret MONGODB_URI is not set (see the top of this file)."
+            exit 1
+          fi
+          # The server log stays in a file and is not printed: it can name the database host.
+          nohup python -m uvicorn app.main:app --port 8000 > "$RUNNER_TEMP/server.log" 2>&1 &
+          for attempt in $(seq 1 45); do
+            if curl -sf http://127.0.0.1:8000/api/v1/health/database > /dev/null; then
+              echo "Backend is up and connected to the database."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::The backend did not start or could not reach MongoDB Atlas (check Atlas Network Access)."
+          exit 1
+
+      # The satellite step rebuilds data/labels/district_flood_observations.json from
+      # the last two months only. That is enough for today's prediction (it uses the
+      # last 30 days) and the file is thrown away with this machine: never commit it.
+      - name: Daily update
+        run: python scripts/daily_update.py

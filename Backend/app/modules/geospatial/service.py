@@ -27,6 +27,7 @@ from app.modules.geospatial.repository import (
     get_district_collection,
     get_flood_history,
     get_flood_grid,
+    get_district_hazard_shares,
     get_satellite_observations,
     FLOOD_ATTRIBUTION
 )
@@ -592,11 +593,17 @@ JRC_DEPTH_LABELS = {1: "< 1 m", 2: "1 to 3 m", 3: "3 to 10 m", 4: "> 10 m"}
 def _district_summary(row: dict) -> dict:
 
     return {
-        key: row[key]
-        for key in (
-            "rank", "pcode", "name", "division",
-            "events_observed", "events_flooded", "max_flooded_share"
-        )
+        **{
+            key: row[key]
+            for key in (
+                "rank", "pcode", "name", "division",
+                "events_observed", "events_flooded", "max_flooded_share"
+            )
+        },
+        # Modelled hazard, kept apart from the observed history above.
+        **get_district_hazard_shares().get(
+            row["pcode"], {"hazard_share_10yr": None, "hazard_share_100yr": None}
+        ),
     }
 
 

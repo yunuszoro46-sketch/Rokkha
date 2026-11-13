@@ -96,7 +96,7 @@ establish flood risk.
 | Flood prediction API (`/predictions`) and alerts with assets at risk (`/alerts`) | Implemented; uses the trained model in `data/models/` |
 | Training and evaluation script (baselines, calibration, alert thresholds, report) | Implemented |
 | Recent rain for the days ERA5 lacks (`rain_recent`, GFS) | Implemented |
-| Daily update script (refresh data, predict today, list alerts) | Implemented (start it by hand or with cron) |
+| Daily update script (refresh data, predict today, list alerts) | Implemented; runs every morning on GitHub Actions once the `MONGODB_URI` repository secret is set (`.github/workflows/daily-update.yml`) |
 | Trained flood model with measured results | Implemented: better than the baselines on 2023–2024 and again on 2025; weak on new floods (see [section 13](#13-the-flood-model-design-and-measured-results)) |
 | User accounts: register, log in, save a home location, flood report for it (`/auth`) | Implemented (passwords hashed with scrypt; login slowed after 5 wrong passwords) |
 | Read-only mode for a public server (`PUBLIC_READ_ONLY`) and a Render deploy file (`render.yaml`) | Implemented; the service itself must be created in the Render dashboard |
@@ -188,7 +188,7 @@ Rokkha/
     ├── docs/
     │   └── FRONTEND_API_GUIDE.md  guide for the frontend developer
     ├── scripts/                   rebuild the data files from their sources
-    ├── tests/                     319 automated tests
+    ├── tests/                     321 automated tests
     ├── ml/                        (placeholder)
     ├── pytest.ini
     ├── requirements.txt           pinned API dependencies
@@ -660,7 +660,7 @@ Allowed by default: `http://localhost:3000` and `http://localhost:5173`. Add oth
 python -m pytest -v
 ```
 
-Expected: **319 passed**.
+Expected: **321 passed**.
 
 Tests that store data use a **separate local test MongoDB in Docker**, never Atlas:
 
@@ -814,6 +814,22 @@ satellite pass saw no flood), a model without satellite inputs, and held-out div
 recent rain, fetches the newest satellite passes (Copernicus GFM, this month and the last), predicts today and
 prints the alerts. It takes about a minute and a half and about 235 Open-Meteo calls. To run it every morning,
 add the cron line shown at the top of the script.
+
+**Running it automatically.** `.github/workflows/daily-update.yml` runs the same script every day at 03:30 UTC
+(09:30 in Bangladesh) on a GitHub machine: it starts a copy of the backend there, runs the update, and the
+results (rain, river flow, today's predictions) land in MongoDB Atlas, where the hosted backend reads them.
+One-time setup: in the GitHub repository open **Settings > Secrets and variables > Actions > New repository
+secret**, name `MONGODB_URI`, value the Atlas connection string. It can also be started by hand from the
+**Actions** tab. Rehearsed on 13 November 2026 in a clean copy of the repository: 2 minutes 19 seconds, and the
+56 predictions were identical to the ones made on the developer's machine.
+
+Two things the automatic run does **not** do:
+
+- It does not update `data/labels/district_flood_observations.json` in the repository. On the GitHub machine
+  that file is rebuilt from the last two months only (enough for the prediction, which uses 30 days) and then
+  thrown away. The satellite timeline and the "observed" map on the hosted backend therefore show passes up
+  to the last time a developer ran the daily update locally and committed that file.
+- It does not retrain or change the model.
 
 The satellite step needs `requirements-dev.txt` (rasterio) and rewrites
 `data/labels/district_flood_observations.json`; the running backend notices the new file by itself. Git will
