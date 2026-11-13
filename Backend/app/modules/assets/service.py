@@ -16,6 +16,8 @@ from app.modules.geospatial.service import (
     check_flood_at_point,
     find_district,
     find_nearest_waterways,
+    is_inside_waterway_coverage,
+    WATERWAYS_ATTRIBUTION,
 )
 
 
@@ -202,17 +204,17 @@ def _exposure_for(asset: dict) -> tuple[dict, list[str]]:
     # Reuse the geospatial module's public functions: flood grid +
     # district history, and nearest waterways.
     flood = check_flood_at_point(point)
-    waterways = find_nearest_waterways(point, ["river", "canal"])
+
+    # Waterway data only covers Dhaka District: outside it, the "nearest"
+    # line could be 200 km away and misleading, so it is not even searched.
+    covered = is_inside_waterway_coverage(point)
+    waterways = find_nearest_waterways(point, ["river", "canal"]) if covered else None
 
     cell = flood["cell"]
     district = flood["district"]
 
     flooded_ids = cell["flooded_event_ids"]
     hazard = cell["hazard"]
-
-    # Waterway data only covers Dhaka District: outside it, the "nearest"
-    # line could be 200 km away and misleading, so leave the list empty.
-    covered = waterways["inside_coverage_area"]
 
     exposure = {
         "asset_id": asset["id"],
@@ -254,7 +256,7 @@ def _exposure_for(asset: dict) -> tuple[dict, list[str]]:
         },
     }
 
-    attribution = [flood["attribution"], waterways["attribution"]]
+    attribution = [flood["attribution"], WATERWAYS_ATTRIBUTION]
 
     return exposure, attribution
 

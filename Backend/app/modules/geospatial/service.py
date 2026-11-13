@@ -554,18 +554,80 @@ def find_nearest_waterways(
     }
 
 
-def _inside_dhaka_district(point_data: GeoJSONPoint):
+def _to_shape(geometry):
+
+    # The same construction as analyze_point_in_polygon, for shapes that are
+    # built once and reused (district and coverage outlines never change).
+    if isinstance(geometry, GeoJSONPolygon):
+        return Polygon(shell=geometry.coordinates[0], holes=geometry.coordinates[1:])
+
+    return MultiPolygon([
+        Polygon(shell=coordinates[0], holes=coordinates[1:])
+        for coordinates in geometry.coordinates
+    ])
+
+
+@lru_cache(maxsize=1)
+def _dhaka_district_shape():
 
     for feature in get_boundary_collection().features:
 
         if feature.properties["admin_level"] == 2:
 
-            return analyze_point_in_polygon(
-                point_data,
-                feature.geometry
-            )["covered"]
+            shape = _to_shape(feature.geometry)
+            # "Prepared" = indexed once, so each later test is fast.
+            shapely.prepare(shape)
+            return shape
 
-    return False
+    return None
+
+
+def _inside_dhaka_district(point_data: GeoJSONPoint):
+
+    shape = _dhaka_district_shape()
+
+    return bool(shape is not None and shape.covers(Point(point_data.coordinates)))
+
+
+def is_inside_waterway_coverage(point_data: GeoJSONPoint) -> bool:
+
+    # The waterway data only covers Dhaka District (used by other modules).
+    return _inside_dhaka_district(point_data)
+
+
+@lru_cache(maxsize=1)
+def _district_shapes():
+
+    # The 64 district outlines as prepared Shapely shapes, in file order.
+    # Building and validating them takes a moment, so it is done once;
+    # locating a point is then 64 fast tests instead of 64 rebuilds.
+    shapes = []
+
+    for feature in get_district_collection().features:
+
+        shape = _to_shape(feature.geometry)
+
+        if shape.is_empty or not shape.is_valid:
+            raise ValueError(f"District {feature.id} has an invalid outline.")
+
+        shapely.prepare(shape)
+        shapes.append((shape, feature))
+
+    return shapes
+
+
+def _locate_district(point_data: GeoJSONPoint):
+
+    # The first district (in file order) that covers the point, inside or on
+    # its boundary: the same answer as analyze_point_in_zones gives first.
+    point = Point(point_data.coordinates)
+
+    for shape, feature in _district_shapes():
+
+        if shape.covers(point):
+            return feature
+
+    return None
 
 
 # ==========================================
@@ -841,10 +903,10 @@ def check_flood_at_point(point_data: GeoJSONPoint):
 
     rows = {row["pcode"]: row for row in get_flood_history()["districts"]}
 
-    # Which district? Reuse the tested point-in-zones logic.
-    located = analyze_point_in_zones(point_data, get_district_collection())
+    # Which district?
+    located = _locate_district(point_data)
 
-    if not located["matches"]:
+    if located is None:
 
         return {
             "district": None,
@@ -853,7 +915,7 @@ def check_flood_at_point(point_data: GeoJSONPoint):
             "limitations": FLOOD_LIMITATIONS
         }
 
-    pcode = located["matches"][0]["feature_id"]
+    pcode = located.id
 
     longitude, latitude = point_data.coordinates
 
@@ -873,12 +935,12 @@ def find_district(point_data: GeoJSONPoint):
 
     # Which of Bangladesh's 64 districts contains this point?
     # Returns {"pcode", "name", "division"} or None outside Bangladesh.
-    located = analyze_point_in_zones(point_data, get_district_collection())
+    located = _locate_district(point_data)
 
-    if not located["matches"]:
+    if located is None:
         return None
 
-    properties = located["matches"][0]["properties"]
+    properties = located.properties
 
     return {
         "pcode": properties["pcode"],

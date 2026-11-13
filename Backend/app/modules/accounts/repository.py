@@ -30,6 +30,8 @@ def _to_api(document: dict | None) -> dict | None:
 
     user = {key: value for key, value in document.items() if key != "password_hash"}
     user["id"] = user.pop("_id")
+    # Accounts made before roles existed have no role stored: they are users.
+    user.setdefault("role", "user")
     return user
 
 
@@ -44,6 +46,7 @@ async def create_user(name: str, email: str, password_hash: str) -> dict | None:
         "name": name,
         "email": email,
         "password_hash": password_hash,
+        "role": "user",
         "location": None,
         "location_label": None,
         "district": None,
@@ -78,6 +81,13 @@ async def update_user(user_id: str, changes: dict) -> dict | None:
     await get_db()[USERS].update_one({"_id": user_id}, {"$set": changes})
 
     return await find_user(user_id)
+
+
+async def list_users(limit: int) -> list[dict]:
+
+    cursor = get_db()[USERS].find().sort("created_at", 1).limit(limit)
+
+    return [_to_api(document) async for document in cursor]
 
 
 async def delete_user(user_id: str) -> None:

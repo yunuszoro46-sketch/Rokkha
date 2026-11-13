@@ -100,7 +100,10 @@ establish flood risk.
 | Trained flood model with measured results | Implemented: better than the baselines on 2023–2024 and again on 2025; weak on new floods (see [section 13](#13-the-flood-model-design-and-measured-results)) |
 | User accounts: register, log in, save a home location, flood report for it (`/auth`) | Implemented (passwords hashed with scrypt; login slowed after 5 wrong passwords) |
 | Read-only mode for a public server (`PUBLIC_READ_ONLY`) and a Render deploy file (`render.yaml`) | Implemented; the service itself must be created in the Render dashboard |
-| Roles (admin, rescue), general rate limiting | Not implemented |
+| Roles: user, rescuer, admin (`scripts/set_role.py` makes the first admin; admins change roles through `/admin`) | Implemented |
+| Rescue requests (SOS): sent without a login, followed by the sender, handled by rescuers (`/sos`) | Implemented |
+| Hospitals, clinics and shelters from OpenStreetMap as assets (3,162 places) | Implemented (`data/assets/`, `scripts/import_osm_facilities.py`) |
+| General rate limiting, password reset, email check | Not implemented |
 
 Weather observations are submitted through the API. The weather module does **not** fetch live weather.
 
@@ -175,7 +178,8 @@ Rokkha/
     │   │   ├── ingestion/         rain and river data from Open-Meteo
     │   │   ├── prediction/        model inputs, training table, flood predictions
     │   │   ├── alerts/            alerts from predictions + assets at risk
-    │   │   └── accounts/          user accounts, login, home location, report for it
+    │   │   ├── accounts/          user accounts, roles, login, home location, report for it
+    │   │   └── rescue/            rescue requests (SOS) and their handling
     │   └── main.py                app, startup/shutdown, routers, CORS
     ├── data/
     │   ├── boundaries/            Dhaka District + 64 districts (+ README)
@@ -188,7 +192,7 @@ Rokkha/
     ├── docs/
     │   └── FRONTEND_API_GUIDE.md  guide for the frontend developer
     ├── scripts/                   rebuild the data files from their sources
-    ├── tests/                     321 automated tests
+    ├── tests/                     352 automated tests
     ├── ml/                        (placeholder)
     ├── pytest.ini
     ├── requirements.txt           pinned API dependencies
@@ -299,7 +303,7 @@ What the hosted copy is set to do (all in `render.yaml`):
 
 | Setting | Value | Why |
 | --- | --- | --- |
-| `PUBLIC_READ_ONLY` | `true` | Anyone on the internet can reach this server and there are no admin logins yet. In this mode every request that would change shared data (assets, ingestion runs, predictions, weather, saved locations) is refused with **403**. Reading, the point checks and user accounts work normally |
+| `PUBLIC_READ_ONLY` | `true` | Anyone on the internet can reach this server. In this mode ingestion runs, new predictions, weather records and saved locations are refused with **403**, and changing assets needs an admin login. Reading, the point checks, user accounts and rescue requests work normally |
 | `CORS_ORIGINS` | the Vercel address and localhost | Only these websites may call the API from a browser. Add the address here if the frontend moves |
 | Start command | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` | One process, no `--reload` |
 | Region | Singapore | Closest to Bangladesh |
@@ -442,8 +446,52 @@ How the login is protected:
   15 minutes have passed.
 - **A user can only read their own profile, location and report.**
 
-Not covered yet: there are no roles, so the asset and ingestion endpoints are still open to anyone; no email
-is sent (no address check, no password reset); no general rate limiting.
+Not covered yet: no email is sent (no address check, no password reset); no general rate limiting.
+
+### Roles and admin
+
+Every account has a role: `user` (default), `rescuer` or `admin`. A new account is always a `user`, whatever
+the request says.
+
+| Method | Endpoint | Who | Purpose |
+| --- | --- | --- | --- |
+| GET | `/admin/users?limit=` | admin | All accounts (no password data) |
+| PATCH | `/admin/users/{user_id}/role` | admin | Set `{"role": "user" \| "rescuer" \| "admin"}`. An admin cannot change their own role |
+
+The first admin is made on a developer's machine, straight in the database:
+`python scripts/set_role.py someone@example.org admin` (the person registers first).
+
+On the public server (`PUBLIC_READ_ONLY=true`) creating, changing and deleting **assets** needs an admin
+login; ingestion runs, new predictions, weather records and saved locations stay switched off there.
+
+### Rescue requests (SOS)
+
+| Method | Endpoint | Who | Purpose |
+| --- | --- | --- | --- |
+| POST | `/sos` | anyone | Send a request: `client_id`, `location`, `people`, `need`, optional `note`, `contact_name`, `contact_phone`. 201 with a receipt; the same `client_id` again gives 200 and stores nothing new |
+| GET | `/sos/status/{client_id}` | the sender | Status, history and the rescuers' message |
+| POST | `/sos/status/{client_id}/cancel` | the sender | "I no longer need help" |
+| GET | `/sos/mine` | logged-in user | Requests sent while logged in |
+| GET | `/sos?status=&district_pcode=&limit=` | rescuer, admin | Open requests (or one status), longest-waiting first, with location and contact |
+| PATCH | `/sos/{id}` | rescuer, admin | `{"status", "message_to_sender"}` |
+
+How it is built:
+
+- **No login is needed to ask for help.** The phone makes a random `client_id` when the request is first
+  saved and sends it unchanged on every retry. That makes retries safe (a phone with a bad connection may send
+  the same request several times) and it is also the sender's private key for reading the status. Only its
+  SHA-256 hash is stored.
+- **Status only moves forward:** `new` → `acknowledged` → `team_sent` → `resolved`. A request can be cancelled
+  until it is resolved. A change is written only if the status is still the one the rescuer saw, so two rescuers
+  clicking at the same moment cannot overwrite each other.
+- **The receipt and the sender's status view hold no personal details.** Location, phone number and note are
+  returned only to rescuers and admins.
+- **Flood protection:** at most 10 new requests per internet address per hour (the address is stored hashed
+  and deleted after an hour). Retries are not counted.
+- The location must be inside Bangladesh; the district is filled in from it.
+
+Not covered: requests are kept until someone deletes them (no retention period is set), there is no SMS or
+push notification to rescuers, and nothing verifies that a request is genuine.
 
 ## 7. Try the API without writing code
 
@@ -579,6 +627,7 @@ Each data folder has its own README with sources, changes and limitations.
 | --- | --- | --- |
 | Dhaka District and 64 district boundaries | Bangladesh Bureau of Statistics and UN OCHA, via HDX (COD-AB v03) | CC BY-IGO |
 | Dhaka rivers, canals, drains | OpenStreetMap contributors (HOT export, 2026-11-04) | ODbL |
+| Hospitals, clinics and flood/cyclone shelters (3,162 assets) | OpenStreetMap contributors (HOT exports on HDX, snapshot 2026-11-04); not checked on the ground, see `data/assets/README.md` | ODbL |
 | Observed flood water, 10 events 2016–2024 | UNOSAT (United Nations Satellite Centre) | CC BY-SA |
 | Modelled river-flood hazard (10- and 100-year), permanent water | JRC GloFAS v2.1.2, © European Union | CC BY 4.0 / ODbL |
 | Historical rain | ERA5 reanalysis (ECMWF, Copernicus C3S) via Open-Meteo | CC BY 4.0 (Open-Meteo) |
@@ -660,7 +709,7 @@ Allowed by default: `http://localhost:3000` and `http://localhost:5173`. Add oth
 python -m pytest -v
 ```
 
-Expected: **321 passed**.
+Expected: **352 passed**.
 
 Tests that store data use a **separate local test MongoDB in Docker**, never Atlas:
 
@@ -676,6 +725,8 @@ test. Use another test server with `TEST_MONGODB_URI=mongodb://host:port`.
 | --- | --- |
 | `test_api_accounts.py` | Register, log in and out, wrong passwords, home location, report for it, account deletion |
 | `test_public_read_only.py` | Read-only mode: changes refused, reading, point checks and accounts still work |
+| `test_api_rescue.py` | Rescue requests (send, retry, follow, cancel, handle), roles and admin routes |
+| `test_osm_facilities.py` | OpenStreetMap facility selection and the built facility file |
 | `test_api_geospatial.py` | Geometry tools, locations, health, CORS |
 | `test_api_boundaries.py` | Dhaka boundaries |
 | `test_api_waterways.py` | Rivers, canals, nearest waterway |
@@ -864,8 +915,8 @@ When contributing:
 - Never commit `.env` or secrets.
 - Update this README when behaviour changes.
 
-User accounts exist (`/auth`), but there are no roles yet: creating or deleting assets and starting ingestion
-runs are open to anyone who can reach the server, and there is no general rate limiting. Keep the backend in a
-controlled environment until those safeguards exist.
+On a developer's machine every endpoint is open. On the public server `PUBLIC_READ_ONLY=true` switches the
+data-changing endpoints off or makes them admin-only (see "Hosting on Render"). There is no general rate
+limiting yet.
 
 **Climate Shield (Rokkha) — building toward reliable flood-risk intelligence for Bangladesh.**

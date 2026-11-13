@@ -90,6 +90,17 @@ class Database:
         )
         await cls.db["login_failures"].create_index([("email", ASCENDING)], name="email")
 
+        # Rescue requests: one per phone-made key; lists by status and time.
+        sos = cls.db["sos_requests"]
+        await sos.create_index([("client_key_hash", ASCENDING)], name="client_key_unique", unique=True)
+        await sos.create_index([("status", ASCENDING), ("received_at", ASCENDING)], name="status_received")
+        await sos.create_index([("user_id", ASCENDING)], name="user_id")
+        await sos.create_index([("district.pcode", ASCENDING)], name="district_pcode")
+        await cls.db["sos_senders"].create_index(
+            [("at", ASCENDING)], name="at_ttl", expireAfterSeconds=3600
+        )
+        await cls.db["sos_senders"].create_index([("sender_hash", ASCENDING)], name="sender_hash")
+
     @classmethod
     async def disconnect(cls):
 

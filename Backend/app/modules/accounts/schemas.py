@@ -72,6 +72,16 @@ class LocationRequest(BaseModel):
 # RESPONSES
 # ==========================================
 
+# What an account may do. Every new account is a "user"; only an admin (or the
+# developer's scripts/set_role.py) can change it. Never taken from the client.
+Role = Literal["user", "rescuer", "admin"]
+
+
+class RoleRequest(BaseModel):
+
+    role: Role
+
+
 class DistrictRef(BaseModel):
 
     pcode: str
@@ -84,6 +94,7 @@ class UserResponse(BaseModel):
     id: str
     name: str
     email: str
+    role: Role
     location: GeoJSONPoint | None
     location_label: str | None
     district: DistrictRef | None
@@ -122,3 +133,9 @@ class LocationReportResponse(BaseModel):
 
     attribution: list[str]
     limitations: list[str]
+
+
+class UserListResponse(BaseModel):
+
+    count: int
+    users: list[UserResponse]

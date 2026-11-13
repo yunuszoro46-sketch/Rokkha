@@ -13,8 +13,10 @@ you need to build screens on top of it.
 > **New:** user accounts and login, with a flood report for the user's
 > saved location (section 3 H).
 >
-> **Not built yet:** admin and rescue roles, notifications (SMS, push,
-> email) and Bangla text. Don't design screens that depend on them as if
+> **New:** rescue requests (SOS), rescuer and admin roles (sections 3 I and
+> 3 J), and about 3,200 real hospitals, clinics and shelters from OpenStreetMap.
+>
+> **Not built yet:** notifications (SMS, push, email) and Bangla text. Don't design screens that depend on them as if
 > they were real.
 
 ---
@@ -25,9 +27,9 @@ The backend runs at **`https://rokkha-backend.onrender.com/api/v1`** (interactiv
 `https://rokkha-backend.onrender.com/docs`). Production builds of the portal use it through
 `Frontend/.env.production`.
 
-- It is **read-only**: `POST`/`PATCH`/`DELETE` on assets, ingestion runs, predictions, weather and saved
-  locations answer **403** there. Reading, the point checks (`/geospatial/flood/check` and similar) and
-  accounts (`/auth/...`) work. To add assets or create predictions, use a local backend (section 1).
+- It is **read-only** for shared data: ingestion runs, predictions, weather and saved locations answer
+  **403** there, and changing assets needs an **admin** login. Reading, the point checks
+  (`/geospatial/flood/check` and similar), accounts (`/auth/...`) and rescue requests (`/sos`) work.
 - It **sleeps after 15 minutes** without requests; the first call after that can take about a minute.
 - Only `https://rokkha-app.vercel.app` and `localhost:3000` may call it from a browser. Ask the backend
   developer to add another address.
@@ -497,6 +499,66 @@ The report:
   means "none registered yet", not "no shelter exists".
 - Still no roles: every account is a normal user. Admin and rescue logins do not exist yet.
 
+### I. Rescue requests (SOS)
+
+Anyone can ask for help, **without a login**.
+
+| Method | Path | Who | What it does |
+|---|---|---|---|
+| `POST` | `/sos` | anyone | send a request → 201 with a receipt; the same `client_id` again → 200, nothing stored twice |
+| `GET` | `/sos/status/{client_id}` | the sender | the current status (404 = it has not reached the server) |
+| `POST` | `/sos/status/{client_id}/cancel` | the sender | "I no longer need help" (409 if already resolved or cancelled) |
+| `GET` | `/sos/mine` | logged-in user | requests sent while logged in |
+| `GET` | `/sos?status=&district_pcode=` | rescuer, admin | open requests, longest-waiting first, with location and contact |
+| `PATCH` | `/sos/{id}` | rescuer, admin | body `{"status": "acknowledged", "message_to_sender": "Boat leaving from the ghat"}` |
+
+Sending:
+
+```json
+{"client_id": "0b6f2c1e-7d1a-4e7e-9a0e-2f8f6f3d9c11",
+ "location": {"type": "Point", "coordinates": [91.1428, 24.8474]}, "accuracy_m": 25,
+ "people": 4, "need": "rescue", "note": "Water at the roof. Two children.",
+ "contact_name": "Rahima", "contact_phone": "+880 1700 000000", "saved_at": "2026-11-13T09:00:00Z"}
+```
+
+The receipt (also what the status call returns):
+
+```json
+{"id": "...", "status": "new", "district": {"pcode": "BD6090", "name": "Sunamganj", "division": "Sylhet"},
+ "received_at": "2026-11-13T09:00:05Z", "updated_at": "2026-11-13T09:00:05Z",
+ "history": [{"status": "new", "at": "2026-11-13T09:00:05Z"}], "message_to_sender": null}
+```
+
+- **`client_id`** is a random UUID the phone makes **once**, when the person presses "send"
+  (`crypto.randomUUID()`), and keeps (for example in `localStorage`). Send the same request, unchanged, until
+  the server answers 200 or 201. It is also the only key to the status: keep it private, never put it in a
+  shared link.
+- **Be honest about delivery.** Until the server has answered 200/201, show "Saved on this phone, not sent
+  yet". Only then show "Received by the server". Never write "help is coming" unless `status` is `team_sent`.
+- `need`: `rescue`, `medical`, `food_water`, `shelter` or `other`. `people`: 1–1000. `note` ≤ 500 characters.
+  `location` must be inside Bangladesh (422 otherwise).
+- `status`: `new` → `acknowledged` (a rescuer has seen it) → `team_sent` → `resolved`; or `cancelled`. It never
+  goes backwards (409 if a rescuer tries).
+- **429** = more than 10 new requests from one connection in an hour. Show the message and the 999 number.
+- A rescuer's list item has everything in the receipt plus `location`, `accuracy_m`, `people`, `need`, `note`,
+  `contact_name`, `contact_phone`, `saved_at`, `from_account`. The list answer also has `by_status` counts.
+  This is personal data: show it only on the rescuer screens.
+
+### J. Roles and admin
+
+`user.role` (in every login and `/auth/me` answer) is `user`, `rescuer` or `admin`. Show the rescuer screens
+only for `rescuer` and `admin`, the admin screens only for `admin`. Hiding a screen is not the protection: the
+backend refuses the calls (403) whatever the page shows.
+
+| Method | Path | What it does |
+|---|---|---|
+| `GET` | `/admin/users` | `{"count", "users": [...]}`: every account with its role |
+| `PATCH` | `/admin/users/{user_id}/role` | body `{"role": "rescuer"}`. 409 for the admin's own account |
+
+New accounts are always `user`. The first admin is made by the backend developer
+(`python scripts/set_role.py <email> admin`). On the hosted backend, adding, changing and deleting assets
+(section A) needs an admin login: send `Authorization: Bearer <token>`.
+
 ### G. Small tools (optional)
 
 `POST /geospatial/spatial-analysis/distance`, `.../linestring-length`,
@@ -530,7 +592,8 @@ and who each screen is for.
 | **Flood history** of a district | `GET /geospatial/flood/districts/{pcode}` and `.../satellite-observations` | "Flooded in 6 of 6 large flood events"; a timeline of satellite passes |
 | **Rain and river charts** | `GET /ingestion/rain`, `/ingestion/rain-forecast`, `/ingestion/river` | Bars for rain, line for river flow; draw forecast values differently |
 | **Check any place** | `POST /geospatial/flood/check` | Tap the map: flooded before? In the 10- or 100-year flood zone? |
-| **Nearest shelter or hospital** | `GET /assets/near?lng=&lat=&max_distance_m=&asset_type=` | A list, nearest first, with distance in metres |
+| **Nearest shelter or hospital** | `GET /assets/near?lng=&lat=&max_distance_m=&asset_type=` | A list, nearest first, with distance in metres. About 3,200 places come from OpenStreetMap (`source: "OpenStreetMap"`): show "© OpenStreetMap contributors" and that they are not checked on the ground |
+| **Ask for help (SOS)** without a login | `POST /sos`, then `GET /sos/status/{client_id}` (section 3 I) | "Saved on this phone" until the server answers, then the status |
 | **How good the model is** | `GET /predictions/model` | An "About the forecast" panel with the test results and limits |
 
 Rules for every citizen screen:
@@ -559,8 +622,8 @@ Rules for every citizen screen:
 
 ### For an admin only
 
-Creating, changing and deleting assets (`POST`, `PATCH`, `DELETE /assets`). **There are no roles yet** (every account is a normal user), so
-the backend cannot tell an admin from a visitor. Keep these forms out of the public pages. Hiding a form is not
+Creating, changing and deleting assets (`POST`, `PATCH`, `DELETE /assets`). On the hosted backend these calls need an **admin** login
+(section 3 J); on a local backend they are open. Keep these forms out of the public pages. Hiding a form is not
 security; real protection comes with the login work.
 
 ### What the backend does not give you (yet)
@@ -568,13 +631,13 @@ security; real protection comes with the login work.
 | Missing | What it means for your screens |
 |---|---|
 | Notifications (SMS, push, email) | An alert exists only when someone opens the app. Don't show "you will be notified" |
-| Admin and rescue roles | Accounts exist (section 3 H), but every account is a normal user. Don't build screens that trust a "role" chosen in the browser |
+| Notifications to rescuers | A new rescue request appears only when a rescuer's page asks again. Refresh the list every 30 seconds or so |
 | Password reset, email check | No email is sent. A forgotten password cannot be recovered yet |
 | Bangla text | `message` and all names are in English. Translate fixed labels in the frontend; keep district names as they are until a Bangla name list exists |
 | Upazila or village detail | Only districts. Don't zoom the risk colours below district level |
 | Other hazards (cyclone, heat, erosion) | Floods only |
 | Offline support | The API needs a connection. Keep the last answer and show its time ("updated 3 hours ago"); never show old data as current, and never show "no risk" because a call failed |
-| Rescue requests (SOS, missions, teams) | Not in this backend at all |
+| Rescue teams and missions | Requests and their status exist (section 3 I); teams, boats and routes do not |
 
 ---
 
@@ -598,7 +661,7 @@ data and then predicts. Show `data_through` and, from `features`, `days_since_la
 pass: 1 day ago") so users can see how fresh the inputs are; when it is `null`, no pass from the last 30 days
 was available and the prediction is weaker. In the dry season (now) expect no alerts.
 
-**Coming next:** a scheduled daily update, and admin / rescue roles with rate limits before any public use.
+**Coming next:** general rate limits, password reset.
 
 Questions or a field you need that isn't there? Ask the backend developer —
 `/docs` always shows the current, exact shapes.

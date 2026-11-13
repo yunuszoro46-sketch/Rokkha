@@ -3,13 +3,16 @@ from datetime import date, datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
+from app.core.config import settings
 from app.modules.accounts import service
 from app.modules.accounts.schemas import (
     LocationReportResponse,
     LocationRequest,
     LoginRequest,
     RegisterRequest,
+    RoleRequest,
     SessionResponse,
+    UserListResponse,
     UserResponse,
 )
 
@@ -49,6 +52,57 @@ async def current_user(token: str = Depends(current_token)) -> dict:
         raise NOT_LOGGED_IN
 
     return user
+
+
+async def optional_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer)
+) -> dict | None:
+
+    # For routes that work without a login but record who asked when there is one.
+    if credentials is None:
+        return None
+
+    return await service.user_for_token(credentials.credentials)
+
+
+def require_role(*roles: str):
+
+    # Use as a dependency: Depends(require_role("rescuer", "admin")).
+    async def check(user: dict = Depends(current_user)) -> dict:
+
+        if user["role"] not in roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Your account is not allowed to do this.",
+            )
+
+        return user
+
+    return check
+
+
+async def admin_on_public_server(
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer)
+) -> None:
+
+    # For routes that change shared data (assets). On a developer's machine
+    # they stay open; on a public server (PUBLIC_READ_ONLY) only an admin may use them.
+    if not settings.PUBLIC_READ_ONLY:
+        return
+
+    if credentials is None:
+        raise NOT_LOGGED_IN
+
+    user = await service.user_for_token(credentials.credentials)
+
+    if user is None:
+        raise NOT_LOGGED_IN
+
+    if user["role"] != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only an admin can change this on the public server.",
+        )
 
 
 @router.post(
@@ -162,3 +216,45 @@ async def my_report(
             status_code=409,
             detail="No location saved yet. Save one with PUT /api/v1/auth/me/location.",
         )
+
+
+# ==========================================
+# ADMIN: accounts and roles
+# ==========================================
+
+admin_router = APIRouter(
+    prefix="/admin",
+    tags=["Admin"]
+)
+
+
+@admin_router.get(
+    "/users",
+    response_model=UserListResponse
+)
+async def list_users(
+    limit: int = Query(default=200, ge=1, le=1000),
+    admin: dict = Depends(require_role("admin")),
+):
+
+    return await service.list_users(limit)
+
+
+@admin_router.patch(
+    "/users/{user_id}/role",
+    response_model=UserResponse
+)
+async def change_role(
+    user_id: str,
+    data: RoleRequest,
+    admin: dict = Depends(require_role("admin")),
+):
+
+    try:
+        return await service.set_role(admin, user_id, data.role)
+
+    except service.OwnRole:
+        raise HTTPException(status_code=409, detail="You cannot change your own role.")
+
+    except service.UserNotFound:
+        raise HTTPException(status_code=404, detail="User not found")
