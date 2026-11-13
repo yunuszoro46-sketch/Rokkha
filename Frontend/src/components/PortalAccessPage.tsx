@@ -3,8 +3,6 @@
 import React, { useState, useEffect } from "react";
 import logoAsset from "@/assets/logo.png";
 import {
-  LifeBuoy,
-  User as UserIcon,
   MapPin,
   Eye,
   EyeOff,
@@ -26,11 +24,20 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Language } from "@/lib/translations";
+import {
+  AccountUser,
+  AuthError,
+  logIn,
+  registerAccount,
+  readGpsPosition,
+  saveMyLocation,
+} from "@/services/auth";
 
 interface PortalAccessPageProps {
   isOpen?: boolean;
   onClose?: () => void;
-  onLoginSuccess: () => void;
+  /** Called with the account after a real login, or with null for guest access. */
+  onLoginSuccess: (user: AccountUser | null) => void;
   lang?: Language;
   onToggleLanguage?: () => void;
 }
@@ -43,10 +50,12 @@ export function PortalAccessPage({
   onToggleLanguage,
 }: PortalAccessPageProps) {
   const [tab, setTab] = useState<string>("register");
-  const [role, setRole] = useState<"rescuer" | "user">("rescuer");
   const [fullName, setFullName] = useState("");
   const [contact, setContact] = useState("");
-  const [location, setLocation] = useState("");
+  // GPS position [longitude, latitude] the user chose to share, saved after registering.
+  const [gpsPosition, setGpsPosition] = useState<[number, number] | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -64,18 +73,52 @@ export function PortalAccessPage({
     onToggleLanguage?.();
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleUseGps = async () => {
+    setFormError(null);
+    setIsLocating(true);
+    try {
+      setGpsPosition(await readGpsPosition());
+    } catch (error) {
+      setFormError((error as Error).message);
+    } finally {
+      setIsLocating(false);
+    }
+  };
+
+  // Real accounts on the backend: nothing is "logged in" unless the server says so.
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
     setIsSubmitting(true);
-    // Instant authentic session transition
-    setTimeout(() => {
+    try {
+      let user =
+        tab === "register"
+          ? await registerAccount(fullName, contact, password)
+          : await logIn(contact, password);
+
+      if (tab === "register" && gpsPosition) {
+        try {
+          user = await saveMyLocation(gpsPosition[0], gpsPosition[1]);
+        } catch (error) {
+          // The account exists; only the location was refused (e.g. outside Bangladesh).
+          // The report panel will ask for it again.
+        }
+      }
+      setPassword("");
+      onLoginSuccess(user);
+    } catch (error) {
+      setFormError(
+        error instanceof AuthError
+          ? error.message
+          : "Something went wrong. Please try again."
+      );
+    } finally {
       setIsSubmitting(false);
-      onLoginSuccess();
-    }, 350);
+    }
   };
 
   const handleGuestAccess = () => {
-    onLoginSuccess();
+    onLoginSuccess(null);
   };
 
   if (!isOpen) return null;
@@ -168,41 +211,6 @@ export function PortalAccessPage({
           <form onSubmit={handleSubmit} className="space-y-4">
             {tab === "register" && (
               <>
-                {/* Join as: Role Selector with shadcn Buttons */}
-                <div>
-                  <label className="block text-xs font-semibold text-[#3B4740] mb-2">
-                    {isBn ? "ভূমিকা নির্বাচন করুন:" : "Join as:"}
-                  </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setRole("rescuer")}
-                      className={`h-11 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all ${
-                        role === "rescuer"
-                          ? "border-[#16A34A] border-2 bg-[#DCFCE7] text-[#15803D] hover:bg-[#DCFCE7] hover:text-[#15803D] shadow-sm"
-                          : "border-[#DFDDD3] bg-white text-[#526058] hover:bg-[#F5F3EC]"
-                      }`}
-                    >
-                      <LifeBuoy size={16} className={role === "rescuer" ? "text-[#16A34A]" : ""} />
-                      <span>{isBn ? "উদ্ধারকারী" : "RESCUER"}</span>
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setRole("user")}
-                      className={`h-11 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all ${
-                        role === "user"
-                          ? "border-[#16A34A] border-2 bg-[#DCFCE7] text-[#15803D] hover:bg-[#DCFCE7] hover:text-[#15803D] shadow-sm"
-                          : "border-[#DFDDD3] bg-white text-[#526058] hover:bg-[#F5F3EC]"
-                      }`}
-                    >
-                      <UserIcon size={16} className={role === "user" ? "text-[#16A34A]" : ""} />
-                      <span>{isBn ? "নাগরিক ব্যবহারকারী" : "USER"}</span>
-                    </Button>
-                  </div>
-                </div>
-
                 {/* Full Name Input */}
                 <div>
                   <label className="block text-xs font-semibold text-[#3B4740] mb-1.5">
@@ -211,6 +219,8 @@ export function PortalAccessPage({
                   <Input
                     type="text"
                     required
+                    maxLength={80}
+                    autoComplete="name"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder={isBn ? "আপনার পূর্ণ নাম" : "Full Name"}
@@ -223,38 +233,46 @@ export function PortalAccessPage({
             {/* Mobile / Email Input */}
             <div>
               <label className="block text-xs font-semibold text-[#3B4740] mb-1.5">
-                {isBn ? "মোবাইল / ইমেইল" : "Mobile / Email"}
+                {isBn ? "ইমেইল" : "Email"}
               </label>
               <Input
-                type="text"
+                type="email"
                 required
+                autoComplete="email"
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
-                placeholder="+880 ... or email"
+                placeholder="name@example.org"
                 className="bg-white border-[#DFDDD3] text-[#12241C] placeholder:text-[#88948D] h-11 rounded-xl focus-visible:ring-[#16A34A]"
               />
             </div>
 
             {tab === "register" && (
-              /* Access Location Input */
+              /* Optional: share the current GPS position so the report covers the user's own place */
               <div>
                 <label className="block text-xs font-semibold text-[#3B4740] mb-1.5">
-                  {isBn ? "অবস্থান / এলাকা" : "Access Location"}
+                  {isBn ? "আমার অবস্থান (ঐচ্ছিক)" : "My location (optional)"}
                 </label>
-                <div className="relative">
-                  <Input
-                    type="text"
-                    required
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder={isBn ? "জেলা / উপজেলা / গ্রাম" : "District / Sub-district / Village"}
-                    className="bg-white border-[#DFDDD3] text-[#12241C] placeholder:text-[#88948D] h-11 rounded-xl pr-10 focus-visible:ring-[#16A34A]"
-                  />
-                  <MapPin
-                    size={16}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#6B7280] pointer-events-none"
-                  />
-                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleUseGps}
+                  disabled={isLocating}
+                  className="w-full h-11 rounded-xl border-[#DFDDD3] bg-white text-[#12241C] hover:bg-[#F5F3EC] text-xs sm:text-sm font-bold flex items-center justify-center gap-2"
+                >
+                  <MapPin size={16} className={gpsPosition ? "text-[#16A34A]" : "text-[#6B7280]"} />
+                  <span>
+                    {isLocating
+                      ? isBn ? "অবস্থান নেওয়া হচ্ছে..." : "Reading location..."
+                      : gpsPosition
+                      ? `${gpsPosition[1].toFixed(4)}°N, ${gpsPosition[0].toFixed(4)}°E`
+                      : isBn ? "আমার বর্তমান অবস্থান ব্যবহার করুন" : "Use my current location"}
+                  </span>
+                </Button>
+                <p className="mt-1.5 text-[11px] text-[#5C6863] leading-snug">
+                  {isBn
+                    ? "এটি আপনার অ্যাকাউন্টে সংরক্ষিত হয় যাতে আপনার এলাকার বন্যা প্রতিবেদন দেখানো যায়। শুধু আপনিই এটি দেখতে পারবেন, এবং পরে মুছে ফেলতে পারবেন।"
+                    : "Saved with your account so the flood report can cover your own place. Only you can see it, and you can remove it later."}
+                </p>
               </div>
             )}
 
@@ -267,6 +285,9 @@ export function PortalAccessPage({
                 <Input
                   type={showPassword ? "text" : "password"}
                   required
+                  minLength={tab === "register" ? 8 : 1}
+                  maxLength={128}
+                  autoComplete={tab === "register" ? "new-password" : "current-password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={isBn ? "পাসওয়ার্ড" : "Security Password"}
@@ -282,6 +303,21 @@ export function PortalAccessPage({
                 </button>
               </div>
             </div>
+
+            {tab === "register" && (
+              <p className="-mt-2 text-[11px] text-[#5C6863]">
+                {isBn ? "কমপক্ষে ৮ অক্ষর।" : "At least 8 characters."}
+              </p>
+            )}
+
+            {formError && (
+              <div
+                role="alert"
+                className="rounded-xl border border-[#FCA5A5] bg-[#FEE2E2] px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#991B1B]"
+              >
+                {formError}
+              </div>
+            )}
 
             {/* Submit Action Button */}
             <Button

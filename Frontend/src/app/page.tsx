@@ -79,6 +79,8 @@ import {
 } from "@/services/api";
 import { AssetNearResult } from "@/types/api";
 import { DataSourceBanner } from "@/components/DataSourceBanner";
+import { MyLocationReport } from "@/components/MyLocationReport";
+import { AccountUser, getCurrentUser, logOut } from "@/services/auth";
 
 // Dynamically import Leaflet map for interactive exploration
 const LeafletFloodMap = dynamic(
@@ -463,6 +465,8 @@ export function CitizenPortalApp({
   const [forecastLoadedFor, setForecastLoadedFor] = useState<string | null>(null);
   // Places registered in the backend near the selected district (never invented).
   const [reportAssets, setReportAssets] = useState<AssetNearResult[]>([]);
+  // The logged-in account (null = guest). Set only from the backend's answers.
+  const [accountUser, setAccountUser] = useState<AccountUser | null>(null);
   const [selectedPcode, setSelectedPcode] = useState("BD6090"); // Sunamganj default
   const [selectedName, setSelectedName] = useState("Sunamganj");
   const [inspectedPoint, setInspectedPoint] = useState<{ lat: number; lng: number } | null>({
@@ -663,6 +667,31 @@ export function CitizenPortalApp({
       mounted = false;
     };
   }, [selectedPcode]);
+
+  // A login kept in this browser from an earlier visit: ask the backend whether it still holds.
+  useEffect(() => {
+    let mounted = true;
+    getCurrentUser()
+      .then((user) => {
+        if (mounted && user) setAccountUser(user);
+      })
+      .catch(() => {
+        // Backend not reachable: stay a guest; the saved-sample banner explains the rest.
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Show the map for the user's own district once it is known.
+  const accountPcode = accountUser?.district?.pcode;
+  useEffect(() => {
+    if (accountPcode) setSelectedPcode(accountPcode);
+  }, [accountPcode]);
+
+  const handleLogOut = () => {
+    logOut().finally(() => setAccountUser(null));
+  };
 
   const isForecastLoading = forecastLoadedFor !== targetDate;
   const hasForecast = predictions.length > 0;
@@ -1126,6 +1155,17 @@ export function CitizenPortalApp({
                     </div>
                   </Card>
                 </div>
+
+                {accountUser && (activeView === "map" || activeView === "alerts") && (
+                  <MyLocationReport
+                    user={accountUser}
+                    targetDate={targetDate}
+                    lang={lang}
+                    onUserChange={setAccountUser}
+                    onLoggedOut={() => setAccountUser(null)}
+                    onLogOut={handleLogOut}
+                  />
+                )}
 
                 {(activeView === "map" || activeView === "alerts") &&
                   !isForecastLoading &&
@@ -1640,7 +1680,8 @@ export function CitizenPortalApp({
           setIsLoginOpen(false);
           if (activeView === "login") navigateToPage("overview");
         }}
-        onLoginSuccess={() => {
+        onLoginSuccess={(user) => {
+          if (user) setAccountUser(user);
           setIsLoginOpen(false);
           navigateToPage("map");
         }}
