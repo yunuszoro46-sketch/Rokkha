@@ -417,6 +417,22 @@ Implemented in `src/services/auth.ts`; full shapes in `Backend/docs/FRONTEND_API
 
 All except register and login need `Authorization: Bearer <token>`.
 
+### 3.6b. Map data (added 13 Nov 2026)
+
+| Method | Path | Used for |
+|---|---|---|
+| `GET` | `/geospatial/flood/satellite-observations/latest?date=&max_age_days=` | The map's "Observed by satellite" view: newest pass of every district on or before the day |
+| `GET` | `/assets` | Markers of registered places (no saved sample: none shown without the backend) |
+| `GET` | `/ingestion/sites?kind=river` | Markers of the 9 river stations |
+
+`POST /geospatial/flood/check` returns the cell's fields directly (`cell.times_flooded`, `cell.times_observed`,
+`cell.hazard[]`), and the district's place as `district.rank`. `hazard[].depth_label` is `null` outside the
+modelled flood area. Depth labels are `"< 1 m"`, `"1 to 3 m"`, `"3 to 10 m"`, `"> 10 m"`.
+
+The map has two views that are never blended: **Model forecast** (alert / watch colours with the probability
+written on the district) and **Observed by satellite** (share of the district under unusual water). A day
+without a forecast is drawn grey, not in the "no alert" colour.
+
 ### 3.7. Saved sample rules (added 13 Nov 2026)
 
 - When the backend cannot be reached, functions in `src/services/api.ts` use the files in `src/data` and call

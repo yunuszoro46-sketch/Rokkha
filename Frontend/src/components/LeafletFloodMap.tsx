@@ -1,12 +1,22 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import districtBoundariesData from "../data/bangladesh_districts.json";
 import riversData from "../data/bangladesh_rivers.json";
-import { DistrictPrediction, PointFloodCheck } from "../types/api";
-import { formatProbability } from "../lib/utils";
+import {
+  DistrictPrediction,
+  PointFloodCheck,
+  DistrictLatestObservation,
+  RegisteredAsset,
+  RiverSite,
+} from "../types/api";
+import {
+  getLatestSatelliteObservations,
+  getRegisteredAssets,
+  getRiverSites,
+} from "../services/api";
 import { Crosshair, MapPin, Waves } from "lucide-react";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -32,7 +42,48 @@ interface LeafletFloodMapProps {
   targetDate?: string;
   lang?: Language;
   onChangeTargetDate?: (date: string) => void;
+  /** true while the forecast for targetDate is still being fetched. */
+  isForecastLoading?: boolean;
+  /** The logged-in user's saved place, shown as a marker. */
+  userPlace?: { lng: number; lat: number; label: string | null } | null;
 }
+
+// Two separate views of the same map. They are never blended: one is what the
+// model expects, the other is what the satellite saw.
+type MapView = "forecast" | "observed";
+
+const COLORS = {
+  alert: "#B94A48",
+  watch: "#C69A50",
+  none: "#78958A",
+  unsupported: "#94A3B8",
+  // No forecast / no recent satellite pass. Deliberately not a "safe" colour.
+  noData: "#E5E7EB",
+  // Observed share of the district under unusual water (10 % = "flooded" by the label rule).
+  observed: ["#DBEAFE", "#93C5FD", "#3B82F6", "#1E3A8A"],
+};
+
+function observedColor(share: number): string {
+  if (share >= 0.25) return COLORS.observed[3];
+  if (share >= 0.1) return COLORS.observed[2];
+  if (share >= 0.02) return COLORS.observed[1];
+  return COLORS.observed[0];
+}
+
+// Names of registered places are typed in by people: never put them into HTML unescaped.
+function escapeHtml(text: string): string {
+  return text.replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string)
+  );
+}
+
+// The backend's depth classes (JRC flood hazard map) in Bangla.
+const DEPTH_BN: Record<string, string> = {
+  "< 1 m": "১ মিটারের কম",
+  "1 to 3 m": "১ থেকে ৩ মিটার",
+  "3 to 10 m": "৩ থেকে ১০ মিটার",
+  "> 10 m": "১০ মিটারের বেশি",
+};
 
 export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
   predictions,
@@ -45,6 +96,8 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
   targetDate = "2022-06-18",
   lang = "en",
   onChangeTargetDate,
+  isForecastLoading = false,
+  userPlace = null,
 }) => {
   const t = UI_TEXT[lang] || UI_TEXT.en;
   const isBn = lang === "bn";
@@ -53,23 +106,107 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
   const mapRef = useRef<L.Map | null>(null);
   const districtLayerRef = useRef<L.GeoJSON | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
+  const labelLayerRef = useRef<L.LayerGroup | null>(null);
+  const placesLayerRef = useRef<L.LayerGroup | null>(null);
+
+  const [view, setView] = useState<MapView>("forecast");
+  const [latestPasses, setLatestPasses] = useState<DistrictLatestObservation[]>([]);
+  const [assets, setAssets] = useState<RegisteredAsset[]>([]);
+  const [riverSites, setRiverSites] = useState<RiverSite[]>([]);
   const callbacksRef = useRef({ onSelectDistrict, onInspectPoint });
 
   useEffect(() => {
     callbacksRef.current = { onSelectDistrict, onInspectPoint };
   }, [onSelectDistrict, onInspectPoint]);
 
-  const getDistrictFillColor = (
-    pcode: string,
-    preds: DistrictPrediction[]
-  ): string => {
-    const p = preds.find((item) => item.pcode === pcode);
-    if (!p) return "#78958A";
-    if (p.status === "unsupported") return "#94A3B8"; // neutral grey for 8 radar-blind districts
-    if (p.alert_level === "alert") return "#B94A48"; // clay red
-    if (p.alert_level === "watch") return "#C69A50"; // amber
-    return "#78958A"; // restrained sage
+  const percentText = (probability: number): string =>
+    probability > 0.95
+      ? isBn ? "৯৫% এর বেশি" : "more than 95%"
+      : `${isBn ? toBnNum(Math.round(probability * 100)) : Math.round(probability * 100)}%`;
+
+  const getDistrictFillColor = (pcode: string): string => {
+    if (view === "observed") {
+      const row = latestPasses.find((item) => item.pcode === pcode);
+      if (row && !row.observable) return COLORS.unsupported;
+      if (!row || !row.observation) return COLORS.noData;
+      return observedColor(row.observation.flooded_share);
+    }
+    const p = predictions.find((item) => item.pcode === pcode);
+    if (!p) return COLORS.noData; // no forecast for this day: not "normal"
+    if (p.status === "unsupported") return COLORS.unsupported;
+    if (p.alert_level === "alert") return COLORS.alert;
+    if (p.alert_level === "watch") return COLORS.watch;
+    if (p.alert_level === "none") return COLORS.none;
+    return COLORS.noData; // inputs missing
   };
+
+  // The text shown when the pointer rests on a district.
+  const districtTooltip = (pcode: string, name: string, division: string): string => {
+    const title = isBn ? `${DISTRICTS_BN[pcode] || name} জেলা` : `${name} District`;
+    const sub = isBn ? `${DIVISIONS_BN[division] || division} বিভাগ` : `${division} Division`;
+    let line: string;
+
+    if (view === "observed") {
+      const row = latestPasses.find((item) => item.pcode === pcode);
+      if (row && !row.observable) {
+        line = isBn ? "স্যাটেলাইট এই জেলা পর্যবেক্ষণ করতে পারে না" : "Satellites cannot observe this district";
+      } else if (!row || !row.observation) {
+        line = isBn ? "সাম্প্রতিক কোনো স্যাটেলাইট পর্যবেক্ষণ নেই" : "No recent satellite pass";
+      } else {
+        const share = (row.observation.flooded_share * 100).toFixed(1);
+        const days = row.days_ago ?? 0;
+        line = isBn
+          ? `দেখা অংশের ${toBnNum(share)}% অস্বাভাবিক পানিতে · ${toBnNum(row.observation.date)} (${toBnNum(days)} দিন আগে)`
+          : `${share}% of the observed land under unusual water · ${row.observation.date} (${days} day${days === 1 ? "" : "s"} before)`;
+      }
+    } else {
+      const p = predictions.find((item) => item.pcode === pcode);
+      if (!p) {
+        line = isBn ? "এই দিনের পূর্বাভাস নেই" : "No forecast for this day";
+      } else if (p.status === "unsupported") {
+        line = isBn ? "এই জেলায় পূর্বাভাস সম্ভব নয়" : "No forecast possible here";
+      } else if (p.probability === null || p.probability === undefined) {
+        line = isBn ? "এই দিনের তথ্য অসম্পূর্ণ" : "Inputs missing for this day";
+      } else {
+        const level =
+          p.alert_level === "alert"
+            ? isBn ? "অ্যালার্ট" : "ALERT"
+            : p.alert_level === "watch"
+            ? isBn ? "নজরদারি" : "WATCH"
+            : isBn ? "সতর্কতা সীমার নিচে" : "below alert level";
+        line = isBn
+          ? `মডেলের সম্ভাবনা: ${percentText(p.probability)} · ${level}`
+          : `Model probability: ${percentText(p.probability)} · ${level}`;
+      }
+    }
+
+    return (
+      `<div style="font-weight:700;color:#263B32;font-size:16px;">${escapeHtml(title)}</div>` +
+      `<div style="font-size:14px;color:#58645f;">${escapeHtml(sub)}</div>` +
+      `<div style="font-size:14px;color:#263B32;font-weight:600;margin-top:2px;">${escapeHtml(line)}</div>`
+    );
+  };
+
+  // The satellite view's data follows the chosen day.
+  useEffect(() => {
+    let mounted = true;
+    getLatestSatelliteObservations(targetDate).then((rows) => {
+      if (mounted) setLatestPasses(rows);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [targetDate]);
+
+  // Registered places and river stations: fetched once.
+  useEffect(() => {
+    let mounted = true;
+    getRegisteredAssets().then((rows) => mounted && setAssets(rows));
+    getRiverSites().then((rows) => mounted && setRiverSites(rows));
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // Initialize Leaflet Map (Note: Leaflet uses [lat, lng] order per FRONTEND_API_GUIDE.md)
   useEffect(() => {
@@ -100,7 +237,7 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
         const pcode = feature?.properties?.pcode || "";
         const isSelected = pcode === selectedDistrictPcode;
         return {
-          fillColor: getDistrictFillColor(pcode, predictions),
+          fillColor: getDistrictFillColor(pcode),
           fillOpacity: 0.62,
           color: isSelected ? "#263B32" : "#FFFFFF",
           weight: isSelected ? 2.8 : 1.2,
@@ -112,10 +249,8 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
         const name = feature?.properties?.name || pcode;
         const division = feature?.properties?.parent_name || "";
 
-        layer.bindTooltip(
-          `<div style="font-weight:700;color:#263B32;font-size:16px;">${name} District</div><div style="font-size:16px;color:#58645f;">${division} Division · ${pcode}</div>`,
-          { sticky: true, direction: "top" }
-        );
+        // The text is filled in (and kept up to date) by the colour effect below.
+        layer.bindTooltip("", { sticky: true, direction: "top" });
 
         layer.on("click", (e: L.LeafletMouseEvent) => {
           L.DomEvent.stopPropagation(e);
@@ -146,6 +281,8 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
       callbacksRef.current.onInspectPoint(e.latlng.lat, e.latlng.lng);
     });
 
+    labelLayerRef.current = L.layerGroup().addTo(map);
+    placesLayerRef.current = L.layerGroup().addTo(map);
     mapRef.current = map;
 
     return () => {
@@ -153,26 +290,111 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
       mapRef.current = null;
       districtLayerRef.current = null;
       markerRef.current = null;
+      labelLayerRef.current = null;
+      placesLayerRef.current = null;
     };
   }, []);
 
-  // Update District Choropleth Colors when predictions or selectedDistrictPcode changes
+  // Colours, hover text and the percentage labels follow the data, the view and the language.
   useEffect(() => {
     const layer = districtLayerRef.current;
-    if (!layer) return;
+    const labels = labelLayerRef.current;
+    if (!layer || !labels) return;
 
     layer.setStyle((feature) => {
       const pcode = feature?.properties?.pcode || "";
       const isSelected = pcode === selectedDistrictPcode;
       return {
-        fillColor: getDistrictFillColor(pcode, predictions),
+        fillColor: getDistrictFillColor(pcode),
         fillOpacity: 0.62,
         color: isSelected ? "#263B32" : "#FFFFFF",
         weight: isSelected ? 2.8 : 1.2,
         dashArray: isSelected ? undefined : "3, 3",
       };
     });
-  }, [predictions, selectedDistrictPcode]);
+
+    labels.clearLayers();
+
+    layer.eachLayer((item) => {
+      const districtLayer = item as L.Polygon & { feature?: any };
+      const props = districtLayer.feature?.properties || {};
+      const pcode: string = props.pcode || "";
+      districtLayer.setTooltipContent(
+        districtTooltip(pcode, props.name || pcode, props.parent_name || "")
+      );
+
+      // Forecast view: write the probability on districts at watch or alert level.
+      if (view !== "forecast") return;
+      const p = predictions.find((pred) => pred.pcode === pcode);
+      if (!p || p.probability === null || p.probability === undefined) return;
+      if (p.alert_level !== "alert" && p.alert_level !== "watch") return;
+
+      const text = p.probability > 0.95 ? (isBn ? ">৯৫%" : ">95%") : percentText(p.probability);
+      L.marker(districtLayer.getBounds().getCenter(), {
+        interactive: false,
+        keyboard: false,
+        icon: L.divIcon({
+          className: "rokkha-probability-label",
+          html: `<div style="transform:translate(-50%,-50%);display:inline-block;white-space:nowrap;padding:1px 6px;border-radius:9999px;background:${
+            p.alert_level === "alert" ? COLORS.alert : COLORS.watch
+          };color:#fff;font-weight:800;font-size:12px;border:1.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.35);">${escapeHtml(text)}</div>`,
+          iconSize: [0, 0],
+        }),
+      }).addTo(labels);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [predictions, selectedDistrictPcode, view, latestPasses, lang]);
+
+  // Markers: the user's own place, registered places and river stations.
+  useEffect(() => {
+    const places = placesLayerRef.current;
+    if (!places) return;
+    places.clearLayers();
+
+    const dot = (style: string) =>
+      L.divIcon({
+        className: "rokkha-place-marker",
+        html: `<div style="${style}"></div>`,
+        iconSize: [14, 14],
+        iconAnchor: [7, 7],
+      });
+
+    riverSites.forEach((site) => {
+      const [lng, lat] = site.location.coordinates;
+      L.marker([lat, lng], {
+        icon: dot("width:12px;height:12px;background:#1D4ED8;border:2px solid #fff;transform:rotate(45deg);box-shadow:0 0 4px rgba(0,0,0,0.4);"),
+      })
+        .bindTooltip(
+          `<b>${escapeHtml(site.name)}</b><br/>${isBn ? "নদী প্রবাহ কেন্দ্র (GloFAS)" : "River flow station (GloFAS)"}`,
+          { direction: "top" }
+        )
+        .addTo(places);
+    });
+
+    assets.forEach((asset) => {
+      const [lng, lat] = asset.location.coordinates;
+      L.marker([lat, lng], {
+        icon: dot("width:12px;height:12px;background:#fff;border:3px solid #7C3AED;border-radius:3px;box-shadow:0 0 4px rgba(0,0,0,0.4);"),
+      })
+        .bindTooltip(
+          `<b>${escapeHtml(asset.name)}</b><br/>${escapeHtml(asset.asset_type.replace(/_/g, " "))}`,
+          { direction: "top" }
+        )
+        .addTo(places);
+    });
+
+    if (userPlace) {
+      L.marker([userPlace.lat, userPlace.lng], {
+        zIndexOffset: 500,
+        icon: dot("width:16px;height:16px;background:#16A34A;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 3px rgba(22,163,74,0.35),0 0 6px rgba(0,0,0,0.4);"),
+      })
+        .bindTooltip(
+          `<b>${escapeHtml(userPlace.label || (isBn ? "আমার স্থান" : "My place"))}</b><br/>${isBn ? "আপনার সংরক্ষিত অবস্থান" : "Your saved location"}`,
+          { direction: "top" }
+        )
+        .addTo(places);
+    }
+  }, [assets, riverSites, userPlace, lang]);
 
   // Update Leaflet Marker when inspectedPoint changes (Leaflet [lat, lng] order)
   useEffect(() => {
@@ -260,23 +482,103 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
           </div>
         )}
 
-        {/* Legend using shadcn/ui Badge */}
-        <div className="flex flex-wrap items-center gap-2 text-base">
-          <span className="font-medium text-brand-forest/70 mr-1">{t.map_legend_label}</span>
-          <Badge variant="alert" className="gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-brand-clay"></span> {t.map_legend_alert}
-          </Badge>
-          <Badge variant="watch" className="gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-brand-amber"></span> {t.map_legend_watch}
-          </Badge>
-          <Badge variant="none" className="gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-brand-sage"></span> {t.map_legend_normal}
-          </Badge>
-          <Badge variant="unsupported" className="gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-gray-400"></span>{" "}
-            {t.map_legend_unsupported}
-          </Badge>
+        {/* Two views, never blended: the model's forecast, or what the satellite saw */}
+        <div className="flex flex-wrap items-center gap-1.5 text-base">
+          <span className="font-medium text-brand-forest/70 mr-1">
+            {isBn ? "মানচিত্রে দেখান:" : "Show on map:"}
+          </span>
+          <Button
+            size="sm"
+            variant={view === "forecast" ? "default" : "secondary"}
+            onClick={() => setView("forecast")}
+          >
+            {isBn ? "মডেলের পূর্বাভাস" : "Model forecast"}
+          </Button>
+          <Button
+            size="sm"
+            variant={view === "observed" ? "default" : "secondary"}
+            onClick={() => setView("observed")}
+          >
+            {isBn ? "স্যাটেলাইটে দেখা বন্যা" : "Observed by satellite"}
+          </Button>
         </div>
+
+        {/* Legend */}
+        <div className="flex flex-wrap items-center gap-2 text-base w-full">
+          <span className="font-medium text-brand-forest/70 mr-1">{t.map_legend_label}</span>
+          {view === "forecast" ? (
+            <>
+              <Badge variant="alert" className="gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-brand-clay"></span> {t.map_legend_alert}
+              </Badge>
+              <Badge variant="watch" className="gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-brand-amber"></span> {t.map_legend_watch}
+              </Badge>
+              <Badge variant="none" className="gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-brand-sage"></span> {t.map_legend_normal}
+              </Badge>
+              <Badge variant="unsupported" className="gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-gray-400"></span>{" "}
+                {t.map_legend_unsupported}
+              </Badge>
+              <Badge variant="unsupported" className="gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full border border-gray-400" style={{ background: COLORS.noData }}></span>{" "}
+                {isBn ? "পূর্বাভাস নেই" : "No forecast"}
+              </Badge>
+            </>
+          ) : (
+            <>
+              {[
+                { color: COLORS.observed[0], en: "under 2%", bn: "২% এর কম" },
+                { color: COLORS.observed[1], en: "2–10%", bn: "২–১০%" },
+                { color: COLORS.observed[2], en: "10–25% (flooded)", bn: "১০–২৫% (প্লাবিত)" },
+                { color: COLORS.observed[3], en: "over 25%", bn: "২৫% এর বেশি" },
+              ].map((step) => (
+                <Badge key={step.en} variant="unsupported" className="gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full border border-gray-400" style={{ background: step.color }}></span>{" "}
+                  {isBn ? step.bn : step.en}
+                </Badge>
+              ))}
+              <Badge variant="unsupported" className="gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full border border-gray-400" style={{ background: COLORS.noData }}></span>{" "}
+                {isBn ? "সাম্প্রতিক পর্যবেক্ষণ নেই" : "No recent pass"}
+              </Badge>
+              <Badge variant="unsupported" className="gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-gray-400"></span>{" "}
+                {t.map_legend_unsupported}
+              </Badge>
+            </>
+          )}
+          <span className="flex items-center gap-1.5 text-sm text-brand-forest/70 ml-1">
+            <span className="inline-block w-2.5 h-2.5 rotate-45 border border-white" style={{ background: "#1D4ED8" }}></span>
+            {isBn ? "নদী কেন্দ্র" : "River station"}
+          </span>
+          <span className="flex items-center gap-1.5 text-sm text-brand-forest/70">
+            <span className="inline-block w-2.5 h-2.5 rounded-sm bg-white" style={{ border: "2px solid #7C3AED" }}></span>
+            {isBn ? "নিবন্ধিত স্থান" : "Registered place"}
+          </span>
+          {userPlace && (
+            <span className="flex items-center gap-1.5 text-sm text-brand-forest/70">
+              <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: "#16A34A" }}></span>
+              {isBn ? "আমার স্থান" : "My place"}
+            </span>
+          )}
+        </div>
+        <p className="w-full text-sm text-brand-forest/70">
+          {view === "forecast"
+            ? isForecastLoading
+              ? isBn ? "পূর্বাভাস আনা হচ্ছে..." : "Loading the forecast..."
+              : predictions.length === 0
+              ? isBn
+                ? `${displayTargetDate} তারিখের কোনো পূর্বাভাস নেই, তাই জেলাগুলো ধূসর। এর মানে ঝুঁকি নেই, তা নয়।`
+                : `No forecast for ${displayTargetDate}, so the districts are grey. This does not mean there is no risk.`
+              : isBn
+              ? `রং: ${displayTargetDate} তারিখের জন্য মডেলের জেলা-ভিত্তিক অনুমান। এটি সরকারি সতর্কতা নয়।`
+              : `Colours: the model's district estimate for ${displayTargetDate}. Not an official warning.`
+            : isBn
+            ? `রং: ${displayTargetDate} বা তার আগের ৩০ দিনের মধ্যে সর্বশেষ স্যাটেলাইট পর্যবেক্ষণে জেলার কত অংশ অস্বাভাবিক পানিতে ছিল। এটি পর্যবেক্ষণ, পূর্বাভাস নয়।`
+            : `Colours: share of each district under unusual water in its latest satellite pass on or before ${displayTargetDate} (at most 30 days earlier). An observation, not a forecast.`}
+        </p>
       </div>
 
       {/* Leaflet Map Canvas */}
@@ -318,11 +620,11 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
                       ({isBn ? (DIVISIONS_BN[pointCheckResult.district.division] || pointCheckResult.district.division) : pointCheckResult.district.division} {t.map_division_suffix})
                     </span>
                   </div>
-                  {pointCheckResult.district.flood_rank && (
+                  {pointCheckResult.district.rank && (
                     <Badge variant="secondary">
                       {t.map_rank_label.replace(
                         "{rank}",
-                        isBn ? toBnNum(pointCheckResult.district.flood_rank) : String(pointCheckResult.district.flood_rank)
+                        isBn ? toBnNum(pointCheckResult.district.rank) : String(pointCheckResult.district.rank)
                       )}
                     </Badge>
                   )}
@@ -339,7 +641,9 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
                         {currentPred.status === "unsupported"
                           ? t.map_radar_blindspot
                           : `${t.map_probability_label} ${
-                              isBn ? toBnNum(formatProbability(currentPred.probability)) : formatProbability(currentPred.probability)
+                              currentPred.probability === null || currentPred.probability === undefined
+                                ? isBn ? "নেই" : "not available"
+                                : percentText(currentPred.probability)
                             }`}
                       </div>
                     </div>
@@ -366,15 +670,23 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
                   </div>
                 )}
 
-                {pointCheckResult.cell?.observed && (
+                {!currentPred && view === "forecast" && !isForecastLoading && (
+                  <div className="p-3 rounded-lg bg-brand-warm border border-brand-limestone font-bold text-brand-forest">
+                    {isBn
+                      ? `${displayTargetDate} তারিখের কোনো পূর্বাভাস নেই।`
+                      : `No forecast for ${displayTargetDate}.`}
+                  </div>
+                )}
+
+                {pointCheckResult.cell && pointCheckResult.cell.times_observed > 0 && (
                   <div className="p-2.5 rounded bg-brand-warm border border-brand-limestone flex items-center justify-between">
                     <span className="text-brand-forest/80">
                       {t.map_observed_satellite_label}
                     </span>
                     <span className="font-bold text-brand-forest">
                       {t.map_of_major_events
-                        .replace("{times}", isBn ? toBnNum(pointCheckResult.cell.observed.times_flooded) : String(pointCheckResult.cell.observed.times_flooded))
-                        .replace("{total}", isBn ? toBnNum(pointCheckResult.cell.observed.times_observed) : String(pointCheckResult.cell.observed.times_observed))}
+                        .replace("{times}", isBn ? toBnNum(pointCheckResult.cell.times_flooded) : String(pointCheckResult.cell.times_flooded))
+                        .replace("{total}", isBn ? toBnNum(pointCheckResult.cell.times_observed) : String(pointCheckResult.cell.times_observed))}
                     </span>
                   </div>
                 )}
@@ -395,7 +707,9 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
                               {isBn ? toBnNum(h.return_period_years) : h.return_period_years}-{isBn ? "বছরের বন্যা" : "Year Return Period"}
                             </span>
                             <span className="font-bold text-brand-forest">
-                              {isBn ? "গভীরতা: " : "Depth: "}{isBn ? (h.depth_label.includes("Over 3m") ? "৩ মিটারের বেশি" : h.depth_label.includes("1-3m") ? "১ থেকে ৩ মিটার" : "০.৫ থেকে ১ মিটার") : h.depth_label}
+                              {h.depth_label
+                                ? `${isBn ? "গভীরতা: " : "Depth: "}${isBn ? DEPTH_BN[h.depth_label] || h.depth_label : h.depth_label}`
+                                : isBn ? "মডেলের বন্যা এলাকার বাইরে" : "Outside the modelled flood area"}
                             </span>
                           </div>
                         ))}

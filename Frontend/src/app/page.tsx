@@ -1167,7 +1167,7 @@ export function CitizenPortalApp({
                   />
                 )}
 
-                {(activeView === "map" || activeView === "alerts") &&
+                {activeView === "alerts" &&
                   !isForecastLoading &&
                   !hasForecast && (
                     <div
@@ -1180,8 +1180,8 @@ export function CitizenPortalApp({
                           : `No forecast for ${targetDate}.`}
                       </span>{" "}
                       {lang === "bn"
-                        ? "মানচিত্রে কোনো ঝুঁকির রং দেখানো হচ্ছে না। এর মানে ঝুঁকি নেই, তা নয়। অন্য তারিখ বেছে নিন।"
-                        : "The map shows no risk colours. This does not mean there is no risk. Choose another date."}
+                        ? "এর মানে ঝুঁকি নেই, তা নয়। অন্য তারিখ বেছে নিন।"
+                        : "This does not mean there is no risk. Choose another date."}
                     </div>
                   )}
 
@@ -1200,6 +1200,16 @@ export function CitizenPortalApp({
                     targetDate={targetDate}
                     lang={lang}
                     onChangeTargetDate={setTargetDate}
+                    isForecastLoading={isForecastLoading}
+                    userPlace={
+                      accountUser?.location
+                        ? {
+                            lng: accountUser.location.coordinates[0],
+                            lat: accountUser.location.coordinates[1],
+                            label: accountUser.location_label,
+                          }
+                        : null
+                    }
                   />
                 )}
 

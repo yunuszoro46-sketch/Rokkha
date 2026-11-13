@@ -62,26 +62,29 @@ export interface AlertItem {
   issued_at: string;
 }
 
+// Exactly what POST /geospatial/flood/check returns.
 export interface PointFloodCheck {
   district: {
     pcode: string;
     name: string;
     division: string;
-    flood_rank?: number;
+    // Place among the 64 districts by how often they flooded (1 = most often).
+    rank?: number;
     events_observed?: number;
     events_flooded?: number;
+    max_flooded_share?: number;
   } | null;
+  // The ~90 m map cell under the point. null = no cell data (e.g. the saved sample).
   cell: {
-    observed?: {
-      times_observed: number;
-      times_flooded: number;
-      flooded_event_ids: string[];
-      last_flooded_event_id: string | null;
-    };
+    times_observed: number;
+    times_flooded: number;
+    observed_event_ids?: string[];
+    flooded_event_ids?: string[];
+    // depth_label is null when the point is outside the modelled flood area.
     hazard?: Array<{
       return_period_years: number;
-      depth_class: number;
-      depth_label: string;
+      depth_class: number | null;
+      depth_label: string | null;
     }>;
     permanent_water?: boolean;
   } | null;
@@ -126,3 +129,30 @@ export interface ModelStatus {
   };
 }
 
+
+// One district in GET /geospatial/flood/satellite-observations/latest.
+export interface DistrictLatestObservation {
+  pcode: string;
+  name: string;
+  division: string;
+  // false = the radar can never map this district (hills, forest, city).
+  observable: boolean;
+  // null = no satellite pass in the last days (not "dry").
+  observation: SatelliteObservation | null;
+  days_ago: number | null;
+}
+
+export interface RegisteredAsset {
+  id: string;
+  name: string;
+  asset_type: string;
+  location: { type: "Point"; coordinates: [number, number] }; // [lng, lat]
+  criticality: string;
+}
+
+export interface RiverSite {
+  site_id: string;
+  name: string;
+  river: string | null;
+  location: { type: "Point"; coordinates: [number, number] }; // [lng, lat]
+}

@@ -5,7 +5,11 @@ import {
   SatelliteObservation,
   AssetNearResult,
   ModelStatus,
+  DistrictLatestObservation,
+  RegisteredAsset,
+  RiverSite,
 } from "../types/api";
+import sitesData from "../data/sites.json";
 import benchmarkData from "../data/benchmark_predictions.json";
 import floodHistoryData from "../data/district_flood_history.json";
 import satelliteObsData from "../data/satellite_observations.json";
@@ -188,7 +192,7 @@ export async function checkPointFlood(
       pcode: prop.pcode,
       name: prop.name,
       division: prop.parent_name || histDistrict?.division || "Bangladesh",
-      flood_rank: histDistrict?.rank,
+      rank: histDistrict?.rank,
       events_observed: histDistrict?.events_observed,
       events_flooded: histDistrict?.events_flooded,
     },
@@ -251,6 +255,83 @@ export async function getSatelliteObservations(
     unsupported: false,
     observations: result,
   };
+}
+
+/**
+ * The newest satellite pass of every district on or before `date` (at most
+ * 30 days old). For the "observed flooding" view of the map.
+ */
+export async function getLatestSatelliteObservations(
+  date: string
+): Promise<DistrictLatestObservation[]> {
+  const MAX_AGE_DAYS = 30;
+  try {
+    const res = await fetch(
+      `${API_BASE}/geospatial/flood/satellite-observations/latest?date=${date}&max_age_days=${MAX_AGE_DAYS}`
+    );
+    if (res.ok) {
+      const data = await res.json();
+      markLive("satellite");
+      return data.districts || [];
+    }
+  } catch {
+    // backend not reachable: saved sample below
+  }
+
+  // Saved sample: the same rule as the backend, applied to the saved passes.
+  // Days outside the sample's years simply have no observation.
+  markSample("satellite");
+  const day = new Date(`${date}T00:00:00Z`).getTime();
+  if (Number.isNaN(day)) return [];
+  const oldest = new Date(day - MAX_AGE_DAYS * 86400000).toISOString().slice(0, 10);
+
+  return ((floodHistoryData as any).districts || []).map((d: any) => {
+    const passes: SatelliteObservation[] = ((satelliteObsData as any)[d.pcode] || []).filter(
+      (o: SatelliteObservation) => o.date >= oldest && o.date <= date
+    );
+    const observation = passes.length > 0 ? passes[passes.length - 1] : null;
+    return {
+      pcode: d.pcode,
+      name: d.name,
+      division: d.division,
+      observable: SUPPORTED_PCODES.has(d.pcode),
+      observation,
+      days_ago: observation
+        ? Math.round((day - new Date(`${observation.date}T00:00:00Z`).getTime()) / 86400000)
+        : null,
+    };
+  });
+}
+
+/**
+ * Every place registered in the backend (hospitals, shelters, ...), for map markers.
+ * No saved sample: without the backend the list is empty, never invented.
+ */
+export async function getRegisteredAssets(): Promise<RegisteredAsset[]> {
+  try {
+    const res = await fetch(`${API_BASE}/assets`);
+    if (res.ok) {
+      const data = await res.json();
+      return data.assets || [];
+    }
+  } catch {
+    // backend not reachable
+  }
+  return [];
+}
+
+/** The river stations (GloFAS points) the backend follows. */
+export async function getRiverSites(): Promise<RiverSite[]> {
+  try {
+    const res = await fetch(`${API_BASE}/ingestion/sites?kind=river`);
+    if (res.ok) {
+      const data = await res.json();
+      return data.sites || [];
+    }
+  } catch {
+    // backend not reachable: saved copy of the backend's own site list
+  }
+  return ((sitesData as any).sites || []).filter((s: any) => s.kind === "river");
 }
 
 /**
