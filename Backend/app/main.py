@@ -87,6 +87,7 @@ from app.modules.ingestion.router import router as ingestion_router
 from app.modules.ingestion.repository import close_interrupted_runs
 from app.modules.prediction.router import router as prediction_router
 from app.modules.alerts.router import router as alerts_router
+from app.modules.accounts.router import router as accounts_router
 
 
 @asynccontextmanager
@@ -188,5 +189,10 @@ app.include_router(
 
 app.include_router(
     alerts_router,
+    prefix=settings.API_V1_PREFIX
+)
+
+app.include_router(
+    accounts_router,
     prefix=settings.API_V1_PREFIX
 )

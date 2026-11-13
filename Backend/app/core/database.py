@@ -78,6 +78,18 @@ class Database:
             [("target_date", ASCENDING), ("pcode", ASCENDING)], name="target_pcode"
         )
 
+        # Accounts: one account per email; MongoDB itself deletes expired
+        # logins and old wrong-password counters (TTL indexes).
+        await cls.db["users"].create_index([("email", ASCENDING)], name="email_unique", unique=True)
+        await cls.db["sessions"].create_index(
+            [("expires_at", ASCENDING)], name="expires_at_ttl", expireAfterSeconds=0
+        )
+        await cls.db["sessions"].create_index([("user_id", ASCENDING)], name="user_id")
+        await cls.db["login_failures"].create_index(
+            [("at", ASCENDING)], name="at_ttl", expireAfterSeconds=900
+        )
+        await cls.db["login_failures"].create_index([("email", ASCENDING)], name="email")
+
     @classmethod
     async def disconnect(cls):
 

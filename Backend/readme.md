@@ -98,7 +98,8 @@ establish flood risk.
 | Recent rain for the days ERA5 lacks (`rain_recent`, GFS) | Implemented |
 | Daily update script (refresh data, predict today, list alerts) | Implemented (start it by hand or with cron) |
 | Trained flood model with measured results | Implemented: better than the baselines on 2023–2024 and again on 2025; weak on new floods (see [section 13](#13-the-flood-model-design-and-measured-results)) |
-| Authentication, authorization, rate limiting | Not implemented |
+| User accounts: register, log in, save a home location, flood report for it (`/auth`) | Implemented (passwords hashed with scrypt; login slowed after 5 wrong passwords) |
+| Roles (admin, rescue), protection of the write endpoints, general rate limiting | Not implemented |
 
 Weather observations are submitted through the API. The weather module does **not** fetch live weather.
 
@@ -172,7 +173,8 @@ Rokkha/
     │   │   ├── weather/           weather observations
     │   │   ├── ingestion/         rain and river data from Open-Meteo
     │   │   ├── prediction/        model inputs, training table, flood predictions
-    │   │   └── alerts/            alerts from predictions + assets at risk
+    │   │   ├── alerts/            alerts from predictions + assets at risk
+    │   │   └── accounts/          user accounts, login, home location, report for it
     │   └── main.py                app, startup/shutdown, routers, CORS
     ├── data/
     │   ├── boundaries/            Dhaka District + 64 districts (+ README)
@@ -185,7 +187,7 @@ Rokkha/
     ├── docs/
     │   └── FRONTEND_API_GUIDE.md  guide for the frontend developer
     ├── scripts/                   rebuild the data files from their sources
-    ├── tests/                     289 automated tests
+    ├── tests/                     308 automated tests
     ├── ml/                        (placeholder)
     ├── pytest.ini
     ├── requirements.txt           pinned API dependencies
@@ -365,6 +367,41 @@ A trained model is delivered in `data/models/`. **If those files are missing** `
 `not_trained`, `POST /predictions` answers **503**, and there are no alerts. The backend never returns invented
 predictions. Alert messages state at most "more than 95%", because the model's highest probabilities are too
 confident (section 13).
+
+### User accounts and the report for the user's location
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| POST | `/auth/register` | Create an account from `{"name", "email", "password"}` (password at least 8 characters). Returns a login token |
+| POST | `/auth/login` | Log in with `{"email", "password"}`. Returns a login token valid for 30 days |
+| POST | `/auth/logout` | End this login |
+| GET | `/auth/me` | The logged-in user |
+| DELETE | `/auth/me` | Delete the account, its saved location and all its logins |
+| PUT | `/auth/me/location` | Save the user's place: `{"location": <GeoJSON Point>, "label": "Home"}`. Must be inside Bangladesh |
+| DELETE | `/auth/me/location` | Remove the saved place |
+| GET | `/auth/me/report?target_date=` | Flood report for the saved place (default day: today, UTC) |
+
+Every route except register and login needs the header `Authorization: Bearer <token>`; without a valid token
+the answer is **401**.
+
+The report combines what the backend already knows for that point: the district, the stored forecast for the
+district on that day (`forecast_status` is `available` or `no_forecast_for_this_day`; another day's forecast is
+never used in its place), the observed flood history and modelled hazard of the ~90 m cell under the point, and
+the registered assets within 25 km, nearest first.
+
+How the login is protected:
+
+- **Passwords are never stored.** Only a scrypt hash is (slow and memory-hungry on purpose, with a random salt
+  per user; Python standard library, no extra dependency).
+- **Login tokens are random (256 bits) and only their SHA-256 hash is stored**, so a leaked database gives no
+  working logins. MongoDB deletes expired logins by itself.
+- **Wrong email and wrong password give the same 401 answer**, and take the same time.
+- **After 5 wrong passwords for one email within 15 minutes** further logins for it answer **429** until the
+  15 minutes have passed.
+- **A user can only read their own profile, location and report.**
+
+Not covered yet: there are no roles, so the asset and ingestion endpoints are still open to anyone; no email
+is sent (no address check, no password reset); no general rate limiting.
 
 ## 7. Try the API without writing code
 
@@ -581,7 +618,7 @@ Allowed by default: `http://localhost:3000` and `http://localhost:5173`. Add oth
 python -m pytest -v
 ```
 
-Expected: **289 passed**.
+Expected: **308 passed**.
 
 Tests that store data use a **separate local test MongoDB in Docker**, never Atlas:
 
@@ -595,6 +632,7 @@ test. Use another test server with `TEST_MONGODB_URI=mongodb://host:port`.
 
 | Test file | Covers |
 | --- | --- |
+| `test_api_accounts.py` | Register, log in and out, wrong passwords, home location, report for it, account deletion |
 | `test_api_geospatial.py` | Geometry tools, locations, health, CORS |
 | `test_api_boundaries.py` | Dhaka boundaries |
 | `test_api_waterways.py` | Rivers, canals, nearest waterway |
@@ -637,7 +675,8 @@ Planned items are not claims of completed functionality.
 | New satellite passes for live use (fetched by the daily update) | Done |
 | Check the model on 2025, a year never used so far | Done (section 13) |
 | Check on 2026 (kept untouched for the next model change) | Data stored 12 Nov 2026 (rain 1 Mar–5 Nov, river 15 Feb–10 Nov, satellite passes); **not measured yet on purpose** |
-| Authentication and rate limiting before any public use | Planned |
+| User accounts and login, with a flood report for the user's saved location | Done (`/auth`) |
+| Roles (admin, rescue), protecting asset and ingestion endpoints, general rate limiting | Planned, before any public use |
 
 ## 13. The flood model: design and measured results
 
@@ -763,7 +802,8 @@ When contributing:
 - Never commit `.env` or secrets.
 - Update this README when behaviour changes.
 
-The backend has no authentication, authorization or rate limiting. Keep it in a controlled development environment
-until those safeguards exist.
+User accounts exist (`/auth`), but there are no roles yet: creating or deleting assets and starting ingestion
+runs are open to anyone who can reach the server, and there is no general rate limiting. Keep the backend in a
+controlled environment until those safeguards exist.
 
 **Climate Shield (Rokkha) — building toward reliable flood-risk intelligence for Bangladesh.**
