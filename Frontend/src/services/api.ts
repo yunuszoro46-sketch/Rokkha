@@ -304,12 +304,13 @@ export async function getLatestSatelliteObservations(
 }
 
 /**
- * Every place registered in the backend (hospitals, shelters, ...), for map markers.
+ * The places registered in one district (hospitals, shelters, ...), for map
+ * markers. One district at a time: the whole country is thousands of places.
  * No saved sample: without the backend the list is empty, never invented.
  */
-export async function getRegisteredAssets(): Promise<RegisteredAsset[]> {
+export async function getRegisteredAssets(districtPcode: string): Promise<RegisteredAsset[]> {
   try {
-    const res = await fetch(`${API_BASE}/assets`);
+    const res = await fetch(`${API_BASE}/assets?district_pcode=${districtPcode}`);
     if (res.ok) {
       const data = await res.json();
       return data.assets || [];

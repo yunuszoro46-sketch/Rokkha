@@ -13,6 +13,8 @@ import {
   Info,
   ChevronLeft,
   ChevronRight,
+  Siren,
+  ShieldCheck,
 } from "lucide-react";
 
 export type CitizenView =
@@ -22,6 +24,8 @@ export type CitizenView =
   | "satellite"
   | "hydro"
   | "shelters"
+  | "rescue"
+  | "admin"
   | "login";
 
 interface SideDashboardProps {
@@ -33,6 +37,8 @@ interface SideDashboardProps {
   isCollapsed: boolean;
   onToggleCollapse: () => void;
   lang?: Language;
+  /** Role of the logged-in account; decides which extra pages are listed. */
+  role?: string | null;
 }
 
 export const SideDashboard: React.FC<SideDashboardProps> = ({
@@ -44,6 +50,7 @@ export const SideDashboard: React.FC<SideDashboardProps> = ({
   isCollapsed,
   onToggleCollapse,
   lang = "en",
+  role = null,
 }) => {
   const t = UI_TEXT[lang];
 
@@ -85,6 +92,26 @@ export const SideDashboard: React.FC<SideDashboardProps> = ({
       label: t.side_shelters,
       icon: LifeBuoy,
     },
+    // Listed only for the roles that can use them. The backend checks the
+    // role again on every call, so hiding these is a convenience, not the lock.
+    ...(role === "rescuer" || role === "admin"
+      ? [
+          {
+            id: "rescue" as CitizenView,
+            label: lang === "bn" ? "সাহায্যের অনুরোধ (উদ্ধারকারী)" : "Requests for Help (Rescuers)",
+            icon: Siren,
+          },
+        ]
+      : []),
+    ...(role === "admin"
+      ? [
+          {
+            id: "admin" as CitizenView,
+            label: lang === "bn" ? "অ্যাডমিন: ভূমিকা ও স্থান" : "Admin: Roles & Places",
+            icon: ShieldCheck,
+          },
+        ]
+      : []),
   ];
 
   return (

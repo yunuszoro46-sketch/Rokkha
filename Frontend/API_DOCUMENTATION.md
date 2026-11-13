@@ -433,6 +433,30 @@ The map has two views that are never blended: **Model forecast** (alert / watch 
 written on the district) and **Observed by satellite** (share of the district under unusual water). A day
 without a forecast is drawn grey, not in the "no alert" colour.
 
+### 3.6c. Rescue requests, roles and admin (added 13 Nov 2026)
+
+Implemented in `src/services/rescue.ts`; full shapes in `Backend/docs/FRONTEND_API_GUIDE.md`, sections 3 I and 3 J.
+
+| Method | Path | Who | Used by |
+|---|---|---|---|
+| `POST` | `/sos` | anyone | `SosCenter` (the red SOS button on every page) |
+| `GET` | `/sos/status/{client_id}` | the sender | `SosCenter`, every 20 seconds while a request is open |
+| `POST` | `/sos/status/{client_id}/cancel` | the sender | "I no longer need help" |
+| `GET` | `/sos?status=` | rescuer, admin | `RescuePanel` (`/rescue`), refreshed every 30 seconds |
+| `PATCH` | `/sos/{id}` | rescuer, admin | the status buttons in `RescuePanel` |
+| `GET` | `/admin/users`, `PATCH` `/admin/users/{id}/role` | admin | `AdminPanel` (`/admin`) |
+| `POST` / `DELETE` | `/assets`, `/assets/{id}` | admin (on the hosted backend) | `AdminPanel` |
+
+Rules the SOS screen follows:
+
+- A request is saved in `localStorage` (`rokkha_sos_queue`) **before** it is sent, with a random `client_id`
+  that never changes. A retry sends exactly the same request, so the server never stores it twice.
+- The screen says "Saved on this phone. NOT sent yet" until the server has answered, and offers a 999 call and
+  an SMS with the location. It never says help is coming; it shows the status the rescuers set.
+- `user.role` decides which menu entries appear (`rescue`, `admin`). The backend checks the role on every call.
+- Map markers for registered places are loaded for the selected district only (`/assets?district_pcode=`):
+  the whole country is about 3,200 places, most of them from OpenStreetMap (`source: "OpenStreetMap"`).
+
 ### 3.7. Saved sample rules (added 13 Nov 2026)
 
 - When the backend cannot be reached, functions in `src/services/api.ts` use the files in `src/data` and call
@@ -449,8 +473,8 @@ without a forecast is drawn grey, not in the "no alert" colour.
 
 The following features **do NOT exist in the backend today**. The frontend must NOT simulate or fabricate responses for them without clear disclaimer indicators:
 
-1. **Roles:** every account is a normal user. No admin or rescue role, no password reset, no email check.
-2. **Citizen SOS / Rescue Dispatch:** No SOS dispatch, responder queue, or rescue mission schemas.
+1. **Account recovery:** no password reset, no email check.
+2. **Rescue teams and missions:** Requests for help and their status exist (3.6c); teams, boats and routes do not.
 3. **Automated Notification Subscriptions:** No email, SMS, or push webhook notification engines.
 4. **Official Warning Authority:** The backend produces ML probability estimates; official disaster warnings must reference FFWC / BWDB.
 

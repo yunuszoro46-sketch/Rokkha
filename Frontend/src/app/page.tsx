@@ -80,6 +80,9 @@ import {
 import { AssetNearResult } from "@/types/api";
 import { DataSourceBanner } from "@/components/DataSourceBanner";
 import { MyLocationReport } from "@/components/MyLocationReport";
+import { SosCenter } from "@/components/SosCenter";
+import { RescuePanel } from "@/components/RescuePanel";
+import { AdminPanel } from "@/components/AdminPanel";
 import { AccountUser, getCurrentUser, logOut } from "@/services/auth";
 
 // Dynamically import Leaflet map for interactive exploration
@@ -371,6 +374,18 @@ const PAGE_METADATA: Record<
       subtitle:
         "Locate registered flood shelters, hospitals, clinics, and schools near any district or map coordinate.",
     },
+    rescue: {
+      eyebrow: "RESCUE COORDINATION",
+      title: "Requests for Help",
+      subtitle:
+        "Requests sent with the SOS button, longest-waiting first. For rescuer and admin accounts only.",
+    },
+    admin: {
+      eyebrow: "ADMINISTRATION",
+      title: "Roles & Registered Places",
+      subtitle:
+        "Give accounts the rescuer or admin role, and add or remove registered places. For admin accounts only.",
+    },
   },
   bn: {
     map: {
@@ -402,6 +417,18 @@ const PAGE_METADATA: Record<
       title: "নিকটস্থ জরুরি আশ্রয়কেন্দ্র",
       subtitle:
         "যে কোনো জেলা বা মানচিত্রের অবস্থানের কাছাকাছি নিবন্ধিত বন্যা আশ্রয়কেন্দ্র, হাসপাতাল ও বিদ্যালয় খুঁজুন।",
+    },
+    rescue: {
+      eyebrow: "উদ্ধার সমন্বয়",
+      title: "সাহায্যের অনুরোধ",
+      subtitle:
+        "জরুরি সাহায্য বোতাম দিয়ে পাঠানো অনুরোধ; যিনি সবচেয়ে বেশি অপেক্ষা করছেন তিনি আগে। শুধু উদ্ধারকারী ও অ্যাডমিন অ্যাকাউন্টের জন্য।",
+    },
+    admin: {
+      eyebrow: "প্রশাসন",
+      title: "ভূমিকা ও নিবন্ধিত স্থান",
+      subtitle:
+        "অ্যাকাউন্টকে উদ্ধারকারী বা অ্যাডমিনের ভূমিকা দিন, এবং নিবন্ধিত স্থান যোগ করুন বা মুছুন। শুধু অ্যাডমিন অ্যাকাউন্টের জন্য।",
     },
   },
 };
@@ -756,6 +783,8 @@ export function CitizenPortalApp({
         path === "satellite" ||
         path === "hydro" ||
         path === "shelters" ||
+        path === "rescue" ||
+        path === "admin" ||
         path === "login"
       ) {
         setActiveView(path);
@@ -788,6 +817,7 @@ export function CitizenPortalApp({
           onOpenAbout={() => setIsAboutOpen(true)}
           activeAlertCount={alerts.length}
           isBackendConnected={isBackendConnected}
+          role={accountUser?.role || null}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           lang={lang}
@@ -1325,6 +1355,27 @@ export function CitizenPortalApp({
                     lang={lang}
                   />
                 )}
+
+                {/* Rescuers: requests for help */}
+                {activeView === "rescue" && (
+                  <RescuePanel
+                    user={accountUser}
+                    lang={lang}
+                    onOpenLogin={() => navigateToPage("login")}
+                  />
+                )}
+
+                {/* Admins: roles and registered places */}
+                {activeView === "admin" && (
+                  <AdminPanel
+                    user={accountUser}
+                    lang={lang}
+                    onOpenLogin={() => navigateToPage("login")}
+                    districtPcode={selectedPcode}
+                    districtName={selectedName}
+                    pickedPoint={inspectedPoint}
+                  />
+                )}
               </section>
             )}
           </div>
@@ -1708,6 +1759,22 @@ export function CitizenPortalApp({
         </main>
       </div>
       {/* Portal Access Login/Register Modal & Page (Matching User Reference Image) */}
+      {activeView !== "login" && !isLoginOpen && (
+        <SosCenter
+          lang={lang}
+          contactName={accountUser?.name || ""}
+          savedPlace={
+            accountUser?.location
+              ? {
+                  lng: accountUser.location.coordinates[0],
+                  lat: accountUser.location.coordinates[1],
+                  label: accountUser.location_label,
+                }
+              : null
+          }
+        />
+      )}
+
       <PortalAccessPage
         isOpen={isLoginOpen || activeView === "login"}
         onClose={() => {

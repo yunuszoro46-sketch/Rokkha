@@ -199,15 +199,25 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
     };
   }, [targetDate]);
 
-  // Registered places and river stations: fetched once.
+  // River stations: fetched once.
   useEffect(() => {
     let mounted = true;
-    getRegisteredAssets().then((rows) => mounted && setAssets(rows));
     getRiverSites().then((rows) => mounted && setRiverSites(rows));
     return () => {
       mounted = false;
     };
   }, []);
+
+  // Registered places of the selected district (hospitals, clinics, shelters).
+  useEffect(() => {
+    let mounted = true;
+    setAssets([]);
+    if (!selectedDistrictPcode) return;
+    getRegisteredAssets(selectedDistrictPcode).then((rows) => mounted && setAssets(rows));
+    return () => {
+      mounted = false;
+    };
+  }, [selectedDistrictPcode]);
 
   // Initialize Leaflet Map (Note: Leaflet uses [lat, lng] order per FRONTEND_API_GUIDE.md)
   useEffect(() => {
@@ -563,7 +573,7 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
           </span>
           <span className="flex items-center gap-1.5 text-sm text-brand-forest/70">
             <span className="inline-block w-2.5 h-2.5 rounded-sm bg-white" style={{ border: "2px solid #7C3AED" }}></span>
-            {isBn ? "নিবন্ধিত স্থান" : "Registered place"}
+            {isBn ? "নির্বাচিত জেলার হাসপাতাল, ক্লিনিক, আশ্রয়কেন্দ্র" : "Hospitals, clinics, shelters of the selected district"}
           </span>
           {userPlace && (
             <span className="flex items-center gap-1.5 text-sm text-brand-forest/70">

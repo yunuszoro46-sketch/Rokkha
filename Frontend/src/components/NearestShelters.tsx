@@ -128,6 +128,11 @@ export const NearestShelters: React.FC<NearestSheltersProps> = ({
       </CardHeader>
 
       <CardContent className="pt-5 space-y-3">
+        <p className="text-sm text-brand-forest/70">
+          {isBn
+            ? "বেশিরভাগ স্থান OpenStreetMap থেকে নেওয়া (© OpenStreetMap contributors) এবং সরেজমিনে যাচাই করা নয়। তালিকা সম্পূর্ণ নয়: এখানে না থাকলেও আশ্রয়কেন্দ্র থাকতে পারে। জরুরি প্রয়োজনে ৯৯৯ নম্বরে কল করুন।"
+            : "Most places come from OpenStreetMap (© OpenStreetMap contributors) and are not checked on the ground. The list is not complete: a shelter may exist even if it is not shown here. In an emergency call 999."}
+        </p>
         {isLoading ? (
           <div className="py-6 text-center text-base text-brand-sage animate-pulse">
             {t.shelters_loading}

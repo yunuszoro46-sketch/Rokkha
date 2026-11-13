@@ -148,6 +148,9 @@ export interface RegisteredAsset {
   asset_type: string;
   location: { type: "Point"; coordinates: [number, number] }; // [lng, lat]
   criticality: string;
+  occupancy?: number | null;
+  // "OpenStreetMap" for imported places; null/absent = entered by an admin.
+  source?: string | null;
 }
 
 export interface RiverSite {

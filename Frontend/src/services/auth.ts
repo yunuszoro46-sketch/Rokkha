@@ -18,10 +18,15 @@ export interface GeoPoint {
   coordinates: [number, number]; // [longitude, latitude]
 }
 
+export type Role = "user" | "rescuer" | "admin";
+
 export interface AccountUser {
   id: string;
   name: string;
   email: string;
+  // What the account may do. Decided by the backend only; the page uses it
+  // to choose which screens to show, the backend to allow or refuse calls.
+  role: Role;
   location: GeoPoint | null;
   location_label: string | null;
   district: { pcode: string; name: string; division: string } | null;
@@ -91,7 +96,8 @@ function readDetail(body: any, fallback: string): string {
   return fallback;
 }
 
-async function call<T>(path: string, init: RequestInit = {}, withToken = true): Promise<T> {
+/** One call to the backend, with the login token when there is one. Throws AuthError. */
+export async function call<T>(path: string, init: RequestInit = {}, withToken = true): Promise<T> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   const token = getToken();
   if (withToken && token) headers.Authorization = `Bearer ${token}`;
