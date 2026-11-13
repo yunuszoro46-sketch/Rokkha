@@ -1,4 +1,4 @@
-
+from datetime import date, datetime, timezone
 from datetime import date
 
 from fastapi import APIRouter, HTTPException, Query, status
@@ -29,6 +29,7 @@ from app.modules.geospatial.schemas import (
     DistrictFloodRankingResponse,
     DistrictFloodHistoryResponse,
     DistrictSatelliteObservationsResponse,
+    LatestSatelliteObservationsResponse,
     FloodCheckRequest,
     FloodCheckResponse
 )
@@ -51,6 +52,7 @@ from app.modules.geospatial.service import (
     rank_flood_districts,
     get_district_flood_history,
     get_district_satellite_observations,
+    get_latest_satellite_observations,
     check_flood_at_point
 )
 
@@ -369,6 +371,30 @@ def get_flood_district_history(pcode: str):
         )
 
     return history
+
+
+@router.get(
+    "/flood/satellite-observations/latest",
+    response_model=LatestSatelliteObservationsResponse
+)
+def get_flood_latest_satellite_observations(
+    day: date | None = Query(
+        default=None,
+        alias="date",
+        description="Newest pass on or before this UTC day. Default: today."
+    ),
+    max_age_days: int = Query(
+        default=30,
+        ge=1,
+        le=366,
+        description="Ignore passes older than this many days before the date"
+    )
+):
+
+    # One call for a map of all 64 districts.
+    return get_latest_satellite_observations(
+        day or datetime.now(timezone.utc).date(), max_age_days
+    )
 
 
 @router.get(

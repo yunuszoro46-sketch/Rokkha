@@ -1,4 +1,5 @@
 import math
+from datetime import date, timedelta
 from functools import lru_cache
 
 import numpy
@@ -718,6 +719,57 @@ def get_district_satellite_observations(pcode: str, start_date, end_date, min_ob
         }
 
     return None
+
+
+def get_latest_satellite_observations(day, max_age_days: int):
+
+    # For a map: the newest labelled pass per district, never newer than `day`.
+    data = get_satellite_observations()
+    rule = data["label_rule"]
+    oldest = (day - timedelta(days=max_age_days)).isoformat()
+    newest = day.isoformat()
+
+    districts = []
+
+    for district in data["districts"]:
+
+        # Rows are in date order; only passes that saw enough of the district count.
+        labelled = [row for row in district["rows"] if row[1] >= rule["min_observed_share"]]
+        recent = [row for row in labelled if oldest <= row[0] <= newest]
+
+        observation = None
+        days_ago = None
+
+        if recent:
+            pass_day, observed, flooded, advisory = recent[-1]
+            observation = {
+                "date": pass_day,
+                "observed_share": observed,
+                "flooded_share": flooded,
+                "advisory_share": advisory,
+                "flooded": flooded >= rule["flooded_share_threshold"],
+            }
+            days_ago = (day - date.fromisoformat(pass_day)).days
+
+        districts.append({
+            "pcode": district["pcode"],
+            "name": district["name"],
+            "division": district["division"],
+            "observable": bool(labelled),
+            "observation": observation,
+            "days_ago": days_ago,
+        })
+
+    return {
+        "date": day,
+        "max_age_days": max_age_days,
+        "kind": data["kind"],
+        "count": sum(d["observation"] is not None for d in districts),
+        "districts": districts,
+        "label_rule": rule,
+        "attribution": SATELLITE_ATTRIBUTION,
+        "limitations": SATELLITE_LIMITATIONS,
+    }
 
 
 def _events_from_bits(bits: int, event_ids) -> list[str]:

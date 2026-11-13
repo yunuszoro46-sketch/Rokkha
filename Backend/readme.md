@@ -188,7 +188,7 @@ Rokkha/
     ├── docs/
     │   └── FRONTEND_API_GUIDE.md  guide for the frontend developer
     ├── scripts/                   rebuild the data files from their sources
-    ├── tests/                     313 automated tests
+    ├── tests/                     319 automated tests
     ├── ml/                        (placeholder)
     ├── pytest.ini
     ├── requirements.txt           pinned API dependencies
@@ -374,6 +374,7 @@ All module paths start with `/api/v1`. Full request and response shapes: `/docs`
 | GET | `/geospatial/flood/districts?limit=&division=` | 64 districts ranked by observed flood frequency |
 | GET | `/geospatial/flood/districts/{pcode}` | One district, event by event |
 | GET | `/geospatial/flood/districts/{pcode}/satellite-observations?start_date=&end_date=&min_observed_share=` | Satellite flood timeline of one district (Copernicus GFM): every Sentinel-1 pass, with `flooded` true/false/null |
+| GET | `/geospatial/flood/satellite-observations/latest?date=&max_age_days=` | For a map: the newest satellite pass of every district on or before a day (default today, at most 30 days old), in one call |
 | POST | `/geospatial/flood/check` | Flood history and modelled hazard at any point |
 
 ### Ingestion
@@ -659,7 +660,7 @@ Allowed by default: `http://localhost:3000` and `http://localhost:5173`. Add oth
 python -m pytest -v
 ```
 
-Expected: **313 passed**.
+Expected: **319 passed**.
 
 Tests that store data use a **separate local test MongoDB in Docker**, never Atlas:
 

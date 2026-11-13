@@ -241,3 +241,75 @@ def test_a_rebuilt_observations_file_is_read_without_a_restart(tmp_path, monkeyp
     write("2026-11-09", 2_000_000_000)
     assert geo.get_satellite_observations()["districts"][0]["rows"][0][0] == "2026-11-09"
     assert get_labelled_passes()["BD6090"][0][0].isoformat() == "2026-11-09"
+
+
+# ==========================================
+# LATEST PASS FOR EVERY DISTRICT (one call for a map)
+# ==========================================
+
+LATEST = "/api/v1/geospatial/flood/satellite-observations/latest"
+
+
+def test_latest_gives_one_row_per_district(client):
+
+    response = client.get(LATEST, params={"date": "2022-06-18"})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["date"] == "2022-06-18"
+    assert body["kind"] == "observed"
+    assert len(body["districts"]) == 64
+    assert body["count"] == sum(d["observation"] is not None for d in body["districts"])
+    assert body["attribution"] and body["limitations"]
+
+
+def test_latest_matches_the_district_timeline_and_never_looks_ahead(client):
+
+    latest = client.get(LATEST, params={"date": "2022-06-18"}).json()
+    row = next(d for d in latest["districts"] if d["pcode"] == SUNAMGANJ)
+
+    timeline = observations(
+        client, SUNAMGANJ, start_date="2022-05-19", end_date="2022-06-18"
+    ).json()["observations"]
+
+    assert row["observable"] is True
+    assert row["observation"] == timeline[-1]
+    assert row["observation"]["date"] <= "2022-06-18"
+    assert row["days_ago"] == (date(2022, 6, 18) - date.fromisoformat(row["observation"]["date"])).days
+
+
+def test_latest_marks_districts_the_radar_cannot_observe(client):
+
+    body = client.get(LATEST, params={"date": "2022-06-18"}).json()
+
+    blind = {d["pcode"] for d in body["districts"] if not d["observable"]}
+
+    assert blind == NEVER_LABELLED
+    assert all(d["observation"] is None for d in body["districts"] if not d["observable"])
+
+
+def test_latest_has_no_observation_when_the_last_pass_is_too_old(client):
+
+    # January: the archive holds April-November passes only, so nothing recent exists.
+    body = client.get(LATEST, params={"date": "2022-01-20"}).json()
+
+    assert body["count"] == 0
+    assert all(d["observation"] is None and d["days_ago"] is None for d in body["districts"])
+    # ... but an observable district is still marked observable: "no recent pass", not "blind".
+    assert next(d for d in body["districts"] if d["pcode"] == SUNAMGANJ)["observable"] is True
+
+
+def test_latest_max_age_can_be_widened(client):
+
+    narrow = client.get(LATEST, params={"date": "2022-06-18", "max_age_days": 1}).json()
+    wide = client.get(LATEST, params={"date": "2022-06-18", "max_age_days": 30}).json()
+
+    assert narrow["count"] < wide["count"]
+    assert all(d["days_ago"] <= 1 for d in narrow["districts"] if d["observation"])
+
+
+def test_latest_rejects_bad_parameters(client):
+
+    assert client.get(LATEST, params={"date": "yesterday"}).status_code == 422
+    assert client.get(LATEST, params={"date": "2022-06-18", "max_age_days": 0}).status_code == 422
+    assert client.get(LATEST, params={"date": "2022-06-18", "max_age_days": 400}).status_code == 422

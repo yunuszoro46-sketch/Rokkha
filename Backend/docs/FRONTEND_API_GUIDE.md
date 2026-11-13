@@ -311,6 +311,25 @@ the district:
   `count: 0`: radar can't map floods under hills, forest or city. Show "satellite can't observe this district".
 - These are **observations**, not forecasts. Show the `attribution` (Copernicus) and the `limitations`.
 
+**Observed-flooding map (new):** `GET /geospatial/flood/satellite-observations/latest?date=2022-06-18`
+returns one row for each of the 64 districts in a single call:
+
+```json
+{"pcode": "BD6090", "name": "Sunamganj", "division": "Sylhet", "observable": true,
+ "observation": {"date": "2022-06-17", "observed_share": 0.9, "flooded_share": 0.18, "advisory_share": 0.2, "flooded": true},
+ "days_ago": 1}
+```
+
+(Numbers show the shape only.)
+
+- `observation` is the newest pass on or before `date` (default: today) that saw at least half the district,
+  and is at most `max_age_days` old (default 30). It never looks past `date`.
+- `observation: null` with `observable: true` → "no recent satellite pass" (for example in the dry months,
+  when no passes are processed). With `observable: false` → "satellites cannot observe this district".
+  Neither means dry.
+- Colour by `flooded_share` and show `days_ago` ("seen 2 days ago"). This is an **observed** layer: keep it as a
+  separate view from the forecast colours, never blended with them.
+
 Try Sunamganj 2022: `/geospatial/flood/districts/BD6090/satellite-observations?start_date=2022-05-01&end_date=2022-07-31`
 (peak 58.6 % on 23 May).
 
