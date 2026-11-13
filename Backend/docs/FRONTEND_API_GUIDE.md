@@ -334,8 +334,11 @@ Try Sunamganj 2022: `/geospatial/flood/districts/BD6090/satellite-observations?s
 (peak 58.6 % on 23 May).
 
 `/flood/check` returns `{"district": {...} | null, "cell": {...} | null}` —
-both `null` when the point is outside Bangladesh. `cell` has the same
-fields as the exposure `observed`/`hazard` parts (plus `permanent_water`).
+both `null` when the point is outside Bangladesh. The fields sit directly in
+`cell` (there is no `cell.observed` object): `cell.times_observed`, `cell.times_flooded`,
+`cell.flooded_event_ids`, `cell.permanent_water` and `cell.hazard[]` (`depth_label` is `null` outside the
+modelled flood area; labels are `"< 1 m"`, `"1 to 3 m"`, `"3 to 10 m"`, `"> 10 m"`). The district's place in
+the ranking is `district.rank`.
 Good for "click anywhere on the map".
 
 ### D. Dhaka boundaries and rivers (Dhaka District only)
