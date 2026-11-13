@@ -60,48 +60,21 @@ export const RainRiverCharts: React.FC<RainRiverChartsProps> = ({
       if (!mounted) return;
       setIsLoading(false);
 
-      if (rainRes && rainRes.values) {
-        setRainData(
-          rainRes.values.map((v: any) => ({
-            date: v.date?.slice(5) || v.time?.slice(5),
-            precipitation: v.value ?? 0,
-            isForecast: v.is_forecast,
-          }))
-        );
-      } else {
-        setRainData([
-          { date: "06-12", precipitation: 42.5, isForecast: false },
-          { date: "06-13", precipitation: 68.2, isForecast: false },
-          { date: "06-14", precipitation: 115.0, isForecast: false },
-          { date: "06-15", precipitation: 148.4, isForecast: false },
-          { date: "06-16", precipitation: 230.1, isForecast: false },
-          { date: "06-17", precipitation: 262.0, isForecast: false },
-          { date: "06-18", precipitation: 185.3, isForecast: false },
-          { date: "06-19", precipitation: 92.0, isForecast: true },
-          { date: "06-20", precipitation: 45.0, isForecast: true },
-        ]);
-      }
-
-      if (riverRes && riverRes.values) {
-        setRiverData(
-          riverRes.values.map((v: any) => ({
-            date: v.date?.slice(5) || v.time?.slice(5),
-            discharge: v.value ?? 0,
-          }))
-        );
-      } else {
-        setRiverData([
-          { date: "06-12", discharge: 1240 },
-          { date: "06-13", discharge: 1890 },
-          { date: "06-14", discharge: 2650 },
-          { date: "06-15", discharge: 3980 },
-          { date: "06-16", discharge: 5420 },
-          { date: "06-17", discharge: 6890 },
-          { date: "06-18", discharge: 7120 },
-          { date: "06-19", discharge: 5800 },
-          { date: "06-20", discharge: 4300 },
-        ]);
-      }
+      // Only values the backend (or its saved sample) really has. A missing day
+      // stays empty (null): it must not be drawn as 0 mm or 0 m³/s.
+      setRainData(
+        (rainRes?.values || []).map((v: any) => ({
+          date: v.date?.slice(5, 10),
+          precipitation: v.missing ? null : v.precipitation_mm ?? null,
+          isForecast: v.is_forecast,
+        }))
+      );
+      setRiverData(
+        (riverRes?.values || []).map((v: any) => ({
+          date: v.date?.slice(5, 10),
+          discharge: v.missing ? null : v.discharge_m3s ?? null,
+        }))
+      );
     });
 
     return () => {
@@ -138,6 +111,12 @@ export const RainRiverCharts: React.FC<RainRiverChartsProps> = ({
         {isLoading ? (
           <div className="py-10 text-center text-base text-[#78958A] animate-pulse">
             {t.hydro_loading}
+          </div>
+        ) : (activeTab === "rain" ? rainData : riverData).length === 0 ? (
+          <div className="py-10 text-center text-base text-[#5C6863]">
+            {lang === "bn"
+              ? "এই তারিখগুলোর জন্য কোনো তথ্য পাওয়া যায়নি।"
+              : "No data available for these dates."}
           </div>
         ) : activeTab === "rain" ? (
           <div className="space-y-3">

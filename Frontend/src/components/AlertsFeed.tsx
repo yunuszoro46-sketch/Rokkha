@@ -23,6 +23,8 @@ interface AlertsFeedProps {
   alerts: AlertItem[];
   targetDate: string;
   isLoading: boolean;
+  /** false = no forecast exists for this day (different from "no alerts"). */
+  hasForecast?: boolean;
   lang?: Language;
   onSelectDistrict: (pcode: string, name: string) => void;
 }
@@ -31,6 +33,7 @@ export const AlertsFeed: React.FC<AlertsFeedProps> = ({
   alerts,
   targetDate,
   isLoading,
+  hasForecast = true,
   lang = "en",
   onSelectDistrict,
 }) => {
@@ -53,7 +56,9 @@ export const AlertsFeed: React.FC<AlertsFeedProps> = ({
         <span className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-[#FEE2E2] text-[#991B1B] border border-[#FCA5A5] uppercase tracking-wide">
           {alerts.length > 0
             ? lang === "bn" ? "পদক্ষেপ প্রয়োজন" : "Action Required"
-            : lang === "bn" ? "কোন সতর্কতা নেই" : "Normal"}
+            : !hasForecast
+            ? lang === "bn" ? "পূর্বাভাস নেই" : "No forecast"
+            : lang === "bn" ? "কোন সতর্কতা নেই" : "No alerts"}
         </span>
       </CardHeader>
 
@@ -81,7 +86,7 @@ export const AlertsFeed: React.FC<AlertsFeedProps> = ({
           {isAdvisoryOpen && (
             <p className="mt-3 text-xs sm:text-sm text-[#4B5563] leading-relaxed">
               {lang === "bn"
-                ? `বন্যা সতর্কতাগুলো কৃত্রিম বুদ্ধিমত্তা ও বৃষ্টিপাত বিশ্লেষণের মাধ্যমে প্রণীত। ২০২২-০৬-১৮ তারিখের জন্য নির্ণীত সতর্কতামূলক পূর্বাভাস। দাপ্তরিক তথ্যের জন্য এফএফডব্লিউসি (FFWC) বুলেটিন দেখুন।`
+                ? `বন্যা সতর্কতাগুলো কৃত্রিম বুদ্ধিমত্তা ও বৃষ্টিপাত বিশ্লেষণের মাধ্যমে প্রণীত। ${displayDate} তারিখের জন্য নির্ণীত সতর্কতামূলক পূর্বাভাস। দাপ্তরিক তথ্যের জন্য এফএফডব্লিউসি (FFWC) বুলেটিন দেখুন।`
                 : `Flood alerts are machine learning estimations derived from precipitation and satellite radar telemetry for ${displayDate}. Official flood warnings and evacuation directives are issued exclusively by the Flood Forecasting and Warning Centre (FFWC).`}
             </p>
           )}
@@ -105,10 +110,10 @@ export const AlertsFeed: React.FC<AlertsFeedProps> = ({
                   ? lang === "bn" ? "৯৫% এর বেশি" : "More than 95%"
                   : `${Math.round(alert.probability * 100)}%`;
 
-              const assetsCount = alert.assets_at_risk?.total?.assets || 3;
-              const peopleServed = alert.assets_at_risk?.total?.occupancy
-                ? alert.assets_at_risk.total.occupancy.toLocaleString()
-                : isAlert ? "1,850" : "920";
+              // Counts of places registered in the backend for this district; 0 is a real answer.
+              const assetsCount = alert.assets_at_risk?.total?.assets ?? 0;
+              const occupancy = alert.assets_at_risk?.total?.occupancy ?? 0;
+              const peopleServed = occupancy.toLocaleString();
 
               return (
                 <div
@@ -158,17 +163,33 @@ export const AlertsFeed: React.FC<AlertsFeedProps> = ({
                         {lang === "bn" ? "নিবন্ধিত স্থাপনা" : "Registered Critical Assets"}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1.5 font-medium">
-                      <Users size={15} className="text-[#6B7280] shrink-0" />
-                      <span>
-                        ~{isBn ? toBnNum(peopleServed) : peopleServed}{" "}
-                        {lang === "bn" ? "আশ্রয়প্রাপ্ত" : "Sheltered/Served"}
-                      </span>
-                    </div>
+                    {occupancy > 0 && (
+                      <div className="flex items-center gap-1.5 font-medium">
+                        <Users size={15} className="text-[#6B7280] shrink-0" />
+                        <span>
+                          {isBn ? toBnNum(peopleServed) : peopleServed}{" "}
+                          {lang === "bn" ? "জন (নিবন্ধিত ধারণক্ষমতা)" : "people (registered occupancy)"}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
             })}
+          </div>
+        ) : !hasForecast ? (
+          <div className="p-10 rounded-2xl bg-[#FAF9F5] border border-[#DFDDD3] text-center space-y-2">
+            <Info className="w-8 h-8 text-[#6B7280] mx-auto" />
+            <div className="text-xl font-bold text-[#12241C]">
+              {lang === "bn"
+                ? `${displayDate} তারিখের কোনো পূর্বাভাস নেই`
+                : `No forecast for ${displayDate}`}
+            </div>
+            <p className="text-sm text-[#5C6863]">
+              {lang === "bn"
+                ? "এই দিনের জন্য মডেল চালানো হয়নি, তাই সতর্কতা আছে কি নেই তা বলা যাচ্ছে না। এর মানে ঝুঁকি নেই, তা নয়।"
+                : "The model has not been run for this day, so it is unknown whether any district would be on alert. This does not mean there is no risk."}
+            </p>
           </div>
         ) : (
           <div className="p-10 rounded-2xl bg-[#FAF9F5] border border-[#DFDDD3] text-center space-y-2">

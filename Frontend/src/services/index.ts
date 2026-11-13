@@ -9,3 +9,4 @@ export * from "./geospatial/geospatialService";
 export * from "./assets/assetService";
 export * from "./ingestion/ingestionService";
 
+export * from "./dataSource";

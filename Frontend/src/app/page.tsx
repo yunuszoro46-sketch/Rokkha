@@ -75,7 +75,10 @@ import {
   getAlerts,
   checkPointFlood,
   getModelStatus,
+  getNearestAssets,
 } from "@/services/api";
+import { AssetNearResult } from "@/types/api";
+import { DataSourceBanner } from "@/components/DataSourceBanner";
 
 // Dynamically import Leaflet map for interactive exploration
 const LeafletFloodMap = dynamic(
@@ -456,6 +459,10 @@ export function CitizenPortalApp({
   const [targetDate, setTargetDate] = useState("2022-06-18"); // Benchmark flood date
   const [predictions, setPredictions] = useState<DistrictPrediction[]>([]);
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
+  // The date whose forecast has finished loading (null while the first one loads).
+  const [forecastLoadedFor, setForecastLoadedFor] = useState<string | null>(null);
+  // Places registered in the backend near the selected district (never invented).
+  const [reportAssets, setReportAssets] = useState<AssetNearResult[]>([]);
   const [selectedPcode, setSelectedPcode] = useState("BD6090"); // Sunamganj default
   const [selectedName, setSelectedName] = useState("Sunamganj");
   const [inspectedPoint, setInspectedPoint] = useState<{ lat: number; lng: number } | null>({
@@ -558,68 +565,47 @@ export function CitizenPortalApp({
       : "N/A";
     const floodedEventIds: string[] = hist?.flooded_event_ids || [];
 
-    const isHighRisk =
-      pred?.alert_level === "alert" || eventsFlooded >= 4 || rank <= 10;
-    const isWatch =
-      pred?.alert_level === "watch" || eventsFlooded >= 2 || rank <= 25;
+    // The badge and the probability come only from the model's prediction for
+    // this day. Without one, say so: flood history is not a forecast.
+    const hasProbability =
+      pred?.probability !== null && pred?.probability !== undefined;
+    const riskBadge =
+      pred?.alert_level === "alert"
+        ? {
+            text: isBn ? "জরুরি সতর্কতা (অ্যালার্ট)" : "CRITICAL ALERT",
+            color: "bg-[#C9443A] text-white",
+          }
+        : pred?.alert_level === "watch"
+        ? {
+            text: isBn ? "নজরদারি (ওয়াচ)" : "FLOOD WATCH",
+            color: "bg-[#E08A24] text-white",
+          }
+        : pred?.alert_level === "none"
+        ? {
+            text: isBn ? "সতর্কতা সীমার নিচে" : "BELOW ALERT LEVEL",
+            color: "bg-[#22C55E] text-white",
+          }
+        : pred?.status === "unsupported"
+        ? {
+            text: isBn ? "এই জেলায় পূর্বাভাস সম্ভব নয়" : "NO FORECAST POSSIBLE HERE",
+            color: "bg-[#6B7280] text-white",
+          }
+        : {
+            text: isBn ? "এই দিনের পূর্বাভাস নেই" : "NO FORECAST FOR THIS DAY",
+            color: "bg-[#6B7280] text-white",
+          };
 
-    const riskBadge = isHighRisk
-      ? {
-          text: isBn ? "জরুরি সতর্কতা (অ্যালার্ট)" : "CRITICAL ALERT",
-          color: "bg-[#C9443A] text-white",
-        }
-      : isWatch
-      ? {
-          text: isBn ? "নজরদারি (ওয়াচ)" : "FLOOD WATCH",
-          color: "bg-[#E08A24] text-white",
-        }
-      : {
-          text: isBn ? "স্বাভাবিক পরামর্শ" : "NORMAL ADVISORY",
-          color: "bg-[#22C55E] text-white",
-        };
-
-    const formattedProb =
-      pred?.probability !== null && pred?.probability !== undefined
+    const formattedProb = hasProbability
+      ? (pred!.probability as number) > 0.95
         ? isBn
-          ? `${toBnNum(Math.round(pred.probability * 100))}%`
-          : `${Math.round(pred.probability * 100)}%`
-        : eventsFlooded >= 4
-        ? (isBn ? ">৯০%" : ">90%")
-        : (isBn ? "<২৫%" : "<25%");
-
-    const candidateShelters = [
-      {
-        name: isBn
-          ? `${displayName} বহুমুখী ঘূর্ণিঝড় ও বন্যা আশ্রয়কেন্দ্র`
-          : `${selectedName} Multipurpose Cyclone & Flood Shelter`,
-        type: isBn ? "বন্যা আশ্রয়কেন্দ্র" : "Flood Shelter",
-        capacity: 1200,
-        distance: isBn ? "১.৪ কিমি" : "1.4 km",
-        contact: isBn
-          ? "উপজেলা দুর্যোগ ব্যবস্থাপনা কার্যালয়"
-          : "Upazila Disaster Management Office",
-      },
-      {
-        name: isBn
-          ? `${displayName} জেলা ২৫০-শয্যার সদর হাসপাতাল`
-          : `${selectedName} District 250-Bed Sadar Hospital`,
-        type: isBn ? "জরুরি হাসপাতাল" : "Emergency Hospital",
-        capacity: 2400,
-        distance: isBn ? "৩.২ কিমি" : "3.2 km",
-        contact: isBn ? "সিভিল সার্জন কার্যালয় / ৯৯৯" : "Civil Surgeon Office / 999",
-      },
-      {
-        name: isBn
-          ? `${displayName} সরকারি পাইলট উচ্চ বিদ্যালয় ত্রাণ কেন্দ্র`
-          : `${selectedName} Government Pilot High School Relief Camp`,
-        type: isBn ? "কমিউনিটি আশ্রয়কেন্দ্র" : "Community Shelter",
-        capacity: 850,
-        distance: isBn ? "৪.৮ কিমি" : "4.8 km",
-        contact: isBn
-          ? "ইউনিয়ন পরিষদ ত্রাণ সেল"
-          : "Union Parishad Relief Cell",
-      },
-    ];
+          ? "৯৫% এর বেশি"
+          : "more than 95%"
+        : isBn
+        ? `${toBnNum(Math.round((pred!.probability as number) * 100))}%`
+        : `${Math.round((pred!.probability as number) * 100)}%`
+      : isBn
+      ? "নেই"
+      : "not available";
 
     return {
       name: displayName,
@@ -635,7 +621,6 @@ export function CitizenPortalApp({
       prediction: pred,
       riskBadge,
       probabilityText: formattedProb,
-      shelters: candidateShelters,
     };
   }, [selectedPcode, selectedName, predictions, lang]);
 
@@ -652,7 +637,9 @@ export function CitizenPortalApp({
   useEffect(() => {
     let mounted = true;
     getPredictions(targetDate).then((data) => {
-      if (mounted) setPredictions(data);
+      if (!mounted) return;
+      setPredictions(data);
+      setForecastLoadedFor(targetDate);
     });
     getAlerts(targetDate).then((data) => {
       if (mounted) setAlerts(data);
@@ -662,6 +649,23 @@ export function CitizenPortalApp({
       mounted = false;
     };
   }, [targetDate]);
+
+  // Registered places near the selected district's centre, from the backend only.
+  useEffect(() => {
+    let mounted = true;
+    const center = DISTRICT_CENTERS[selectedPcode];
+    setReportAssets([]);
+    if (!center) return;
+    getNearestAssets(center[1], center[0], 50000).then((data) => {
+      if (mounted) setReportAssets(data.slice(0, 5));
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [selectedPcode]);
+
+  const isForecastLoading = forecastLoadedFor !== targetDate;
+  const hasForecast = predictions.length > 0;
 
   // Handle district selection
   const handleSelectDistrict = (pcode: string, name?: string) => {
@@ -761,6 +765,7 @@ export function CitizenPortalApp({
       >
         <main className="w-full flex-1 flex flex-col justify-between">
           <div className="w-full">
+            <DataSourceBanner lang={lang} />
             {/* Top Header / Site Header */}
             <header className="w-full border-b border-[#DFDDD3]/50">
               <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 site-header">
@@ -1122,6 +1127,24 @@ export function CitizenPortalApp({
                   </Card>
                 </div>
 
+                {(activeView === "map" || activeView === "alerts") &&
+                  !isForecastLoading &&
+                  !hasForecast && (
+                    <div
+                      role="status"
+                      className="mb-4 rounded-2xl border border-[#DFDDD3] bg-white px-5 py-4 text-sm text-[#12241C]"
+                    >
+                      <span className="font-extrabold">
+                        {lang === "bn"
+                          ? `${toBnNum(targetDate)} তারিখের কোনো পূর্বাভাস নেই।`
+                          : `No forecast for ${targetDate}.`}
+                      </span>{" "}
+                      {lang === "bn"
+                        ? "মানচিত্রে কোনো ঝুঁকির রং দেখানো হচ্ছে না। এর মানে ঝুঁকি নেই, তা নয়। অন্য তারিখ বেছে নিন।"
+                        : "The map shows no risk colours. This does not mean there is no risk. Choose another date."}
+                    </div>
+                  )}
+
                 {/* PAGE 2: FLOOD MAP & POINT CHECK */}
                 {activeView === "map" && (
                   <LeafletFloodMap
@@ -1188,7 +1211,8 @@ export function CitizenPortalApp({
                     <AlertsFeed
                       alerts={alerts}
                       targetDate={targetDate}
-                      isLoading={false}
+                      isLoading={isForecastLoading}
+                      hasForecast={hasForecast}
                       lang={lang}
                       onSelectDistrict={(pcode, name) => {
                         handleSelectDistrict(pcode, name);
@@ -1498,21 +1522,31 @@ export function CitizenPortalApp({
                   </div>
 
                   <div className="space-y-3">
-                    {districtReport.shelters.map((shelter, idx) => (
+                    {reportAssets.length === 0 && (
+                      <div className="p-3.5 rounded-lg bg-[#FAF9F5] border border-[#EDEBE2] text-sm text-[#263B32]/80">
+                        {lang === "bn"
+                          ? "এই জেলার কেন্দ্র থেকে ৫০ কিমির মধ্যে কোনো নিবন্ধিত আশ্রয়কেন্দ্র বা সেবাকেন্দ্র নেই। জরুরি প্রয়োজনে ৯৯৯ নম্বরে কল করুন।"
+                          : "No registered shelter or facility within 50 km of this district's centre yet. In an emergency call 999."}
+                      </div>
+                    )}
+                    {reportAssets.map((item) => (
                       <div
-                        key={idx}
+                        key={item.asset.id}
                         className="p-3.5 rounded-lg bg-[#FAF9F5] border border-[#EDEBE2] flex flex-col sm:flex-row sm:items-center justify-between gap-2"
                       >
                         <div className="space-y-0.5">
                           <div className="font-bold text-base text-[#11241C]">
-                            {shelter.name}
+                            {item.asset.name}
                           </div>
                           <div className="text-xs text-[#263B32]/70">
-                            {shelter.type} • {lang === "bn" ? `ধারণক্ষমতা: ${toBnNum(shelter.capacity)} জন` : `Capacity: ${shelter.capacity.toLocaleString()} persons`} • {lang === "bn" ? `যোগাযোগ: ${shelter.contact}` : `Contact: ${shelter.contact}`}
+                            {item.asset.asset_type.replace(/_/g, " ")}
+                            {item.asset.district?.name ? ` • ${item.asset.district.name}` : ""}
                           </div>
                         </div>
                         <div className="text-sm font-bold text-[#183026] self-start sm:self-center px-2.5 py-1 rounded bg-[#EDEBE2]">
-                          ~{shelter.distance}
+                          {lang === "bn"
+                            ? `${toBnNum(item.distance_kilometers.toFixed(1))} কিমি`
+                            : `${item.distance_kilometers.toFixed(1)} km`}
                         </div>
                       </div>
                     ))}
