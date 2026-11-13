@@ -410,3 +410,4 @@ The following features **do NOT exist in the backend today**. The frontend must 
 2. **Citizen SOS / Rescue Dispatch:** No SOS dispatch, responder queue, or rescue mission schemas.
 3. **Automated Notification Subscriptions:** No email, SMS, or push webhook notification engines.
 4. **Official Warning Authority:** The backend produces ML probability estimates; official disaster warnings must reference FFWC / BWDB.
+
