@@ -14,7 +14,7 @@ python scripts/build_gfm_labels.py fetch --start 2016-04 --end 2024-11   # ~1.5â
 python scripts/build_gfm_labels.py assemble
 ```
 
-`fetch` keeps one cache file per month in `.cache/` (not committed) and skips
+`fetch` keeps one cache file per month in `.cache/` (committed, so the daily GitHub job can rebuild the file from every month) and skips
 cached months, so an interrupted run can be started again. A month fetched
 before it was over (or within 3 days after) is fetched again, so the current
 month stays up to date. `scripts/daily_update.py` runs `fetch` for this month

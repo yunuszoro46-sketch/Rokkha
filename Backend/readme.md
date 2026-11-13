@@ -823,12 +823,15 @@ secret**, name `MONGODB_URI`, value the Atlas connection string. It can also be 
 **Actions** tab. Rehearsed on 13 November 2026 in a clean copy of the repository: 2 minutes 19 seconds, and the
 56 predictions were identical to the ones made on the developer's machine.
 
-Two things the automatic run does **not** do:
+New satellite passes are files, not database rows, so the job commits them to `main`
+(`data/labels/.cache/` month files and `district_flood_observations.json`, as the user
+`rokkha-daily-update`). Render redeploys from that commit, which keeps the satellite timeline and the
+"observed" map of the hosted backend up to date. **Run `git pull` before you start work**: there is usually
+one such commit per day. The month cache is kept in the repository for this reason: with it, the job rebuilds
+the observations file from every month exactly as a developer's machine does.
 
-- It does not update `data/labels/district_flood_observations.json` in the repository. On the GitHub machine
-  that file is rebuilt from the last two months only (enough for the prediction, which uses 30 days) and then
-  thrown away. The satellite timeline and the "observed" map on the hosted backend therefore show passes up
-  to the last time a developer ran the daily update locally and committed that file.
+What the automatic run does **not** do:
+
 - It does not retrain or change the model.
 
 The satellite step needs `requirements-dev.txt` (rasterio) and rewrites
