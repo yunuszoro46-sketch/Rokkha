@@ -763,9 +763,16 @@ export function CitizenPortalApp({
   };
 
   // Switch between dedicated pages and update browser URL path
+  // On a phone the open menu covers the page, so it starts closed there and
+  // closes again after a page is picked.
+  useEffect(() => {
+    if (window.innerWidth < 768) setIsSidebarCollapsed(true);
+  }, []);
+
   const navigateToPage = (view: CitizenView) => {
     setActiveView(view);
     if (typeof window !== "undefined") {
+      if (window.innerWidth < 768) setIsSidebarCollapsed(true);
       const targetPath = view === "overview" ? "/" : `/${view}`;
       if (window.location.pathname !== targetPath) {
         window.history.pushState({ view }, "", targetPath);
