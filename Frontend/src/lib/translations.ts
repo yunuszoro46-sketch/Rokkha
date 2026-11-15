@@ -121,10 +121,10 @@ export const UI_TEXT = {
     metric_years_sub: "Historical Analysis (2016 – 2024)",
     metric_districts: "64",
     metric_districts_sub: "Districts Covered (National)",
-    metric_assets: "1,200+",
-    metric_assets_sub: "Critical Assets (Hospitals, Shelters)",
-    metric_tests: "187",
-    metric_tests_sub: "Automated Tests & Verifications",
+    metric_assets: "3,160+",
+    metric_assets_sub: "Hospitals, Clinics & Flood Shelters (OpenStreetMap)",
+    metric_tests: "352",
+    metric_tests_sub: "Automated Backend Tests",
 
     // Capabilities Section
     cap_label: "Core Capabilities",
@@ -148,7 +148,7 @@ export const UI_TEXT = {
     cap_7_title: "Integrated Database",
     cap_7_desc: "MongoDB-powered, scalable and reliable data management",
     cap_8_title: "REST APIs",
-    cap_8_desc: "Secure and well-tested APIs (187 automated tests)",
+    cap_8_desc: "Secure and well-tested APIs (352 automated tests)",
 
     // Up next section (24-Hour ML Prediction)
     up_next_badge: "Up next",
@@ -384,10 +384,10 @@ export const UI_TEXT = {
     metric_years_sub: "ঐতিহাসিক বিশ্লেষণ (২০১৬ – ২০২৪)",
     metric_districts: "৬৪",
     metric_districts_sub: "জেলা আওতাভুক্ত (জাতীয় কভারেজ)",
-    metric_assets: "১,২০০+",
-    metric_assets_sub: "গুরুত্বপূর্ণ অবকাঠামো (হাসপাতাল, আশ্রয়কেন্দ্র)",
-    metric_tests: "১৮৭",
-    metric_tests_sub: "স্বয়ংক্রিয় পরীক্ষা ও সঠিকতা যাচাই",
+    metric_assets: "৩,১৬০+",
+    metric_assets_sub: "হাসপাতাল, ক্লিনিক ও বন্যা আশ্রয়কেন্দ্র (OpenStreetMap)",
+    metric_tests: "৩৫২",
+    metric_tests_sub: "ব্যাকএন্ডের স্বয়ংক্রিয় পরীক্ষা",
 
     // Capabilities Section
     cap_label: "প্রধান সুবিধাসমূহ",
@@ -411,7 +411,7 @@ export const UI_TEXT = {
     cap_7_title: "সমন্বিত ডেটাবেস",
     cap_7_desc: "মঙ্গোডিবি (MongoDB) চালিত উচ্চ গতিসম্পন্ন ও নির্ভরযোগ্য তথ্য ব্যবস্থাপনা",
     cap_8_title: "রেস্ট এপিআই (REST APIs)",
-    cap_8_desc: "নিরাপদ ও স্বয়ংক্রিয়ভাবে পরীক্ষিত ওপেন এপিআই (১৮৭টি টেস্ট ভেরিফায়েড)",
+    cap_8_desc: "নিরাপদ ও স্বয়ংক্রিয়ভাবে পরীক্ষিত ওপেন এপিআই (৩৫২টি স্বয়ংক্রিয় টেস্ট)",
 
     // Up next section (24-Hour ML Prediction)
     up_next_badge: "পরবর্তী লক্ষ্য",

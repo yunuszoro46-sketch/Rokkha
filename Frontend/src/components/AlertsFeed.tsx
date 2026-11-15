@@ -87,7 +87,7 @@ export const AlertsFeed: React.FC<AlertsFeedProps> = ({
             <p className="mt-3 text-xs sm:text-sm text-[#4B5563] leading-relaxed">
               {lang === "bn"
                 ? `বন্যা সতর্কতাগুলো কৃত্রিম বুদ্ধিমত্তা ও বৃষ্টিপাত বিশ্লেষণের মাধ্যমে প্রণীত। ${displayDate} তারিখের জন্য নির্ণীত সতর্কতামূলক পূর্বাভাস। দাপ্তরিক তথ্যের জন্য এফএফডব্লিউসি (FFWC) বুলেটিন দেখুন।`
-                : `Flood alerts are machine learning estimations derived from precipitation and satellite radar telemetry for ${displayDate}. Official flood warnings and evacuation directives are issued exclusively by the Flood Forecasting and Warning Centre (FFWC).`}
+                : `Flood alerts are machine learning estimations from rain, river flow and recent satellite flood maps for ${displayDate}. Official flood warnings and evacuation directives are issued exclusively by the Flood Forecasting and Warning Centre (FFWC).`}
             </p>
           )}
         </div>
@@ -151,7 +151,7 @@ export const AlertsFeed: React.FC<AlertsFeedProps> = ({
                         )}
                       </div>
                       <div className="text-xs text-[#6B7280]">
-                        {lang === "bn" ? "বন্যা পূর্বাভাস নির্দেশক" : "Satellite flood radar likelihood"}
+                        {lang === "bn" ? "বন্যা পূর্বাভাস নির্দেশক" : "Model flood probability"}
                       </div>
                     </div>
 

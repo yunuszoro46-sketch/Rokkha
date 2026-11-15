@@ -1016,7 +1016,7 @@ export function CitizenPortalApp({
                         How Rokkha Predicts & Protects
                       </h2>
                       <p className="text-sm md:text-base text-[#56635D] leading-relaxed">
-                        Every forecast is validated against previous historical analysis and 187 automated test suites before reaching communities.
+                        The model was tested on years it never saw (2023–2025) against simple baselines, and the backend is checked by 352 automated tests.
                       </p>
                     </div>
 
@@ -1029,14 +1029,14 @@ export function CitizenPortalApp({
                               01
                             </div>
                             <Badge variant="outline" className="text-xs font-semibold text-[#526059] bg-[#F4F3ED] border-[#E2E0D6] rounded-md px-2.5 py-1">
-                              Satellite + Gauge Ingestion
+                              Data Ingestion
                             </Badge>
                           </div>
                           <h3 className="text-xl font-bold text-[#12241C] mb-3">
-                            Multi-Source Telemetry
+                            Rain, Rivers & Satellites
                           </h3>
                           <p className="text-sm text-[#5C6863] leading-relaxed">
-                            Ingests Sentinel-1 SAR water masks, transboundary rainfall radar, and river gauge readings across all 64 districts.
+                            Collects daily rain (ERA5 and GFS), modelled river flow (GloFAS) and Sentinel-1 satellite flood maps (Copernicus GFM) for all 64 districts.
                           </p>
                         </div>
                       </Card>
@@ -1049,14 +1049,14 @@ export function CitizenPortalApp({
                               02
                             </div>
                             <Badge variant="outline" className="text-xs font-semibold text-[#0369A1] bg-[#E0F2FE] border-[#BAE6FD] rounded-md px-2.5 py-1">
-                              Hydrodynamic Engine
+                              Machine Learning Model
                             </Badge>
                           </div>
                           <h3 className="text-xl font-bold text-[#12241C] mb-3">
-                            Historical & AI Simulation
+                            24-Hour Flood Forecast
                           </h3>
                           <p className="text-sm text-[#5C6863] leading-relaxed">
-                            Synthesizes previous historical analysis with 2D floodplain topography to pinpoint inundation depth and hospital/shelter impact.
+                            A model trained on 2016–2022 floods gives each district a flood probability for the day. Modelled flood-depth zones (JRC) show long-term risk at any point.
                           </p>
                         </div>
                       </Card>
@@ -1069,14 +1069,14 @@ export function CitizenPortalApp({
                               03
                             </div>
                             <Badge variant="outline" className="text-xs font-semibold text-[#047857] bg-[#DCFCE7] border-[#BBF7D0] rounded-md px-2.5 py-1">
-                              Community & API Dispatch
+                              Citizens & Rescuers
                             </Badge>
                           </div>
                           <h3 className="text-xl font-bold text-[#12241C] mb-3">
-                            Actionable Early Warnings
+                            Alerts and Help Requests
                           </h3>
                           <p className="text-sm text-[#5C6863] leading-relaxed">
-                            Delivers district-level evacuation routing, shelter readiness alerts, and REST API webhooks to emergency responders.
+                            Shows district alerts, nearby hospitals and shelters, and a personal location report. The SOS button sends help requests to volunteer rescuers.
                           </p>
                         </div>
                       </Card>
@@ -1751,8 +1751,8 @@ export function CitizenPortalApp({
               <DialogFooter className="pt-2 flex flex-row items-center justify-between border-t border-[#EDEBE2]">
                 <div className="text-xs text-[#263B32]/70">
                   {lang === "bn"
-                    ? "উপাত্তের উৎস: দুর্যোগ ব্যবস্থাপনা অধিদপ্তর, কোপার্নিকাস সেন্টিনেল-১, JRC GloFAS ও UNOSAT।"
-                    : "Data Sources: Bangladesh Disaster Management, Copernicus Sentinel-1, JRC GloFAS & UNOSAT."}
+                    ? "উপাত্তের উৎস: কোপার্নিকাস সেন্টিনেল-১ (GFM), UNOSAT, JRC GloFAS, ERA5/GFS (Open-Meteo) ও OpenStreetMap।"
+                    : "Data Sources: Copernicus Sentinel-1 (GFM), UNOSAT, JRC GloFAS, ERA5/GFS (Open-Meteo) & OpenStreetMap."}
                 </div>
                 <Button onClick={() => setIsDistrictReportOpen(false)}>
                   {t.btn_close}
