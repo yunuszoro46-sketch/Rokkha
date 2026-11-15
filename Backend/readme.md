@@ -883,6 +883,16 @@ New satellite passes are files, not database rows, so the job commits them to `m
 one such commit per day. The month cache is kept in the repository for this reason: with it, the job rebuilds
 the observations file from every month exactly as a developer's machine does.
 
+**Two things seen in live use (15 November 2026):**
+
+- **GitHub starts scheduled jobs late**, sometimes by hours (the 14 November run started at 10:44 UTC instead of
+  03:30). Until it runs, the portal's "Today" button shows grey districts with "No forecast for this date". Before
+  a demo, check the **Actions** tab and start **Daily flood update** by hand if today's run has not happened.
+- **The satellite catalogue (EODC STAC) can be down** (on 15 November it answered `502 Bad Gateway`). The job then
+  logs `satellite passes NOT refreshed`, predicts with the passes already stored, and still succeeds. Nothing is
+  lost: every run fetches this month and the last, so the next run that reaches the catalogue adds the missed
+  passes.
+
 What the automatic run does **not** do:
 
 - It does not retrain or change the model.
