@@ -770,7 +770,8 @@ Planned items are not claims of completed functionality.
 | Check the model on 2025, a year never used so far | Done (section 13) |
 | Check on 2026 (kept untouched for the next model change) | Data stored 12 Nov 2026 (rain 1 Mar–5 Nov, river 15 Feb–10 Nov, satellite passes); **not measured yet on purpose** |
 | User accounts and login, with a flood report for the user's saved location | Done (`/auth`) |
-| Roles (admin, rescue), protecting asset and ingestion endpoints, general rate limiting | Planned, before any public use |
+| Roles (admin, rescue), protecting asset and ingestion endpoints | Done (`/admin`, `/sos`; read-only guard on the hosted server) |
+| General rate limiting for all endpoints | Planned, before wide public use |
 
 ## 13. The flood model: design and measured results
 
