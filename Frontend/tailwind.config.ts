@@ -34,6 +34,12 @@ const config: Config = {
           unsupported: "#94A3B8" // Grey for unsupported / radar blind
         }
       },
+      fontSize: {
+        'main-heading': ['40px', { lineHeight: '48px', fontWeight: '800' }],
+        'section-heading': ['32px', { lineHeight: '40px', fontWeight: '700' }],
+        'body-text': ['16px', { lineHeight: '24px', fontWeight: '400' }],
+        'secondary-text': ['14px', { lineHeight: '20px', fontWeight: '500' }],
+      },
       fontFamily: {
         sans: [
           "-apple-system",

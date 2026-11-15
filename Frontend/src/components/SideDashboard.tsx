@@ -120,35 +120,13 @@ export const SideDashboard: React.FC<SideDashboardProps> = ({
         isCollapsed ? "w-20" : "w-80"
       }`}
     >
-      {/* Top Brand Header */}
+      {/* Top Header - Clean Controls (Logo & Title removed as requested) */}
       <div>
-        <div className="h-[92px] px-5 flex items-center justify-between border-b border-[#1F382D]">
-          <div
-            className="flex items-center space-x-3 overflow-hidden cursor-pointer"
-            onClick={() => onSelectView("overview")}
-          >
-            {isCollapsed ? (
-              <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-                <img
-                  src={logoAsset.src}
-                  alt="Rokkha"
-                  className="w-8 h-8 object-contain"
-                />
-              </div>
-            ) : (
-              <div className="flex items-center space-x-2.5">
-                <img
-                  src={logoAsset.src}
-                  alt="Rokkha"
-                  className="h-8 w-auto object-contain"
-                />
-                <span className="font-extrabold text-xl text-white tracking-tight">
-                  Rokkha Portal
-                </span>
-              </div>
-            )}
-          </div>
-
+        <div
+          className={`h-[68px] px-4 flex items-center ${
+            isCollapsed ? "justify-center" : "justify-end"
+          } border-b border-[#1F382D]`}
+        >
           <button
             onClick={onToggleCollapse}
             className="p-2 rounded-lg hover:bg-white/10 text-white/70 hover:text-white transition hidden md:block"
@@ -158,7 +136,7 @@ export const SideDashboard: React.FC<SideDashboardProps> = ({
           </button>
         </div>
 
-        {/* Navigation Items (Strict 16px text-base) */}
+        {/* Navigation Items (16px Body Font) */}
         <nav className="p-4 space-y-2.5">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -167,7 +145,7 @@ export const SideDashboard: React.FC<SideDashboardProps> = ({
               <button
                 key={item.id}
                 onClick={() => onSelectView(item.id)}
-                className={`w-full flex items-center space-x-4 px-4 py-3.5 rounded-xl text-left transition group relative ${
+                className={`w-full flex items-center space-x-4 px-4 py-3 rounded-xl text-left transition group relative ${
                   isActive
                     ? "bg-[#223A2F] text-white shadow-md border border-[#C69A50]/60"
                     : "text-white/80 hover:bg-white/10 hover:text-white"
@@ -175,7 +153,7 @@ export const SideDashboard: React.FC<SideDashboardProps> = ({
                 title={isCollapsed ? item.label : undefined}
               >
                 <Icon
-                  size={22}
+                  size={20}
                   className={`flex-shrink-0 transition ${
                     isActive
                       ? "text-[#C69A50]"
@@ -188,7 +166,7 @@ export const SideDashboard: React.FC<SideDashboardProps> = ({
                       {item.label}
                     </span>
                     {item.badge !== undefined && (
-                      <span className="bg-[#C9443A] text-white text-base font-bold px-2.5 py-0.5 rounded-full ml-2">
+                      <span className="bg-[#C9443A] text-white text-sm font-bold px-2.5 py-0.5 rounded-full ml-2">
                         {item.badge}
                       </span>
                     )}
@@ -203,34 +181,8 @@ export const SideDashboard: React.FC<SideDashboardProps> = ({
         </nav>
       </div>
 
-      {/* Bottom Actions & Status */}
-      <div className="p-4 border-t border-[#1F382D] space-y-3">
-        <button
-          onClick={onOpenAbout}
-          className="w-full flex items-center space-x-3.5 px-4 py-3 rounded-xl text-base font-semibold text-white/85 hover:bg-white/10 hover:text-white transition border border-transparent hover:border-white/15"
-          title="Data Transparency & Limits"
-        >
-          <Info size={22} className="text-white/75 flex-shrink-0" />
-          {!isCollapsed && (
-            <span className="text-left truncate">{t.side_about}</span>
-          )}
-        </button>
-
-        <div
-          className={`pt-3 flex items-center ${
-            isCollapsed ? "justify-center" : "justify-between px-3"
-          } text-base text-white/70 border-t border-[#1F382D]`}
-        >
-          <div className="flex items-center space-x-2.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#22C55E] shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>
-            {!isCollapsed && (
-              <span className="font-medium text-base text-white/90 tracking-wide">
-                {isBackendConnected ? t.side_status_feed : t.side_status_active}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
+      {/* Bottom spacer (Removed About & Data Limits and Sensor Feed as requested) */}
+      <div className="p-2"></div>
     </aside>
   );
 };
