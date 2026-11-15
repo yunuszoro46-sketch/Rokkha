@@ -31,7 +31,8 @@ The backend runs at **`https://rokkha-backend.onrender.com/api/v1`** (interactiv
   **403** there, and changing assets needs an **admin** login. Reading, the point checks
   (`/geospatial/flood/check` and similar), accounts (`/auth/...`) and rescue requests (`/sos`) work.
 - It **sleeps after 15 minutes** without requests; the first call after that can take about a minute.
-- Only `https://rokkha-app.vercel.app` and `localhost:3000` may call it from a browser. Ask the backend
+- The portal is live at **`https://rokkha-portal.vercel.app`** (Vercel, branch `production`). Only that
+  address, the older `https://rokkha-app.vercel.app` and `localhost:3000` may call the API from a browser. Ask the backend
   developer to add another address.
 
 ## 1. Run the backend on your machine
