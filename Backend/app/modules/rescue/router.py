@@ -23,11 +23,18 @@ rescuers = require_role("rescuer", "admin")
 
 def _sender_address(request: Request) -> str:
 
-    # Behind a hosting proxy (Render) the real address is the first entry of
-    # X-Forwarded-For. It is only used, hashed, to limit floods of requests.
-    forwarded = request.headers.get("x-forwarded-for", "")
+    # Only used, hashed, to limit floods of requests. On Render, Cloudflare sits
+    # in front and puts the visitor's real address in CF-Connecting-IP,
+    # replacing any value the visitor sent. X-Forwarded-For is NOT used: Render
+    # keeps whatever the visitor wrote there, so anyone could fake a new
+    # address on every request and skip the limit.
+    for header in ("cf-connecting-ip", "true-client-ip"):
+        address = request.headers.get(header, "").strip()
+        if address:
+            return address
 
-    return forwarded.split(",")[0].strip() or (request.client.host if request.client else "unknown")
+    # Running locally, without a proxy.
+    return request.client.host if request.client else "unknown"
 
 
 # ==========================================

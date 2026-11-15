@@ -115,3 +115,12 @@ def test_a_refusal_can_be_read_by_the_browser(client, read_only):
 
     assert response.status_code == 403
     assert response.headers["access-control-allow-origin"] == "http://localhost:3000"
+
+
+def test_every_answer_carries_the_browser_security_headers(client):
+
+    for response in (client.get("/api/v1/health"), client.get("/api/v1/does-not-exist")):
+        assert response.headers["X-Content-Type-Options"] == "nosniff"
+        assert response.headers["X-Frame-Options"] == "DENY"
+        assert "frame-ancestors 'none'" in response.headers["Content-Security-Policy"]
+        assert "max-age" in response.headers["Strict-Transport-Security"]

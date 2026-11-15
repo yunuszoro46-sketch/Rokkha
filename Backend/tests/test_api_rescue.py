@@ -116,6 +116,26 @@ def test_too_many_new_requests_from_one_connection_are_refused(client):
     assert "999" in refused.json()["detail"]
 
 
+def test_a_faked_forwarded_address_does_not_skip_the_limit(client):
+
+    # Render keeps any X-Forwarded-For the visitor sends, so it must not count.
+    for i in range(service.MAX_NEW_PER_HOUR):
+        client.post(SOS, json=sos(), headers={"X-Forwarded-For": f"10.0.0.{i}"})
+
+    refused = client.post(SOS, json=sos(), headers={"X-Forwarded-For": "10.9.9.9"})
+
+    assert refused.status_code == 429
+
+
+def test_the_limit_counts_the_address_cloudflare_reports(client):
+
+    for _ in range(service.MAX_NEW_PER_HOUR):
+        client.post(SOS, json=sos(), headers={"CF-Connecting-IP": "203.0.113.1"})
+
+    assert client.post(SOS, json=sos(), headers={"CF-Connecting-IP": "203.0.113.1"}).status_code == 429
+    assert client.post(SOS, json=sos(), headers={"CF-Connecting-IP": "203.0.113.2"}).status_code == 201
+
+
 def test_a_retry_still_works_when_the_limit_is_reached(client):
 
     first = sos()

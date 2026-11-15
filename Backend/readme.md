@@ -192,7 +192,7 @@ Rokkha/
     ├── docs/
     │   └── FRONTEND_API_GUIDE.md  guide for the frontend developer
     ├── scripts/                   rebuild the data files from their sources
-    ├── tests/                     352 automated tests
+    ├── tests/                     355 automated tests
     ├── ml/                        (placeholder)
     ├── pytest.ini
     ├── requirements.txt           pinned API dependencies
@@ -308,6 +308,11 @@ What the hosted copy is set to do (all in `render.yaml`):
 | `CORS_ORIGINS` | the Vercel address and localhost | Only these websites may call the API from a browser. Add the address here if the frontend moves |
 | Start command | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` | One process, no `--reload` |
 | Region | Singapore | Closest to Bangladesh |
+
+Every answer also carries standard browser protections, set in `app/main.py`: `X-Content-Type-Options: nosniff`,
+`X-Frame-Options: DENY` and `Content-Security-Policy: frame-ancestors 'none'` (no showing the API inside another
+site), `Referrer-Policy: no-referrer` and `Strict-Transport-Security` (HTTPS only). The portal sets the same in
+`Frontend/next.config.mjs`.
 
 Limits to know:
 
@@ -488,7 +493,9 @@ How it is built:
 - **The receipt and the sender's status view hold no personal details.** Location, phone number and note are
   returned only to rescuers and admins.
 - **Flood protection:** at most 10 new requests per internet address per hour (the address is stored hashed
-  and deleted after an hour). Retries are not counted.
+  and deleted after an hour). Retries are not counted. The address is the one Cloudflare (in front of Render)
+  reports in `CF-Connecting-IP`; `X-Forwarded-For` is ignored because Render keeps whatever the visitor writes
+  there, and a live test on 15 November 2026 showed that faking it skipped the limit (fixed the same day).
 - The location must be inside Bangladesh; the district is filled in from it.
 
 Not covered: requests are kept until someone deletes them (no retention period is set), there is no SMS or
@@ -710,7 +717,7 @@ Allowed by default: `http://localhost:3000` and `http://localhost:5173`. Add oth
 python -m pytest -v
 ```
 
-Expected: **352 passed**.
+Expected: **355 passed**.
 
 Tests that store data use a **separate local test MongoDB in Docker**, never Atlas:
 
@@ -725,8 +732,8 @@ test. Use another test server with `TEST_MONGODB_URI=mongodb://host:port`.
 | Test file | Covers |
 | --- | --- |
 | `test_api_accounts.py` | Register, log in and out, wrong passwords, home location, report for it, account deletion |
-| `test_public_read_only.py` | Read-only mode: changes refused, reading, point checks and accounts still work |
-| `test_api_rescue.py` | Rescue requests (send, retry, follow, cancel, handle), roles and admin routes |
+| `test_public_read_only.py` | Read-only mode: changes refused, reading, point checks and accounts still work; browser security headers on every answer |
+| `test_api_rescue.py` | Rescue requests (send, retry, follow, cancel, handle), the flood limit (a faked `X-Forwarded-For` does not skip it), roles and admin routes |
 | `test_osm_facilities.py` | OpenStreetMap facility selection and the built facility file |
 | `test_api_geospatial.py` | Geometry tools, locations, health, CORS |
 | `test_api_boundaries.py` | Dhaka boundaries |
