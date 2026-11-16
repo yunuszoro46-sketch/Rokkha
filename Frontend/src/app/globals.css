@@ -15,8 +15,22 @@
   --clay: #B94A48;
 
   /* Typography Scale */
-  --font-heading-main: 40px;
-  --font-heading-section: 32px;
+  --font-logo: 20px;
+  --font-nav: 14px;
+  --font-btn: 14px;
+  --font-title: 32px;
+  --font-subtitle: 16px;
+  --font-card-title: 18px;
+  --font-input: 14px;
+  --font-helper: 13px;
+  --font-footer: 12px;
+
+  --font-xs: 12px;
+  --font-sm: 14px;
+  --font-md: 18px;
+  --font-lg: 32px;
+  --font-heading-main: 32px;
+  --font-heading-section: 30px;
   --font-body: 16px;
   --font-secondary: 14px;
 }
@@ -397,10 +411,10 @@ main {
 .hero h1 {
   margin: 0;
   font-family: "Manrope", sans-serif;
-  font-size: var(--font-lg);
+  font-size: 35px !important;
   color: #121f17;
-  line-height: 1.08;
-  letter-spacing: -0.035em;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
   font-weight: 800;
 }
 .hero h1 span,

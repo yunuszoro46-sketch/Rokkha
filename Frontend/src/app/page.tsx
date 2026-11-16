@@ -963,7 +963,7 @@ export function CitizenPortalApp({
                         <Icon name="shield" size={16} /> {t.hero_tagline}
                       </div>
                       <div className="hero-headline-bar">
-                        <h1>
+                        <h1 className="text-[35px] font-extrabold leading-[1.15]">
                           {t.hero_title_1}
                           <br />
                           {t.hero_title_2}
@@ -1485,301 +1485,87 @@ export function CitizenPortalApp({
             </DialogContent>
           </Dialog>
 
-          {/* MY DISTRICT REPORT MODAL */}
+          {/* MY DISTRICT REPORT MODAL - Redesigned to match FLOOD RISK SUMMARY */}
           <Dialog
             open={isDistrictReportOpen}
             onOpenChange={setIsDistrictReportOpen}
           >
-            <DialogContent className="max-w-4xl max-h-[92vh] overflow-y-auto bg-[#FAFAF7] border-[#E2E0D6] p-6 sm:p-8">
-              <DialogHeader className="border-b border-[#EDEBE2] pb-5">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div>
-                    <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-[#183026] text-[#EDEBE2] text-xs font-bold uppercase tracking-wider mb-2">
-                      <ShieldCheck className="w-3.5 h-3.5 text-[#22C55E]" />
-                      {t.report_tag}
-                    </div>
-                    <DialogTitle className="text-3xl font-extrabold text-[#11241C] flex items-center gap-3">
-                      <span>{districtReport.name}</span>
-                      <span className="text-base font-medium px-3 py-1 rounded-lg bg-[#EDEBE2] text-[#263B32]">
-                        {districtReport.division}
-                      </span>
-                    </DialogTitle>
-                    <DialogDescription className="text-base text-[#263B32]/75 mt-1">
-                      {lang === "bn" ? "ভূ-কেন্দ্রবিন্দু:" : "Geo-Centroid:"} {districtReport.lat.toFixed(4)}°N, {districtReport.lng.toFixed(4)}°E • PCODE: {districtReport.pcode} • {lang === "bn" ? "তারিখ:" : "Target Date:"} {targetDate}
-                    </DialogDescription>
-                  </div>
-
-                  <div className="flex items-center gap-2 self-start sm:self-center">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        if (typeof window !== "undefined") window.print();
-                      }}
-                      className="border-[#E2E0D6] text-[#263B32] hover:bg-[#EDEBE2] flex items-center gap-1.5"
-                    >
-                      <Printer className="w-4 h-4" />
-                      <span>{t.btn_print}</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleDetectMyLocation}
-                      className="border-[#E2E0D6] text-[#263B32] hover:bg-[#EDEBE2] flex items-center gap-1.5"
-                      title="Detect GPS location"
-                    >
-                      <Crosshair className="w-4 h-4" />
-                      <span>{t.btn_gps_detect}</span>
-                    </Button>
-                  </div>
+            <DialogContent className="max-w-md w-full bg-[#FAF9F5] border border-[#DFDDD3] rounded-3xl p-6 sm:p-8 text-center shadow-2xl">
+              <DialogHeader className="space-y-1 text-center">
+                <DialogTitle className="text-2xl sm:text-[26px] font-black tracking-wide text-[#183026] uppercase">
+                  {lang === "bn" ? "বন্যা ঝুঁকি সারাংশ" : "FLOOD RISK SUMMARY"}
+                </DialogTitle>
+                <div className="text-xs sm:text-sm text-[#4B5563]">
+                  {lang === "bn" ? "সর্বশেষ আপডেট:" : "Last Updated:"} {targetDate}
+                </div>
+                <div className="text-sm sm:text-base font-semibold text-[#1F2937]">
+                  {districtReport.name}, {lang === "bn" ? "বাংলাদেশ" : "Bangladesh"}
                 </div>
               </DialogHeader>
 
-              <div className="py-6 space-y-6">
-                {/* 4 Summary Metric Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="p-4 rounded-xl bg-white border border-[#EDEBE2] shadow-sm">
-                    <div className="text-sm font-semibold text-[#263B32]/70 uppercase tracking-wider mb-1">
-                      {t.kpi_rank}
-                    </div>
-                    <div className="text-3xl font-extrabold text-[#11241C]">
-                      #{lang === "bn" ? toBnNum(districtReport.rank) : districtReport.rank}
-                      <span className="text-sm font-normal text-[#263B32]/60 ml-1">/ {lang === "bn" ? "৬৪" : "64"}</span>
-                    </div>
-                    <div className="text-xs text-[#263B32]/65 mt-1 font-medium">
-                      {districtReport.rank <= 10
-                        ? t.kpi_rank_sub_top
-                        : districtReport.rank <= 30
-                        ? t.kpi_rank_sub_mid
-                        : t.kpi_rank_sub_low}
-                    </div>
-                  </div>
-
-                  <div className="p-4 rounded-xl bg-white border border-[#EDEBE2] shadow-sm">
-                    <div className="text-sm font-semibold text-[#263B32]/70 uppercase tracking-wider mb-1">
-                      {t.kpi_forecast}
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className={`text-xs px-2.5 py-1 rounded-md font-bold uppercase ${districtReport.riskBadge.color}`}>
-                        {districtReport.riskBadge.text}
-                      </span>
-                    </div>
-                    <div className="text-xs text-[#263B32]/65 mt-2 font-medium">
-                      {lang === "bn" ? "মডেল সম্ভাবনা:" : "Model Probability:"} {districtReport.probabilityText}
-                    </div>
-                  </div>
-
-                  <div className="p-4 rounded-xl bg-white border border-[#EDEBE2] shadow-sm">
-                    <div className="text-sm font-semibold text-[#263B32]/70 uppercase tracking-wider mb-1">
-                      {t.kpi_events}
-                    </div>
-                    <div className="text-3xl font-extrabold text-[#11241C]">
-                      {lang === "bn" ? toBnNum(districtReport.eventsFlooded) : districtReport.eventsFlooded}
-                      <span className="text-sm font-normal text-[#263B32]/60 ml-1">
-                        / {lang === "bn" ? toBnNum(districtReport.eventsObserved) : districtReport.eventsObserved}
-                      </span>
-                    </div>
-                    <div className="text-xs text-[#263B32]/65 mt-1 font-medium">
-                      {t.kpi_events_sub}
-                    </div>
-                  </div>
-
-                  <div className="p-4 rounded-xl bg-white border border-[#EDEBE2] shadow-sm">
-                    <div className="text-sm font-semibold text-[#263B32]/70 uppercase tracking-wider mb-1">
-                      {t.kpi_land}
-                    </div>
-                    <div className="text-3xl font-extrabold text-[#11241C]">
-                      {districtReport.maxFloodedShare}
-                    </div>
-                    <div className="text-xs text-[#263B32]/65 mt-1 font-medium">
-                      {t.kpi_land_sub}
-                    </div>
-                  </div>
+              {/* Main Rank & Risk Level Card without # */}
+              <div className="bg-white rounded-2xl border border-[#DFDDD3] p-5 sm:p-6 shadow-xs space-y-2.5 mt-2">
+                <div className="text-4xl sm:text-5xl font-black text-[#11241C] tracking-tight">
+                  {lang === "bn" ? toBnNum(districtReport.rank) : districtReport.rank}
+                  <span className="text-2xl sm:text-3xl font-medium text-[#9CA3AF] ml-2">
+                    / {lang === "bn" ? "৬৪" : "64"}
+                  </span>
                 </div>
-
-                {/* Section 1: Hydrological Inundation Hazard */}
-                <div className="p-5 rounded-xl bg-white border border-[#EDEBE2] shadow-sm space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Waves className="w-5 h-5 text-[#2A7256]" />
-                    <h3 className="font-extrabold text-2xl text-[#11241C]">
-                      {t.sec_hazard}
-                    </h3>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="p-4 rounded-lg bg-[#FAF9F5] border border-[#EDEBE2]">
-                      <div className="text-sm font-bold text-[#263B32] mb-1">
-                        {t.ret_10yr}
-                      </div>
-                      <div className="text-2xl font-extrabold text-[#183026]">
-                        {districtReport.hazardShare10}
-                      </div>
-                      <div className="text-xs text-[#263B32]/70 mt-1">
-                        {t.ret_10yr_sub}
-                      </div>
-                    </div>
-
-                    <div className="p-4 rounded-lg bg-[#FAF9F5] border border-[#EDEBE2]">
-                      <div className="text-sm font-bold text-[#263B32] mb-1">
-                        {t.ret_100yr}
-                      </div>
-                      <div className="text-2xl font-extrabold text-[#C9443A]">
-                        {districtReport.hazardShare100}
-                      </div>
-                      <div className="text-xs text-[#263B32]/70 mt-1">
-                        {t.ret_100yr_sub}
-                      </div>
-                    </div>
-                  </div>
-
-                  {districtReport.floodedEventIds.length > 0 && (
-                    <div className="pt-2">
-                      <span className="text-sm font-bold text-[#263B32]">
-                        {lang === "bn"
-                          ? "স্যাটেলাইটে প্লাবিত প্রধান ঐতিহাসিক দুর্যোগসমূহ:"
-                          : "Historical Disaster Events Captured by Satellite:"}
-                      </span>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {districtReport.floodedEventIds.map((eid) => (
-                          <span
-                            key={eid}
-                            className="text-xs px-2.5 py-1 rounded-md bg-[#EDEBE2] text-[#183026] font-semibold"
-                          >
-                            {eid.toUpperCase()}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                <div className="text-xs sm:text-sm font-semibold text-[#4B5563]">
+                  {districtReport.rank <= 35
+                    ? (lang === "bn" ? "উচ্চ" : "High")
+                    : (lang === "bn" ? "মাঝারি" : "Moderate")}
+                  /{lang === "bn" ? "জাতীয় র‍্যাংক" : "National Rank"}
                 </div>
-
-                {/* Section 2: Nearest Emergency Shelters & Critical Facilities */}
-                <div className="p-5 rounded-xl bg-white border border-[#EDEBE2] shadow-sm space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Building2 className="w-5 h-5 text-[#2A7256]" />
-                      <h3 className="font-extrabold text-2xl text-[#11241C]">
-                        {t.sec_shelters}
-                      </h3>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setIsDistrictReportOpen(false);
-                        navigateToPage("shelters");
-                      }}
-                      className="text-sm text-[#2A7256] hover:text-[#183026] font-bold flex items-center gap-1"
-                    >
-                      <span>{t.sec_shelters_all} {districtReport.name}</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
-
-                  <div className="space-y-3">
-                    {reportAssets.length === 0 && (
-                      <div className="p-3.5 rounded-lg bg-[#FAF9F5] border border-[#EDEBE2] text-sm text-[#263B32]/80">
-                        {lang === "bn"
-                          ? "এই জেলার কেন্দ্র থেকে ৫০ কিমির মধ্যে কোনো নিবন্ধিত আশ্রয়কেন্দ্র বা সেবাকেন্দ্র নেই। জরুরি প্রয়োজনে ৯৯৯ নম্বরে কল করুন।"
-                          : "No registered shelter or facility within 50 km of this district's centre yet. In an emergency call 999."}
-                      </div>
-                    )}
-                    {reportAssets.map((item) => (
-                      <div
-                        key={item.asset.id}
-                        className="p-3.5 rounded-lg bg-[#FAF9F5] border border-[#EDEBE2] flex flex-col sm:flex-row sm:items-center justify-between gap-2"
-                      >
-                        <div className="space-y-0.5">
-                          <div className="font-bold text-base text-[#11241C]">
-                            {item.asset.name}
-                          </div>
-                          <div className="text-xs text-[#263B32]/70">
-                            {item.asset.asset_type.replace(/_/g, " ")}
-                            {item.asset.district?.name ? ` • ${item.asset.district.name}` : ""}
-                          </div>
-                        </div>
-                        <div className="text-sm font-bold text-[#183026] self-start sm:self-center px-2.5 py-1 rounded bg-[#EDEBE2]">
-                          {lang === "bn"
-                            ? `${toBnNum(item.distance_kilometers.toFixed(1))} কিমি`
-                            : `${item.distance_kilometers.toFixed(1)} km`}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                {/* Horizontal Progress Bar */}
+                <div className="w-full max-w-[260px] mx-auto h-2 bg-[#E5E7EB] rounded-full overflow-hidden my-2">
+                  <div
+                    className="h-full bg-[#C9443A] rounded-full transition-all duration-500"
+                    style={{
+                      width: `${Math.min(100, Math.max(15, Math.round(((65 - districtReport.rank) / 64) * 100)))}%`,
+                    }}
+                  />
                 </div>
-
-                {/* Section 3: Emergency Helplines & Citizen Action Protocol */}
-                <div className="p-5 rounded-xl bg-[#11241C] text-white shadow-sm space-y-5">
-                  <div className="flex items-center gap-2">
-                    <Phone className="w-5 h-5 text-[#22C55E]" />
-                    <h3 className="font-extrabold text-2xl text-white">
-                      {t.sec_helplines}
-                    </h3>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <a
-                      href="tel:999"
-                      className="p-3 rounded-lg bg-white/10 hover:bg-white/20 transition text-center border border-white/10 block"
-                    >
-                      <div className="text-2xl font-extrabold text-white">
-                        {lang === "bn" ? "৯৯৯" : "999"}
-                      </div>
-                      <div className="text-xs text-white/70 font-medium mt-0.5">{t.helpline_999}</div>
-                    </a>
-
-                    <a
-                      href="tel:1090"
-                      className="p-3 rounded-lg bg-white/10 hover:bg-white/20 transition text-center border border-white/10 block"
-                    >
-                      <div className="text-2xl font-extrabold text-[#22C55E]">
-                        {lang === "bn" ? "১০৯০" : "1090"}
-                      </div>
-                      <div className="text-xs text-white/70 font-medium mt-0.5">{t.helpline_1090}</div>
-                    </a>
-
-                    <a
-                      href="tel:109"
-                      className="p-3 rounded-lg bg-white/10 hover:bg-white/20 transition text-center border border-white/10 block"
-                    >
-                      <div className="text-2xl font-extrabold text-white">
-                        {lang === "bn" ? "১০৯" : "109"}
-                      </div>
-                      <div className="text-xs text-white/70 font-medium mt-0.5">{t.helpline_109}</div>
-                    </a>
-
-                    <a
-                      href="tel:+880249350158"
-                      className="p-3 rounded-lg bg-white/10 hover:bg-white/20 transition text-center border border-white/10 block"
-                    >
-                      <div className="text-base font-extrabold text-white mt-1">
-                        {lang === "bn" ? "রেড ক্রিসেন্ট" : "Red Crescent"}
-                      </div>
-                      <div className="text-xs text-white/70 font-medium mt-0.5">{t.helpline_red_crescent}</div>
-                    </a>
-                  </div>
-
-                  <div className="p-4 rounded-lg bg-white/5 border border-white/10 space-y-2 text-sm text-white/85">
-                    <div className="font-bold text-white text-base">{t.protocol_title}</div>
-                    <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm">
-                      <li>{t.protocol_1}</li>
-                      <li>{t.protocol_2}</li>
-                      <li>{t.protocol_3}</li>
-                      <li>{t.protocol_4}</li>
-                    </ul>
-                  </div>
+                <div className="text-xs sm:text-sm text-[#374151]">
+                  {lang === "bn" ? "বর্তমান বন্যা ঝুঁকির মাত্রা:" : "Current Flood Risk Level:"}{" "}
+                  <span className="font-extrabold text-[#11241C]">
+                    {districtReport.rank <= 35
+                      ? (lang === "bn" ? "উচ্চ" : "High")
+                      : (lang === "bn" ? "মাঝারি" : "Moderate")}
+                  </span>
                 </div>
               </div>
 
-              <DialogFooter className="pt-2 flex flex-row items-center justify-between border-t border-[#EDEBE2]">
-                <div className="text-xs text-[#263B32]/70">
-                  {lang === "bn"
-                    ? "উপাত্তের উৎস: কোপার্নিকাস সেন্টিনেল-১ (GFM), UNOSAT, JRC GloFAS, ERA5/GFS (Open-Meteo) ও OpenStreetMap।"
-                    : "Data Sources: Copernicus Sentinel-1 (GFM), UNOSAT, JRC GloFAS, ERA5/GFS (Open-Meteo) & OpenStreetMap."}
+              {/* HAZARD LEVELS Section */}
+              <div className="text-left mt-5 space-y-2.5">
+                <h4 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#11241C]">
+                  {lang === "bn" ? "ঝুঁকির মাত্রা" : "HAZARD LEVELS"}
+                </h4>
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                  <div className="bg-white rounded-2xl border border-[#DFDDD3] p-4 sm:p-5 text-center shadow-xs">
+                    <div className="text-xs sm:text-sm font-bold text-[#11241C]">
+                      {lang === "bn" ? "১০-বছর" : "10-Year"}
+                    </div>
+                    <div className="text-3xl sm:text-4xl font-black text-[#11241C] my-1 sm:my-2">
+                      {districtReport.hazardShare10}
+                    </div>
+                    <div className="text-[11px] sm:text-xs text-[#6B7280]">
+                      {lang === "bn" ? "প্রতি ১০ বছরে একবার সম্ভাব্য" : "Expected once every 10 years"}
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-2xl border border-[#DFDDD3] p-4 sm:p-5 text-center shadow-xs">
+                    <div className="text-xs sm:text-sm font-bold text-[#11241C]">
+                      {lang === "bn" ? "১০০-বছর" : "100-Year"}
+                    </div>
+                    <div className="text-3xl sm:text-4xl font-black text-[#C9443A] my-1 sm:my-2">
+                      {districtReport.hazardShare100}
+                    </div>
+                    <div className="text-[11px] sm:text-xs text-[#6B7280]">
+                      {lang === "bn" ? "প্রতি ১০০ বছরে একবার সম্ভাব্য" : "Expected once every 100 years"}
+                    </div>
+                  </div>
                 </div>
-                <Button onClick={() => setIsDistrictReportOpen(false)}>
-                  {t.btn_close}
-                </Button>
-              </DialogFooter>
+              </div>
             </DialogContent>
           </Dialog>
 

@@ -116,11 +116,6 @@ export const AlertsFeed: React.FC<AlertsFeedProps> = ({
               const occupancy = alert.assets_at_risk?.total?.occupancy ?? 0;
               const peopleServed = occupancy.toLocaleString();
 
-              // Circumference for radial progress (r=16, 2*PI*r ≈ 100.53)
-              const radius = 16;
-              const circumference = 2 * Math.PI * radius;
-              const strokeDashoffset = circumference - (alert.probability * circumference);
-
               return (
                 <div
                   key={alert.alert_id}
@@ -155,58 +150,24 @@ export const AlertsFeed: React.FC<AlertsFeedProps> = ({
                       </div>
                     </div>
 
-                    {/* Graph Chart (Radial Gauge + Bar Meter) */}
-                    <div className="flex items-center gap-2.5 shrink-0">
-                      {/* Mini Radial Graph Gauge */}
-                      <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
-                        <svg className="w-12 h-12 transform -rotate-90" viewBox="0 0 38 38">
-                          <circle
-                            cx="19"
-                            cy="19"
-                            r={radius}
-                            className="text-[#F3F4F6]"
-                            strokeWidth="3.5"
-                            stroke="currentColor"
-                            fill="none"
-                          />
-                          <circle
-                            cx="19"
-                            cy="19"
-                            r={radius}
-                            className={isAlert ? "text-[#D9381E]" : "text-[#E88C30]"}
-                            strokeWidth="3.5"
-                            strokeDasharray={circumference}
-                            strokeDashoffset={strokeDashoffset}
-                            strokeLinecap="round"
-                            stroke="currentColor"
-                            fill="none"
-                            style={{ transition: "stroke-dashoffset 0.6s ease" }}
-                          />
-                        </svg>
-                        <span className="absolute text-[11px] font-black text-[#111827]">
-                          {percentNum > 95 ? ">95%" : `${percentNum}%`}
-                        </span>
+                    {/* Percentage Text & Linear Meter */}
+                    <div className="text-right flex flex-col items-end shrink-0">
+                      <div className="text-[13px] text-[#6B7280] font-semibold leading-none mb-1">
+                        {lang === "bn" ? "সম্ভাবনা" : "Likelihood"}
                       </div>
-
-                      {/* Percentage Text & Linear Meter */}
-                      <div className="text-right flex flex-col items-end">
-                        <div className="text-[13px] text-[#6B7280] font-semibold leading-none mb-1">
-                          {lang === "bn" ? "সম্ভাবনা" : "Likelihood"}
-                        </div>
-                        <div className="text-sm sm:text-base font-black text-[#111827] leading-none">
-                          {isBn ? toBnNum(likelihoodText) : likelihoodText}
-                        </div>
-                        {/* Mini Linear Graph Bar */}
-                        <div className="w-16 sm:w-20 h-1.5 bg-[#E5E7EB] rounded-full overflow-hidden mt-1.5">
-                          <div
-                            className={`h-full rounded-full transition-all duration-500 ${
-                              isAlert
-                                ? "bg-gradient-to-r from-[#F87171] to-[#D9381E]"
-                                : "bg-gradient-to-r from-[#FBBF24] to-[#E88C30]"
-                            }`}
-                            style={{ width: `${Math.min(100, Math.max(8, alert.probability * 100))}%` }}
-                          />
-                        </div>
+                      <div className="text-sm sm:text-base font-black text-[#111827] leading-none">
+                        {isBn ? toBnNum(likelihoodText) : likelihoodText}
+                      </div>
+                      {/* Mini Linear Graph Bar */}
+                      <div className="w-16 sm:w-20 h-1.5 bg-[#E5E7EB] rounded-full overflow-hidden mt-1.5">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            isAlert
+                              ? "bg-gradient-to-r from-[#F87171] to-[#D9381E]"
+                              : "bg-gradient-to-r from-[#FBBF24] to-[#E88C30]"
+                          }`}
+                          style={{ width: `${Math.min(100, Math.max(8, alert.probability * 100))}%` }}
+                        />
                       </div>
                     </div>
                   </div>
