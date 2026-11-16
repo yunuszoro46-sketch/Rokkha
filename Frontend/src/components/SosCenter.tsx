@@ -12,7 +12,7 @@ import {
   StoredSos,
   cancelSos,
   forgetSos,
-  isOpen,
+  isOpen as checkIsOpen,
   readQueue,
   saveSos,
   smsText,
@@ -24,6 +24,9 @@ interface SosCenterProps {
   /** The logged-in user's saved place, offered as the location. */
   savedPlace?: { lng: number; lat: number; label: string | null } | null;
   contactName?: string;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideFloatingButton?: boolean;
 }
 
 const NEEDS: Array<{ id: Need; en: string; bn: string }> = [
@@ -43,12 +46,30 @@ const SYNC_EVERY_MS = 20000;
  * answered, the screen says "saved on this phone, not sent yet" and offers a
  * phone call and an SMS, which may work when mobile data does not.
  */
-export const SosCenter: React.FC<SosCenterProps> = ({ lang = "en", savedPlace = null, contactName = "" }) => {
+export const SosCenter: React.FC<SosCenterProps> = ({
+  lang = "en",
+  savedPlace = null,
+  contactName = "",
+  isOpen,
+  onOpenChange,
+  hideFloatingButton = false,
+}) => {
   const isBn = lang === "bn";
   const tr = (en: string, bn: string) => (isBn ? bn : en);
   const num = (value: number | string) => (isBn ? toBnNum(value) : String(value));
 
   const [isOpenPanel, setIsOpenPanel] = useState(false);
+
+  useEffect(() => {
+    if (isOpen !== undefined) {
+      setIsOpenPanel(isOpen);
+    }
+  }, [isOpen]);
+
+  const handleOpenChange = (open: boolean) => {
+    setIsOpenPanel(open);
+    onOpenChange?.(open);
+  };
   const [queue, setQueue] = useState<StoredSos[]>([]);
   const [position, setPosition] = useState<{ lng: number; lat: number; accuracy_m: number | null } | null>(null);
   const [isLocating, setIsLocating] = useState(false);
@@ -70,7 +91,7 @@ export const SosCenter: React.FC<SosCenterProps> = ({ lang = "en", savedPlace = 
     const onOnline = () => sync();
     window.addEventListener("online", onOnline);
     const timer = window.setInterval(() => {
-      if (readQueue().some(isOpen)) sync();
+      if (readQueue().some(checkIsOpen)) sync();
     }, SYNC_EVERY_MS);
     return () => {
       window.removeEventListener("online", onOnline);
@@ -167,25 +188,34 @@ export const SosCenter: React.FC<SosCenterProps> = ({ lang = "en", savedPlace = 
     }
   };
 
-  const openCount = queue.filter(isOpen).length;
+  const openCount = queue.filter(checkIsOpen).length;
   const unsentCount = queue.filter((q) => q.delivery === "saved").length;
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setIsOpenPanel(true)}
-        className="fixed bottom-5 right-5 z-[900] h-14 px-5 rounded-full bg-[#C9443A] hover:bg-[#A9362E] text-white font-extrabold text-base shadow-[0_8px_24px_rgba(0,0,0,0.35)] flex items-center gap-2"
-        aria-label={tr("Ask for emergency help", "জরুরি সাহায্য চান")}
-      >
-        <LifeBuoy className="w-5 h-5" />
-        <span>{tr("SOS", "জরুরি সাহায্য")}</span>
-        {openCount > 0 && (
-          <span className="ml-1 min-w-6 h-6 px-1.5 rounded-full bg-white text-[#C9443A] text-sm font-black flex items-center justify-center">
-            {num(openCount)}
-          </span>
-        )}
-      </button>
+      {!hideFloatingButton && (
+        <button
+          type="button"
+          onClick={() => handleOpenChange(true)}
+          className="fixed bottom-5 right-5 z-[900] h-14 px-5 rounded-full bg-[linear-gradient(90deg,#24b859_0%,#8d9635_48%,#e03328_100%)] hover:opacity-95 text-white font-extrabold shadow-[0_8px_24px_rgba(224,51,40,0.35)] flex items-center gap-3 transition-transform hover:scale-105"
+          aria-label={tr("Emergency Rescue Request", "জরুরি উদ্ধার অনুরোধ")}
+        >
+          <LifeBuoy className="w-6 h-6 text-white stroke-[2.5]" />
+          <div className="flex flex-col text-left leading-none">
+            <span className="text-[10px] font-black tracking-wider uppercase text-white/90">
+              {tr("EMERGENCY", "জরুরি")}
+            </span>
+            <span className="text-xs font-black tracking-wider uppercase text-white">
+              {tr("RESCUE REQUEST", "উদ্ধার অনুরোধ")}
+            </span>
+          </div>
+          {openCount > 0 && (
+            <span className="ml-1 min-w-5 h-5 px-1.5 rounded-full bg-white text-[#C9443A] text-xs font-black flex items-center justify-center">
+              {num(openCount)}
+            </span>
+          )}
+        </button>
+      )}
 
       {isOpenPanel && (
         <div className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4" role="dialog" aria-modal="true">
@@ -195,7 +225,7 @@ export const SosCenter: React.FC<SosCenterProps> = ({ lang = "en", savedPlace = 
                 <LifeBuoy className="w-5 h-5" />
                 {tr("Ask for emergency help", "জরুরি সাহায্য চান")}
               </div>
-              <button type="button" onClick={() => setIsOpenPanel(false)} aria-label={tr("Close", "বন্ধ করুন")} className="p-1.5 rounded-full hover:bg-white/20">
+              <button type="button" onClick={() => handleOpenChange(false)} aria-label={tr("Close", "বন্ধ করুন")} className="p-1.5 rounded-full hover:bg-white/20">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -264,7 +294,7 @@ export const SosCenter: React.FC<SosCenterProps> = ({ lang = "en", savedPlace = 
                               </a>
                             </>
                           )}
-                          {isOpen(item) ? (
+                          {checkIsOpen(item) ? (
                             <Button
                               size="sm"
                               variant="outline"

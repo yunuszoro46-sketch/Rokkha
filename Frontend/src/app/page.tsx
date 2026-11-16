@@ -18,6 +18,7 @@ import {
   ExternalLink,
   ShieldCheck,
   Shield,
+  LifeBuoy,
 } from "lucide-react";
 
 // Official shadcn/ui primitives
@@ -525,6 +526,7 @@ export function CitizenPortalApp({
   const [pointCheckResult, setPointCheckResult] = useState<PointFloodCheck | null>(null);
   const [isCheckingPoint, setIsCheckingPoint] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const [isSosOpen, setIsSosOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isDistrictReportOpen, setIsDistrictReportOpen] = useState(false);
   const [modelStatus, setModelStatus] = useState<ModelStatus | null>(null);
@@ -880,9 +882,9 @@ export function CitizenPortalApp({
                 >
                   <img src={logoAsset.src} alt="Rokkha" />
                 </a>
-                <nav aria-label="Primary navigation">
+                <nav aria-label="Primary navigation" className="flex items-center gap-7 sm:gap-9">
                   <a
-                    className={activeView === "overview" ? "active" : ""}
+                    className={`text-[19px] font-semibold transition ${activeView === "overview" ? "active text-[#183026]" : "text-[#263B32]/80 hover:text-[#183026]"}`}
                     href="#overview"
                     onClick={(e) => {
                       e.preventDefault();
@@ -891,62 +893,19 @@ export function CitizenPortalApp({
                   >
                     {t.nav_home}
                   </a>
-                  <a
-                    className={activeView === "map" ? "active" : ""}
-                    href="#map"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigateToPage("map");
-                    }}
-                  >
-                    {t.nav_map}
-                  </a>
-                  <a
-                    className={activeView === "alerts" ? "active" : ""}
-                    href="#alerts"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigateToPage("alerts");
-                    }}
-                  >
-                    {t.nav_alerts}
-                  </a>
-                  <a
-                    className={activeView === "satellite" ? "active" : ""}
-                    href="#satellite"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigateToPage("satellite");
-                    }}
-                  >
-                    {t.nav_data}
-                  </a>
                   <button
                     onClick={() => setIsAboutOpen(true)}
-                    className="text-left font-semibold text-base hover:text-[#263B32] transition"
+                    className="text-left font-semibold text-[19px] text-[#263B32]/80 hover:text-[#183026] transition"
                   >
                     {t.nav_about}
                   </button>
                 </nav>
                 <div className="header-actions flex items-center gap-2">
-                  <button
-                    onClick={toggleLanguage}
-                    className="h-11 px-3.5 rounded-lg border border-[#EDEBE2] bg-white text-sm font-bold text-[#183026] hover:bg-[#FAF9F5] shadow-sm transition flex items-center gap-1.5"
-                    title="Switch Language / ভাষা পরিবর্তন করুন"
-                  >
-                    <span className={lang === "bn" ? "text-[#183026] font-extrabold" : "text-[#183026]/40"}>
-                      বাংলা
-                    </span>
-                    <span className="text-[#183026]/30">|</span>
-                    <span className={lang === "en" ? "text-[#183026] font-extrabold" : "text-[#183026]/40"}>
-                      EN
-                    </span>
-                  </button>
                   <Button
                     onClick={() => navigateToPage("login")}
-                    className="button shadow-sm"
+                    className="button shadow-sm text-[19px] font-bold h-12 px-6 rounded-xl"
                   >
-                    {t.btn_get_started} <Icon name="arrow" size={16} />
+                    {t.btn_get_started} <Icon name="arrow" size={18} />
                   </Button>
                 </div>
               </div>
@@ -972,18 +931,46 @@ export function CitizenPortalApp({
                       <p>
                         {t.hero_desc}
                       </p>
-                      <div className="button-row">
-                        <Button onClick={() => navigateToPage("login")} className="button gap-2">
+                      <div className="button-row flex flex-wrap items-start gap-4 pt-1">
+                        <Button
+                          onClick={() => navigateToPage("login")}
+                          className="button gap-2 text-[14px] font-bold h-14 px-6 rounded-2xl shadow-sm mt-0"
+                        >
                           <span>{t.btn_get_started}</span>
                           <Icon name="arrow" size={16} />
                         </Button>
-                        <Button
-                          variant="outline"
-                          onClick={() => setIsAboutOpen(true)}
-                          className="button button-outline gap-2"
-                        >
-                          <Icon name="play" size={17} /> {t.btn_see_how}
-                        </Button>
+
+                        {/* Emergency SOS Button matching Reference Image in exact horizontal alignment */}
+                        <div className="flex flex-col items-center">
+                          <button
+                            type="button"
+                            onClick={() => setIsSosOpen(true)}
+                            className="group relative flex items-center gap-3.5 px-6 py-2.5 h-14 rounded-full bg-[linear-gradient(90deg,#24b859_0%,#8d9635_48%,#e03328_100%)] hover:opacity-95 text-white shadow-[0_8px_24px_rgba(224,51,40,0.32)] transition-all hover:scale-[1.02] active:scale-[0.98]"
+                            aria-label="Emergency Rescue Request"
+                          >
+                            <div className="w-9 h-9 rounded-full border-2 border-white/90 flex items-center justify-center shrink-0">
+                              <LifeBuoy className="w-5 h-5 text-white stroke-[2.5]" />
+                            </div>
+                            <div className="flex flex-col text-left leading-[1.08]">
+                              <span className="text-[11px] font-black tracking-wider text-white uppercase drop-shadow-xs">
+                                {lang === "bn" ? "জরুরি" : "EMERGENCY"}
+                              </span>
+                              <span className="text-[13px] font-black tracking-wider text-white uppercase drop-shadow-xs">
+                                {lang === "bn" ? "উদ্ধার" : "RESCUE"}
+                              </span>
+                              <span className="text-[13px] font-black tracking-wider text-white uppercase drop-shadow-xs">
+                                {lang === "bn" ? "অনুরোধ" : "REQUEST"}
+                              </span>
+                            </div>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setIsSosOpen(true)}
+                            className="mt-1.5 px-4 py-1 rounded-full bg-[#24b859] hover:bg-[#1ea850] text-white text-[13px] font-bold shadow-xs transition hover:scale-105"
+                          >
+                            {lang === "bn" ? "ঝুঁকি বা দুর্যোগ জানান" : "Report A Hazard"}
+                          </button>
+                        </div>
                       </div>
                     </div>
                     <div className="hero-map">
@@ -1578,6 +1565,8 @@ export function CitizenPortalApp({
         <SosCenter
           lang={lang}
           contactName={accountUser?.name || ""}
+          isOpen={isSosOpen}
+          onOpenChange={setIsSosOpen}
           savedPlace={
             accountUser?.location
               ? {
