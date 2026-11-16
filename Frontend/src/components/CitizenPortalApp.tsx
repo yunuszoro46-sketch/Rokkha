@@ -841,8 +841,8 @@ export function CitizenPortalApp({
           isPageLoading ? "page-loading" : ""
         }`}
       >
-      {/* 1. Left Side Dashboard Rail - Multi-Page Navigation (only shown on functional pages, hidden on landing/overview) */}
-      {activeView !== "overview" && activeView !== "login" && (
+      {/* 1. Left Side Dashboard Rail - Multi-Page Navigation (shown on all pages except login) */}
+      {activeView !== "login" && (
         <SideDashboard
           activeView={activeView}
           onSelectView={navigateToPage}
@@ -859,7 +859,7 @@ export function CitizenPortalApp({
       {/* Main Content Area */}
       <div
         className={`flex-1 w-full bg-[#EDEBE2] bg-[url('/topo-pattern.svg')] bg-repeat transition-all duration-300 min-w-0 flex flex-col justify-between ${
-          activeView === "overview" || activeView === "login"
+          activeView === "login"
             ? "pl-0"
             : isSidebarCollapsed
             ? "pl-20"
@@ -882,11 +882,11 @@ export function CitizenPortalApp({
                 >
                   <img src={logoAsset.src} alt="Rokkha" />
                 </a>
-                <nav aria-label="Primary navigation" className="flex items-center gap-4 sm:gap-6 lg:gap-7 overflow-x-auto py-2">
+                <nav aria-label="Primary navigation" className="flex items-center gap-7 sm:gap-9">
                   <a
-                    className={`text-[17px] font-semibold transition shrink-0 ${
+                    className={`text-[17px] font-semibold transition pb-1 ${
                       activeView === "overview"
-                        ? "active text-[#183026] border-b-2 border-[#183026] pb-0.5"
+                        ? "active text-[#183026] border-b-2 border-[#183026]"
                         : "text-[#263B32]/80 hover:text-[#183026]"
                     }`}
                     href="#overview"
@@ -898,9 +898,9 @@ export function CitizenPortalApp({
                     {t.nav_home}
                   </a>
                   <a
-                    className={`text-[17px] font-semibold transition shrink-0 ${
+                    className={`text-[17px] font-semibold transition pb-1 ${
                       activeView === "map"
-                        ? "active text-[#183026] border-b-2 border-[#183026] pb-0.5"
+                        ? "active text-[#183026] border-b-2 border-[#183026]"
                         : "text-[#263B32]/80 hover:text-[#183026]"
                     }`}
                     href="#map"
@@ -912,9 +912,9 @@ export function CitizenPortalApp({
                     {t.nav_map}
                   </a>
                   <a
-                    className={`text-[17px] font-semibold transition shrink-0 ${
+                    className={`text-[17px] font-semibold transition pb-1 ${
                       activeView === "alerts"
-                        ? "active text-[#183026] border-b-2 border-[#183026] pb-0.5"
+                        ? "active text-[#183026] border-b-2 border-[#183026]"
                         : "text-[#263B32]/80 hover:text-[#183026]"
                     }`}
                     href="#alerts"
@@ -926,9 +926,9 @@ export function CitizenPortalApp({
                     {t.nav_alerts}
                   </a>
                   <a
-                    className={`text-[17px] font-semibold transition shrink-0 ${
+                    className={`text-[17px] font-semibold transition pb-1 ${
                       activeView === "satellite"
-                        ? "active text-[#183026] border-b-2 border-[#183026] pb-0.5"
+                        ? "active text-[#183026] border-b-2 border-[#183026]"
                         : "text-[#263B32]/80 hover:text-[#183026]"
                     }`}
                     href="#satellite"
@@ -937,50 +937,37 @@ export function CitizenPortalApp({
                       navigateToPage("satellite");
                     }}
                   >
-                    {lang === "bn" ? "স্যাটেলাইট টাইমলাইন" : "Satellite Timeline"}
-                  </a>
-                  <a
-                    className={`text-[17px] font-semibold transition shrink-0 ${
-                      activeView === "hydro"
-                        ? "active text-[#183026] border-b-2 border-[#183026] pb-0.5"
-                        : "text-[#263B32]/80 hover:text-[#183026]"
-                    }`}
-                    href="#hydro"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigateToPage("hydro");
-                    }}
-                  >
-                    {lang === "bn" ? "বৃষ্টি ও নদী" : "Rain & Rivers"}
-                  </a>
-                  <a
-                    className={`text-[17px] font-semibold transition shrink-0 ${
-                      activeView === "shelters"
-                        ? "active text-[#183026] border-b-2 border-[#183026] pb-0.5"
-                        : "text-[#263B32]/80 hover:text-[#183026]"
-                    }`}
-                    href="#shelters"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigateToPage("shelters");
-                    }}
-                  >
-                    {lang === "bn" ? "আশ্রয়কেন্দ্র" : "Safe Shelters"}
+                    {t.nav_data}
                   </a>
                   <button
                     type="button"
                     onClick={() => setIsAboutOpen(true)}
-                    className="text-left font-semibold text-[17px] text-[#263B32]/80 hover:text-[#183026] transition shrink-0 cursor-pointer"
+                    className="text-left font-semibold text-[17px] text-[#263B32]/80 hover:text-[#183026] transition cursor-pointer pb-1"
                   >
                     {t.nav_about}
                   </button>
                 </nav>
-                <div className="header-actions flex items-center gap-2 shrink-0">
+                <div className="header-actions flex items-center gap-3 shrink-0">
+                  <button
+                    type="button"
+                    onClick={toggleLanguage}
+                    className="h-11 px-3.5 rounded-xl border border-[#DFDDD3] bg-white text-sm font-bold text-[#183026] hover:bg-[#FAF9F5] shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                    title="Switch Language / ভাষা পরিবর্তন করুন"
+                  >
+                    <span className={lang === "bn" ? "text-[#183026] font-extrabold" : "text-[#183026]/40"}>
+                      বাংলা
+                    </span>
+                    <span className="text-[#183026]/30 font-medium">|</span>
+                    <span className={lang === "en" ? "text-[#183026] font-extrabold" : "text-[#183026]/40"}>
+                      EN
+                    </span>
+                  </button>
                   <Button
                     onClick={() => navigateToPage("map")}
-                    className="button shadow-sm text-[17px] font-bold h-12 px-5 rounded-xl cursor-pointer"
+                    className="button shadow-sm text-[16px] font-bold h-11 px-5 rounded-xl bg-[#11241C] hover:bg-[#0A1812] text-white flex items-center gap-2 cursor-pointer"
                   >
-                    {t.btn_get_started} <Icon name="arrow" size={18} />
+                    <span>{t.btn_get_started}</span>
+                    <Icon name="arrow" size={16} />
                   </Button>
                 </div>
               </div>
