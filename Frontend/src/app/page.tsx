@@ -402,20 +402,38 @@ const PAGE_METADATA: Record<
 };
 
 function LoadingScreen({ lang = "en" }: { lang?: Language }) {
-  const t = UI_TEXT[lang] || UI_TEXT.en;
+  const isBn = lang === "bn";
+  const loadingText = isBn ? "বন্যা তথ্য প্রস্তুত হচ্ছে" : "PREPARING FLOOD INTELLIGENCE";
+
   return (
     <div
-      className="loading-screen"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-hidden"
       role="status"
       aria-live="polite"
       aria-label="Loading Rokkha"
     >
-      <div className="loading-content">
-        <div className="loading-brand">
-          <img src={logoAsset.src} alt="Rokkha" />
+      {/* Background Image: Satellite Flood Radar with balanced street water flow on both sides */}
+      <div
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: "url('/satellite-flood-bg.jpg')",
+        }}
+      />
+      {/* Backdrop overlay blur */}
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-[4px]" />
+
+      {/* Centered Loading Card Matching Video */}
+      <div className="relative z-10 w-full max-w-[390px] my-auto bg-[#EDEBE2] border border-[#D5D2C5] rounded-3xl p-8 sm:p-10 shadow-[0_25px_60px_rgba(0,0,0,0.5)] flex flex-col items-center text-center animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-center mb-3">
+          <img
+            src={logoAsset.src}
+            alt="Rokkha"
+            className="h-10 w-auto object-contain"
+          />
         </div>
-        <div className="map-loader" aria-hidden="true">
-          <svg viewBox="0 0 465 640">
+
+        <div className="map-loader w-48 sm:w-56 my-2" aria-hidden="true">
+          <svg viewBox="0 0 465 640" className="w-full h-full">
             <path className="map-loader-track" d={mapOutline} />
             <path
               className="map-loader-progress"
@@ -433,8 +451,12 @@ function LoadingScreen({ lang = "en" }: { lang?: Language }) {
             />
           </svg>
         </div>
-        <p>{t.loading_text}</p>
-        <div className="loading-dots" aria-hidden="true">
+
+        <p className="font-extrabold text-xs sm:text-sm tracking-widest text-[#11241C] uppercase mt-4">
+          {loadingText}
+        </p>
+
+        <div className="loading-dots flex gap-2 justify-center mt-3" aria-hidden="true">
           <i />
           <i />
           <i />
@@ -1608,7 +1630,11 @@ export function CitizenPortalApp({
         }}
         onLoginSuccess={() => {
           setIsLoginOpen(false);
-          navigateToPage("map");
+          setIsPageLoading(true);
+          window.setTimeout(() => {
+            setIsPageLoading(false);
+            navigateToPage("map");
+          }, 2400);
         }}
         lang={lang}
         onToggleLanguage={toggleLanguage}
