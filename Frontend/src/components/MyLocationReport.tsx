@@ -137,14 +137,14 @@ export const MyLocationReport: React.FC<MyLocationReportProps> = ({
   const depths = (cell?.hazard || []).filter((h) => h.depth_label);
 
   return (
-    <Card className="border-[#DFDDD3] bg-white rounded-3xl shadow-sm overflow-hidden mb-4" id="my-report">
-      <CardHeader className="px-5 sm:px-6 py-4 border-b border-[#EBE8DC] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <Card className="border-[#DFDDD3] bg-white rounded-2xl shadow-xs overflow-hidden mb-3" id="my-report">
+      <CardHeader className="px-4 sm:px-5 py-2.5 border-b border-[#EBE8DC] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div className="space-y-0.5">
-          <CardTitle className="text-xl sm:text-2xl font-extrabold text-[#12241C] tracking-tight">
+          <CardTitle className="text-lg sm:text-xl font-extrabold text-[#12241C] tracking-tight">
             {isBn ? "আমার এলাকার বন্যা প্রতিবেদন" : "My Place Flood Report"}
           </CardTitle>
           <div className="flex items-center gap-1.5 text-xs text-[#5C6863] font-medium">
-            <UserIcon size={13} />
+            <UserIcon size={12} />
             <span>
               {user.name} · {user.email}
             </span>
@@ -154,23 +154,23 @@ export const MyLocationReport: React.FC<MyLocationReportProps> = ({
           variant="outline"
           size="sm"
           onClick={onLogOut}
-          className="h-8.5 px-3 border-[#DFDDD3] text-[#12241C] hover:bg-[#FAF9F5] flex items-center gap-1.5 text-xs font-semibold rounded-lg self-start sm:self-center"
+          className="h-7.5 px-2.5 border-[#DFDDD3] text-[#12241C] hover:bg-[#FAF9F5] flex items-center gap-1 text-xs font-semibold rounded-lg self-start sm:self-center"
         >
-          <LogOut className="w-3.5 h-3.5" />
+          <LogOut className="w-3 h-3" />
           <span>{isBn ? "লগআউট" : "Log out"}</span>
         </Button>
       </CardHeader>
 
-      <CardContent className="p-5 sm:p-6 space-y-4">
+      <CardContent className="p-3 sm:p-4 space-y-3">
         {error && (
-          <div role="alert" className="rounded-xl border border-[#FCA5A5] bg-[#FEE2E2] px-3.5 py-2.5 text-sm font-semibold text-[#991B1B]">
+          <div role="alert" className="rounded-xl border border-[#FCA5A5] bg-[#FEE2E2] px-3 py-2 text-xs font-semibold text-[#991B1B]">
             {error}
           </div>
         )}
 
         {!user.location ? (
-          <div className="rounded-2xl border border-[#DFDDD3] bg-[#FAF9F5] p-5 space-y-3">
-            <p className="text-sm text-[#12241C]">
+          <div className="rounded-xl border border-[#DFDDD3] bg-[#FAF9F5] p-3 sm:p-4 space-y-2">
+            <p className="text-xs sm:text-sm text-[#12241C]">
               {isBn
                 ? "আপনার এলাকার প্রতিবেদন দেখতে আপনার অবস্থান সংরক্ষণ করুন। এটি শুধু আপনিই দেখতে পারবেন এবং যেকোনো সময় মুছে ফেলতে পারবেন।"
                 : "Save your location to see the report for your own place. Only you can see it, and you can remove it at any time."}

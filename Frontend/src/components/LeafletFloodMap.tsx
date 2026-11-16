@@ -17,7 +17,7 @@ import {
   getRegisteredAssets,
   getRiverSites,
 } from "../services/api";
-import { Crosshair, MapPin, Waves } from "lucide-react";
+import { Crosshair, FileText, MapPin, Waves } from "lucide-react";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -46,7 +46,6 @@ interface LeafletFloodMapProps {
   isForecastLoading?: boolean;
   /** The logged-in user's saved place, shown as a marker. */
   userPlace?: { lng: number; lat: number; label: string | null } | null;
-  /** Callback to open the full District Report & Emergency Plan modal */
   onOpenEmergencyPlan?: () => void;
 }
 
@@ -436,224 +435,339 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
     }
   }, [inspectedPoint]);
 
-  // Automatically pan & zoom closely to selected district
-  useEffect(() => {
-    if (!mapRef.current || !selectedDistrictPcode) return;
-    const features = (districtBoundariesData as any)?.features || [];
-    const found = features.find(
-      (f: any) =>
-        f.properties?.pcode === selectedDistrictPcode ||
-        f.properties?.ADM2_PCODE === selectedDistrictPcode
-    );
-    if (found) {
-      try {
-        const geo = L.geoJSON(found);
-        const bounds = geo.getBounds();
-        if (bounds.isValid()) {
-          mapRef.current.fitBounds(bounds, { maxZoom: 11, padding: [15, 15] });
-        }
-      } catch {}
-    }
-  }, [selectedDistrictPcode]);
-
-  const currentDistrictPcode =
-    pointCheckResult?.district?.pcode || selectedDistrictPcode || "BD6090";
-  const matchedDistrict = (districtBoundariesData as any)?.features?.find(
-    (f: any) =>
-      f.properties?.pcode === currentDistrictPcode ||
-      f.properties?.ADM2_PCODE === currentDistrictPcode
-  );
-  const districtRawName =
-    pointCheckResult?.district?.name ||
-    matchedDistrict?.properties?.name ||
-    "Sunamganj";
-  const districtDisplayName = isBn
-    ? DISTRICTS_BN[currentDistrictPcode] || districtRawName
-    : districtRawName;
-
   const currentPred = predictions.find(
-    (p) => p.pcode === currentDistrictPcode
+    (p) =>
+      p.pcode ===
+      (pointCheckResult?.district?.pcode || selectedDistrictPcode)
   );
-
-  // Risk Level: High, Moderate, Low
-  const isHighRisk =
-    currentPred?.alert_level === "alert" ||
-    (currentPred?.probability !== undefined && currentPred?.probability !== null && currentPred.probability >= 0.7) ||
-    currentDistrictPcode === "BD6090";
-  const isWatch =
-    !isHighRisk &&
-    (currentPred?.alert_level === "watch" ||
-      (currentPred?.probability !== undefined && currentPred?.probability !== null && currentPred.probability >= 0.3));
-
-  const riskLabel = isHighRisk ? (isBn ? "উচ্চ" : "High") : isWatch ? (isBn ? "মাঝারি" : "Moderate") : (isBn ? "কম" : "Low");
-  const riskColor = isHighRisk ? "text-[#C9443A]" : isWatch ? "text-[#E08A24]" : "text-[#22C55E]";
-  const evacLevel = isHighRisk ? 3 : isWatch ? 2 : 1;
-
-  // 24H Forecast probability
-  let forecastProbabilityStr = ">95%";
-  if (currentPred?.probability !== null && currentPred?.probability !== undefined) {
-    if (currentPred.probability > 0.95) {
-      forecastProbabilityStr = isBn ? ">৯৫%" : ">95%";
-    } else {
-      const pct = Math.round(currentPred.probability * 100);
-      forecastProbabilityStr = `${isBn ? toBnNum(pct) : pct}%`;
-    }
-  } else if (isBn) {
-    forecastProbabilityStr = ">৯৫%";
-  }
-
-  // Peak flood depth
-  let peakDepthStr = "1.8m";
-  if (pointCheckResult?.cell?.hazard && pointCheckResult.cell.hazard.length > 0) {
-    const raw = pointCheckResult.cell.hazard[0].depth_label;
-    if (raw) {
-      peakDepthStr = isBn ? (DEPTH_BN[raw] || raw) : raw;
-    }
-  }
-  if (peakDepthStr === "1.8m" && isBn) {
-    peakDepthStr = "১.৮ মি.";
-  }
 
   return (
-    <Card className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden border border-[#DFDDD3] shadow-md bg-white p-3 sm:p-4 md:p-5 space-y-2.5 sm:space-y-3.5">
-      {/* 1. Centered Header: My Location Report - [District Name] */}
-      <div className="text-center pt-0.5">
-        <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-[#8B5E3C] tracking-wide">
-          {isBn ? `বন্যা ঝুঁকি প্রতিবেদন - ${districtDisplayName}` : `My Location Report - ${districtDisplayName}`}
-        </h2>
-      </div>
-
-      {/* 2. 3 Stat Cards in a row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3.5">
-        {/* Card 1: Current Flood Risk */}
-        <div className="bg-white rounded-xl sm:rounded-2xl border border-[#DFDDD3] shadow-xs p-2.5 sm:p-3 text-center flex flex-col items-center justify-center space-y-0.5">
-          <span className="text-[#5C6863] text-xs font-semibold">
-            {isBn ? "বর্তমান বন্যা ঝুঁকি" : "Current Flood Risk"}
-          </span>
-          <div className={`text-2xl sm:text-3xl font-bold tracking-tight my-0.5 ${riskColor}`}>
-            {riskLabel}
+    <Card className="relative w-full rounded-2xl overflow-hidden border-brand-limestone shadow-card bg-brand-white">
+      {/* Map Control Bar using shadcn/ui Button, Input, Badge */}
+      <div className="p-4 bg-white border-b border-[#DFDDD3] flex flex-wrap items-center justify-between gap-3 font-sans">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+          <div className="flex items-center space-x-2">
+            <MapPin className="w-5 h-5 text-[#11241C]" />
+            <h2 className="font-bold text-[18px] text-[#11241C]">
+              {t.map_card_title}
+            </h2>
           </div>
-          <span className="text-[10px] sm:text-xs text-[#4B5563] font-medium">
-            {isBn ? `উচ্ছেদ স্তর ${toBnNum(evacLevel)}` : `Evacuation Level ${evacLevel}`}
+          <span className="text-[13px] text-[#5C6863]">
+            {t.map_card_hint}
           </span>
         </div>
 
-        {/* Card 2: 24H Forecast */}
-        <div className="bg-white rounded-xl sm:rounded-2xl border border-[#DFDDD3] shadow-xs p-2.5 sm:p-3 text-center flex flex-col items-center justify-center space-y-0.5">
-          <span className="text-[#5C6863] text-xs font-semibold">
-            {isBn ? "২৪ ঘণ্টার পূর্বাভাস" : "24H Forecast"}
-          </span>
-          <div className="text-2xl sm:text-3xl font-bold text-[#1F513F] tracking-tight my-0.5">
-            {forecastProbabilityStr}
+        {/* Target Date Presets from Section 3.F */}
+        {onChangeTargetDate && (
+          <div className="flex flex-wrap items-center gap-2 text-[13px]">
+            <span className="font-semibold text-[#5C6863]">
+              {t.map_forecast_date_label}
+            </span>
+            <Input
+              type="date"
+              value={targetDate}
+              onChange={(e) => onChangeTargetDate(e.target.value)}
+              className="h-9 w-40 font-mono text-[13px] bg-[#FAF9F5] border-[#DFDDD3] rounded-lg"
+            />
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Button
+                size="sm"
+                variant={targetDate === "2022-06-18" ? "default" : "secondary"}
+                onClick={() => onChangeTargetDate("2022-06-18")}
+                className="text-[13px] font-semibold h-8.5 rounded-lg px-2.5"
+              >
+                {t.scenario_sylhet}
+              </Button>
+              <Button
+                size="sm"
+                variant={targetDate === "2024-08-22" ? "default" : "secondary"}
+                onClick={() => onChangeTargetDate("2024-08-22")}
+                className="text-[13px] font-semibold h-8.5 rounded-lg px-2.5"
+              >
+                {t.scenario_feni}
+              </Button>
+              <Button
+                size="sm"
+                variant={targetDate === "2023-04-10" ? "default" : "secondary"}
+                onClick={() => onChangeTargetDate("2023-04-10")}
+                className="text-[13px] font-semibold h-8.5 rounded-lg px-2.5"
+              >
+                {t.scenario_dry}
+              </Button>
+              <Button
+                size="sm"
+                variant={targetDate === todayUtc ? "default" : "secondary"}
+                onClick={() => onChangeTargetDate(todayUtc)}
+                className="text-[13px] font-semibold h-8.5 rounded-lg px-2.5"
+              >
+                {isBn ? "আজ" : "Today"}
+              </Button>
+            </div>
           </div>
-          <span className="text-[10px] sm:text-xs font-semibold text-[#1F513F]">
-            {isBn ? "সম্ভাবনা (চরম নির্ভরযোগ্য)" : "Probability (Extreme Conf.)"}
+        )}
+
+        {/* Two views, never blended: the model's forecast, or what the satellite saw */}
+        <div className="flex flex-wrap items-center gap-1.5 text-[13px]">
+          <span className="font-semibold text-[#5C6863] mr-1">
+            {isBn ? "মানচিত্রে দেখান:" : "Show on map:"}
           </span>
+          <Button
+            size="sm"
+            variant={view === "forecast" ? "default" : "secondary"}
+            onClick={() => setView("forecast")}
+            className="text-[13px] font-semibold h-8.5 rounded-lg px-3"
+          >
+            {isBn ? "মডেলের পূর্বাভাস" : "Model forecast"}
+          </Button>
+          <Button
+            size="sm"
+            variant={view === "observed" ? "default" : "secondary"}
+            onClick={() => setView("observed")}
+            className="text-[13px] font-semibold h-8.5 rounded-lg px-3"
+          >
+            {isBn ? "স্যাটেলাইটে দেখা বন্যা" : "Observed by satellite"}
+          </Button>
         </div>
 
-        {/* Card 3: Peak Flood Depth */}
-        <div className="bg-white rounded-xl sm:rounded-2xl border border-[#DFDDD3] shadow-xs p-2.5 sm:p-3 text-center flex flex-col items-center justify-center space-y-0.5">
-          <span className="text-[#5C6863] text-xs font-semibold">
-            {isBn ? "সর্বোচ্চ বন্যার গভীরতা" : "Peak Flood Depth"}
+        {/* Legend */}
+        <div className="flex flex-wrap items-center gap-2 text-[13px] w-full">
+          <span className="font-semibold text-[#5C6863] mr-1">{t.map_legend_label}</span>
+          {view === "forecast" ? (
+            <>
+              <Badge variant="alert" className="gap-1.5 text-[13px] font-bold px-2.5 py-0.5 rounded-full">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#D9381E]"></span> {t.map_legend_alert}
+              </Badge>
+              <Badge variant="watch" className="gap-1.5 text-[13px] font-bold px-2.5 py-0.5 rounded-full">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#E88C30]"></span> {t.map_legend_watch}
+              </Badge>
+              <Badge variant="none" className="gap-1.5 text-[13px] font-bold px-2.5 py-0.5 rounded-full">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#16A34A]"></span> {t.map_legend_normal}
+              </Badge>
+              <Badge variant="unsupported" className="gap-1.5 text-[13px] font-bold px-2.5 py-0.5 rounded-full">
+                <span className="w-2.5 h-2.5 rounded-full bg-gray-400"></span>{" "}
+                {t.map_legend_unsupported}
+              </Badge>
+              <Badge variant="unsupported" className="gap-1.5 text-[13px] font-bold px-2.5 py-0.5 rounded-full">
+                <span className="w-2.5 h-2.5 rounded-full border border-gray-400" style={{ background: COLORS.noData }}></span>{" "}
+                {isBn ? "পূর্বাভাস নেই" : "No forecast"}
+              </Badge>
+            </>
+          ) : (
+            <>
+              {[
+                { color: COLORS.observed[0], en: "under 2%", bn: "২% এর কম" },
+                { color: COLORS.observed[1], en: "2–10%", bn: "২–১০%" },
+                { color: COLORS.observed[2], en: "10–25% (flooded)", bn: "১০–২৫% (প্লাবিত)" },
+                { color: COLORS.observed[3], en: "over 25%", bn: "২৫% এর বেশি" },
+              ].map((step) => (
+                <Badge key={step.en} variant="unsupported" className="gap-1.5 text-[13px] font-semibold px-2.5 py-0.5 rounded-full">
+                  <span className="w-2.5 h-2.5 rounded-full border border-gray-400" style={{ background: step.color }}></span>{" "}
+                  {isBn ? step.bn : step.en}
+                </Badge>
+              ))}
+              <Badge variant="unsupported" className="gap-1.5 text-[13px] font-semibold px-2.5 py-0.5 rounded-full">
+                <span className="w-2.5 h-2.5 rounded-full border border-gray-400" style={{ background: COLORS.noData }}></span>{" "}
+                {isBn ? "সাম্প্রতিক পর্যবেক্ষণ নেই" : "No recent pass"}
+              </Badge>
+              <Badge variant="unsupported" className="gap-1.5 text-[13px] font-semibold px-2.5 py-0.5 rounded-full">
+                <span className="w-2.5 h-2.5 rounded-full bg-gray-400"></span>{" "}
+                {t.map_legend_unsupported}
+              </Badge>
+            </>
+          )}
+          <span className="flex items-center gap-1.5 text-[13px] text-[#5C6863] ml-1">
+            <span className="inline-block w-2.5 h-2.5 rotate-45 border border-white" style={{ background: "#1D4ED8" }}></span>
+            {isBn ? "নদী কেন্দ্র" : "River station"}
           </span>
-          <div className="text-2xl sm:text-3xl font-bold text-[#11241C] tracking-tight my-0.5">
-            {peakDepthStr}
-          </div>
-          <span className="text-[10px] sm:text-xs text-[#4B5563] font-medium">
-            {isBn ? "গেজ স্টেশন ৭" : "Gauge Station 7"}
+          <span className="flex items-center gap-1.5 text-[13px] text-[#5C6863]">
+            <span className="inline-block w-2.5 h-2.5 rounded-sm bg-white" style={{ border: "2px solid #7C3AED" }}></span>
+            {isBn ? "নির্বাচিত জেলার হাসপাতাল, ক্লিনিক, আশ্রয়কেন্দ্র" : "Hospitals, clinics, shelters of the selected district"}
           </span>
-        </div>
-      </div>
-
-      {/* 3. Interactive Map Canvas */}
-      <div className="w-full">
-        {/* Map Viewport */}
-        <div className="h-[210px] sm:h-[240px] md:h-[270px] lg:h-[300px] w-full rounded-2xl overflow-hidden border border-[#DFDDD3] relative shadow-inner bg-[#FAF9F5]">
-          <div ref={mapContainerRef} className="h-full w-full z-0" />
-
-          {/* Floating Inspection Card when a point is inspected */}
-          {inspectedPoint && (
-            <Card className="absolute bottom-3 left-3 right-3 sm:right-auto sm:w-[380px] z-[500] bg-white/95 backdrop-blur-md rounded-2xl p-4 border border-[#DFDDD3] shadow-lg text-[#12241C] font-sans">
-              <div className="flex items-center justify-between pb-1.5">
-                <div className="flex items-center space-x-1.5">
-                  <Crosshair className="w-3.5 h-3.5 text-[#C69A50]" />
-                  <h4 className="font-bold text-xs uppercase tracking-wider text-[#5C6863]">
-                    {t.map_inspect_header}
-                  </h4>
-                </div>
-                <span className="text-xs font-mono text-[#5C6863]">
-                  {isBn ? toBnNum(inspectedPoint.lat.toFixed(4)) : inspectedPoint.lat.toFixed(4)}°N,{" "}
-                  {isBn ? toBnNum(inspectedPoint.lng.toFixed(4)) : inspectedPoint.lng.toFixed(4)}°E
-                </span>
-              </div>
-              <Separator className="mb-2 border-[#DFDDD3]" />
-
-              {isCheckingPoint ? (
-                <div className="py-1.5 text-xs text-[#78958A] flex items-center space-x-2">
-                  <span className="w-2 h-2 rounded-full bg-[#C69A50] animate-ping"></span>
-                  <span>{t.map_inspect_loading}</span>
-                </div>
-              ) : pointCheckResult?.district ? (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="font-bold text-base text-[#11241C]">
-                        {isBn ? (DISTRICTS_BN[pointCheckResult.district.pcode] || pointCheckResult.district.name) : pointCheckResult.district.name}
-                      </span>
-                      <span className="text-xs text-[#5C6863] ml-1">
-                        ({isBn ? (DIVISIONS_BN[pointCheckResult.district.division] || pointCheckResult.district.division) : pointCheckResult.district.division})
-                      </span>
-                    </div>
-                    {pointCheckResult.district.rank && (
-                      <Badge variant="secondary" className="text-xs font-semibold px-2 py-0.5 rounded-full">
-                        {t.map_rank_label.replace(
-                          "{rank}",
-                          isBn ? toBnNum(pointCheckResult.district.rank) : String(pointCheckResult.district.rank)
-                        )}
-                      </Badge>
-                    )}
-                  </div>
-
-                  {currentPred && view === "forecast" && (
-                    <div className="p-2 rounded-xl bg-[#F7F6F0] border border-[#DFDDD3] flex items-center justify-between text-xs">
-                      <div>
-                        <div className="text-[11px] text-[#5C6863] font-semibold">
-                          {t.map_forecast_24h_title.replace("{date}", displayTargetDate)}
-                        </div>
-                        <div className="font-bold text-sm text-[#11241C]">
-                          {t.map_probability_label}{" "}
-                          {currentPred.probability !== null && currentPred.probability !== undefined
-                            ? percentText(currentPred.probability)
-                            : isBn ? "নেই" : "not available"}
-                        </div>
-                      </div>
-                      <Badge
-                        variant={currentPred.alert_level === "alert" ? "alert" : currentPred.alert_level === "watch" ? "watch" : "none"}
-                        className="text-xs font-bold px-2 py-0.5 rounded-full"
-                      >
-                        {currentPred.alert_level === "alert" ? (isBn ? "অ্যালার্ট" : "ALERT") : currentPred.alert_level === "watch" ? (isBn ? "নজরদারি" : "WATCH") : t.map_badge_no_alert}
-                      </Badge>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-xs text-[#5C6863]">
-                  {isBn ? "স্থানটি বাংলাদেশের প্রশাসনিক সীমানার বাইরে।" : "Point is outside Bangladesh boundaries."}
-                </div>
-              )}
-            </Card>
+          {userPlace && (
+            <span className="flex items-center gap-1.5 text-[13px] text-[#5C6863]">
+              <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: "#16A34A" }}></span>
+              {isBn ? "আমার স্থান" : "My place"}
+            </span>
           )}
         </div>
+        <p className="w-full text-[13px] text-[#5C6863] leading-relaxed">
+          {view === "forecast"
+            ? isForecastLoading
+              ? isBn ? "পূর্বাভাস আনা হচ্ছে..." : "Loading the forecast..."
+              : predictions.length === 0
+              ? isBn
+                ? `${displayTargetDate} তারিখের কোনো পূর্বাভাস নেই, তাই জেলাগুলো ধূসর। এর মানে ঝুঁকি নেই, তা নয়।`
+                : `No forecast for ${displayTargetDate}, so the districts are grey. This does not mean there is no risk.`
+              : isBn
+              ? `রং: ${displayTargetDate} তারিখের জন্য মডেলের জেলা-ভিত্তিক অনুমান। এটি সরকারি সতর্কতা নয়।`
+              : `Colours: the model's district estimate for ${displayTargetDate}. Not an official warning.`
+            : isBn
+            ? `রং: ${displayTargetDate} বা তার আগের ৩০ দিনের মধ্যে সর্বশেষ স্যাটেলাইট পর্যবেক্ষণে জেলার কত অংশ অস্বাভাবিক পানিতে ছিল। এটি পর্যবেক্ষণ, পূর্বাভাস নয়।`
+            : `Colours: share of each district under unusual water in its latest satellite pass on or before ${displayTargetDate} (at most 30 days earlier). An observation, not a forecast.`}
+        </p>
       </div>
 
-      {/* 4. Full-Width Dark Green Button */}
-      <Button
-        type="button"
-        onClick={() => onOpenEmergencyPlan?.()}
-        className="w-full h-9 sm:h-10 bg-[#183026] hover:bg-[#0E1D16] text-white font-extrabold text-xs sm:text-sm rounded-xl sm:rounded-2xl shadow-sm transition-all cursor-pointer flex items-center justify-center gap-2"
-      >
-        <span>{isBn ? "বিস্তারিত ও জরুরি পরিকল্পনা দেখুন" : "See Details & Emergency Plan"}</span>
-      </Button>
+      {/* Leaflet Map Canvas */}
+      <div className="h-[360px] sm:h-[420px] md:h-[480px] lg:h-[540px] xl:h-[600px] w-full relative">
+        <div ref={mapContainerRef} className="h-full w-full z-0" />
+
+        {/* Floating Point-Inspection Card on Map */}
+        {inspectedPoint && (
+          <Card className="absolute bottom-4 left-4 right-4 sm:right-auto sm:w-[440px] z-[500] bg-white/95 backdrop-blur-md rounded-2xl p-5 border border-[#DFDDD3] shadow-xl text-[#12241C] font-sans">
+            <div className="flex items-center justify-between pb-2">
+              <div className="flex items-center space-x-1.5">
+                <Crosshair className="w-4 h-4 text-[#C69A50]" />
+                <h4 className="font-bold text-[13px] uppercase tracking-wider text-[#5C6863]">
+                  {t.map_inspect_header}
+                </h4>
+              </div>
+              <span className="text-[13px] font-mono text-[#5C6863]">
+                {isBn ? toBnNum(inspectedPoint.lat.toFixed(4)) : inspectedPoint.lat.toFixed(4)}°N,{" "}
+                {isBn ? toBnNum(inspectedPoint.lng.toFixed(4)) : inspectedPoint.lng.toFixed(4)}°E
+              </span>
+            </div>
+            <Separator className="mb-3 border-[#DFDDD3]" />
+
+            {isCheckingPoint ? (
+              <div className="py-2 text-[13px] text-[#78958A] flex items-center space-x-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#C69A50] animate-ping"></span>
+                <span>
+                  {t.map_inspect_loading}
+                </span>
+              </div>
+            ) : pointCheckResult?.district ? (
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <span className="font-bold text-[18px] text-[#11241C]">
+                      {isBn ? (DISTRICTS_BN[pointCheckResult.district.pcode] || pointCheckResult.district.name) : pointCheckResult.district.name}
+                    </span>
+                    <span className="text-[14px] text-[#5C6863] ml-1.5">
+                      ({isBn ? (DIVISIONS_BN[pointCheckResult.district.division] || pointCheckResult.district.division) : pointCheckResult.district.division} {t.map_division_suffix})
+                    </span>
+                  </div>
+                  {pointCheckResult.district.rank && (
+                    <Badge variant="secondary" className="text-[13px] font-semibold px-2.5 py-0.5 rounded-full">
+                      {t.map_rank_label.replace(
+                        "{rank}",
+                        isBn ? toBnNum(pointCheckResult.district.rank) : String(pointCheckResult.district.rank)
+                      )}
+                    </Badge>
+                  )}
+                </div>
+
+                {/* 24h Forecast Status for this District */}
+                {currentPred && (
+                  <div className="p-3.5 rounded-xl bg-[#F7F6F0] border border-[#DFDDD3] flex items-center justify-between gap-2">
+                    <div>
+                      <div className="text-[13px] uppercase font-bold text-[#5C6863]">
+                        {t.map_forecast_24h_title.replace("{date}", displayTargetDate)}
+                      </div>
+                      <div className="font-extrabold text-[18px] text-[#11241C] mt-0.5">
+                        {currentPred.status === "unsupported"
+                          ? t.map_radar_blindspot
+                          : `${t.map_probability_label} ${
+                              currentPred.probability === null || currentPred.probability === undefined
+                                ? isBn ? "নেই" : "not available"
+                                : percentText(currentPred.probability)
+                            }`}
+                      </div>
+                    </div>
+                    <Badge
+                      variant={
+                        currentPred.status === "unsupported"
+                          ? "unsupported"
+                          : currentPred.alert_level === "alert"
+                          ? "alert"
+                          : currentPred.alert_level === "watch"
+                          ? "watch"
+                          : "none"
+                      }
+                      className="text-[13px] font-bold uppercase px-3 py-1 rounded-full shadow-xs"
+                    >
+                      {currentPred.status === "unsupported"
+                        ? t.map_badge_unsupported
+                        : currentPred.alert_level === "none"
+                        ? t.map_badge_no_alert
+                        : currentPred.alert_level === "alert"
+                        ? isBn ? "অ্যালার্ট" : "ALERT"
+                        : isBn ? "নজরদারি" : "WATCH"}
+                    </Badge>
+                  </div>
+                )}
+
+                {!currentPred && view === "forecast" && !isForecastLoading && (
+                  <div className="p-3 rounded-xl bg-[#F7F6F0] border border-[#DFDDD3] font-bold text-[14px] text-[#11241C]">
+                    {isBn
+                      ? `${displayTargetDate} তারিখের কোনো পূর্বাভাস নেই।`
+                      : `No forecast for ${displayTargetDate}.`}
+                  </div>
+                )}
+
+                {pointCheckResult.cell && pointCheckResult.cell.times_observed > 0 && (
+                  <div className="p-2.5 rounded-xl bg-[#F7F6F0] border border-[#DFDDD3] flex items-center justify-between text-[13px]">
+                    <span className="text-[#5C6863] font-medium">
+                      {t.map_observed_satellite_label}
+                    </span>
+                    <span className="font-bold text-[#11241C]">
+                      {t.map_of_major_events
+                        .replace("{times}", isBn ? toBnNum(pointCheckResult.cell.times_flooded) : String(pointCheckResult.cell.times_flooded))
+                        .replace("{total}", isBn ? toBnNum(pointCheckResult.cell.times_observed) : String(pointCheckResult.cell.times_observed))}
+                    </span>
+                  </div>
+                )}
+
+                {pointCheckResult.cell?.hazard &&
+                  pointCheckResult.cell.hazard.length > 0 && (
+                    <div className="space-y-1.5">
+                      <div className="text-[13px] font-bold text-[#5C6863] uppercase">
+                        {t.map_jrc_glofas_title}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {pointCheckResult.cell.hazard.map((h, i) => (
+                          <div
+                            key={i}
+                            className="p-3 rounded-xl bg-[#F7F6F0] border border-[#DFDDD3] flex flex-col justify-between"
+                          >
+                            <span className="text-[13px] font-semibold text-[#5C6863]">
+                              {isBn ? toBnNum(h.return_period_years) : h.return_period_years}-{isBn ? "বছরের বন্যা" : "Year Return Period"}
+                            </span>
+                            <span className="font-extrabold text-[18px] text-[#11241C] mt-0.5">
+                              {h.depth_label
+                                ? `${isBn ? DEPTH_BN[h.depth_label] || h.depth_label : h.depth_label}`
+                                : isBn ? "বন্যা এলাকার বাইরে" : "Outside Area"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                {pointCheckResult.cell?.permanent_water && (
+                  <div className="text-[13px] text-[#78958A] font-semibold flex items-center gap-1.5">
+                    <Waves className="w-4 h-4" /> {isBn ? "স্থানাঙ্কটি স্থায়ী নদী বা জলাশয়ের ওপর অবস্থিত।" : "Point lies on permanent river/waterway."}
+                  </div>
+                )}
+
+                {onOpenEmergencyPlan && (
+                  <Button
+                    size="sm"
+                    onClick={() => onOpenEmergencyPlan()}
+                    className="w-full mt-2 h-9 bg-[#183026] hover:bg-[#0E1D16] text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-[#4ADE80]" />
+                    <span>{isBn ? "বিস্তারিত বন্যা প্রতিবেদন ও জরুরি পরিকল্পনা দেখুন" : "See Details & Emergency Plan"}</span>
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="text-[13px] text-[#5C6863]">
+                {isBn ? "স্থানাঙ্কটি বাংলাদেশের প্রশাসনিক সীমানার বাইরে। মানচিত্রের যেকোনো জেলায় ক্লিক করুন।" : "Point is outside Bangladesh administrative boundaries. Click any district on the map to inspect."}
+              </div>
+            )}
+          </Card>
+        )}
+      </div>
     </Card>
   );
 };
