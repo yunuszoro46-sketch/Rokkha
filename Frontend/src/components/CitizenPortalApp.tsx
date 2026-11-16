@@ -528,6 +528,7 @@ export function CitizenPortalApp({
   const [aboutLang, setAboutLang] = useState<Language>("en");
   const [isSosOpen, setIsSosOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [landingFeatureTab, setLandingFeatureTab] = useState<"map" | "alerts" | "satellite" | "hydro" | "shelters">("map");
   const [isDistrictReportOpen, setIsDistrictReportOpen] = useState(false);
   const [modelStatus, setModelStatus] = useState<ModelStatus | null>(null);
   const [lang, setLang] = useState<Language>("en");
@@ -881,9 +882,13 @@ export function CitizenPortalApp({
                 >
                   <img src={logoAsset.src} alt="Rokkha" />
                 </a>
-                <nav aria-label="Primary navigation" className="flex items-center gap-7 sm:gap-9">
+                <nav aria-label="Primary navigation" className="flex items-center gap-4 sm:gap-6 lg:gap-7 overflow-x-auto py-2">
                   <a
-                    className={`text-[19px] font-semibold transition ${activeView === "overview" ? "active text-[#183026]" : "text-[#263B32]/80 hover:text-[#183026]"}`}
+                    className={`text-[17px] font-semibold transition shrink-0 ${
+                      activeView === "overview"
+                        ? "active text-[#183026] border-b-2 border-[#183026] pb-0.5"
+                        : "text-[#263B32]/80 hover:text-[#183026]"
+                    }`}
                     href="#overview"
                     onClick={(e) => {
                       e.preventDefault();
@@ -892,17 +897,88 @@ export function CitizenPortalApp({
                   >
                     {t.nav_home}
                   </a>
+                  <a
+                    className={`text-[17px] font-semibold transition shrink-0 ${
+                      activeView === "map"
+                        ? "active text-[#183026] border-b-2 border-[#183026] pb-0.5"
+                        : "text-[#263B32]/80 hover:text-[#183026]"
+                    }`}
+                    href="#map"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigateToPage("map");
+                    }}
+                  >
+                    {t.nav_map}
+                  </a>
+                  <a
+                    className={`text-[17px] font-semibold transition shrink-0 ${
+                      activeView === "alerts"
+                        ? "active text-[#183026] border-b-2 border-[#183026] pb-0.5"
+                        : "text-[#263B32]/80 hover:text-[#183026]"
+                    }`}
+                    href="#alerts"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigateToPage("alerts");
+                    }}
+                  >
+                    {t.nav_alerts}
+                  </a>
+                  <a
+                    className={`text-[17px] font-semibold transition shrink-0 ${
+                      activeView === "satellite"
+                        ? "active text-[#183026] border-b-2 border-[#183026] pb-0.5"
+                        : "text-[#263B32]/80 hover:text-[#183026]"
+                    }`}
+                    href="#satellite"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigateToPage("satellite");
+                    }}
+                  >
+                    {lang === "bn" ? "স্যাটেলাইট টাইমলাইন" : "Satellite Timeline"}
+                  </a>
+                  <a
+                    className={`text-[17px] font-semibold transition shrink-0 ${
+                      activeView === "hydro"
+                        ? "active text-[#183026] border-b-2 border-[#183026] pb-0.5"
+                        : "text-[#263B32]/80 hover:text-[#183026]"
+                    }`}
+                    href="#hydro"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigateToPage("hydro");
+                    }}
+                  >
+                    {lang === "bn" ? "বৃষ্টি ও নদী" : "Rain & Rivers"}
+                  </a>
+                  <a
+                    className={`text-[17px] font-semibold transition shrink-0 ${
+                      activeView === "shelters"
+                        ? "active text-[#183026] border-b-2 border-[#183026] pb-0.5"
+                        : "text-[#263B32]/80 hover:text-[#183026]"
+                    }`}
+                    href="#shelters"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigateToPage("shelters");
+                    }}
+                  >
+                    {lang === "bn" ? "আশ্রয়কেন্দ্র" : "Safe Shelters"}
+                  </a>
                   <button
+                    type="button"
                     onClick={() => setIsAboutOpen(true)}
-                    className="text-left font-semibold text-[19px] text-[#263B32]/80 hover:text-[#183026] transition"
+                    className="text-left font-semibold text-[17px] text-[#263B32]/80 hover:text-[#183026] transition shrink-0 cursor-pointer"
                   >
                     {t.nav_about}
                   </button>
                 </nav>
-                <div className="header-actions flex items-center gap-2">
+                <div className="header-actions flex items-center gap-2 shrink-0">
                   <Button
-                    onClick={() => navigateToPage("login")}
-                    className="button shadow-sm text-[19px] font-bold h-12 px-6 rounded-xl"
+                    onClick={() => navigateToPage("map")}
+                    className="button shadow-sm text-[17px] font-bold h-12 px-5 rounded-xl cursor-pointer"
                   >
                     {t.btn_get_started} <Icon name="arrow" size={18} />
                   </Button>
@@ -935,8 +1011,8 @@ export function CitizenPortalApp({
                       </p>
                       <div className="button-row flex items-center gap-4">
                         <Button
-                          onClick={() => navigateToPage("login")}
-                          className="button gap-2 text-[14px] font-bold h-14 px-7 rounded-2xl shadow-sm m-0"
+                          onClick={() => navigateToPage("map")}
+                          className="button gap-2 text-[14px] font-bold h-14 px-7 rounded-2xl shadow-sm m-0 cursor-pointer"
                         >
                           <span>{t.btn_get_started}</span>
                           <Icon name="arrow" size={16} />
