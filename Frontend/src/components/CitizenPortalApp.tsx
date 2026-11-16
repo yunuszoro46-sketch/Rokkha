@@ -1394,29 +1394,30 @@ export function CitizenPortalApp({
                         : "Data Honesty, Model Performance & Institutional Limitations"}
                     </DialogTitle>
                   </div>
-                  {/* EN / BN Switcher */}
-                  <div className="flex items-center shrink-0 bg-[#EDEBE2]/70 p-1 rounded-xl border border-[#DFDDD3]">
+                  {/* EN | BN Switcher */}
+                  <div className="flex items-center shrink-0 bg-[#EDEBE2]/70 p-0.5 rounded-full border border-[#DFDDD3]">
                     <button
                       type="button"
                       onClick={() => setAboutLang("en")}
-                      className={`px-3 py-1 text-xs font-black rounded-lg transition-all ${
+                      className={`px-2.5 py-0.5 text-xs font-black rounded-full transition-all ${
                         aboutLang === "en"
-                          ? "bg-white text-[#183026] shadow-sm"
+                          ? "bg-white text-[#183026] shadow-xs border border-[#183026]"
                           : "text-[#5C6863] hover:text-[#183026]"
                       }`}
                     >
                       EN
                     </button>
+                    <span className="text-[#A3ADA6] text-[11px] font-bold select-none px-0.5">|</span>
                     <button
                       type="button"
                       onClick={() => setAboutLang("bn")}
-                      className={`px-3 py-1 text-xs font-black rounded-lg transition-all ${
+                      className={`px-2.5 py-0.5 text-xs font-black rounded-full transition-all ${
                         aboutLang === "bn"
-                          ? "bg-white text-[#183026] shadow-sm"
+                          ? "bg-white text-[#183026] shadow-xs border border-[#183026]"
                           : "text-[#5C6863] hover:text-[#183026]"
                       }`}
                     >
-                      বাং
+                      BN
                     </button>
                   </div>
                 </div>
