@@ -920,7 +920,7 @@ export function CitizenPortalApp({
                         <Icon name="shield" size={16} /> {t.hero_tagline}
                       </div>
                       <div className="hero-headline-bar">
-                        <h1 className="text-[35px] font-extrabold leading-[1.12] tracking-tight uppercase">
+                        <h1 className="text-[35px] font-extrabold leading-[1.15] tracking-tight text-[#121f17]">
                           {t.hero_title_1}
                           <br />
                           {t.hero_title_2}

@@ -110,9 +110,9 @@ export const UI_TEXT = {
 
     // Hero
     hero_tagline: "Climate Intelligence for a Safer Bangladesh",
-    hero_title_1: "DETECT. FORECAST.",
-    hero_title_2: "RESPOND.",
-    hero_subtitle: "Alert before flood.",
+    hero_title_1: "Detect Forecast &",
+    hero_title_2: "respond",
+    hero_subtitle: "Alert before flood",
     hero_desc:
       "Rokkha is a climate intelligence platform for flood analysis, risk mapping, and early prediction—helping communities and organizations stay one step ahead.",
     btn_see_how: "See How It Works",
@@ -374,9 +374,9 @@ export const UI_TEXT = {
 
     // Hero
     hero_tagline: "সুরক্ষিত বাংলাদেশের জন্য জলবায়ু বুদ্ধিমত্তা",
-    hero_title_1: "শনাক্তকরণ। পূর্বাভাস।",
-    hero_title_2: "প্রতিক্রিয়া।",
-    hero_subtitle: "বন্যার আগেই সতর্কতা।",
+    hero_title_1: "শনাক্তকরণ পূর্বাভাস ও",
+    hero_title_2: "সাড়াদান",
+    hero_subtitle: "বন্যার আগেই সতর্কতা",
     hero_desc:
       "রক্ষা হলো বন্যা বিশ্লেষণ, ঝুঁকি মানচিত্র এবং আগাম পূর্বাভাসের একটি নির্ভরযোগ্য প্ল্যাটফর্ম—যা ঝুঁকিপূর্ণ সম্প্রদায় ও সংস্থাকে এক ধাপ এগিয়ে রাখতে সহায়তা করে।",
     btn_see_how: "কীভাবে কাজ করে",
