@@ -154,7 +154,7 @@ export const DistrictDetailMap: React.FC<DistrictDetailMapProps> = ({
   }, [pcode, districtName, lat, lng, assets, isBn]);
 
   return (
-    <div className="relative w-full h-[260px] sm:h-[300px] rounded-2xl overflow-hidden border border-[#DFDDD3] shadow-inner bg-[#EDEBE2]">
+    <div className="relative w-full h-[200px] sm:h-[220px] rounded-2xl overflow-hidden border border-[#DFDDD3] shadow-inner bg-[#EDEBE2]">
       <div ref={mapContainerRef} className="w-full h-full z-0" />
       <div className="absolute top-2.5 right-2.5 z-10 bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-[#DFDDD3] text-[11px] font-bold text-[#183026] shadow-xs flex items-center gap-2">
         <span className="flex items-center gap-1">

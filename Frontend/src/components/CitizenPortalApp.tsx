@@ -1173,20 +1173,20 @@ export function CitizenPortalApp({
 
             {/* DEDICATED FEATURE PAGES (map, alerts, satellite, hydro, shelters) */}
             {activeView !== "overview" && activeView !== "login" && (
-              <section className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-8 space-y-6">
+              <section className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-3 sm:py-4 space-y-3 sm:space-y-4">
                 {/* Page Header & Global Context Controls */}
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-2">
-                  <div className="space-y-2 max-w-2xl">
-                    <h1 className="text-3xl sm:text-4xl font-extrabold text-[#11241B] tracking-tight leading-tight">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4 pb-1">
+                  <div className="space-y-1 max-w-2xl">
+                    <h1 className="text-2xl sm:text-3xl font-extrabold text-[#11241B] tracking-tight leading-tight">
                       {PAGE_METADATA[lang][activeView].title}
                     </h1>
-                    <p className="text-sm text-[#4E5C55] leading-relaxed">
+                    <p className="text-xs sm:text-sm text-[#4E5C55] leading-relaxed">
                       {PAGE_METADATA[lang][activeView].subtitle}
                     </p>
                   </div>
 
-                  {/* Active District & Date Context Bar matching Image 2 */}
-                  <Card className="p-3.5 border-[#DFDDD3] bg-white rounded-2xl shadow-sm flex flex-col gap-2.5 shrink-0">
+                  {/* Active District & Date Context Bar */}
+                  <Card className="p-2.5 sm:p-3 border-[#DFDDD3] bg-white rounded-2xl shadow-sm flex flex-col gap-2 shrink-0">
                     <div className="flex flex-wrap items-center gap-3">
                       <div className="flex items-center gap-1.5">
                         <MapPin className="w-4 h-4 text-[#5C6863]" />
@@ -1585,7 +1585,7 @@ export function CitizenPortalApp({
             open={isDistrictReportOpen}
             onOpenChange={setIsDistrictReportOpen}
           >
-            <DialogContent className="max-w-3xl w-full max-h-[88vh] overflow-y-auto bg-[#FAF9F5] border border-[#DFDDD3] rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 text-left">
+            <DialogContent className="max-w-2xl w-[92vw] max-h-[84vh] overflow-y-auto bg-[#FAF9F5] border border-[#DFDDD3] rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4 text-left">
               <DialogHeader className="space-y-1 text-center">
                 <DialogTitle className="text-2xl sm:text-[26px] font-bold tracking-wide text-[#8B5E3C]">
                   {districtReport.name} - {lang === "bn" ? "বিস্তারিত বন্যা প্রতিবেদন ও জরুরি পরিকল্পনা" : "Detailed Flood Report & Emergency Plan"}

@@ -515,64 +515,60 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
   }
 
   return (
-    <Card className="relative w-full rounded-3xl overflow-hidden border border-[#DFDDD3] shadow-md bg-white p-6 sm:p-8 space-y-6">
+    <Card className="relative w-full rounded-3xl overflow-hidden border border-[#DFDDD3] shadow-md bg-white p-4 sm:p-6 space-y-4">
       {/* 1. Centered Header: My Location Report - [District Name] */}
-      <div className="text-center pt-1">
-        <h2 className="text-2xl sm:text-[28px] font-bold text-[#8B5E3C] tracking-wide">
+      <div className="text-center pt-0.5">
+        <h2 className="text-xl sm:text-2xl font-bold text-[#8B5E3C] tracking-wide">
           {isBn ? `বন্যা ঝুঁকি প্রতিবেদন - ${districtDisplayName}` : `My Location Report - ${districtDisplayName}`}
         </h2>
       </div>
 
       {/* 2. 3 Stat Cards in a row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         {/* Card 1: Current Flood Risk */}
-        <div className="bg-white rounded-2xl border border-[#DFDDD3] shadow-xs p-5 sm:p-6 text-center flex flex-col items-center justify-center space-y-1">
-          <span className="text-[#5C6863] text-sm sm:text-base font-semibold">
+        <div className="bg-white rounded-2xl border border-[#DFDDD3] shadow-xs p-3.5 sm:p-4 text-center flex flex-col items-center justify-center space-y-0.5">
+          <span className="text-[#5C6863] text-xs sm:text-sm font-semibold">
             {isBn ? "বর্তমান বন্যা ঝুঁকি" : "Current Flood Risk"}
           </span>
-          <div className={`text-4xl sm:text-[46px] font-bold tracking-tight my-1 ${riskColor}`}>
+          <div className={`text-3xl sm:text-4xl font-bold tracking-tight my-0.5 ${riskColor}`}>
             {riskLabel}
           </div>
-          <span className="text-xs sm:text-sm text-[#4B5563] font-medium">
+          <span className="text-[11px] sm:text-xs text-[#4B5563] font-medium">
             {isBn ? `উচ্ছেদ স্তর ${toBnNum(evacLevel)}` : `Evacuation Level ${evacLevel}`}
           </span>
         </div>
 
         {/* Card 2: 24H Forecast */}
-        <div className="bg-white rounded-2xl border border-[#DFDDD3] shadow-xs p-5 sm:p-6 text-center flex flex-col items-center justify-center space-y-0.5">
-          <span className="text-[#5C6863] text-sm sm:text-base font-semibold">
+        <div className="bg-white rounded-2xl border border-[#DFDDD3] shadow-xs p-3.5 sm:p-4 text-center flex flex-col items-center justify-center space-y-0.5">
+          <span className="text-[#5C6863] text-xs sm:text-sm font-semibold">
             {isBn ? "২৪ ঘণ্টার পূর্বাভাস" : "24H Forecast"}
           </span>
-          <div className="text-4xl sm:text-[46px] font-bold text-[#1F513F] tracking-tight my-1">
+          <div className="text-3xl sm:text-4xl font-bold text-[#1F513F] tracking-tight my-0.5">
             {forecastProbabilityStr}
           </div>
-          <span className="text-xs sm:text-sm font-semibold text-[#1F513F]">
-            {isBn ? "সম্ভাবনা" : "Probability"}
-          </span>
-          <span className="text-[11px] sm:text-xs text-[#5C6863]">
-            {isBn ? "চরম নির্ভরযোগ্যতা" : "Extreme Confidence"}
+          <span className="text-[11px] sm:text-xs font-semibold text-[#1F513F]">
+            {isBn ? "সম্ভাবনা (চরম নির্ভরযোগ্য)" : "Probability (Extreme Conf.)"}
           </span>
         </div>
 
         {/* Card 3: Peak Flood Depth */}
-        <div className="bg-white rounded-2xl border border-[#DFDDD3] shadow-xs p-5 sm:p-6 text-center flex flex-col items-center justify-center space-y-1">
-          <span className="text-[#5C6863] text-sm sm:text-base font-semibold">
+        <div className="bg-white rounded-2xl border border-[#DFDDD3] shadow-xs p-3.5 sm:p-4 text-center flex flex-col items-center justify-center space-y-0.5">
+          <span className="text-[#5C6863] text-xs sm:text-sm font-semibold">
             {isBn ? "সর্বোচ্চ বন্যার গভীরতা" : "Peak Flood Depth"}
           </span>
-          <div className="text-4xl sm:text-[46px] font-bold text-[#11241C] tracking-tight my-1">
+          <div className="text-3xl sm:text-4xl font-bold text-[#11241C] tracking-tight my-0.5">
             {peakDepthStr}
           </div>
-          <span className="text-xs sm:text-sm text-[#4B5563] font-medium">
-            {isBn ? "রেকর্ডকৃত গেজ স্টেশন ৭" : "Recorded at Gauge Station 7"}
+          <span className="text-[11px] sm:text-xs text-[#4B5563] font-medium">
+            {isBn ? "গেজ স্টেশন ৭" : "Gauge Station 7"}
           </span>
         </div>
       </div>
 
       {/* 3. Interactive Map Canvas */}
       <div className="w-full">
-
         {/* Map Viewport */}
-        <div className="h-[380px] sm:h-[440px] w-full rounded-2xl overflow-hidden border border-[#DFDDD3] relative shadow-inner bg-[#FAF9F5]">
+        <div className="h-[280px] sm:h-[320px] md:h-[350px] w-full rounded-2xl overflow-hidden border border-[#DFDDD3] relative shadow-inner bg-[#FAF9F5]">
           <div ref={mapContainerRef} className="h-full w-full z-0" />
 
           {/* Floating Inspection Card when a point is inspected */}
@@ -654,7 +650,7 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
       <Button
         type="button"
         onClick={() => onOpenEmergencyPlan?.()}
-        className="w-full h-12 sm:h-13 bg-[#183026] hover:bg-[#0E1D16] text-white font-extrabold text-base rounded-2xl shadow-sm transition-all cursor-pointer flex items-center justify-center gap-2"
+        className="w-full h-11 bg-[#183026] hover:bg-[#0E1D16] text-white font-extrabold text-sm sm:text-base rounded-2xl shadow-sm transition-all cursor-pointer flex items-center justify-center gap-2"
       >
         <span>{isBn ? "বিস্তারিত ও জরুরি পরিকল্পনা দেখুন" : "See Details & Emergency Plan"}</span>
       </Button>
