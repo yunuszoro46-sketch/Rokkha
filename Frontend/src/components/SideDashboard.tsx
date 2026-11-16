@@ -117,7 +117,7 @@ export const SideDashboard: React.FC<SideDashboardProps> = ({
   return (
     <aside
       className={`fixed top-0 left-0 h-screen z-40 bg-[#11241C] text-white flex flex-col justify-between border-r border-[#1F382D] transition-all duration-300 shadow-2xl ${
-        isCollapsed ? "w-20" : "w-80"
+        isCollapsed ? "w-16 sm:w-20" : "w-64 lg:w-72"
       }`}
     >
       {/* Top Header - Clean Controls (Logo & Title removed as requested) */}

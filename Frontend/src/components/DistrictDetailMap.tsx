@@ -154,15 +154,15 @@ export const DistrictDetailMap: React.FC<DistrictDetailMapProps> = ({
   }, [pcode, districtName, lat, lng, assets, isBn]);
 
   return (
-    <div className="relative w-full h-[200px] sm:h-[220px] rounded-2xl overflow-hidden border border-[#DFDDD3] shadow-inner bg-[#EDEBE2]">
+    <div className="relative w-full h-[135px] sm:h-[155px] rounded-2xl overflow-hidden border border-[#DFDDD3] shadow-inner bg-[#EDEBE2]">
       <div ref={mapContainerRef} className="w-full h-full z-0" />
-      <div className="absolute top-2.5 right-2.5 z-10 bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-[#DFDDD3] text-[11px] font-bold text-[#183026] shadow-xs flex items-center gap-2">
+      <div className="absolute top-2 right-2 z-10 bg-white/95 backdrop-blur-xs px-2 py-0.5 rounded-lg border border-[#DFDDD3] text-[10px] font-bold text-[#183026] shadow-xs flex items-center gap-1.5">
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-[#C9443A]"></span>
+          <span className="w-1.5 h-1.5 rounded-full bg-[#C9443A]"></span>
           {isBn ? "ঝুঁকিপূর্ণ কেন্দ্র" : "District Epicenter"}
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-sm bg-[#7C3AED]"></span>
+          <span className="w-1.5 h-1.5 rounded-sm bg-[#7C3AED]"></span>
           {isBn ? "আশ্রয়/হাসপাতাল" : "Shelters & Medical"}
         </span>
       </div>

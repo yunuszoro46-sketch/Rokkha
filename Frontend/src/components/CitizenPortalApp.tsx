@@ -855,8 +855,8 @@ export function CitizenPortalApp({
           activeView === "overview" || activeView === "login"
             ? "pl-0"
             : isSidebarCollapsed
-            ? "pl-20"
-            : "pl-20 lg:pl-72 xl:pl-80"
+            ? "pl-16 sm:pl-20"
+            : "pl-64 lg:pl-72"
         }`}
       >
         <main className="w-full max-w-full flex-1 flex flex-col justify-between overflow-x-hidden">
@@ -1063,9 +1063,9 @@ export function CitizenPortalApp({
 
 
                 {/* End-to-End Architecture */}
-                <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 my-20">
+                <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 my-10 sm:my-14 md:my-16">
                   <section id="architecture">
-                    <div className="text-center max-w-3xl mx-auto mb-14">
+                    <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-10">
                       <span className="inline-block px-3.5 py-1 text-xs font-bold tracking-wider text-[#1F513F] bg-[#D8E6DF] rounded-full uppercase mb-4">
                         END-TO-END ARCHITECTURE
                       </span>
@@ -1142,7 +1142,7 @@ export function CitizenPortalApp({
                 </div>
 
                 {/* Banner Card: Building a more flood-resilient Bangladesh (Matching Image 2) */}
-                <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 my-10">
+                <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 my-6 sm:my-8 md:my-10">
                   <div className="bg-white rounded-3xl border border-[#DFDDD3] p-5 sm:p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
                     <div className="flex flex-col sm:flex-row items-center gap-5 w-full md:w-auto">
                       <img
@@ -1173,70 +1173,68 @@ export function CitizenPortalApp({
 
             {/* DEDICATED FEATURE PAGES (map, alerts, satellite, hydro, shelters) */}
             {activeView !== "overview" && activeView !== "login" && (
-              <section className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-3 sm:py-4 space-y-3 sm:space-y-4">
+              <section className="w-full max-w-[1360px] mx-auto px-3 sm:px-6 md:px-8 py-2 sm:py-3 space-y-2 sm:space-y-3">
                 {/* Page Header & Global Context Controls */}
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4 pb-1">
-                  <div className="space-y-1 max-w-2xl">
-                    <h1 className="text-2xl sm:text-3xl font-extrabold text-[#11241B] tracking-tight leading-tight">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-0.5">
+                  <div className="space-y-0.5 max-w-xl">
+                    <h1 className="text-xl sm:text-2xl font-extrabold text-[#11241B] tracking-tight leading-tight">
                       {PAGE_METADATA[lang][activeView].title}
                     </h1>
-                    <p className="text-xs sm:text-sm text-[#4E5C55] leading-relaxed">
+                    <p className="text-xs text-[#4E5C55] leading-relaxed hidden sm:block">
                       {PAGE_METADATA[lang][activeView].subtitle}
                     </p>
                   </div>
 
                   {/* Active District & Date Context Bar */}
-                  <Card className="p-2.5 sm:p-3 border-[#DFDDD3] bg-white rounded-2xl shadow-sm flex flex-col gap-2 shrink-0">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <div className="flex items-center gap-1.5">
-                        <MapPin className="w-4 h-4 text-[#5C6863]" />
-                        <span className="text-xs font-bold text-[#12241C]">
-                          {t.label_district}:
-                        </span>
-                        <Select
-                          value={selectedPcode}
-                          onValueChange={(val) => handleSelectDistrict(val)}
-                        >
-                          <SelectTrigger className="h-8.5 w-48 text-xs font-semibold bg-[#FAF9F5] border-[#DFDDD3] rounded-lg">
-                            <SelectValue placeholder={t.placeholder_select_district} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {ALL_DISTRICTS.map((d) => (
-                              <SelectItem key={d.pcode} value={d.pcode}>
-                                {lang === "bn"
-                                  ? `${DISTRICTS_BN[d.pcode] || d.name} (${DIVISIONS_BN[d.division] || d.division})`
-                                  : `${d.name} (${d.division})`}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {(activeView === "map" || activeView === "alerts") && (
-                        <div className="flex items-center gap-1.5">
-                          <Calendar className="w-4 h-4 text-[#5C6863]" />
-                          <span className="text-xs font-bold text-[#12241C]">
-                            {t.label_date}:
-                          </span>
-                          <Input
-                            type="date"
-                            value={targetDate}
-                            onChange={(e) => setTargetDate(e.target.value)}
-                            className="h-8.5 w-36 font-mono text-xs bg-[#FAF9F5] border-[#DFDDD3] rounded-lg"
-                          />
-                        </div>
-                      )}
+                  <Card className="p-2 border-[#DFDDD3] bg-white rounded-xl shadow-xs flex flex-wrap items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-[#5C6863]" />
+                      <span className="text-xs font-bold text-[#12241C]">
+                        {t.label_district}:
+                      </span>
+                      <Select
+                        value={selectedPcode}
+                        onValueChange={(val) => handleSelectDistrict(val)}
+                      >
+                        <SelectTrigger className="h-7.5 w-36 sm:w-44 text-xs font-semibold bg-[#FAF9F5] border-[#DFDDD3] rounded-lg">
+                          <SelectValue placeholder={t.placeholder_select_district} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ALL_DISTRICTS.map((d) => (
+                            <SelectItem key={d.pcode} value={d.pcode}>
+                              {lang === "bn"
+                                ? `${DISTRICTS_BN[d.pcode] || d.name} (${DIVISIONS_BN[d.division] || d.division})`
+                                : `${d.name} (${d.division})`}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    {(activeView === "map" || activeView === "alerts") && (
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-[#5C6863]" />
+                        <span className="text-xs font-bold text-[#12241C]">
+                          {t.label_date}:
+                        </span>
+                        <Input
+                          type="date"
+                          value={targetDate}
+                          onChange={(e) => setTargetDate(e.target.value)}
+                          className="h-7.5 w-32 font-mono text-xs bg-[#FAF9F5] border-[#DFDDD3] rounded-lg"
+                        />
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-1.5">
                       <Button
                         onClick={() => setIsDistrictReportOpen(true)}
-                        className="bg-[#122B1E] hover:bg-[#0C1F15] text-white font-bold text-xs px-3 h-8.5 rounded-lg flex items-center gap-2 shadow-sm transition-all"
+                        className="bg-[#122B1E] hover:bg-[#0C1F15] text-white font-bold text-xs px-2.5 h-7.5 rounded-lg flex items-center gap-1.5 shadow-xs transition-all"
                         title={`View comprehensive flood report for ${selectedName}`}
                       >
-                        <FileText className="w-3.5 h-3.5 text-[#4ADE80]" />
+                        <FileText className="w-3 h-3 text-[#4ADE80]" />
                         <span>{t.btn_my_district}</span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/20 text-white font-semibold">
+                        <span className="text-[10px] px-1 py-0.5 rounded bg-white/20 text-white font-semibold">
                           {lang === "bn" ? (DISTRICTS_BN[selectedPcode] || selectedName) : selectedName}
                         </span>
                       </Button>
@@ -1245,10 +1243,10 @@ export function CitizenPortalApp({
                         variant="outline"
                         size="sm"
                         onClick={handleDetectMyLocation}
-                        className="h-8.5 px-3 border-[#DFDDD3] text-[#12241C] hover:bg-[#FAF9F5] flex items-center gap-1.5 text-xs font-semibold rounded-lg"
+                        className="h-7.5 px-2 border-[#DFDDD3] text-[#12241C] hover:bg-[#FAF9F5] flex items-center gap-1 text-xs font-semibold rounded-lg"
                         title="Detect GPS location and select nearest district"
                       >
-                        <Crosshair className="w-3.5 h-3.5 text-[#12241C]" />
+                        <Crosshair className="w-3 h-3 text-[#12241C]" />
                         <span>{t.btn_gps}</span>
                       </Button>
                     </div>
@@ -1585,24 +1583,24 @@ export function CitizenPortalApp({
             open={isDistrictReportOpen}
             onOpenChange={setIsDistrictReportOpen}
           >
-            <DialogContent className="max-w-2xl w-[92vw] max-h-[84vh] overflow-y-auto bg-[#FAF9F5] border border-[#DFDDD3] rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4 text-left">
-              <DialogHeader className="space-y-1 text-center">
-                <DialogTitle className="text-2xl sm:text-[26px] font-bold tracking-wide text-[#8B5E3C]">
+            <DialogContent className="max-w-xl md:max-w-2xl w-[94vw] sm:w-[90vw] max-h-[84vh] overflow-y-auto bg-[#FAF9F5] border border-[#DFDDD3] rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-2xl space-y-2.5 sm:space-y-3 text-left">
+              <DialogHeader className="space-y-0.5 text-center pr-6">
+                <DialogTitle className="text-lg sm:text-xl font-bold tracking-wide text-[#8B5E3C]">
                   {districtReport.name} - {lang === "bn" ? "বিস্তারিত বন্যা প্রতিবেদন ও জরুরি পরিকল্পনা" : "Detailed Flood Report & Emergency Plan"}
                 </DialogTitle>
-                <div className="text-xs sm:text-sm text-[#4B5563]">
+                <div className="text-[10px] sm:text-xs text-[#4B5563]">
                   {districtReport.division} {lang === "bn" ? "বিভাগ" : "Division"} • {lang === "bn" ? "জাতীয় র‍্যাংক #" : "National Rank #"}{lang === "bn" ? toBnNum(districtReport.rank) : districtReport.rank} / {lang === "bn" ? "৬৪" : "64"} • {lang === "bn" ? "পূর্বাভাস তারিখ:" : "Forecast Date:"} {lang === "bn" ? toBnNum(targetDate) : targetDate}
                 </div>
               </DialogHeader>
 
               {/* 1. Map of that location */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs font-bold text-[#183026]">
-                  <span className="flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-[#C9443A]" />
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-[11px] font-bold text-[#183026]">
+                  <span className="flex items-center gap-1">
+                    <MapPin className="w-3 h-3 text-[#C9443A]" />
                     {lang === "bn" ? "এলাকার বিশদ মানচিত্র ও আশ্রয়কেন্দ্র:" : "Location Map & Emergency Shelters:"}
                   </span>
-                  <span className="text-[#5C6863] font-mono text-[11px]">
+                  <span className="text-[#5C6863] font-mono text-[10px]">
                     {lang === "bn" ? toBnNum(currentCoords.lat.toFixed(4)) : currentCoords.lat.toFixed(4)}°N, {lang === "bn" ? toBnNum(currentCoords.lng.toFixed(4)) : currentCoords.lng.toFixed(4)}°E
                   </span>
                 </div>
@@ -1617,87 +1615,87 @@ export function CitizenPortalApp({
               </div>
 
               {/* 2. Core Metrics 4-Card Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
                 {/* 1: Risk */}
-                <div className="bg-white rounded-2xl border border-[#DFDDD3] p-4 text-center shadow-xs flex flex-col justify-between">
-                  <span className="text-xs font-semibold text-[#5C6863]">
+                <div className="bg-white rounded-xl border border-[#DFDDD3] p-2 sm:p-2.5 text-center shadow-xs flex flex-col justify-between">
+                  <span className="text-[10px] sm:text-[11px] font-semibold text-[#5C6863]">
                     {lang === "bn" ? "বন্যা ঝুঁকি" : "Flood Risk"}
                   </span>
-                  <div className={`text-2xl sm:text-3xl font-bold my-1 ${
+                  <div className={`text-lg sm:text-xl font-bold my-0.5 ${
                     districtReport.rank <= 35 ? "text-[#C9443A]" : "text-[#E08A24]"
                   }`}>
                     {districtReport.rank <= 35 ? (lang === "bn" ? "উচ্চ" : "High") : (lang === "bn" ? "মাঝারি" : "Moderate")}
                   </div>
-                  <span className="text-[11px] font-medium text-[#4B5563]">
+                  <span className="text-[9px] sm:text-[10px] font-medium text-[#4B5563]">
                     {districtReport.rank <= 35 ? (lang === "bn" ? "উচ্ছেদ স্তর ৩" : "Evac Level 3") : (lang === "bn" ? "সতর্কতা স্তর ২" : "Alert Level 2")}
                   </span>
                 </div>
 
                 {/* 2: Forecast */}
-                <div className="bg-white rounded-2xl border border-[#DFDDD3] p-4 text-center shadow-xs flex flex-col justify-between">
-                  <span className="text-xs font-semibold text-[#5C6863]">
+                <div className="bg-white rounded-xl border border-[#DFDDD3] p-2 sm:p-2.5 text-center shadow-xs flex flex-col justify-between">
+                  <span className="text-[10px] sm:text-[11px] font-semibold text-[#5C6863]">
                     {lang === "bn" ? "২৪ঘণ্টা পূর্বাভাস" : "24H Forecast"}
                   </span>
-                  <div className="text-2xl sm:text-3xl font-bold text-[#1F513F] my-1">
+                  <div className="text-lg sm:text-xl font-bold text-[#1F513F] my-0.5">
                     {lang === "bn" ? ">৯৫%" : ">95%"}
                   </div>
-                  <span className="text-[11px] font-medium text-[#1F513F]">
+                  <span className="text-[9px] sm:text-[10px] font-medium text-[#1F513F]">
                     {lang === "bn" ? "চরম নির্ভরযোগ্য" : "Extreme Conf."}
                   </span>
                 </div>
 
                 {/* 3: Depth */}
-                <div className="bg-white rounded-2xl border border-[#DFDDD3] p-4 text-center shadow-xs flex flex-col justify-between">
-                  <span className="text-xs font-semibold text-[#5C6863]">
+                <div className="bg-white rounded-xl border border-[#DFDDD3] p-2 sm:p-2.5 text-center shadow-xs flex flex-col justify-between">
+                  <span className="text-[10px] sm:text-[11px] font-semibold text-[#5C6863]">
                     {lang === "bn" ? "পানির গভীরতা" : "Peak Depth"}
                   </span>
-                  <div className="text-2xl sm:text-3xl font-bold text-[#11241C] my-1">
+                  <div className="text-lg sm:text-xl font-bold text-[#11241C] my-0.5">
                     {lang === "bn" ? "১.৮ মি." : "1.8m"}
                   </div>
-                  <span className="text-[11px] font-medium text-[#4B5563]">
+                  <span className="text-[9px] sm:text-[10px] font-medium text-[#4B5563]">
                     {lang === "bn" ? "গেজ স্টেশন ৭" : "Gauge Stn 7"}
                   </span>
                 </div>
 
                 {/* 4: Rank */}
-                <div className="bg-white rounded-2xl border border-[#DFDDD3] p-4 text-center shadow-xs flex flex-col justify-between">
-                  <span className="text-xs font-semibold text-[#5C6863]">
+                <div className="bg-white rounded-xl border border-[#DFDDD3] p-2 sm:p-2.5 text-center shadow-xs flex flex-col justify-between">
+                  <span className="text-[10px] sm:text-[11px] font-semibold text-[#5C6863]">
                     {lang === "bn" ? "জাতীয় র‍্যাংক" : "National Rank"}
                   </span>
-                  <div className="text-2xl sm:text-3xl font-bold text-[#11241C] my-1">
+                  <div className="text-lg sm:text-xl font-bold text-[#11241C] my-0.5">
                     #{lang === "bn" ? toBnNum(districtReport.rank) : districtReport.rank}
                   </div>
-                  <span className="text-[11px] font-medium text-[#4B5563]">
+                  <span className="text-[9px] sm:text-[10px] font-medium text-[#4B5563]">
                     {lang === "bn" ? "৬৪ জেলার মধ্যে" : "Out of 64"}
                   </span>
                 </div>
               </div>
 
               {/* 3. Hydrology Hazard Return Periods */}
-              <div className="space-y-2">
-                <h4 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#11241C]">
+              <div className="space-y-1.5">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-[#11241C]">
                   {lang === "bn" ? "দীর্ঘমেয়াদী প্লাবন ঝুঁকি (JRC / GloFAS)" : "LONG-TERM FLOOD RETURN PERIODS"}
                 </h4>
-                <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                  <div className="bg-white rounded-2xl border border-[#DFDDD3] p-4 text-center shadow-xs">
-                    <div className="text-xs font-bold text-[#11241C]">
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <div className="bg-white rounded-xl border border-[#DFDDD3] p-3 text-center shadow-xs">
+                    <div className="text-[11px] font-bold text-[#11241C]">
                       {lang === "bn" ? "১০-বছরের বন্যা চক্র" : "10-Year Flood Cycle"}
                     </div>
-                    <div className="text-2xl sm:text-3xl font-bold text-[#11241C] my-1">
+                    <div className="text-xl sm:text-2xl font-bold text-[#11241C] my-0.5">
                       {districtReport.hazardShare10}
                     </div>
-                    <div className="text-[11px] text-[#6B7280]">
+                    <div className="text-[10px] text-[#6B7280]">
                       {lang === "bn" ? "১০ বছরে অন্তত একবার প্লাবিত হওয়ার সম্ভাব্য এলাকা" : "Expected once every 10 years"}
                     </div>
                   </div>
-                  <div className="bg-white rounded-2xl border border-[#DFDDD3] p-4 text-center shadow-xs">
-                    <div className="text-xs font-bold text-[#11241C]">
+                  <div className="bg-white rounded-xl border border-[#DFDDD3] p-3 text-center shadow-xs">
+                    <div className="text-[11px] font-bold text-[#11241C]">
                       {lang === "bn" ? "১০০-বছরের চরম বন্যা" : "100-Year Severe Flood"}
                     </div>
-                    <div className="text-2xl sm:text-3xl font-bold text-[#C9443A] my-1">
+                    <div className="text-xl sm:text-2xl font-bold text-[#C9443A] my-0.5">
                       {districtReport.hazardShare100}
                     </div>
-                    <div className="text-[11px] text-[#6B7280]">
+                    <div className="text-[10px] text-[#6B7280]">
                       {lang === "bn" ? "শতবর্ষের মহা-প্লাবনের সর্বোচ্চ ঝুঁকি এলাকা" : "Expected once every 100 years"}
                     </div>
                   </div>
@@ -1705,47 +1703,47 @@ export function CitizenPortalApp({
               </div>
 
               {/* 4. Actionable Emergency Evacuation Plan */}
-              <div className="space-y-2.5 bg-white rounded-2xl border border-[#DFDDD3] p-5 shadow-xs">
-                <h4 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#183026] flex items-center gap-1.5">
-                  <ShieldAlert className="w-4 h-4 text-[#C9443A]" />
+              <div className="space-y-2 bg-white rounded-2xl border border-[#DFDDD3] p-3.5 sm:p-4 shadow-xs">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-[#183026] flex items-center gap-1.5">
+                  <ShieldAlert className="w-3.5 h-3.5 text-[#C9443A]" />
                   {lang === "bn" ? "জরুরি উচ্ছেদ ও নিরাপত্তা নির্দেশনা" : "EMERGENCY EVACUATION & ACTION GUIDELINES"}
                 </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-[#263B32] leading-relaxed">
-                  <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#DFDDD3] space-y-1">
-                    <div className="font-bold text-[#183026]">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-[#263B32] leading-relaxed">
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-[#FAF9F5] border border-[#DFDDD3] space-y-0.5">
+                    <div className="font-bold text-[#183026] text-[11px]">
                       {lang === "bn" ? "১. আশ্রয়কেন্দ্রে স্থানান্তর:" : "1. Immediate Evacuation:"}
                     </div>
-                    <div>
+                    <div className="text-[11px]">
                       {lang === "bn"
                         ? "শিশু, বয়োবৃদ্ধ ও গবাদিপশু দ্রুত নিকটবর্তী পাকা আশ্রয়কেন্দ্র বা বন্যা প্রতিরোধী ভবনে সরিয়ে নিন।"
                         : "Move children, elderly, and livestock immediately to the nearest designated elevated shelter."}
                     </div>
                   </div>
-                  <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#DFDDD3] space-y-1">
-                    <div className="font-bold text-[#183026]">
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-[#FAF9F5] border border-[#DFDDD3] space-y-0.5">
+                    <div className="font-bold text-[#183026] text-[11px]">
                       {lang === "bn" ? "২. নিরাপদ পানি ও শুকনো খাবার:" : "2. Safe Water & Provisions:"}
                     </div>
-                    <div>
+                    <div className="text-[11px]">
                       {lang === "bn"
                         ? "কমপক্ষে ৭২ ঘণ্টার নিরাপদ খাওয়ার পানি, হ্যালোজেন ট্যাবলেট, ওরাল স্যালাইন ও শুকনো খাবার সংরক্ষণ করুন।"
                         : "Secure 72 hours of clean drinking water, purification tablets (Halazone), saline, and dry rations."}
                     </div>
                   </div>
-                  <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#DFDDD3] space-y-1">
-                    <div className="font-bold text-[#183026]">
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-[#FAF9F5] border border-[#DFDDD3] space-y-0.5">
+                    <div className="font-bold text-[#183026] text-[11px]">
                       {lang === "bn" ? "৩. বিদ্যুৎ ও যোগাযোগ ব্যবস্থা:" : "3. Power & Device Safety:"}
                     </div>
-                    <div>
+                    <div className="text-[11px]">
                       {lang === "bn"
                         ? "পানি ঘরে ঢোকার আগেই মেইন সুইচ বন্ধ করুন। মোবাইল ও পাওয়ারব্যাংক ওয়াটারপ্রুফ পলিথিনে সিল করে রাখুন।"
                         : "Turn off main electrical breakers before water enters. Seal mobile phones and powerbanks in waterproof bags."}
                     </div>
                   </div>
-                  <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#DFDDD3] space-y-1">
-                    <div className="font-bold text-[#183026]">
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-[#FAF9F5] border border-[#DFDDD3] space-y-0.5">
+                    <div className="font-bold text-[#183026] text-[11px]">
                       {lang === "bn" ? "৪. জরুরি হটলাইন নম্বরসমূহ:" : "4. Emergency Helplines:"}
                     </div>
-                    <div>
+                    <div className="text-[11px]">
                       {lang === "bn"
                         ? "উদ্ধার সহায়তা: ৯৯৯ | দুর্যোগ তথ্য: ১০৯০ | নারী ও শিশু সহায়তা: ১০৯"
                         : "National Rescue: 999 | Flood IVR: 1090 | Women & Child Helpline: 109"}
@@ -1756,26 +1754,26 @@ export function CitizenPortalApp({
 
               {/* 5. Registered Emergency Shelters & Hospitals */}
               {reportAssets.length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#11241C]">
+                <div className="space-y-1.5">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#11241C]">
                     {lang === "bn" ? "নিকটবর্তী নিবন্ধিত আশ্রয়কেন্দ্র ও চিকিৎসাকেন্দ্র" : "NEARBY REGISTERED SHELTERS & HOSPITALS"}
                   </h4>
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     {reportAssets.map((item) => (
                       <div
                         key={item.asset.id}
-                        className="bg-white rounded-xl border border-[#DFDDD3] p-3 flex items-center justify-between shadow-xs text-xs"
+                        className="bg-white rounded-xl border border-[#DFDDD3] p-2.5 flex items-center justify-between shadow-xs text-xs"
                       >
-                        <div className="flex items-center gap-2.5">
-                          <span className="text-lg">
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">
                             {item.asset.asset_type.toLowerCase().includes("hospital") || item.asset.asset_type.toLowerCase().includes("clinic") ? "🏥" : "⛺"}
                           </span>
                           <div>
-                            <div className="font-bold text-[#11241C]">{item.asset.name}</div>
-                            <div className="text-[11px] text-[#5C6863]">{item.asset.asset_type}</div>
+                            <div className="font-bold text-[#11241C] text-[11px]">{item.asset.name}</div>
+                            <div className="text-[10px] text-[#5C6863]">{item.asset.asset_type}</div>
                           </div>
                         </div>
-                        <div className="font-bold text-[#183026] text-right">
+                        <div className="font-bold text-[#183026] text-right text-xs">
                           {item.distance_kilometers.toFixed(1)} km {lang === "bn" ? "দূরে" : "away"}
                         </div>
                       </div>
@@ -1785,21 +1783,21 @@ export function CitizenPortalApp({
               )}
 
               {/* 6. Footer Actions */}
-              <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
+              <div className="pt-1 flex flex-col sm:flex-row items-center gap-2.5">
                 <Button
                   onClick={() => {
                     setIsDistrictReportOpen(false);
                     setIsSosOpen(true);
                   }}
-                  className="w-full sm:flex-1 h-12 text-[12px] font-black tracking-wider uppercase text-white rounded-2xl shadow-md border-0 cursor-pointer transition-all active:scale-98 flex items-center justify-center gap-2 [background:linear-gradient(90deg,#3B7E5D_0%,#E9B441_34%,#E67328_67%,#D93829_100%)] hover:opacity-95"
+                  className="w-full sm:flex-1 h-10 text-[11px] font-black tracking-wider uppercase text-white rounded-xl sm:rounded-2xl shadow-md border-0 cursor-pointer transition-all active:scale-98 flex items-center justify-center gap-1.5 [background:linear-gradient(90deg,#3B7E5D_0%,#E9B441_34%,#E67328_67%,#D93829_100%)] hover:opacity-95"
                 >
-                  <AlertTriangle className="w-4 h-4 text-white animate-bounce" />
+                  <AlertTriangle className="w-3.5 h-3.5 text-white animate-bounce" />
                   <span>{lang === "bn" ? "জরুরি এসওএস উদ্ধার অনুরোধ পাঠান" : "Request Immediate SOS Rescue"}</span>
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => setIsDistrictReportOpen(false)}
-                  className="w-full sm:w-auto h-12 px-6 rounded-2xl border-[#DFDDD3] font-bold text-xs text-[#11241C] hover:bg-[#FAF9F5]"
+                  className="w-full sm:w-auto h-10 px-5 rounded-xl sm:rounded-2xl border-[#DFDDD3] font-bold text-xs text-[#11241C] hover:bg-[#FAF9F5]"
                 >
                   {lang === "bn" ? "প্রতিবেদন বন্ধ করুন" : "Close Report"}
                 </Button>

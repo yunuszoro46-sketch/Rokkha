@@ -39,6 +39,8 @@
   html {
     scroll-behavior: smooth;
     font-size: 16px;
+    overflow-x: hidden;
+    max-width: 100vw;
   }
   body {
     background: #EDEBE2;
@@ -46,6 +48,8 @@
     font-family: "DM Sans", sans-serif;
     font-size: 16px;
     line-height: 24px;
+    overflow-x: hidden;
+    max-width: 100vw;
   }
 
   /* 40px – Main headings */
@@ -673,6 +677,7 @@ h2 em {
   gap: 56px;
   align-items: center;
   padding: 35px 4% 70px;
+  overflow: hidden;
 }
 .prediction::after {
   content: "";
@@ -874,6 +879,13 @@ h2 em {
 }
 
 @media (max-width: 1024px) {
+  .site-header nav {
+    gap: 1.25rem;
+  }
+  .site-header nav a,
+  .site-header nav button {
+    font-size: 15px;
+  }
   .metrics {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -886,9 +898,20 @@ h2 em {
 }
 
 @media (max-width: 768px) {
+  .site-header {
+    height: 60px;
+  }
+  .site-header nav {
+    display: none;
+  }
   .hero {
     grid-template-columns: 1fr;
     text-align: center;
+    min-height: auto;
+    padding: 1rem 0 1.5rem 0;
+  }
+  .hero-map {
+    height: 320px;
   }
   .button-row {
     justify-content: center;
@@ -897,6 +920,15 @@ h2 em {
   .capability-grid,
   .cta {
     grid-template-columns: 1fr;
+  }
+  .metrics > div {
+    padding: 16px 20px;
+    min-height: auto;
+  }
+  .cta {
+    width: 100%;
+    margin: 16px auto;
+    padding: 14px 16px;
   }
 }
 
