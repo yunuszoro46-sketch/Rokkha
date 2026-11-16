@@ -851,15 +851,15 @@ export function CitizenPortalApp({
 
       {/* Main Content Area */}
       <div
-        className={`flex-1 w-full bg-[#EDEBE2] bg-[url('/topo-pattern.svg')] bg-repeat transition-all duration-300 min-w-0 flex flex-col justify-between ${
+        className={`flex-1 w-full max-w-full bg-[#EDEBE2] bg-[url('/topo-pattern.svg')] bg-repeat transition-all duration-300 min-w-0 flex flex-col justify-between overflow-x-hidden ${
           activeView === "overview" || activeView === "login"
             ? "pl-0"
             : isSidebarCollapsed
             ? "pl-20"
-            : "pl-20 md:pl-80"
+            : "pl-20 lg:pl-72 xl:pl-80"
         }`}
       >
-        <main className="w-full flex-1 flex flex-col justify-between">
+        <main className="w-full max-w-full flex-1 flex flex-col justify-between overflow-x-hidden">
           <div className="w-full">
             {/* Top Header / Site Header */}
             <header className="w-full border-b border-[#DFDDD3]/50">

@@ -35,9 +35,11 @@ export const DistrictDetailMap: React.FC<DistrictDetailMapProps> = ({
 
     const map = L.map(mapContainerRef.current, {
       center: [lat, lng],
-      zoom: 10,
+      zoom: 12,
+      minZoom: 9,
+      maxZoom: 18,
       zoomControl: true,
-      scrollWheelZoom: false,
+      scrollWheelZoom: true,
     });
 
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -59,23 +61,29 @@ export const DistrictDetailMap: React.FC<DistrictDetailMapProps> = ({
       const geoLayer = L.geoJSON(districtFeature, {
         style: {
           color: "#8B5E3C",
-          weight: 3,
+          weight: 3.5,
           fillColor: "#C9443A",
-          fillOpacity: 0.22,
-          dashArray: "4, 4",
+          fillOpacity: 0.26,
+          dashArray: "3, 3",
         },
       }).addTo(map);
 
       try {
         const bounds = geoLayer.getBounds();
         if (bounds.isValid()) {
-          map.fitBounds(bounds, { padding: [25, 25] });
+          // Frame tightly and ensure close-up zoom level
+          map.fitBounds(bounds, { padding: [8, 8], maxZoom: 12.5 });
+          if (map.getZoom() < 11) {
+            map.setZoom(11.5);
+          }
+        } else {
+          map.setView([lat, lng], 12);
         }
       } catch {
-        map.setView([lat, lng], 10);
+        map.setView([lat, lng], 12);
       }
     } else {
-      map.setView([lat, lng], 10);
+      map.setView([lat, lng], 12);
     }
 
     // Add prominent center pin marker with district badge

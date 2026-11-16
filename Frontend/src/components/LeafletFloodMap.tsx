@@ -436,6 +436,26 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
     }
   }, [inspectedPoint]);
 
+  // Automatically pan & zoom closely to selected district
+  useEffect(() => {
+    if (!mapRef.current || !selectedDistrictPcode) return;
+    const features = (districtBoundariesData as any)?.features || [];
+    const found = features.find(
+      (f: any) =>
+        f.properties?.pcode === selectedDistrictPcode ||
+        f.properties?.ADM2_PCODE === selectedDistrictPcode
+    );
+    if (found) {
+      try {
+        const geo = L.geoJSON(found);
+        const bounds = geo.getBounds();
+        if (bounds.isValid()) {
+          mapRef.current.fitBounds(bounds, { maxZoom: 11, padding: [15, 15] });
+        }
+      } catch {}
+    }
+  }, [selectedDistrictPcode]);
+
   const currentDistrictPcode =
     pointCheckResult?.district?.pcode || selectedDistrictPcode || "BD6090";
   const matchedDistrict = (districtBoundariesData as any)?.features?.find(
@@ -548,65 +568,8 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
         </div>
       </div>
 
-      {/* 3. Interactive Map Canvas with compact scenario & view controls */}
-      <div className="w-full space-y-2">
-        {/* Compact Scenario & Layer toggles */}
-        <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-xs">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[#5C6863] font-semibold">{isBn ? "তারিখ:" : "Forecast Date:"}</span>
-            <Button
-              size="sm"
-              variant={targetDate === "2022-06-18" ? "default" : "secondary"}
-              onClick={() => onChangeTargetDate?.("2022-06-18")}
-              className="text-xs font-semibold h-7 rounded-lg px-2"
-            >
-              {t.scenario_sylhet}
-            </Button>
-            <Button
-              size="sm"
-              variant={targetDate === "2024-08-22" ? "default" : "secondary"}
-              onClick={() => onChangeTargetDate?.("2024-08-22")}
-              className="text-xs font-semibold h-7 rounded-lg px-2"
-            >
-              {t.scenario_feni}
-            </Button>
-            <Button
-              size="sm"
-              variant={targetDate === "2023-04-10" ? "default" : "secondary"}
-              onClick={() => onChangeTargetDate?.("2023-04-10")}
-              className="text-xs font-semibold h-7 rounded-lg px-2"
-            >
-              {t.scenario_dry}
-            </Button>
-            <Button
-              size="sm"
-              variant={targetDate === todayUtc ? "default" : "secondary"}
-              onClick={() => onChangeTargetDate?.(todayUtc)}
-              className="text-xs font-semibold h-7 rounded-lg px-2"
-            >
-              {isBn ? "আজ" : "Today"}
-            </Button>
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <Button
-              size="sm"
-              variant={view === "forecast" ? "default" : "secondary"}
-              onClick={() => setView("forecast")}
-              className="text-xs font-semibold h-7 rounded-lg px-2.5"
-            >
-              {isBn ? "মডেল পূর্বাভাস" : "Model forecast"}
-            </Button>
-            <Button
-              size="sm"
-              variant={view === "observed" ? "default" : "secondary"}
-              onClick={() => setView("observed")}
-              className="text-xs font-semibold h-7 rounded-lg px-2.5"
-            >
-              {isBn ? "স্যাটেলাইট পর্যবেক্ষণ" : "Observed by satellite"}
-            </Button>
-          </div>
-        </div>
+      {/* 3. Interactive Map Canvas */}
+      <div className="w-full">
 
         {/* Map Viewport */}
         <div className="h-[380px] sm:h-[440px] w-full rounded-2xl overflow-hidden border border-[#DFDDD3] relative shadow-inner bg-[#FAF9F5]">
