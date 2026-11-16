@@ -4,7 +4,9 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Crosshair, LifeBuoy, MapPin, MessageSquare, Phone, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Language, toBnNum } from "../lib/translations";
+import { Language, toBnNum, DISTRICTS_BN } from "../lib/translations";
+import districtGeoData from "@/data/bangladesh_districts.json";
+import benchmarkData from "@/data/benchmark_predictions.json";
 import { readGpsPosition } from "../services/auth";
 import {
   Need,
@@ -28,6 +30,23 @@ interface SosCenterProps {
   onOpenChange?: (open: boolean) => void;
   hideFloatingButton?: boolean;
 }
+
+const ALL_DISTRICTS: Array<{ pcode: string; name: string; division: string }> = (
+  districtGeoData as any
+).features
+  .map((f: any) => ({
+    pcode: f.properties.pcode,
+    name: f.properties.name,
+    division: f.properties.parent_name || "",
+  }))
+  .sort((a: any, b: any) => a.name.localeCompare(b.name));
+
+const DISTRICT_CENTERS: Record<string, [number, number]> =
+  (benchmarkData as any).centroids || {
+    BD6090: [24.9602, 91.3992],
+    BD3026: [23.8103, 90.4125],
+    BD6091: [24.8949, 91.8687],
+  };
 
 const NEEDS: Array<{ id: Need; en: string; bn: string }> = [
   { id: "rescue", en: "Rescue (trapped by water)", bn: "উদ্ধার (পানিতে আটকা)" },
@@ -71,7 +90,10 @@ export const SosCenter: React.FC<SosCenterProps> = ({
     onOpenChange?.(open);
   };
   const [queue, setQueue] = useState<StoredSos[]>([]);
-  const [position, setPosition] = useState<{ lng: number; lat: number; accuracy_m: number | null } | null>(null);
+  const [position, setPosition] = useState<{ lng: number; lat: number; accuracy_m: number | null; label?: string } | null>(null);
+  const [showOtherLocation, setShowOtherLocation] = useState(false);
+  const [otherDistrict, setOtherDistrict] = useState("");
+  const [otherArea, setOtherArea] = useState("");
   const [isLocating, setIsLocating] = useState(false);
   const [people, setPeople] = useState("1");
   const [need, setNeed] = useState<Need>("rescue");
@@ -79,6 +101,40 @@ export const SosCenter: React.FC<SosCenterProps> = ({
   const [name, setName] = useState(contactName);
   const [phone, setPhone] = useState("");
   const [problem, setProblem] = useState<string | null>(null);
+
+  const handleSelectDistrict = (pcode: string) => {
+    setOtherDistrict(pcode);
+    const center = DISTRICT_CENTERS[pcode];
+    const d = ALL_DISTRICTS.find((item) => item.pcode === pcode);
+    if (center && d) {
+      const distName = isBn ? (DISTRICTS_BN[pcode] || d.name) : d.name;
+      const label = otherArea.trim() ? `${otherArea.trim()}, ${distName}` : distName;
+      setPosition({
+        lat: center[0],
+        lng: center[1],
+        accuracy_m: null,
+        label,
+      });
+    }
+  };
+
+  const handleOtherAreaChange = (val: string) => {
+    setOtherArea(val);
+    if (otherDistrict) {
+      const center = DISTRICT_CENTERS[otherDistrict];
+      const d = ALL_DISTRICTS.find((item) => item.pcode === otherDistrict);
+      if (center && d) {
+        const distName = isBn ? (DISTRICTS_BN[otherDistrict] || d.name) : d.name;
+        const label = val.trim() ? `${val.trim()}, ${distName}` : distName;
+        setPosition({
+          lat: center[0],
+          lng: center[1],
+          accuracy_m: null,
+          label,
+        });
+      }
+    }
+  };
 
   const sync = useCallback(async () => {
     setQueue(await syncQueue());
@@ -108,7 +164,8 @@ export const SosCenter: React.FC<SosCenterProps> = ({
     setIsLocating(true);
     try {
       const [lng, lat] = await readGpsPosition();
-      setPosition({ lng, lat, accuracy_m: null });
+      setPosition({ lng, lat, accuracy_m: null, label: tr("My GPS location", "আমার জিপিএস অবস্থান") });
+      setShowOtherLocation(false);
     } catch (error) {
       setProblem((error as Error).message);
     } finally {
@@ -122,13 +179,17 @@ export const SosCenter: React.FC<SosCenterProps> = ({
       setProblem(tr("Choose your location first.", "আগে আপনার অবস্থান দিন।"));
       return;
     }
+    const locationPrefix = position.label ? `[${position.label}] ` : "";
+    const noteWithLocation = note.trim().startsWith(locationPrefix)
+      ? note.trim()
+      : `${locationPrefix}${note.trim()}`;
     const draft: SosDraft = {
       lng: position.lng,
       lat: position.lat,
       accuracy_m: position.accuracy_m,
       people: Math.min(1000, Math.max(1, Number(people) || 1)),
       need,
-      note: note.trim().slice(0, 500),
+      note: noteWithLocation.trim().slice(0, 500),
       contact_name: name.trim().slice(0, 80),
       contact_phone: phone.trim().slice(0, 20),
     };
@@ -340,11 +401,27 @@ export const SosCenter: React.FC<SosCenterProps> = ({
                       <Crosshair className="w-4 h-4" />
                       {isLocating ? tr("Reading location...", "অবস্থান নেওয়া হচ্ছে...") : tr("Use my current location", "আমার বর্তমান অবস্থান")}
                     </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowOtherLocation((prev) => !prev)}
+                      className={`h-10 rounded-xl text-sm font-bold flex items-center gap-2 transition-all ${
+                        showOtherLocation
+                          ? "bg-[#183026] text-white border-[#183026] hover:bg-[#12241C] hover:text-white"
+                          : "border-[#DFDDD3] hover:border-[#12241C]"
+                      }`}
+                    >
+                      <MapPin className={`w-4 h-4 ${showOtherLocation ? "text-white" : "text-[#C9443A]"}`} />
+                      {tr("Use others location", "অন্যের অবস্থান")}
+                    </Button>
                     {savedPlace && (
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => setPosition({ lng: savedPlace.lng, lat: savedPlace.lat, accuracy_m: null })}
+                        onClick={() => {
+                          setPosition({ lng: savedPlace.lng, lat: savedPlace.lat, accuracy_m: null, label: savedPlace.label || undefined });
+                          setShowOtherLocation(false);
+                        }}
                         className="h-10 rounded-xl text-sm font-bold flex items-center gap-2"
                       >
                         <MapPin className="w-4 h-4" />
@@ -352,10 +429,55 @@ export const SosCenter: React.FC<SosCenterProps> = ({
                       </Button>
                     )}
                   </div>
+
+                  {showOtherLocation && (
+                    <div className="p-3.5 rounded-2xl bg-[#FAFAF7] border border-[#DFDDD3] space-y-3 mt-2">
+                      <div className="text-xs font-bold text-[#183026]">
+                        {tr("Specify location for someone else:", "অন্য কারো অবস্থান নির্বাচন করুন:")}
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div>
+                          <label className="block text-[11px] font-bold text-[#5C6863] mb-1">
+                            {tr("District (Required)", "জেলা (আবশ্যক)")}
+                          </label>
+                          <select
+                            value={otherDistrict}
+                            onChange={(e) => handleSelectDistrict(e.target.value)}
+                            className="h-10 w-full rounded-xl border border-[#DFDDD3] bg-white px-3 text-xs font-semibold text-[#183026]"
+                          >
+                            <option value="">{tr("-- Select District --", "-- জেলা নির্বাচন করুন --")}</option>
+                            {ALL_DISTRICTS.map((d) => (
+                              <option key={d.pcode} value={d.pcode}>
+                                {isBn ? (DISTRICTS_BN[d.pcode] || d.name) : d.name} ({d.division})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-bold text-[#5C6863] mb-1">
+                            {tr("Upazila / Area / Landmark (Optional)", "উপজেলা / গ্রাম / পরিচিত স্থান (ঐচ্ছিক)")}
+                          </label>
+                          <Input
+                            type="text"
+                            value={otherArea}
+                            onChange={(e) => handleOtherAreaChange(e.target.value)}
+                            placeholder={tr("e.g. Chhagalnaiya, near flood shelter", "যেমন: ছাগলনাইয়া, বন্যা আশ্রয়কেন্দ্রের কাছে")}
+                            className="h-10 rounded-xl text-xs bg-white"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="text-sm text-[#12241C]">
-                    {position
-                      ? `${num(position.lat.toFixed(5))}°N, ${num(position.lng.toFixed(5))}°E`
-                      : tr("No location chosen yet.", "এখনো অবস্থান দেওয়া হয়নি।")}
+                    {position ? (
+                      <span className="font-semibold">
+                        {position.label ? <span className="text-[#183026] mr-1.5 font-bold">📍 {position.label} —</span> : null}
+                        {num(position.lat.toFixed(5))}°N, {num(position.lng.toFixed(5))}°E
+                      </span>
+                    ) : (
+                      tr("No location chosen yet.", "এখনো অবস্থান দেওয়া হয়নি।")
+                    )}
                   </div>
                 </div>
 
