@@ -79,7 +79,6 @@ import {
   getNearestAssets,
 } from "@/services/api";
 import { AssetNearResult } from "@/types/api";
-import { DataSourceBanner } from "@/components/DataSourceBanner";
 import { MyLocationReport } from "@/components/MyLocationReport";
 import { SosCenter } from "@/components/SosCenter";
 import { RescuePanel } from "@/components/RescuePanel";
@@ -867,7 +866,6 @@ export function CitizenPortalApp({
       >
         <main className="w-full flex-1 flex flex-col justify-between">
           <div className="w-full">
-            <DataSourceBanner lang={lang} />
             {/* Top Header / Site Header */}
             <header className="w-full border-b border-[#DFDDD3]/50">
               <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 site-header">
@@ -922,55 +920,26 @@ export function CitizenPortalApp({
                         <Icon name="shield" size={16} /> {t.hero_tagline}
                       </div>
                       <div className="hero-headline-bar">
-                        <h1 className="text-[35px] font-extrabold leading-[1.15]">
+                        <h1 className="text-[35px] font-extrabold leading-[1.12] tracking-tight uppercase">
                           {t.hero_title_1}
                           <br />
                           {t.hero_title_2}
                         </h1>
+                        <p className="text-xl sm:text-2xl font-bold text-[#11241C] mt-2">
+                          {t.hero_subtitle}
+                        </p>
                       </div>
                       <p>
                         {t.hero_desc}
                       </p>
-                      <div className="button-row flex flex-wrap items-start gap-4 pt-1">
+                      <div className="button-row">
                         <Button
                           onClick={() => navigateToPage("login")}
-                          className="button gap-2 text-[14px] font-bold h-14 px-6 rounded-2xl shadow-sm mt-0"
+                          className="button gap-2 text-[14px] font-bold h-14 px-7 rounded-2xl shadow-sm"
                         >
                           <span>{t.btn_get_started}</span>
                           <Icon name="arrow" size={16} />
                         </Button>
-
-                        {/* Emergency SOS Button matching Reference Image in exact horizontal alignment */}
-                        <div className="flex flex-col items-center">
-                          <button
-                            type="button"
-                            onClick={() => setIsSosOpen(true)}
-                            className="group relative flex items-center gap-3.5 px-6 py-2.5 h-14 rounded-full bg-[linear-gradient(90deg,#24b859_0%,#8d9635_48%,#e03328_100%)] hover:opacity-95 text-white shadow-[0_8px_24px_rgba(224,51,40,0.32)] transition-all hover:scale-[1.02] active:scale-[0.98]"
-                            aria-label="Emergency Rescue Request"
-                          >
-                            <div className="w-9 h-9 rounded-full border-2 border-white/90 flex items-center justify-center shrink-0">
-                              <LifeBuoy className="w-5 h-5 text-white stroke-[2.5]" />
-                            </div>
-                            <div className="flex flex-col text-left leading-[1.08]">
-                              <span className="text-[11px] font-black tracking-wider text-white uppercase drop-shadow-xs">
-                                {lang === "bn" ? "জরুরি" : "EMERGENCY"}
-                              </span>
-                              <span className="text-[13px] font-black tracking-wider text-white uppercase drop-shadow-xs">
-                                {lang === "bn" ? "উদ্ধার" : "RESCUE"}
-                              </span>
-                              <span className="text-[13px] font-black tracking-wider text-white uppercase drop-shadow-xs">
-                                {lang === "bn" ? "অনুরোধ" : "REQUEST"}
-                              </span>
-                            </div>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setIsSosOpen(true)}
-                            className="mt-1.5 px-4 py-1 rounded-full bg-[#24b859] hover:bg-[#1ea850] text-white text-[13px] font-bold shadow-xs transition hover:scale-105"
-                          >
-                            {lang === "bn" ? "ঝুঁকি বা দুর্যোগ জানান" : "Report A Hazard"}
-                          </button>
-                        </div>
                       </div>
                     </div>
                     <div className="hero-map">
@@ -1118,13 +1087,6 @@ export function CitizenPortalApp({
                         </p>
                       </div>
                     </div>
-                    <Button
-                      onClick={() => navigateToPage("login")}
-                      className="bg-[#122B1E] hover:bg-[#0C1F15] text-white font-bold text-sm px-6 h-11 rounded-xl shadow-md shrink-0 flex items-center gap-2"
-                    >
-                      <span>{t.btn_get_started}</span>
-                      <Icon name="arrow" size={16} />
-                    </Button>
                   </div>
                 </div>
               </>
@@ -1567,6 +1529,7 @@ export function CitizenPortalApp({
           contactName={accountUser?.name || ""}
           isOpen={isSosOpen}
           onOpenChange={setIsSosOpen}
+          hideFloatingButton={activeView === "overview"}
           savedPlace={
             accountUser?.location
               ? {

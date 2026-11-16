@@ -197,7 +197,7 @@ export const SosCenter: React.FC<SosCenterProps> = ({
         <button
           type="button"
           onClick={() => handleOpenChange(true)}
-          className="fixed bottom-5 right-5 z-[900] h-14 px-5 rounded-full bg-[linear-gradient(90deg,#24b859_0%,#8d9635_48%,#e03328_100%)] hover:opacity-95 text-white font-extrabold shadow-[0_8px_24px_rgba(224,51,40,0.35)] flex items-center gap-3 transition-transform hover:scale-105"
+          className="fixed bottom-5 right-5 z-[900] h-14 px-5 rounded-full bg-[#183026] hover:bg-[#0E1D16] border border-[#2B4B3D] text-white font-extrabold shadow-[0_8px_24px_rgba(18,36,28,0.35)] flex items-center gap-3 transition-transform hover:scale-105"
           aria-label={tr("Emergency Rescue Request", "জরুরি উদ্ধার অনুরোধ")}
         >
           <LifeBuoy className="w-6 h-6 text-white stroke-[2.5]" />
@@ -210,7 +210,7 @@ export const SosCenter: React.FC<SosCenterProps> = ({
             </span>
           </div>
           {openCount > 0 && (
-            <span className="ml-1 min-w-5 h-5 px-1.5 rounded-full bg-white text-[#C9443A] text-xs font-black flex items-center justify-center">
+            <span className="ml-1 min-w-5 h-5 px-1.5 rounded-full bg-white text-[#183026] text-xs font-black flex items-center justify-center">
               {num(openCount)}
             </span>
           )}

@@ -110,8 +110,9 @@ export const UI_TEXT = {
 
     // Hero
     hero_tagline: "Climate Intelligence for a Safer Bangladesh",
-    hero_title_1: "Predict. Prepare.",
-    hero_title_2: "Protect.",
+    hero_title_1: "DETECT. FORECAST.",
+    hero_title_2: "RESPOND.",
+    hero_subtitle: "Alert before flood.",
     hero_desc:
       "Rokkha is a climate intelligence platform for flood analysis, risk mapping, and early prediction—helping communities and organizations stay one step ahead.",
     btn_see_how: "See How It Works",
@@ -346,9 +347,9 @@ export const UI_TEXT = {
     footer_about_link: "Data Transparency & Limits",
     footer_copyright: "Rokkha. Open Public Safety Intelligence.",
     footer_coords_note: "WGS84 Geodesic Coordinates",
-    footer_helpline_999: "999 (National Emergency)",
-    footer_helpline_1090: "1090 (Flood & Disaster IVR)",
-    footer_helpline_109: "109 (Women & Child Helpline)",
+    footer_helpline_999: "999 (Emergency)",
+    footer_helpline_1090: "1090 (Disaster)",
+    footer_helpline_109: "109 (Helpline)",
   },
   bn: {
     // Top Nav
@@ -373,8 +374,9 @@ export const UI_TEXT = {
 
     // Hero
     hero_tagline: "সুরক্ষিত বাংলাদেশের জন্য জলবায়ু বুদ্ধিমত্তা",
-    hero_title_1: "পূর্বাভাস। প্রস্তুতি।",
-    hero_title_2: "সুরক্ষা।",
+    hero_title_1: "শনাক্তকরণ। পূর্বাভাস।",
+    hero_title_2: "প্রতিক্রিয়া।",
+    hero_subtitle: "বন্যার আগেই সতর্কতা।",
     hero_desc:
       "রক্ষা হলো বন্যা বিশ্লেষণ, ঝুঁকি মানচিত্র এবং আগাম পূর্বাভাসের একটি নির্ভরযোগ্য প্ল্যাটফর্ম—যা ঝুঁকিপূর্ণ সম্প্রদায় ও সংস্থাকে এক ধাপ এগিয়ে রাখতে সহায়তা করে।",
     btn_see_how: "কীভাবে কাজ করে",
@@ -610,8 +612,8 @@ export const UI_TEXT = {
     footer_about_link: "উপাত্তের স্বচ্ছতা ও সীমাবদ্ধতা",
     footer_copyright: "রক্ষা। উন্মুক্ত নাগরিক নিরাপত্তা বুদ্ধিমত্তা প্ল্যাটফর্ম।",
     footer_coords_note: "WGS84 ভূস্থানিক স্থানাঙ্ক ব্যবস্থা",
-    footer_helpline_999: "৯৯৯ (জাতীয় জরুরি সেবা)",
-    footer_helpline_1090: "১০৯০ (বন্যা ও দুর্যোগ আইভিআর)",
-    footer_helpline_109: "১০৯ (নারী ও শিশু সুরক্ষা হেল্পলাইন)",
+    footer_helpline_999: "৯৯৯ (জরুরি)",
+    footer_helpline_1090: "১০৯০ (দুর্যোগ)",
+    footer_helpline_109: "১০৯ (হেল্পলাইন)",
   },
 };
