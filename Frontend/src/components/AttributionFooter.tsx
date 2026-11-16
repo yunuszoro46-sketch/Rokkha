@@ -40,28 +40,28 @@ export const AttributionFooter: React.FC<AttributionFooterProps> = ({
 
           {/* Actionable Emergency Helplines (Citizen 1-tap call) */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-            <span className="text-xs font-bold text-[#11241C]/80 flex items-center gap-1.5 shrink-0 whitespace-nowrap">
-              <PhoneCall className="w-3.5 h-3.5 text-[#C93B2B]" />
+            <span className="text-[11px] font-bold text-[#11241C]/80 flex items-center gap-1.5 shrink-0 whitespace-nowrap">
+              <PhoneCall className="w-3 h-3 text-[#C93B2B]" />
               {t.footer_helplines_title}:
             </span>
             <div className="flex flex-wrap items-center gap-1.5">
               <a
                 href="tel:999"
-                className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-white border border-[#DFDDD3] hover:border-[#C93B2B] text-xs font-bold text-[#11241C] hover:text-[#C93B2B] rounded-lg transition-colors shadow-2xs"
+                className="inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-[#DFDDD3] hover:border-[#C93B2B] text-[11px] font-bold text-[#11241C] hover:text-[#C93B2B] rounded-md transition-colors shadow-2xs"
                 title="National Emergency Service"
               >
                 📞 {t.footer_helpline_999}
               </a>
               <a
                 href="tel:1090"
-                className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-white border border-[#DFDDD3] hover:border-[#0284C7] text-xs font-bold text-[#11241C] hover:text-[#0284C7] rounded-lg transition-colors shadow-2xs"
+                className="inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-[#DFDDD3] hover:border-[#0284C7] text-[11px] font-bold text-[#11241C] hover:text-[#0284C7] rounded-md transition-colors shadow-2xs"
                 title="Flood & Disaster IVR"
               >
                 📞 {t.footer_helpline_1090}
               </a>
               <a
                 href="tel:109"
-                className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-white border border-[#DFDDD3] hover:border-[#16A34A] text-xs font-bold text-[#11241C] hover:text-[#16A34A] rounded-lg transition-colors shadow-2xs"
+                className="inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-[#DFDDD3] hover:border-[#16A34A] text-[11px] font-bold text-[#11241C] hover:text-[#16A34A] rounded-md transition-colors shadow-2xs"
                 title="Women & Child Helpline"
               >
                 📞 {t.footer_helpline_109}
