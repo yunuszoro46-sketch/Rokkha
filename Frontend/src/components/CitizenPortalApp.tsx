@@ -1793,37 +1793,6 @@ export function CitizenPortalApp({
                 )}
               </div>
 
-              {/* 4. Hydrology Hazard Return Periods */}
-              <div className="space-y-1.5">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-[#11241C]">
-                  {lang === "bn" ? "দীর্ঘমেয়াদী প্লাবন ঝুঁকি (JRC / GloFAS)" : "LONG-TERM FLOOD RETURN PERIODS"}
-                </h4>
-                <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                  <div className="bg-white rounded-xl border border-[#DFDDD3] p-3 text-center shadow-xs">
-                    <div className="text-[11px] font-bold text-[#11241C]">
-                      {lang === "bn" ? "১০-বছরের বন্যা চক্র" : "10-Year Flood Cycle"}
-                    </div>
-                    <div className="text-xl sm:text-2xl font-bold text-[#11241C] my-0.5">
-                      {districtReport.hazardShare10}
-                    </div>
-                    <div className="text-[10px] text-[#6B7280]">
-                      {lang === "bn" ? "১০ বছরে অন্তত একবার প্লাবিত হওয়ার সম্ভাব্য এলাকা" : "Expected once every 10 years"}
-                    </div>
-                  </div>
-                  <div className="bg-white rounded-xl border border-[#DFDDD3] p-3 text-center shadow-xs">
-                    <div className="text-[11px] font-bold text-[#11241C]">
-                      {lang === "bn" ? "১০০-বছরের চরম বন্যা" : "100-Year Severe Flood"}
-                    </div>
-                    <div className="text-xl sm:text-2xl font-bold text-[#C9443A] my-0.5">
-                      {districtReport.hazardShare100}
-                    </div>
-                    <div className="text-[10px] text-[#6B7280]">
-                      {lang === "bn" ? "শতবর্ষের মহা-প্লাবনের সর্বোচ্চ ঝুঁকি এলাকা" : "Expected once every 100 years"}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               {/* 4. Actionable Emergency Evacuation Plan */}
               <div className="space-y-2 bg-white rounded-2xl border border-[#DFDDD3] p-3.5 sm:p-4 shadow-xs">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-[#183026] flex items-center gap-1.5">
