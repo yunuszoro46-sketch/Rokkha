@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { AssetNearResult } from "../types/api";
 import { getNearestAssets } from "../services/api";
-import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
+import { Card, CardHeader, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
@@ -14,7 +14,7 @@ import {
   SelectContent,
   SelectItem,
 } from "./ui/select";
-import { LifeBuoy, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import {
   Language,
   UI_TEXT,
@@ -69,21 +69,29 @@ export const NearestShelters: React.FC<NearestSheltersProps> = ({
     <Card className="border-brand-limestone bg-brand-white shadow-card" id="shelters">
       <CardHeader className="border-b border-brand-limestone pb-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <LifeBuoy className="w-6 h-6 text-brand-forest" />
-              <CardTitle>{t.shelters_card_title}</CardTitle>
-            </div>
-            <p className="text-base text-brand-forest/70 font-medium">
-              {t.shelters_card_sub
-                .replace("{radius}", isBn ? toBnNum(radiusKm) : String(radiusKm))
-                .replace("{district}", displayDistrict)
-                .replace("{coords}", coordsStr)}
-            </p>
+          {/* Filter Pills using shadcn/ui Button */}
+          <div className="flex flex-wrap items-center gap-2 text-base">
+            <span className="text-brand-forest/60 mr-1">{t.shelters_filter_label}</span>
+            {[
+              { id: "", label: t.shelters_type_all },
+              { id: "flood_shelter", label: t.shelters_type_flood },
+              { id: "hospital", label: t.shelters_type_hospital },
+              { id: "clinic", label: t.shelters_type_clinic },
+              { id: "school", label: t.shelters_type_school },
+            ].map((type) => (
+              <Button
+                key={type.id}
+                size="sm"
+                variant={filterType === type.id ? "default" : "secondary"}
+                onClick={() => setFilterType(type.id)}
+              >
+                {type.label}
+              </Button>
+            ))}
           </div>
 
           {/* Radius selector using shadcn/ui Select */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 shrink-0">
             <span className="text-base text-brand-forest/70 font-medium">
               {t.shelters_radius_label}
             </span>
@@ -103,27 +111,6 @@ export const NearestShelters: React.FC<NearestSheltersProps> = ({
               </SelectContent>
             </Select>
           </div>
-        </div>
-
-        {/* Filter Pills using shadcn/ui Button */}
-        <div className="flex flex-wrap items-center gap-2 pt-2 text-base">
-          <span className="text-brand-forest/60 mr-1">{t.shelters_filter_label}</span>
-          {[
-            { id: "", label: t.shelters_type_all },
-            { id: "flood_shelter", label: t.shelters_type_flood },
-            { id: "hospital", label: t.shelters_type_hospital },
-            { id: "clinic", label: t.shelters_type_clinic },
-            { id: "school", label: t.shelters_type_school },
-          ].map((type) => (
-            <Button
-              key={type.id}
-              size="sm"
-              variant={filterType === type.id ? "default" : "secondary"}
-              onClick={() => setFilterType(type.id)}
-            >
-              {type.label}
-            </Button>
-          ))}
         </div>
       </CardHeader>
 
