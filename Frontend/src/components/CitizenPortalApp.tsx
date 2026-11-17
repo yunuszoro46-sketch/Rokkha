@@ -880,7 +880,7 @@ export function CitizenPortalApp({
                 </a>
                 <nav aria-label="Primary navigation" className="flex items-center gap-7 sm:gap-9">
                   <a
-                    className={`text-[17px] font-semibold transition pb-1 ${
+                    className={`text-[17px] font-semibold transition pb-1 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 select-none ${
                       activeView === "overview"
                         ? "active text-[#183026] border-b-2 border-[#183026]"
                         : "text-[#263B32]/80 hover:text-[#183026]"
@@ -894,7 +894,7 @@ export function CitizenPortalApp({
                     {t.nav_home}
                   </a>
                   <a
-                    className={`text-[17px] font-semibold transition pb-1 ${
+                    className={`text-[17px] font-semibold transition pb-1 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 select-none ${
                       activeView === "map"
                         ? "active text-[#183026] border-b-2 border-[#183026]"
                         : "text-[#263B32]/80 hover:text-[#183026]"
@@ -908,7 +908,7 @@ export function CitizenPortalApp({
                     {t.nav_map}
                   </a>
                   <a
-                    className={`text-[17px] font-semibold transition pb-1 ${
+                    className={`text-[17px] font-semibold transition pb-1 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 select-none ${
                       activeView === "alerts"
                         ? "active text-[#183026] border-b-2 border-[#183026]"
                         : "text-[#263B32]/80 hover:text-[#183026]"
@@ -922,7 +922,7 @@ export function CitizenPortalApp({
                     {t.nav_alerts}
                   </a>
                   <a
-                    className={`text-[17px] font-semibold transition pb-1 ${
+                    className={`text-[17px] font-semibold transition pb-1 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 select-none ${
                       activeView === "satellite"
                         ? "active text-[#183026] border-b-2 border-[#183026]"
                         : "text-[#263B32]/80 hover:text-[#183026]"
@@ -938,7 +938,7 @@ export function CitizenPortalApp({
                   <button
                     type="button"
                     onClick={() => setIsAboutOpen(true)}
-                    className="text-left font-semibold text-[17px] text-[#263B32]/80 hover:text-[#183026] transition cursor-pointer pb-1"
+                    className="text-left font-semibold text-[17px] text-[#263B32]/80 hover:text-[#183026] transition cursor-pointer pb-1 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 select-none"
                   >
                     {t.nav_about}
                   </button>

@@ -94,6 +94,16 @@
   a {
     -webkit-tap-highlight-color: transparent;
   }
+
+  nav a:focus,
+  nav a:focus-visible,
+  nav button:focus,
+  nav button:focus-visible,
+  .site-header a:focus,
+  .site-header a:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+  }
 }
 
 * {

@@ -259,20 +259,22 @@ export const SosCenter: React.FC<SosCenterProps> = ({
         <button
           type="button"
           onClick={() => handleOpenChange(true)}
-          className="fixed bottom-5 right-5 z-[900] h-14 px-5 rounded-full bg-[#183026] hover:bg-[#0E1D16] border border-[#2B4B3D] text-white font-extrabold shadow-[0_8px_24px_rgba(18,36,28,0.35)] flex items-center gap-3 transition-transform hover:scale-105"
+          className="fixed bottom-5 right-5 z-[900] h-14 px-5 rounded-full bg-[linear-gradient(90deg,#3B7E5D_0%,#E9B441_34%,#E67328_67%,#D93829_100%)] hover:opacity-95 text-white font-extrabold shadow-[0_8px_24px_rgba(217,56,41,0.25)] flex items-center gap-3 transition-all hover:scale-[1.03] active:scale-[0.98] cursor-pointer"
           aria-label={tr("Emergency Rescue Request", "জরুরি উদ্ধার অনুরোধ")}
         >
-          <LifeBuoy className="w-6 h-6 text-white stroke-[2.5]" />
-          <div className="flex flex-col text-left leading-none">
-            <span className="text-[10px] font-black tracking-wider uppercase text-white/90">
+          <div className="w-8 h-8 rounded-full border-2 border-white/95 flex items-center justify-center shrink-0 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
+            <LifeBuoy className="w-4 h-4 text-white stroke-[2.5]" />
+          </div>
+          <div className="flex flex-col text-left leading-[1.1]">
+            <span className="text-[10px] font-black tracking-wider text-white uppercase drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)]">
               {tr("EMERGENCY", "জরুরি")}
             </span>
-            <span className="text-xs font-black tracking-wider uppercase text-white">
+            <span className="text-[11px] font-black tracking-wider text-white uppercase drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)]">
               {tr("RESCUE REQUEST", "উদ্ধার অনুরোধ")}
             </span>
           </div>
           {openCount > 0 && (
-            <span className="ml-1 min-w-5 h-5 px-1.5 rounded-full bg-white text-[#183026] text-xs font-black flex items-center justify-center">
+            <span className="ml-1 min-w-5 h-5 px-1.5 rounded-full bg-white text-[#D93829] text-xs font-black flex items-center justify-center shadow-xs">
               {num(openCount)}
             </span>
           )}
