@@ -284,6 +284,9 @@ If MongoDB is unreachable, the server does not start (see section 10).
 **Hosted since 13 November 2026 at `https://rokkha-backend.onrender.com`** (API under `/api/v1`, interactive
 docs at `/docs`). The steps below are how it was set up, for anyone who has to repeat it.
 The portal (frontend) is hosted on Vercel at **`https://rokkha-portal.vercel.app`**, built from the `production` branch.
+Login and location were checked end to end on 17 Nov 2026. The backend's register, login and location endpoints
+worked; the faults were in the portal (no visible login state, GPS snapped to the district centre, invented
+numbers on the location card) and were fixed on the `production` branch.
 
 The file `render.yaml` in the repository root describes the hosted backend, so nothing has to be typed into
 Render except the database secret.

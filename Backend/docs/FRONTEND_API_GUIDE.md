@@ -473,6 +473,12 @@ A login (from register and login):
   input → 422 with the usual `detail` list.
 - To save the place, use the phone's GPS (`navigator.geolocation`) or a tap on the map. Ask the user before
   saving it: a home location is personal data. Only that user can read it back.
+- For an accurate place, don't trust the first GPS reading: it is often a rough Wi-Fi/cell fix hundreds of
+  metres off. The portal (`Frontend/src/services/location.ts`) watches the position for up to 12 s, keeps the
+  most accurate reading (stops early at ≤ 50 m, since the flood check uses ~90 m cells) and falls back to the
+  device's rough location on laptops without GPS. Send the user's exact point to `POST /geospatial/flood/check`
+  (the backend finds the district); never snap it to a district centre. Send the reading's accuracy as
+  `accuracy_m` with an SOS.
 
 The report:
 
