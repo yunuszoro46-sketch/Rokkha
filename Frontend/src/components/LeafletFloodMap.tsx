@@ -61,6 +61,7 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
   selectedDistrictPcode,
   onSelectDistrict,
   onInspectPoint,
+  inspectedPoint,
   pointCheckResult,
   targetDate = "2022-06-18",
   lang = "en",
@@ -72,6 +73,9 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
   const geoLayerRef = useRef<L.GeoJSON | null>(null);
   const centerPinRef = useRef<L.Marker | null>(null);
   const [assets, setAssets] = useState<RegisteredAsset[]>([]);
+  // Tapping the map checks that exact spot (the fallback when GPS is not available).
+  const onInspectRef = useRef(onInspectPoint);
+  onInspectRef.current = onInspectPoint;
 
   const currentDistrictPcode = selectedDistrictPcode || "BD6090"; // default Sunamganj
   const currentPred = predictions.find((p) => p.pcode === currentDistrictPcode);
@@ -85,43 +89,67 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
   const districtRawName = feature?.properties?.name || feature?.properties?.admin2Name || "Sunamganj";
   const districtDisplayName = isBn ? DISTRICTS_BN[currentDistrictPcode] || districtRawName : districtRawName;
 
-  // Determine Risk
-  const isHighRisk =
-    currentPred?.alert_level === "alert" ||
-    (currentPred?.probability !== undefined && currentPred?.probability !== null && currentPred.probability >= 0.7) ||
-    currentDistrictPcode === "BD6090";
-  const isWatch =
-    !isHighRisk &&
-    (currentPred?.alert_level === "watch" ||
-      (currentPred?.probability !== undefined && currentPred?.probability !== null && currentPred.probability >= 0.3));
+  // Everything on this card comes from the backend: the model's forecast for
+  // the district on this day, and the flood check for the exact point.
+  // When something is missing we say so; we never fill in a number.
+  const level = currentPred?.status === "predicted" ? currentPred.alert_level : null;
+  const isHighRisk = level === "alert";
+  const isWatch = level === "watch";
+  const riskLabel =
+    level === "alert" ? (isBn ? "বিপদ (অ্যালার্ট)" : "Alert")
+    : level === "watch" ? (isBn ? "সতর্কতা (ওয়াচ)" : "Watch")
+    : level === "none" ? (isBn ? "নিম্ন" : "Low")
+    : currentPred?.status === "unsupported" ? (isBn ? "পূর্বাভাস নেই" : "Not covered")
+    : (isBn ? "পূর্বাভাস নেই" : "No forecast");
+  // "Low" is grey-blue, never green: low chance is not "safe".
+  const riskColor = isHighRisk ? "text-[#C9443A]" : isWatch ? "text-[#E08A24]" : level === "none" ? "text-[#475569]" : "text-[#6B7280]";
+  const riskNote =
+    level === "alert" ? (isBn ? "প্রস্তুত থাকুন; সরকারি নির্দেশ মেনে চলুন" : "Be ready to move; follow official orders")
+    : level === "watch" ? (isBn ? "প্রস্তুতি নিন ও খবর রাখুন" : "Get prepared and keep checking")
+    : level === "none" ? (isBn ? "আজ সম্ভাবনা কম — শূন্য নয়" : "Low chance today — not zero")
+    : currentPred?.status === "unsupported" ? (isBn ? "এই জেলায় মডেল কাজ করে না" : "The model does not cover this district")
+    : (isBn ? "এই দিনের পূর্বাভাস পাওয়া যায়নি" : "No forecast stored for this day");
 
-  const riskLabel = isHighRisk ? (isBn ? "উচ্চ" : "High") : isWatch ? (isBn ? "মাঝারি" : "Moderate") : (isBn ? "কম" : "Low");
-  const riskColor = isHighRisk ? "text-[#C9443A]" : isWatch ? "text-[#E08A24]" : "text-[#22C55E]";
-  const evacLevel = isHighRisk ? 3 : isWatch ? 2 : 1;
-
-  // Probability
-  let forecastProbabilityStr = ">95%";
-  if (currentPred?.probability !== null && currentPred?.probability !== undefined) {
-    if (currentPred.probability > 0.95) {
+  // Probability: the real number, or a dash.
+  const probability = currentPred?.status === "predicted" ? currentPred.probability : null;
+  let forecastProbabilityStr = "—";
+  let probabilityNote = isBn ? "পূর্বাভাস নেই" : "not available";
+  if (probability !== null && probability !== undefined) {
+    const pct = Math.round(probability * 100);
+    if (probability > 0.95) {
+      // A model is never certain: don't show 100%.
       forecastProbabilityStr = isBn ? ">৯৫%" : ">95%";
+      probabilityNote = isBn ? "১০ বারে ৯ বারের বেশি" : "more than 9 in 10";
     } else {
-      const pct = Math.round(currentPred.probability * 100);
-      forecastProbabilityStr = `${isBn ? toBnNum(pct) : pct}%`;
+      const inTen = Math.max(0, Math.round(probability * 10));
+      // A tiny chance is shown as "<1%", not "0%" (low is not zero).
+      forecastProbabilityStr = pct < 1 ? (isBn ? "<১%" : "<1%") : `${isBn ? toBnNum(pct) : pct}%`;
+      probabilityNote =
+        inTen === 0
+          ? (isBn ? "১০ বারে ১ বারেরও কম" : "less than 1 in 10")
+          : isBn ? `প্রায় ১০ বারে ${toBnNum(inTen)} বার` : `about ${inTen} in 10`;
     }
-  } else if (isBn) {
-    forecastProbabilityStr = ">৯৫%";
   }
 
-  // Peak Depth
-  let peakDepthStr = "1.8m";
-  if (pointCheckResult?.cell?.hazard && pointCheckResult.cell.hazard.length > 0) {
-    const raw = pointCheckResult.cell.hazard[0].depth_label;
-    if (raw) {
-      peakDepthStr = isBn ? DEPTH_BN[raw] || raw : raw;
+  // Depth: JRC's modelled river-flood depth for the ~90 m cell at the checked
+  // point, in a 1-in-100-year flood. A model, not a measurement.
+  const pointInDistrict = pointCheckResult?.district?.pcode === currentDistrictPcode;
+  const hazard100 = pointInDistrict
+    ? pointCheckResult?.cell?.hazard?.find((h: any) => h.return_period_years === 100)
+    : undefined;
+  let peakDepthStr = "—";
+  let depthNote = isBn ? "মানচিত্রে ট্যাপ করুন বা জিপিএস ব্যবহার করুন" : "Tap the map or use GPS";
+  if (pointInDistrict && pointCheckResult?.cell) {
+    if (pointCheckResult.cell.permanent_water) {
+      peakDepthStr = isBn ? "স্থায়ী জলাশয়" : "Water body";
+      depthNote = isBn ? "নদী বা স্থায়ী পানি" : "River or permanent water";
+    } else if (hazard100?.depth_label) {
+      peakDepthStr = isBn ? DEPTH_BN[hazard100.depth_label] || hazard100.depth_label : hazard100.depth_label;
+      depthNote = isBn ? "১০০ বছরে একবারের বন্যায়, মডেল (JRC)" : "in a 1-in-100-year flood, modelled (JRC)";
+    } else {
+      peakDepthStr = isBn ? "বাইরে" : "Outside";
+      depthNote = isBn ? "মডেলের নদী-বন্যা এলাকার বাইরে (JRC)" : "the modelled river-flood zone (JRC)";
     }
-  }
-  if (peakDepthStr === "1.8m" && isBn) {
-    peakDepthStr = "১.৮ মি.";
   }
 
   // Load assets for this district
@@ -152,6 +180,8 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
       maxZoom: 18,
       subdomains: ["a", "b", "c"],
     }).addTo(map);
+
+    map.on("click", (e: L.LeafletMouseEvent) => onInspectRef.current?.(e.latlng.lat, e.latlng.lng));
 
     mapRef.current = map;
 
@@ -211,7 +241,14 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
 
     // Add Green Map Pin matching Image 2
     const bounds = geoLayer.getBounds();
-    const centerPoint = bounds.isValid() ? bounds.getCenter() : L.latLng(DISTRICT_CENTERS[currentDistrictPcode] || [25.0658, 91.395]);
+    // The pin marks the checked point (GPS, saved place or a tap) when it lies in
+    // this district; otherwise the middle of the district.
+    const centerPoint =
+      pointInDistrict && inspectedPoint
+        ? L.latLng(inspectedPoint.lat, inspectedPoint.lng)
+        : bounds.isValid()
+        ? bounds.getCenter()
+        : L.latLng(DISTRICT_CENTERS[currentDistrictPcode] || [25.0658, 91.395]);
 
     const greenPinHtml = `
       <div style="display:flex;flex-direction:column;align-items:center;pointer-events:none;transform:translate(-50%,-100%);">
@@ -242,7 +279,7 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
     }, 200);
 
     return () => clearTimeout(t);
-  }, [currentDistrictPcode, districtDisplayName, isHighRisk]);
+  }, [currentDistrictPcode, districtDisplayName, isHighRisk, pointInDistrict, inspectedPoint?.lat, inspectedPoint?.lng]);
 
   return (
     <Card className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden border border-[#DFDDD3] shadow-md bg-white p-3.5 sm:p-5 space-y-3 sm:space-y-4">
@@ -264,7 +301,7 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
             {riskLabel}
           </div>
           <span className="text-[11px] sm:text-xs text-[#4B5563] font-medium">
-            {isBn ? `উচ্ছেদ স্তর ${toBnNum(evacLevel)}` : `Evacuation Level ${evacLevel}`}
+            {riskNote}
           </span>
         </div>
 
@@ -278,10 +315,10 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
           </div>
           <div className="flex flex-col items-center">
             <span className="text-[11px] sm:text-xs font-semibold text-[#1F513F]">
-              {isBn ? "সম্ভাবনা" : "Probability"}
+              {isBn ? "বন্যার সম্ভাবনা (জেলা)" : "Chance of flooding (district)"}
             </span>
             <span className="text-[10px] sm:text-[11px] text-[#4B5563] font-medium">
-              {isBn ? "চরম নির্ভরযোগ্য" : "Extreme Confidence"}
+              {probabilityNote}
             </span>
           </div>
         </div>
@@ -289,13 +326,13 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
         {/* Card 3: Peak Flood Depth */}
         <div className="bg-white rounded-xl sm:rounded-2xl border border-[#DFDDD3] shadow-xs p-3 sm:p-4 text-center flex flex-col items-center justify-center space-y-0.5">
           <span className="text-[#5C6863] text-xs sm:text-sm font-semibold">
-            {isBn ? "সর্বোচ্চ বন্যার গভীরতা" : "Peak Flood Depth"}
+            {isBn ? "বন্যার গভীরতা (এই স্থানে)" : "Flood depth (this spot)"}
           </span>
           <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#11241C] tracking-tight my-0.5">
             {peakDepthStr}
           </div>
           <span className="text-[10px] sm:text-xs text-[#4B5563] font-medium">
-            {isBn ? "গেজ স্টেশন ৭ এ রেকর্ডকৃত" : "Recorded at Gauge Station 7"}
+            {depthNote}
           </span>
         </div>
       </div>

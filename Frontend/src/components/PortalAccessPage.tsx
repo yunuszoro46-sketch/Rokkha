@@ -59,6 +59,16 @@ export function PortalAccessPage({
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // The free server sleeps when unused; its first answer can take up to a minute.
+  const [isSlow, setIsSlow] = useState(false);
+  useEffect(() => {
+    if (!isSubmitting) {
+      setIsSlow(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setIsSlow(true), 5000);
+    return () => window.clearTimeout(timer);
+  }, [isSubmitting]);
   const [currentLang, setCurrentLang] = useState<Language>(lang);
 
   useEffect(() => {
@@ -77,7 +87,7 @@ export function PortalAccessPage({
     setFormError(null);
     setIsLocating(true);
     try {
-      setGpsPosition(await readGpsPosition());
+      setGpsPosition(await readGpsPosition(isBn));
     } catch (error) {
       setFormError((error as Error).message);
     } finally {
@@ -319,6 +329,14 @@ export function PortalAccessPage({
               </div>
             )}
 
+            {isSubmitting && isSlow && (
+              <p role="status" aria-live="polite" className="text-xs sm:text-sm text-[#526058]">
+                {isBn
+                  ? "সার্ভার চালু হচ্ছে, প্রথমবার এক মিনিট পর্যন্ত লাগতে পারে। অনুগ্রহ করে অপেক্ষা করুন..."
+                  : "Waking the server up — the first sign-in can take up to a minute. Please wait..."}
+              </p>
+            )}
+
             {/* Submit Action Button */}
             <Button
               type="submit"
@@ -326,7 +344,7 @@ export function PortalAccessPage({
               className="w-full h-12 bg-[#16A34A] hover:bg-[#15803D] text-white font-bold text-base rounded-xl transition-all shadow-md mt-2 cursor-pointer"
             >
               {isSubmitting ? (
-                <span>{isBn ? "যাচাই করা হচ্ছে..." : "Authenticating..."}</span>
+                <span>{tab === "register" ? (isBn ? "অ্যাকাউন্ট তৈরি হচ্ছে..." : "Creating account...") : (isBn ? "লগ ইন হচ্ছে..." : "Logging in...")}</span>
               ) : tab === "register" ? (
                 <span>{isBn ? "নিবন্ধন ও প্রবেশ" : "Register & Access"}</span>
               ) : (

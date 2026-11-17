@@ -6,6 +6,7 @@
 // backend cannot be reached or refuses the request.
 
 import { DistrictPrediction, AssetNearResult } from "../types/api";
+import { readPreciseLocation } from "./location";
 
 const API_BASE =
   (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL) ||
@@ -183,17 +184,9 @@ export function getMyReport(targetDate: string): Promise<LocationReport> {
   return call<LocationReport>(`/auth/me/report?target_date=${targetDate}`);
 }
 
-/** The browser's GPS position as [longitude, latitude]. Asks the user for permission. */
-export function readGpsPosition(): Promise<[number, number]> {
-  return new Promise((resolve, reject) => {
-    if (typeof window === "undefined" || !navigator.geolocation) {
-      reject(new Error("This browser cannot give a location."));
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => resolve([pos.coords.longitude, pos.coords.latitude]),
-      () => reject(new Error("The location could not be read. Allow location access and try again.")),
-      { enableHighAccuracy: true, timeout: 15000 }
-    );
-  });
+/** The browser's position as [longitude, latitude], as accurate as the device allows.
+ * Asks the user for permission. See services/location.ts. */
+export async function readGpsPosition(isBn = false): Promise<[number, number]> {
+  const fix = await readPreciseLocation({ isBn });
+  return [fix.lng, fix.lat];
 }

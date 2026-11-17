@@ -7,7 +7,7 @@ import { Input } from "./ui/input";
 import { Language, toBnNum, DISTRICTS_BN } from "../lib/translations";
 import districtGeoData from "@/data/bangladesh_districts.json";
 import benchmarkData from "@/data/benchmark_predictions.json";
-import { readGpsPosition } from "../services/auth";
+import { readPreciseLocation } from "../services/location";
 import {
   Need,
   SosDraft,
@@ -163,8 +163,9 @@ export const SosCenter: React.FC<SosCenterProps> = ({
     setProblem(null);
     setIsLocating(true);
     try {
-      const [lng, lat] = await readGpsPosition();
-      setPosition({ lng, lat, accuracy_m: null, label: tr("My GPS location", "আমার জিপিএস অবস্থান") });
+      // Rescuers need the most exact spot the phone can give, with its accuracy.
+      const fix = await readPreciseLocation({ isBn });
+      setPosition({ lng: fix.lng, lat: fix.lat, accuracy_m: fix.accuracy_m, label: tr("My GPS location", "আমার জিপিএস অবস্থান") });
       setShowOtherLocation(false);
     } catch (error) {
       setProblem((error as Error).message);
@@ -474,6 +475,7 @@ export const SosCenter: React.FC<SosCenterProps> = ({
                       <span className="font-semibold">
                         {position.label ? <span className="text-[#183026] mr-1.5 font-bold">📍 {position.label} —</span> : null}
                         {num(position.lat.toFixed(5))}°N, {num(position.lng.toFixed(5))}°E
+                        {position.accuracy_m !== null ? <span className="ml-1.5 text-[#5C6863]">({tr("within", "নির্ভুলতা")} ±{num(String(position.accuracy_m))} {tr("m", "মি")})</span> : null}
                       </span>
                     ) : (
                       tr("No location chosen yet.", "এখনো অবস্থান দেওয়া হয়নি।")

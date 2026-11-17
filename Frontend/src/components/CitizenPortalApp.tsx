@@ -84,6 +84,7 @@ import { SosCenter } from "@/components/SosCenter";
 import { RescuePanel } from "@/components/RescuePanel";
 import { AdminPanel } from "@/components/AdminPanel";
 import { AccountUser, getCurrentUser, logOut } from "@/services/auth";
+import { GpsFix, LocationError, accuracyText, readPreciseLocation } from "@/services/location";
 
 // Dynamically import Leaflet map for interactive exploration
 const LeafletFloodMap = dynamic(
@@ -559,34 +560,25 @@ export function CitizenPortalApp({
     }
   }, []);
 
-  // Auto-detect user GPS coordinates to match closest district
-  const handleDetectMyLocation = () => {
-    if (typeof window === "undefined" || !navigator.geolocation) {
-      alert("Geolocation is not supported by your browser.");
-      return;
+  // "GPS": read the user's own position as exactly as the device allows and
+  // check THAT point (the backend finds the district it lies in), instead of
+  // jumping to the nearest district centre.
+  const [gpsState, setGpsState] = useState<
+    { kind: "idle" } | { kind: "locating" } | { kind: "found"; fix: GpsFix } | { kind: "error"; message: string }
+  >({ kind: "idle" });
+
+  const handleDetectMyLocation = async () => {
+    setGpsState({ kind: "locating" });
+    try {
+      const fix = await readPreciseLocation({ isBn: lang === "bn" });
+      setGpsState({ kind: "found", fix });
+      await handleInspectPoint(fix.lat, fix.lng);
+    } catch (error) {
+      setGpsState({
+        kind: "error",
+        message: error instanceof LocationError ? error.message : String((error as Error)?.message || error),
+      });
     }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        let closestPcode = selectedPcode;
-        let closestDist = Infinity;
-        Object.entries(DISTRICT_CENTERS).forEach(([pcode, [dLat, dLng]]) => {
-          const dist = Math.hypot(latitude - dLat, longitude - dLng);
-          if (dist < closestDist) {
-            closestDist = dist;
-            closestPcode = pcode;
-          }
-        });
-        const found = ALL_DISTRICTS.find((d) => d.pcode === closestPcode);
-        if (found) {
-          handleSelectDistrict(found.pcode, found.name);
-          setIsDistrictReportOpen(true);
-        }
-      },
-      () => {
-        alert("Unable to access GPS location. Please select your district from the dropdown.");
-      }
-    );
   };
 
   // Comprehensive District Intelligence Report Memo
@@ -737,11 +729,22 @@ export function CitizenPortalApp({
     };
   }, []);
 
-  // Show the map for the user's own district once it is known.
+  // Once the user's saved place is known, show the report for that exact point
+  // (not just its district), unless they already picked a place with GPS.
   const accountPcode = accountUser?.district?.pcode;
+  const accountLng = accountUser?.location?.coordinates?.[0];
+  const accountLat = accountUser?.location?.coordinates?.[1];
   useEffect(() => {
-    if (accountPcode) setSelectedPcode(accountPcode);
-  }, [accountPcode]);
+    if (gpsState.kind === "found") return;
+    if (accountLat !== undefined && accountLng !== undefined) {
+      handleInspectPoint(accountLat, accountLng);
+    } else if (accountPcode) {
+      setSelectedPcode(accountPcode);
+      const d = ALL_DISTRICTS.find((item) => item.pcode === accountPcode);
+      if (d) setSelectedName(d.name);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accountPcode, accountLat, accountLng]);
 
   const handleLogOut = () => {
     logOut().finally(() => setAccountUser(null));
@@ -940,11 +943,11 @@ export function CitizenPortalApp({
                     {t.nav_about}
                   </button>
                 </nav>
-                <div className="header-actions flex items-center gap-3 shrink-0">
+                <div className="header-actions flex items-center gap-2 sm:gap-3 shrink-0">
                   <button
                     type="button"
                     onClick={toggleLanguage}
-                    className="h-11 px-3.5 rounded-xl border border-[#DFDDD3] bg-white text-sm font-bold text-[#183026] hover:bg-[#FAF9F5] shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                    className="h-11 px-2.5 sm:px-3.5 rounded-xl border border-[#DFDDD3] bg-white text-sm font-bold text-[#183026] hover:bg-[#FAF9F5] shadow-xs transition flex items-center gap-1.5 cursor-pointer"
                     title="Switch Language / ভাষা পরিবর্তন করুন"
                   >
                     <span className={lang === "bn" ? "text-[#183026] font-extrabold" : "text-[#183026]/40"}>
@@ -955,13 +958,36 @@ export function CitizenPortalApp({
                       EN
                     </span>
                   </button>
-                  <Button
-                    onClick={() => navigateToPage("map")}
-                    className="button shadow-sm text-[16px] font-bold h-11 px-5 rounded-xl bg-[#11241C] hover:bg-[#0A1812] text-white flex items-center gap-2 cursor-pointer"
-                  >
-                    <span>{t.btn_get_started}</span>
-                    <Icon name="arrow" size={16} />
-                  </Button>
+                  {/* Account: who is logged in, or a way to log in. */}
+                  {accountUser ? (
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span
+                        className="hidden sm:flex items-center gap-1.5 h-11 px-3 rounded-xl border border-[#DFDDD3] bg-white text-sm font-bold text-[#183026] max-w-[180px]"
+                        title={accountUser.email}
+                      >
+                        <span className="w-6 h-6 rounded-full bg-[#1F513F] text-white text-xs flex items-center justify-center shrink-0" aria-hidden="true">
+                          {(accountUser.name || accountUser.email).trim().charAt(0).toUpperCase()}
+                        </span>
+                        <span className="truncate">{accountUser.name}</span>
+                      </span>
+                      <Button
+                        onClick={handleLogOut}
+                        variant="outline"
+                        className="h-11 px-2.5 sm:px-3.5 rounded-xl border-[#DFDDD3] text-[13px] sm:text-sm font-bold text-[#183026] cursor-pointer whitespace-nowrap"
+                        aria-label={lang === "bn" ? `লগ আউট (${accountUser.name})` : `Log out (${accountUser.name})`}
+                      >
+                        {lang === "bn" ? "লগ আউট" : "Log out"}
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      onClick={() => navigateToPage("login")}
+                      className="button shadow-sm text-[14px] sm:text-[15px] font-bold h-11 px-3 sm:px-5 rounded-xl bg-[#11241C] hover:bg-[#0A1812] text-white flex items-center gap-2 cursor-pointer whitespace-nowrap"
+                    >
+                      <span>{lang === "bn" ? "লগ ইন" : "Log in"}</span>
+                      <span className="hidden sm:inline-flex"><Icon name="arrow" size={16} /></span>
+                    </Button>
+                  )}
                 </div>
               </div>
             </header>
@@ -1226,7 +1252,7 @@ export function CitizenPortalApp({
                       </div>
                     )}
 
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex flex-wrap items-center gap-1.5">
                       <Button
                         onClick={() => setIsDistrictReportOpen(true)}
                         className="bg-[#122B1E] hover:bg-[#0C1F15] text-white font-bold text-xs px-2.5 h-7.5 rounded-lg flex items-center gap-1.5 shadow-xs transition-all"
@@ -1243,13 +1269,29 @@ export function CitizenPortalApp({
                         variant="outline"
                         size="sm"
                         onClick={handleDetectMyLocation}
+                        disabled={gpsState.kind === "locating"}
                         className="h-7.5 px-2 border-[#DFDDD3] text-[#12241C] hover:bg-[#FAF9F5] flex items-center gap-1 text-xs font-semibold rounded-lg"
-                        title="Detect GPS location and select nearest district"
+                        title={lang === "bn" ? "আমার সঠিক অবস্থানের বন্যা তথ্য দেখুন" : "Check the flood report for my exact location"}
                       >
-                        <Crosshair className="w-3 h-3 text-[#12241C]" />
-                        <span>{t.btn_gps}</span>
+                        <Crosshair className={`w-3 h-3 text-[#12241C] ${gpsState.kind === "locating" ? "animate-spin" : ""}`} />
+                        <span>{gpsState.kind === "locating" ? (lang === "bn" ? "খোঁজা হচ্ছে..." : "Locating...") : t.btn_gps}</span>
                       </Button>
                     </div>
+                    {gpsState.kind !== "idle" && (
+                      <p
+                        role="status"
+                        aria-live="polite"
+                        className={`mt-1.5 text-[11px] leading-snug ${gpsState.kind === "error" ? "text-[#B23A30] font-semibold" : "text-[#4B5563]"}`}
+                      >
+                        {gpsState.kind === "locating" &&
+                          (lang === "bn" ? "আপনার অবস্থান নেওয়া হচ্ছে (কয়েক সেকেন্ড লাগতে পারে)..." : "Reading your location (can take a few seconds)...")}
+                        {gpsState.kind === "found" &&
+                          (lang === "bn"
+                            ? `আপনার অবস্থান: ${toBnNum(gpsState.fix.lat.toFixed(4))}°N, ${toBnNum(gpsState.fix.lng.toFixed(4))}°E ${accuracyText(gpsState.fix, true)}`
+                            : `Your location: ${gpsState.fix.lat.toFixed(4)}°N, ${gpsState.fix.lng.toFixed(4)}°E ${accuracyText(gpsState.fix)}`)}
+                        {gpsState.kind === "error" && gpsState.message}
+                      </p>
+                    )}
                   </Card>
                 </div>
 
@@ -1642,46 +1684,65 @@ export function CitizenPortalApp({
 
               {/* 2. Core Metrics 4-Card Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
-                {/* 1: Risk */}
-                <div className="bg-white rounded-xl border border-[#DFDDD3] p-2 sm:p-2.5 text-center shadow-xs flex flex-col justify-between">
-                  <span className="text-[10px] sm:text-[11px] font-semibold text-[#5C6863]">
-                    {lang === "bn" ? "বন্যা ঝুঁকি" : "Flood Risk"}
-                  </span>
-                  <div className={`text-lg sm:text-xl font-bold my-0.5 ${
-                    districtReport.rank <= 35 ? "text-[#C9443A]" : "text-[#E08A24]"
-                  }`}>
-                    {districtReport.rank <= 35 ? (lang === "bn" ? "উচ্চ" : "High") : (lang === "bn" ? "মাঝারি" : "Moderate")}
-                  </div>
-                  <span className="text-[9px] sm:text-[10px] font-medium text-[#4B5563]">
-                    {districtReport.rank <= 35 ? (lang === "bn" ? "উচ্ছেদ স্তর ৩" : "Evac Level 3") : (lang === "bn" ? "সতর্কতা স্তর ২" : "Alert Level 2")}
-                  </span>
-                </div>
+                {/* 1: Risk — the model's level for this district and day, never invented */}
+                {(() => {
+                  const isBn = lang === "bn";
+                  const pred = districtReport.prediction;
+                  const level = pred?.status === "predicted" ? pred.alert_level : null;
+                  const label =
+                    level === "alert" ? (isBn ? "বিপদ" : "Alert")
+                    : level === "watch" ? (isBn ? "সতর্কতা" : "Watch")
+                    : level === "none" ? (isBn ? "নিম্ন" : "Low")
+                    : (isBn ? "নেই" : "No forecast");
+                  const color =
+                    level === "alert" ? "text-[#C9443A]" : level === "watch" ? "text-[#E08A24]" : level === "none" ? "text-[#475569]" : "text-[#6B7280]";
+                  const note =
+                    level === "none" ? (isBn ? "কম, তবে শূন্য নয়" : "Low, not zero")
+                    : level ? (isBn ? "মডেল পূর্বাভাস" : "Model forecast")
+                    : (isBn ? "এই দিনের জন্য নেই" : "None for this day");
 
-                {/* 2: Forecast */}
-                <div className="bg-white rounded-xl border border-[#DFDDD3] p-2 sm:p-2.5 text-center shadow-xs flex flex-col justify-between">
-                  <span className="text-[10px] sm:text-[11px] font-semibold text-[#5C6863]">
-                    {lang === "bn" ? "২৪ঘণ্টা পূর্বাভাস" : "24H Forecast"}
-                  </span>
-                  <div className="text-lg sm:text-xl font-bold text-[#1F513F] my-0.5">
-                    {lang === "bn" ? ">৯৫%" : ">95%"}
-                  </div>
-                  <span className="text-[9px] sm:text-[10px] font-medium text-[#1F513F]">
-                    {lang === "bn" ? "চরম নির্ভরযোগ্য" : "Extreme Conf."}
-                  </span>
-                </div>
+                  const point = pointCheckResult?.district?.pcode === selectedPcode ? pointCheckResult : null;
+                  const h100 = point?.cell?.hazard?.find((h: any) => h.return_period_years === 100);
+                  const depth = !point?.cell
+                    ? "—"
+                    : point.cell.permanent_water
+                    ? (isBn ? "জলাশয়" : "Water body")
+                    : h100?.depth_label
+                    ? (isBn ? ({ "< 1 m": "১ মি.-এর কম", "1 to 3 m": "১–৩ মি.", "3 to 10 m": "৩–১০ মি.", "> 10 m": "১০ মি.-এর বেশি" } as Record<string, string>)[h100.depth_label] || h100.depth_label : h100.depth_label)
+                    : (isBn ? "বাইরে" : "Outside");
+                  const depthNote = !point?.cell
+                    ? (isBn ? "মানচিত্রে স্থান বাছুন" : "Pick a spot on the map")
+                    : h100?.depth_label
+                    ? (isBn ? "১০০ বছরের বন্যা, মডেল" : "1-in-100-yr flood, modelled")
+                    : point.cell.permanent_water
+                    ? (isBn ? "নদী বা স্থায়ী পানি" : "River or permanent water")
+                    : (isBn ? "মডেল বন্যা এলাকার বাইরে" : "Outside modelled flood zone");
 
-                {/* 3: Depth */}
-                <div className="bg-white rounded-xl border border-[#DFDDD3] p-2 sm:p-2.5 text-center shadow-xs flex flex-col justify-between">
-                  <span className="text-[10px] sm:text-[11px] font-semibold text-[#5C6863]">
-                    {lang === "bn" ? "পানির গভীরতা" : "Peak Depth"}
-                  </span>
-                  <div className="text-lg sm:text-xl font-bold text-[#11241C] my-0.5">
-                    {lang === "bn" ? "১.৮ মি." : "1.8m"}
-                  </div>
-                  <span className="text-[9px] sm:text-[10px] font-medium text-[#4B5563]">
-                    {lang === "bn" ? "গেজ স্টেশন ৭" : "Gauge Stn 7"}
-                  </span>
-                </div>
+                  const cardCls = "bg-white rounded-xl border border-[#DFDDD3] p-2 sm:p-2.5 text-center shadow-xs flex flex-col justify-between";
+                  return (
+                    <>
+                      <div className={cardCls}>
+                        <span className="text-[10px] sm:text-[11px] font-semibold text-[#5C6863]">{isBn ? "বন্যা ঝুঁকি" : "Flood Risk"}</span>
+                        <div className={`text-lg sm:text-xl font-bold my-0.5 ${color}`}>{label}</div>
+                        <span className="text-[9px] sm:text-[10px] font-medium text-[#4B5563]">{note}</span>
+                      </div>
+
+                      {/* 2: Forecast — the real probability, or "not available" */}
+                      <div className={cardCls}>
+                        <span className="text-[10px] sm:text-[11px] font-semibold text-[#5C6863]">{isBn ? "বন্যার সম্ভাবনা" : "Chance of flooding"}</span>
+                        <div className="text-lg sm:text-xl font-bold text-[#1F513F] my-0.5">{districtReport.probabilityText}</div>
+                        <span className="text-[9px] sm:text-[10px] font-medium text-[#1F513F]">{isBn ? "জেলা, এই দিনের" : "District, this day"}</span>
+                      </div>
+
+                      {/* 3: Depth — JRC modelled depth at the checked spot */}
+                      <div className={cardCls}>
+                        <span className="text-[10px] sm:text-[11px] font-semibold text-[#5C6863]">{isBn ? "গভীরতা (এই স্থানে)" : "Depth (this spot)"}</span>
+                        <div className="text-lg sm:text-xl font-bold text-[#11241C] my-0.5">{depth}</div>
+                        <span className="text-[9px] sm:text-[10px] font-medium text-[#4B5563]">{depthNote}</span>
+                      </div>
+                    </>
+                  );
+                })()}
 
                 {/* 4: Rank */}
                 <div className="bg-white rounded-xl border border-[#DFDDD3] p-2 sm:p-2.5 text-center shadow-xs flex flex-col justify-between">

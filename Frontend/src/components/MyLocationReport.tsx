@@ -86,7 +86,7 @@ export const MyLocationReport: React.FC<MyLocationReportProps> = ({
     setError(null);
     setIsSaving(true);
     try {
-      const [lng, lat] = await readGpsPosition();
+      const [lng, lat] = await readGpsPosition(isBn);
       onUserChange(await saveMyLocation(lng, lat));
     } catch (problem) {
       fail(problem);
