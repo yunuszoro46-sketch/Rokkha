@@ -1738,36 +1738,6 @@ export function CitizenPortalApp({
                 </div>
               </div>
 
-              {/* 5. Registered Emergency Shelters & Hospitals */}
-              {reportAssets.length > 0 && (
-                <div className="space-y-1.5">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#11241C]">
-                    {lang === "bn" ? "নিকটবর্তী নিবন্ধিত আশ্রয়কেন্দ্র ও চিকিৎসাকেন্দ্র" : "NEARBY REGISTERED SHELTERS & HOSPITALS"}
-                  </h4>
-                  <div className="space-y-1.5">
-                    {reportAssets.map((item) => (
-                      <div
-                        key={item.asset.id}
-                        className="bg-white rounded-xl border border-[#DFDDD3] p-2.5 flex items-center justify-between shadow-xs text-xs"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="text-base">
-                            {item.asset.asset_type.toLowerCase().includes("hospital") || item.asset.asset_type.toLowerCase().includes("clinic") ? "🏥" : "⛺"}
-                          </span>
-                          <div>
-                            <div className="font-bold text-[#11241C] text-[11px]">{item.asset.name}</div>
-                            <div className="text-[10px] text-[#5C6863]">{item.asset.asset_type}</div>
-                          </div>
-                        </div>
-                        <div className="font-bold text-[#183026] text-right text-xs">
-                          {item.distance_kilometers.toFixed(1)} km {lang === "bn" ? "দূরে" : "away"}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* 6. Footer Actions */}
               <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
                 <button
