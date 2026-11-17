@@ -1204,16 +1204,15 @@ export function CitizenPortalApp({
             {/* DEDICATED FEATURE PAGES (map, alerts, satellite, hydro, shelters) */}
             {activeView !== "overview" && activeView !== "login" && (
               <section className="w-full max-w-[1360px] mx-auto px-3 sm:px-6 md:px-8 py-2 sm:py-3 space-y-2 sm:space-y-3">
-                {/* Page Header & Global Context Controls */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-0.5">
-                  <div className="max-w-xl">
-                    <h1 className="text-xl sm:text-2xl font-extrabold text-[#11241B] tracking-tight leading-tight">
-                      {PAGE_METADATA[lang][activeView].title}
-                    </h1>
-                  </div>
+                {/* Page Header & Global Context Controls (hidden on Forecast & Early Warnings to avoid duplicate titles with the section header) */}
+                {activeView !== "alerts" && (
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-0.5">
+                    <div className="max-w-xl">
+                      <h1 className="text-xl sm:text-2xl font-extrabold text-[#11241B] tracking-tight leading-tight">
+                        {PAGE_METADATA[lang][activeView].title}
+                      </h1>
+                    </div>
 
-                  {/* Active District & Date Context Bar (hidden on Forecast & Early Warnings to avoid redundancy with the section dropdown) */}
-                  {activeView !== "alerts" && (
                     <Card className="p-2 border-[#DFDDD3] bg-white rounded-xl shadow-xs flex flex-wrap items-center gap-2 shrink-0">
                       <div className="flex items-center gap-1.5">
                         <MapPin className="w-3.5 h-3.5 text-[#5C6863]" />
@@ -1296,8 +1295,8 @@ export function CitizenPortalApp({
                         </p>
                       )}
                     </Card>
-                  )}
-                </div>
+                  </div>
+                )}
 
                 {accountUser && activeView === "alerts" && (
                   <MyLocationReport
