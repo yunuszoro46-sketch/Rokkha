@@ -6,8 +6,6 @@ import { formatProbability } from "../lib/utils";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 import {
   Info,
-  ChevronDown,
-  ChevronUp,
   Landmark,
   Users,
   CheckCircle2,
@@ -45,7 +43,6 @@ export const AlertsFeed: React.FC<AlertsFeedProps> = ({
   const t = UI_TEXT[lang] || UI_TEXT.en;
   const isBn = lang === "bn";
   const displayDate = isBn ? toBnNum(targetDate) : targetDate;
-  const [isAdvisoryOpen, setIsAdvisoryOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterToSelected, setFilterToSelected] = useState(false);
 
@@ -85,35 +82,6 @@ export const AlertsFeed: React.FC<AlertsFeedProps> = ({
       </CardHeader>
 
       <CardContent className="p-6 sm:p-8 space-y-6">
-        {/* Public Advisory Box (Collapsible with perfect padding & spacing) */}
-        <div className="rounded-2xl border border-[#DFDDD3] bg-[#FAF9F5] p-5 transition-all">
-          <div
-            className="flex items-center justify-between cursor-pointer select-none"
-            onClick={() => setIsAdvisoryOpen(!isAdvisoryOpen)}
-          >
-            <div className="flex items-center gap-2.5 text-sm font-bold text-[#1E3A2F]">
-              <span className="w-5 h-5 rounded-full bg-[#E5EDE7] flex items-center justify-center text-[#1E3A2F]">
-                <Info size={13} />
-              </span>
-              <span>{lang === "bn" ? "জনস্বার্থে বিজ্ঞপ্তি" : "Public Advisory"}</span>
-            </div>
-            <button
-              type="button"
-              className="text-[#5C6863] hover:text-[#12241C] transition p-1"
-              aria-label="Toggle Public Advisory"
-            >
-              {isAdvisoryOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-            </button>
-          </div>
-          {isAdvisoryOpen && (
-            <p className="mt-3 text-xs sm:text-sm text-[#4B5563] leading-relaxed">
-              {lang === "bn"
-                ? `বন্যা সতর্কতাগুলো কৃত্রিম বুদ্ধিমত্তা ও বৃষ্টিপাত বিশ্লেষণের মাধ্যমে প্রণীত। ${displayDate} তারিখের জন্য নির্ণীত সতর্কতামূলক পূর্বাভাস। দাপ্তরিক তথ্যের জন্য এফএফডব্লিউসি (FFWC) বুলেটিন দেখুন।`
-                : `Flood alerts are machine learning estimations from rain, river flow and recent satellite flood maps for ${displayDate}. Official flood warnings and evacuation directives are issued exclusively by the Flood Forecasting and Warning Centre (FFWC).`}
-            </p>
-          )}
-        </div>
-
         {/* District Search & Quick Filter matching User Request */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#FAF9F5] p-3 rounded-2xl border border-[#DFDDD3]">
           <div className="relative flex-1 max-w-sm">
