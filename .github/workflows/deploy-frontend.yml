@@ -16,11 +16,9 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
       - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: team_8i8eMSPvyI8iDiL6GpHBN1Ym
-          vercel-project-id: prj_QpHYw136pwBZ71OtU5FfvtXe5oFR
-          working-directory: ./Frontend
-          vercel-args: '--prod'
+        working-directory: Frontend
+        run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
