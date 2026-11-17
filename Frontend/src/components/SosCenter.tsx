@@ -396,7 +396,7 @@ export const SosCenter: React.FC<SosCenterProps> = ({
                 <div className="text-sm font-extrabold text-[#12241C]">{tr("New request", "নতুন অনুরোধ")}</div>
 
                 <div className="space-y-2">
-                  <label className="block text-xs font-bold text-[#3B4740]">{tr("Where are you?", "আপনি কোথায়?")}</label>
+                  <label className="block text-base sm:text-lg font-bold text-[#12241C]">{tr("Where are you?", "আপনি কোথায়?")}</label>
                   <div className="flex flex-wrap gap-2">
                     <Button type="button" variant="outline" onClick={useGps} disabled={isLocating} className="h-10 rounded-xl text-sm font-bold flex items-center gap-2">
                       <Crosshair className="w-4 h-4" />
