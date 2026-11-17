@@ -7,8 +7,6 @@ import {
   Home,
   Map,
   AlertOctagon,
-  CloudRain,
-  Satellite,
   LifeBuoy,
   Info,
   ChevronLeft,
@@ -76,16 +74,6 @@ export const SideDashboard: React.FC<SideDashboardProps> = ({
             ? toBnNum(activeAlertCount)
             : activeAlertCount
           : undefined,
-    },
-    {
-      id: "satellite" as CitizenView,
-      label: t.side_satellite,
-      icon: Satellite,
-    },
-    {
-      id: "hydro" as CitizenView,
-      label: t.side_hydro,
-      icon: CloudRain,
     },
     {
       id: "shelters" as CitizenView,

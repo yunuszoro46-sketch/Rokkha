@@ -1,8 +1,13 @@
 "use client";
 
-import { CitizenPortalApp } from "@/components/CitizenPortalApp";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function SatellitePage() {
-  return <CitizenPortalApp initialView="satellite" />;
+  const router = useRouter();
+  useEffect(() => {
+    router.replace("/map");
+  }, [router]);
+  return null;
 }
 

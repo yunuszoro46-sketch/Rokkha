@@ -45,8 +45,6 @@ import {
 // Live Engine Components (strictly adhering to FRONTEND_API_GUIDE.md)
 import { SideDashboard, CitizenView } from "@/components/SideDashboard";
 import { AlertsFeed } from "@/components/AlertsFeed";
-import { DistrictSatelliteTimeline } from "@/components/DistrictSatelliteTimeline";
-import { RainRiverCharts } from "@/components/RainRiverCharts";
 import { NearestShelters } from "@/components/NearestShelters";
 import { AttributionFooter } from "@/components/AttributionFooter";
 import { PortalAccessPage } from "@/components/PortalAccessPage";
@@ -243,7 +241,7 @@ const getCapabilities = (t: any): Array<{
     icon: "chart",
     title: t.cap_1_title,
     body: t.cap_1_desc,
-    targetView: "satellite",
+    targetView: "map",
   },
   {
     icon: "layers",
@@ -274,7 +272,7 @@ const getCapabilities = (t: any): Array<{
     icon: "cloud",
     title: t.cap_6_title,
     body: t.cap_6_desc,
-    targetView: "hydro",
+    targetView: "alerts",
   },
   {
     icon: "database",
@@ -923,17 +921,17 @@ export function CitizenPortalApp({
                   </a>
                   <a
                     className={`text-[17px] font-semibold transition pb-1 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 select-none ${
-                      activeView === "satellite"
+                      activeView === "shelters"
                         ? "active text-[#183026] border-b-2 border-[#183026]"
                         : "text-[#263B32]/80 hover:text-[#183026]"
                     }`}
-                    href="#satellite"
+                    href="#shelters"
                     onClick={(e) => {
                       e.preventDefault();
-                      navigateToPage("satellite");
+                      navigateToPage("shelters");
                     }}
                   >
-                    {t.nav_data}
+                    {lang === "bn" ? "আশ্রয়কেন্দ্র" : "Shelters"}
                   </a>
                   <button
                     type="button"
@@ -1364,43 +1362,10 @@ export function CitizenPortalApp({
                         handleSelectDistrict(pcode, name);
                       }}
                     />
-
-                    {/* Satellite Inundation Timeline & Graph for that district */}
-                    <div className="pt-2">
-                      <DistrictSatelliteTimeline
-                        districtPcode={selectedPcode}
-                        districtName={selectedName}
-                        lang={lang}
-                        onSelectDistrict={(pcode, name) =>
-                          handleSelectDistrict(pcode, name)
-                        }
-                      />
-                    </div>
                   </div>
                 )}
 
-                {/* PAGE 4: DISTRICT RANKING & SATELLITE */}
-                {activeView === "satellite" && (
-                  <DistrictSatelliteTimeline
-                    districtPcode={selectedPcode}
-                    districtName={selectedName}
-                    lang={lang}
-                    onSelectDistrict={(pcode, name) =>
-                      handleSelectDistrict(pcode, name)
-                    }
-                  />
-                )}
-
-                {/* PAGE 5: RAIN & RIVER GAUGES */}
-                {activeView === "hydro" && (
-                  <RainRiverCharts
-                    districtPcode={selectedPcode}
-                    districtName={selectedName}
-                    lang={lang}
-                  />
-                )}
-
-                {/* PAGE 6: NEAREST EMERGENCY SHELTERS */}
+                {/* PAGE 4: NEAREST EMERGENCY SHELTERS */}
                 {activeView === "shelters" && (
                   <NearestShelters
                     currentCoords={currentCoords}
