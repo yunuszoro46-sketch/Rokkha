@@ -40,7 +40,7 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
 
     defaults:
       run:
@@ -114,9 +114,15 @@ jobs:
       # Step 4 of the script fetches this month's and last month's satellite passes
       # into data/labels/.cache and rebuilds data/labels/district_flood_observations.json
       # from every cached month, exactly as on a developer's machine.
+      # Open-Meteo sometimes times out for a while (17 Nov 2026). The update resumes
+      # where it stopped, so one more try after 10 minutes is cheap and usually enough.
       - name: Daily update
         if: steps.done.outputs.skip != 'true'
-        run: python scripts/daily_update.py
+        run: |
+          if python scripts/daily_update.py; then exit 0; fi
+          echo "::warning::The daily update failed; trying once more in 10 minutes."
+          sleep 600
+          python scripts/daily_update.py
 
       - name: Commit new satellite passes
         if: steps.done.outputs.skip != 'true'

@@ -21,6 +21,7 @@ from uuid import uuid4
 from app.core.config import settings
 from app.modules.ingestion import sources
 from app.modules.ingestion.repository import (
+    close_interrupted_runs,
     add_api_calls,
     api_calls_used,
     count_documents,
@@ -153,6 +154,9 @@ async def start_run(
 ) -> dict:
 
     # One run at a time, so two runs cannot overspend the budget together.
+    # A run left "running" by a server that has since died does not count.
+    await close_interrupted_runs(_utc_now())
+
     for run in await list_runs(5):
         if run["status"] in ("queued", "running"):
             raise IngestionBusyError(f"Run {run['_id']} is still {run['status']}.")

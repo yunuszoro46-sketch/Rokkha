@@ -900,6 +900,11 @@ the observations file from every month exactly as a developer's machine does.
 - **GitHub starts scheduled jobs late**, sometimes by hours (the 14 November run started at 10:44 UTC instead of
   03:30, and the 17 November one at 12:12 UTC). Until it runs, the portal's "Today" button shows grey districts
   with "No forecast for this date". Fixed on 17 November, see below.
+- **A restart of the hosted backend broke a running update (17 November).** Render and the job's own copy of the
+  backend share one database, and every server start closed all "running" ingestion runs, including the job's.
+  Now each run notes the time whenever it makes progress (`heartbeat_at`); a starting server, or a new run,
+  closes only runs silent for more than 30 minutes (`RUN_STALE_AFTER`). If the update still fails (for example
+  Open-Meteo timing out), the job tries once more after 10 minutes; it resumes where it stopped.
 - **The satellite catalogue (EODC STAC) can be down** (on 15 November it answered `502 Bad Gateway`). The job then
   logs `satellite passes NOT refreshed`, predicts with the passes already stored, and still succeeds. Nothing is
   lost: every run fetches this month and the last, so the next run that reaches the catalogue adds the missed

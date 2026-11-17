@@ -460,14 +460,15 @@ def test_lasting_network_failure_is_reported_clearly(client):
 def test_runs_interrupted_by_a_restart_are_closed(fake_api):
 
     # A run was "running" when the server stopped (restart, crash, laptop
-    # closed). Nothing is running any more, so on the next start it must be
+    # closed) and has shown no sign of life since. On the next start it must be
     # closed; otherwise it would block every new run with 409 forever.
+    long_ago = datetime.now(timezone.utc) - timedelta(hours=2)
     with MongoClient(TEST_MONGODB_URI) as mongo:
         mongo[TEST_DATABASE]["ingestion_runs"].insert_one({
             "_id": "interrupted", "kind": "rain_history", "status": "running",
             "source": "x", "start_date": "2022-06-10", "end_date": "2022-06-12",
             "forecast_days": None, "site_ids": [DHAKA],
-            "started_at": datetime.now(timezone.utc), "finished_at": None,
+            "started_at": long_ago, "heartbeat_at": long_ago, "finished_at": None,
             "pieces_total": 1, "pieces_done": 0, "pieces_skipped": 0,
             "values_written": 0, "api_calls": 0, "message": None,
         })
@@ -486,6 +487,69 @@ def test_runs_interrupted_by_a_restart_are_closed(fake_api):
 
         assert response.status_code == 202           # no longer blocked
         assert result["status"] == "completed"
+
+
+def test_a_restart_leaves_runs_of_other_servers_alone(fake_api):
+
+    # The hosted backend (Render) and the daily job's own copy of the backend
+    # (GitHub Actions) share one database. When Render restarts (deploy, waking
+    # from sleep) it must not close a run the other copy is doing right now:
+    # on 17 Nov 2026 that made the daily update fail.
+    now = datetime.now(timezone.utc)
+    with MongoClient(TEST_MONGODB_URI) as mongo:
+        mongo[TEST_DATABASE]["ingestion_runs"].insert_one({
+            "_id": "elsewhere", "kind": "rain_recent", "status": "running",
+            "source": "x", "start_date": None, "end_date": None, "forecast_days": None, "past_days": 7,
+            "site_ids": [DHAKA], "pieces_total": 1, "pieces_done": 0, "pieces_skipped": 0,
+            "values_written": 0, "api_calls": 0, 
+            "started_at": now - timedelta(minutes=5), "heartbeat_at": now - timedelta(seconds=20),
+            "finished_at": None, "message": None,
+        })
+
+    with TestClient(app) as client:                  # the server starts
+
+        other = client.get("/api/v1/ingestion/runs/elsewhere").json()
+
+        assert other["status"] == "running"
+        assert other["finished_at"] is None
+
+
+def test_a_stuck_run_does_not_block_new_runs(client, fake_api):
+
+    # A run whose server died while this one kept running: no sign of life for
+    # hours. Starting a new run closes it instead of answering 409 forever.
+    long_ago = datetime.now(timezone.utc) - timedelta(hours=3)
+    with MongoClient(TEST_MONGODB_URI) as mongo:
+        mongo[TEST_DATABASE]["ingestion_runs"].insert_one({
+            "_id": "stuck", "kind": "rain_recent", "status": "running",
+            "source": "x", "start_date": None, "end_date": None, "forecast_days": None, "past_days": 7,
+            "site_ids": [DHAKA], "pieces_total": 1, "pieces_done": 0, "pieces_skipped": 0,
+            "values_written": 0, "api_calls": 0, 
+            "started_at": long_ago, "heartbeat_at": long_ago, "finished_at": None, "message": None,
+        })
+
+    response, result = run(client, kind="rain_history", start_date="2022-06-10",
+                           end_date="2022-06-12", site_ids=[DHAKA])
+
+    assert response.status_code == 202
+    assert result["status"] == "completed"
+
+    stuck = client.get(f"{BASE}/runs/stuck").json()
+    assert stuck["status"] == "failed"
+    assert "interrupted" in stuck["message"]
+
+
+def test_runs_record_that_they_are_alive(client, fake_api):
+
+    before = datetime.now(timezone.utc)
+
+    response, result = run(client, kind="rain_history", start_date="2022-06-10",
+                           end_date="2022-06-12", site_ids=[DHAKA])
+
+    with MongoClient(TEST_MONGODB_URI, tz_aware=True) as mongo:
+        stored = mongo[TEST_DATABASE]["ingestion_runs"].find_one({"_id": result["run_id"]})
+
+    assert stored["heartbeat_at"] >= before.replace(microsecond=0)
 
 
 def test_only_one_run_at_a_time(client):
