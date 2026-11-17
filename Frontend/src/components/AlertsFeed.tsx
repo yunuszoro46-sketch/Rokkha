@@ -9,16 +9,26 @@ import {
   Landmark,
   Users,
   CheckCircle2,
-  Search,
+  ChevronDown,
 } from "lucide-react";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
+import districtGeoData from "@/data/bangladesh_districts.json";
 import {
   Language,
   UI_TEXT,
   DISTRICTS_BN,
+  DIVISIONS_BN,
   toBnNum,
 } from "../lib/translations";
+
+const ALL_DISTRICTS: Array<{ pcode: string; name: string; division: string }> = (
+  districtGeoData as any
+).features
+  .map((f: any) => ({
+    pcode: f.properties.pcode,
+    name: f.properties.name,
+    division: f.properties.parent_name || "",
+  }))
+  .sort((a: any, b: any) => a.name.localeCompare(b.name));
 
 interface AlertsFeedProps {
   alerts: AlertItem[];
@@ -43,96 +53,62 @@ export const AlertsFeed: React.FC<AlertsFeedProps> = ({
   const t = UI_TEXT[lang] || UI_TEXT.en;
   const isBn = lang === "bn";
   const displayDate = isBn ? toBnNum(targetDate) : targetDate;
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterToSelected, setFilterToSelected] = useState(false);
+  const [selectedDistrictFilter, setSelectedDistrictFilter] = useState<string>("");
 
-  // Filter alerts by search query or selected district
-  const filteredAlerts = alerts.filter((alert) => {
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      const enName = alert.district.name.toLowerCase();
-      const bnName = (DISTRICTS_BN[alert.district.pcode] || "").toLowerCase();
-      const divName = alert.district.division.toLowerCase();
-      return enName.includes(q) || bnName.includes(q) || divName.includes(q);
-    }
-    if (filterToSelected && selectedDistrictPcode) {
-      return alert.district.pcode === selectedDistrictPcode;
-    }
-    return true;
-  });
+  // Filter alerts by selected district from dropdown; if none selected, all show
+  const filteredAlerts = selectedDistrictFilter
+    ? alerts.filter((alert) => alert.district.pcode === selectedDistrictFilter)
+    : alerts;
+
+  const selDistrictMeta = ALL_DISTRICTS.find(
+    (d) => d.pcode === selectedDistrictFilter
+  );
+  const selDistrictName = selDistrictMeta
+    ? isBn
+      ? DISTRICTS_BN[selDistrictMeta.pcode] || selDistrictMeta.name
+      : selDistrictMeta.name
+    : "";
 
   return (
     <Card className="border-[#DFDDD3] bg-white rounded-3xl shadow-sm overflow-hidden">
-      {/* Container Header */}
-      <CardHeader className="px-6 sm:px-8 py-6 border-b border-[#EBE8DC] flex flex-row items-center justify-between">
-        <div className="flex items-center gap-2">
-          <CardTitle className="text-2xl sm:text-3xl font-extrabold text-[#12241C] tracking-tight">
-            {lang === "bn"
-              ? `জেলা বন্যা সতর্কতা (${toBnNum(alerts.length)})`
-              : `District Flood Early Warnings (${alerts.length})`}
-          </CardTitle>
+      {/* Top of Section: Just Title and a Dropdown with 64 District List */}
+      <CardHeader className="px-6 sm:px-8 py-5 border-b border-[#EBE8DC] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <CardTitle className="text-xl sm:text-2xl font-extrabold text-[#12241C] tracking-tight">
+          {lang === "bn"
+            ? "জেলা বন্যা সতর্কতা"
+            : "District Flood Early Warnings"}
+        </CardTitle>
+
+        {/* 64 District Dropdown */}
+        <div className="relative">
+          <select
+            value={selectedDistrictFilter}
+            onChange={(e) => {
+              const val = e.target.value;
+              setSelectedDistrictFilter(val);
+              if (val) {
+                const d = ALL_DISTRICTS.find((item) => item.pcode === val);
+                if (d) onSelectDistrict(d.pcode, d.name);
+              }
+            }}
+            className="appearance-none bg-[#FAF9F5] hover:bg-[#F3EFE6] border border-[#DFDDD3] text-[#12241C] font-bold text-xs sm:text-sm rounded-xl pl-3.5 pr-9 py-2 focus:outline-none focus:ring-1 focus:ring-[#183026] shadow-2xs cursor-pointer min-w-[210px] transition-colors"
+          >
+            <option value="">
+              {lang === "bn" ? "সকল জেলা (৬৪টি)" : "All Districts (64)"}
+            </option>
+            {ALL_DISTRICTS.map((d) => (
+              <option key={d.pcode} value={d.pcode}>
+                {lang === "bn"
+                  ? `${DISTRICTS_BN[d.pcode] || d.name} (${DIVISIONS_BN[d.division] || d.division})`
+                  : `${d.name} (${d.division})`}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="w-4 h-4 text-[#5C6863] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
-        <span className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-[#FEE2E2] text-[#991B1B] border border-[#FCA5A5] uppercase tracking-wide">
-          {alerts.length > 0
-            ? lang === "bn" ? "পদক্ষেপ প্রয়োজন" : "Action Required"
-            : !hasForecast
-            ? lang === "bn" ? "পূর্বাভাস নেই" : "No forecast"
-            : lang === "bn" ? "কোন সতর্কতা নেই" : "No alerts"}
-        </span>
       </CardHeader>
 
       <CardContent className="p-6 sm:p-8 space-y-6">
-        {/* District Search & Quick Filter matching User Request */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#FAF9F5] p-3 rounded-2xl border border-[#DFDDD3]">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="w-4 h-4 text-[#6B7280] absolute left-3 top-1/2 -translate-y-1/2" />
-            <Input
-              type="text"
-              placeholder={isBn ? "জেলা অনুসন্ধান করুন (যেমন: সুনামগঞ্জ, সিলেট...)" : "Search district alerts (e.g. Sunamganj, Sylhet)..."}
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setFilterToSelected(false);
-              }}
-              className="pl-9 h-9 text-xs bg-white border-[#DFDDD3] rounded-xl"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            {selectedDistrictPcode && (
-              <Button
-                size="sm"
-                variant={filterToSelected ? "default" : "outline"}
-                onClick={() => {
-                  setFilterToSelected(!filterToSelected);
-                  setSearchQuery("");
-                }}
-                className={`text-xs font-bold h-8.5 rounded-xl ${
-                  filterToSelected
-                    ? "bg-[#183026] text-white"
-                    : "bg-white border-[#DFDDD3] text-[#183026] hover:bg-[#FAF9F5]"
-                }`}
-              >
-                {isBn
-                  ? `শুধুমাত্র ${DISTRICTS_BN[selectedDistrictPcode] || "নির্বাচিত জেলা"}`
-                  : `Show only ${DISTRICTS_BN[selectedDistrictPcode] || "selected district"}`}
-              </Button>
-            )}
-            {(searchQuery || filterToSelected) && (
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  setSearchQuery("");
-                  setFilterToSelected(false);
-                }}
-                className="text-xs text-[#6B7280] hover:text-[#11241C] h-8.5 px-2"
-              >
-                {isBn ? "সব দেখান" : "Show all (15)"}
-              </Button>
-            )}
-          </div>
-        </div>
-
         {/* Alerts Grid: Fully responsive 1, 2, or 3 columns */}
         {isLoading ? (
           <div className="py-16 text-center text-base text-[#5C6863] animate-pulse">
@@ -235,6 +211,20 @@ export const AlertsFeed: React.FC<AlertsFeedProps> = ({
                 </div>
               );
             })}
+          </div>
+        ) : selectedDistrictFilter ? (
+          <div className="p-8 sm:p-12 rounded-2xl bg-[#FAF9F5] border border-[#DFDDD3] text-center space-y-2">
+            <CheckCircle2 className="w-8 h-8 text-[#16A34A] mx-auto" />
+            <div className="text-lg sm:text-xl font-bold text-[#12241C]">
+              {lang === "bn"
+                ? `${selDistrictName} জেলায় কোনো সক্রিয় বন্যা সতর্কতা নেই`
+                : `No Active Flood Alerts for ${selDistrictName} District`}
+            </div>
+            <p className="text-xs sm:text-sm text-[#5C6863]">
+              {lang === "bn"
+                ? `নির্বাচিত তারিখে এই জেলার জন্য কোনো সতর্কতা বা ওয়াচ জারি করা হয়নি।`
+                : `No flood alert or watch has been triggered for this district on the selected date.`}
+            </p>
           </div>
         ) : !hasForecast ? (
           <div className="p-10 rounded-2xl bg-[#FAF9F5] border border-[#DFDDD3] text-center space-y-2">
