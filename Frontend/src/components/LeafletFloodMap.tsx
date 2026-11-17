@@ -12,6 +12,7 @@ import {
 import { getRegisteredAssets } from "../services/api";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
+import { Maximize2 } from "lucide-react";
 import {
   Language,
   DISTRICTS_BN,
@@ -76,6 +77,8 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
   // Tapping the map checks that exact spot (the fallback when GPS is not available).
   const onInspectRef = useRef(onInspectPoint);
   onInspectRef.current = onInspectPoint;
+  const onSelectDistrictRef = useRef(onSelectDistrict);
+  onSelectDistrictRef.current = onSelectDistrict;
 
   const currentDistrictPcode = selectedDistrictPcode || "BD6090"; // default Sunamganj
   const currentPred = predictions.find((p) => p.pcode === currentDistrictPcode);
@@ -161,18 +164,24 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
     return () => { cancelled = true; };
   }, [currentDistrictPcode]);
 
+  // Bounding box of all Bangladesh to ensure the full country is visible
+  const BD_BOUNDS: L.LatLngBoundsLiteral = [
+    [20.55, 88.0],
+    [26.65, 92.7],
+  ];
+
   // Initialize Map
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
-    const initialCenter = DISTRICT_CENTERS[currentDistrictPcode] || [25.0658, 91.395];
-
     const map = L.map(mapContainerRef.current, {
-      center: initialCenter,
-      zoom: 9.5,
+      center: [23.75, 90.35],
+      zoom: 7,
       zoomControl: true,
       attributionControl: false,
       scrollWheelZoom: true,
+      minZoom: 6,
+      maxZoom: 16,
     });
 
     // Clean OpenStreetMap Tiles
@@ -180,6 +189,8 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
       maxZoom: 18,
       subdomains: ["a", "b", "c"],
     }).addTo(map);
+
+    map.fitBounds(BD_BOUNDS, { padding: [16, 16] });
 
     map.on("click", (e: L.LeafletMouseEvent) => onInspectRef.current?.(e.latlng.lat, e.latlng.lng));
 
@@ -191,7 +202,7 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
     };
   }, []);
 
-  // Update District Polygon and Framing when selected district changes
+  // Update District Polygons, Green Cover, and Pin Marker
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -206,49 +217,90 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
       centerPinRef.current = null;
     }
 
-    if (!feature) {
-      const center = DISTRICT_CENTERS[currentDistrictPcode] || [25.0658, 91.395];
-      map.setView(center, 9.5);
-      return;
-    }
+    let selectedLayerBounds: L.LatLngBounds | null = null;
 
-    // Add district boundary with subtle outline & fill
-    const geoLayer = L.geoJSON(feature as any, {
-      style: {
-        color: "#6B7280",
-        weight: 2,
-        opacity: 0.85,
-        fillColor: isHighRisk ? "#FEE2E2" : "#ECFDF5",
-        fillOpacity: 0.25,
+    // Render all 64 districts so full BD is visible; selected district gets green cover
+    const geoLayer = L.geoJSON(districtBoundariesData as any, {
+      style: (feat) => {
+        const isSelected =
+          feat?.properties?.pcode === currentDistrictPcode ||
+          feat?.properties?.admin2Pcode === currentDistrictPcode;
+
+        if (isSelected) {
+          return {
+            color: "#15803D", // deep green border
+            weight: 3,
+            opacity: 1,
+            fillColor: "#22C55E", // vibrant green cover
+            fillOpacity: 0.5,
+          };
+        }
+
+        return {
+          color: "#94A3B8", // subtle district boundary
+          weight: 1,
+          opacity: 0.65,
+          fillColor: "#F8FAFC",
+          fillOpacity: 0.15,
+        };
+      },
+      onEachFeature: (feat, layer) => {
+        const pcode = feat.properties?.pcode || feat.properties?.admin2Pcode;
+        const name = feat.properties?.name || feat.properties?.admin2Name || "";
+        const isSelected = pcode === currentDistrictPcode;
+
+        if (isSelected) {
+          selectedLayerBounds = (layer as any).getBounds();
+          setTimeout(() => {
+            (layer as any).bringToFront?.();
+          }, 0);
+        }
+
+        const displayName = isBn ? DISTRICTS_BN[pcode] || name : name;
+        layer.bindTooltip(displayName, {
+          sticky: true,
+          direction: "top",
+          className: "rokkha-district-tooltip",
+        });
+
+        layer.on({
+          mouseover: (e) => {
+            if (pcode !== currentDistrictPcode) {
+              const target = e.target;
+              target.setStyle({
+                fillColor: "#86EFAC",
+                fillOpacity: 0.35,
+                weight: 2,
+                color: "#16A34A",
+              });
+            }
+          },
+          mouseout: (e) => {
+            if (pcode !== currentDistrictPcode) {
+              geoLayer.resetStyle(e.target);
+            }
+          },
+          click: (e) => {
+            L.DomEvent.stopPropagation(e);
+            if (pcode) {
+              onSelectDistrictRef.current?.(pcode, name);
+            }
+            onInspectRef.current?.(e.latlng.lat, e.latlng.lng);
+          },
+        });
       },
     }).addTo(map);
 
     geoLayerRef.current = geoLayer;
 
-    // Fit map bounds closely to the district
-    try {
-      const bounds = geoLayer.getBounds();
-      if (bounds.isValid()) {
-        map.fitBounds(bounds, {
-          padding: [24, 24],
-          maxZoom: 11.5,
-        });
-      }
-    } catch {
-      const center = DISTRICT_CENTERS[currentDistrictPcode] || [25.0658, 91.395];
-      map.setView(center, 9.5);
-    }
-
-    // Add Green Map Pin matching Image 2
-    const bounds = geoLayer.getBounds();
-    // The pin marks the checked point (GPS, saved place or a tap) when it lies in
-    // this district; otherwise the middle of the district.
+    // Add Green Map Pin matching selected district
+    const bounds = selectedLayerBounds || (feature ? L.geoJSON(feature as any).getBounds() : null);
     const centerPoint =
       pointInDistrict && inspectedPoint
         ? L.latLng(inspectedPoint.lat, inspectedPoint.lng)
-        : bounds.isValid()
+        : bounds && bounds.isValid()
         ? bounds.getCenter()
-        : L.latLng(DISTRICT_CENTERS[currentDistrictPcode] || [25.0658, 91.395]);
+        : L.latLng(DISTRICT_CENTERS[currentDistrictPcode] || [23.75, 90.35]);
 
     const greenPinHtml = `
       <div style="display:flex;flex-direction:column;align-items:center;pointer-events:none;transform:translate(-50%,-100%);">
@@ -272,6 +324,9 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
 
     const marker = L.marker(centerPoint, { icon: pinIcon }).addTo(map);
     centerPinRef.current = marker;
+
+    // Pan smoothly toward selected district while preserving national perspective
+    map.panTo(centerPoint, { animate: true });
 
     // Invalidate size in case of container sizing transition
     const t = setTimeout(() => {
@@ -337,10 +392,21 @@ export const LeafletFloodMap: React.FC<LeafletFloodMapProps> = ({
         </div>
       </div>
 
-      {/* 3. Close-up Map Canvas matching Image 2 */}
+      {/* 3. Expansive Full Bangladesh Map Canvas with Green District Cover */}
       <div className="w-full">
-        <div className="h-[210px] sm:h-[250px] md:h-[290px] w-full rounded-2xl overflow-hidden border border-[#DFDDD3] relative shadow-inner bg-[#FAF9F5]">
+        <div className="h-[480px] sm:h-[560px] md:h-[640px] w-full rounded-2xl overflow-hidden border border-[#DFDDD3] relative shadow-inner bg-[#FAF9F5]">
           <div ref={mapContainerRef} className="h-full w-full z-0" />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => mapRef.current?.fitBounds(BD_BOUNDS, { padding: [16, 16] })}
+            className="absolute top-3 right-3 z-[400] bg-white/95 backdrop-blur-md hover:bg-white text-[#11241C] border-[#DFDDD3] font-bold text-xs h-7.5 px-2.5 rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer"
+            title={isBn ? "পুরো বাংলাদেশ দেখুন" : "View Full Bangladesh"}
+          >
+            <Maximize2 className="w-3.5 h-3.5 text-[#16A34A]" />
+            <span>{isBn ? "পুরো বাংলাদেশ" : "Full Bangladesh"}</span>
+          </Button>
         </div>
       </div>
 
