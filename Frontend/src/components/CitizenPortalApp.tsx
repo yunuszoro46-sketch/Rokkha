@@ -1015,7 +1015,13 @@ export function CitizenPortalApp({
                       </p>
                       <div className="button-row flex items-center gap-4">
                         <Button
-                          onClick={() => navigateToPage("map")}
+                          onClick={() => {
+                            if (accountUser) {
+                              navigateToPage("map");
+                            } else {
+                              setIsLoginOpen(true);
+                            }
+                          }}
                           className="button gap-2 text-[14px] font-bold h-14 px-7 rounded-2xl shadow-sm m-0 cursor-pointer"
                         >
                           <span>{t.btn_get_started}</span>
