@@ -669,6 +669,11 @@ data and then predicts. Show `data_through` and, from `features`, `days_since_la
 pass: 1 day ago") so users can see how fresh the inputs are; when it is `null`, no pass from the last 30 days
 was available and the prediction is weaker. In the dry season (now) expect no alerts.
 
+**When today's forecast appears (since 17 Nov 2026).** The daily update is started at **09:30 Bangladesh time**
+(03:30 UTC) and takes 2-3 minutes, so today's predictions normally exist from about 09:35. Before that,
+`GET /predictions?target_date=<today>` answers **404**: show the previous day's forecast labelled "Yesterday's
+forecast" rather than an empty map. The response's `issued_at` (UTC) is the time to show as "Updated 09:32".
+
 **Coming next:** general rate limits, password reset.
 
 Questions or a field you need that isn't there? Ask the backend developer —

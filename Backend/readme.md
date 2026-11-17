@@ -898,12 +898,33 @@ the observations file from every month exactly as a developer's machine does.
 **Two things seen in live use (15 November 2026):**
 
 - **GitHub starts scheduled jobs late**, sometimes by hours (the 14 November run started at 10:44 UTC instead of
-  03:30). Until it runs, the portal's "Today" button shows grey districts with "No forecast for this date". Before
-  a demo, check the **Actions** tab and start **Daily flood update** by hand if today's run has not happened.
+  03:30, and the 17 November one at 12:12 UTC). Until it runs, the portal's "Today" button shows grey districts
+  with "No forecast for this date". Fixed on 17 November, see below.
 - **The satellite catalogue (EODC STAC) can be down** (on 15 November it answered `502 Bad Gateway`). The job then
   logs `satellite passes NOT refreshed`, predicts with the passes already stored, and still succeeds. Nothing is
   lost: every run fetches this month and the last, so the next run that reaches the catalogue adds the missed
   passes.
+
+**Starting the daily update on time (since 17 November 2026).** GitHub's own timer is now only a backup (03:30
+and 06:17 UTC). The main start comes from a free outside timer, [cron-job.org](https://cron-job.org), which at
+03:30 UTC asks GitHub to run the workflow. The job's first step checks the hosted backend: if today (UTC) already
+has predictions it stops within seconds, so several starts a day do no harm. To redo a day anyway, start it by
+hand with **force** ticked. One-time setup (only the repository owner can do it; never paste the token anywhere
+else, including chats):
+
+1. GitHub > your picture > **Settings > Developer settings > Personal access tokens > Fine-grained tokens >
+   Generate new token**. Name `rokkha-daily-timer`, expiry 90 days (put a reminder in your calendar),
+   **Repository access: Only select repositories > Rokkha**, **Permissions > Repository > Actions: Read and
+   write** (nothing else). Generate and copy it.
+2. Sign up at cron-job.org > **Create cronjob**:
+   - URL `https://api.github.com/repos/yunuszoro46-sketch/Rokkha/actions/workflows/daily-update.yml/dispatches`
+   - Schedule: every day at **09:30**, time zone **Asia/Dhaka** (= 03:30 UTC).
+   - **Advanced**: request method **POST**; headers `Authorization: Bearer <the token>`,
+     `Accept: application/vnd.github+json`, `X-GitHub-Api-Version: 2022-11-28`; request body `{"ref":"main"}`.
+   - Save, then press **Test run**: GitHub answers `204 No Content`, and a run started by `workflow_dispatch`
+     appears in the **Actions** tab within a minute.
+3. If the token expires the timer's runs fail (401) and the GitHub backups take over, late again. Make a new
+   token and paste it into the cron-job.org header.
 
 What the automatic run does **not** do:
 

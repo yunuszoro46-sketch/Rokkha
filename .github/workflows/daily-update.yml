@@ -14,10 +14,20 @@ name: Daily flood update
 
 on:
   schedule:
-    # 03:30 UTC = 09:30 in Bangladesh. GitHub may start it some minutes late.
+    # Backup only. GitHub's own timer has started this job 7-9 hours late
+    # (e.g. 03:30 UTC set, 12:12 UTC started on 17 Nov 2026), so the main start
+    # comes from an outside timer (cron-job.org) at 03:30 UTC = 09:30 in Bangladesh,
+    # which calls this workflow through the GitHub API (workflow_dispatch).
+    # Setup: Backend/readme.md, "Starting the daily update on time".
     - cron: "30 3 * * *"
-  # Also lets you start it by hand: Actions tab > Daily flood update > Run workflow.
+    - cron: "17 6 * * *"
+  # Started by the outside timer, or by hand: Actions tab > Daily flood update > Run workflow.
   workflow_dispatch:
+    inputs:
+      force:
+        description: "Run even if today's predictions already exist"
+        type: boolean
+        default: false
 
 permissions:
   # Needed to commit the new satellite passes.
@@ -41,9 +51,37 @@ jobs:
       MONGODB_DATABASE: climate_shield
 
     steps:
+      # Several starts a day are expected (outside timer + GitHub backups). The update
+      # overwrites rather than duplicates, but there is no need to redo it: if the hosted
+      # backend already has predictions for today (UTC), stop here in a few seconds.
+      - name: Check whether today is already done
+        id: done
+        working-directory: .
+        env:
+          FORCE: ${{ github.event.inputs.force || 'false' }}
+        run: |
+          today=$(date -u +%Y-%m-%d)
+          if [ "$FORCE" = "true" ]; then
+            echo "Forced run: updating $today again."
+            echo "skip=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          # The free server may be asleep: allow up to 2 minutes for it to wake.
+          code=$(curl -s -o /tmp/today.json -w '%{http_code}' --max-time 120 \
+            "https://rokkha-backend.onrender.com/api/v1/predictions?target_date=$today" || echo 000)
+          predicted=$(python3 -c "import json; print(json.load(open('/tmp/today.json')).get('count_predicted', 0))" 2>/dev/null || echo 0)
+          if [ "$code" = "200" ] && [ "$predicted" -gt 0 ]; then
+            echo "Today ($today) already has $predicted predictions. Nothing to do."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No predictions for $today yet (HTTP $code). Running the update."
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/checkout@v4
+        if: steps.done.outputs.skip != 'true'
 
       - uses: actions/setup-python@v5
+        if: steps.done.outputs.skip != 'true'
         with:
           python-version: "3.12"
           cache: pip
@@ -51,9 +89,11 @@ jobs:
 
       # requirements-dev.txt = the API's packages plus the tools that read satellite files.
       - name: Install packages
+        if: steps.done.outputs.skip != 'true'
         run: pip install -r requirements-dev.txt
 
       - name: Start the backend
+        if: steps.done.outputs.skip != 'true'
         run: |
           if [ -z "$MONGODB_URI" ]; then
             echo "::error::The repository secret MONGODB_URI is not set (see the top of this file)."
@@ -75,9 +115,11 @@ jobs:
       # into data/labels/.cache and rebuilds data/labels/district_flood_observations.json
       # from every cached month, exactly as on a developer's machine.
       - name: Daily update
+        if: steps.done.outputs.skip != 'true'
         run: python scripts/daily_update.py
 
       - name: Commit new satellite passes
+        if: steps.done.outputs.skip != 'true'
         run: |
           git add data/labels
           if git diff --cached --quiet; then
