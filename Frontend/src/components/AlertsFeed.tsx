@@ -11,7 +11,10 @@ import {
   Landmark,
   Users,
   CheckCircle2,
+  Search,
 } from "lucide-react";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
 import {
   Language,
   UI_TEXT,
@@ -26,6 +29,7 @@ interface AlertsFeedProps {
   /** false = no forecast exists for this day (different from "no alerts"). */
   hasForecast?: boolean;
   lang?: Language;
+  selectedDistrictPcode?: string;
   onSelectDistrict: (pcode: string, name: string) => void;
 }
 
@@ -35,12 +39,30 @@ export const AlertsFeed: React.FC<AlertsFeedProps> = ({
   isLoading,
   hasForecast = true,
   lang = "en",
+  selectedDistrictPcode,
   onSelectDistrict,
 }) => {
   const t = UI_TEXT[lang] || UI_TEXT.en;
   const isBn = lang === "bn";
   const displayDate = isBn ? toBnNum(targetDate) : targetDate;
   const [isAdvisoryOpen, setIsAdvisoryOpen] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterToSelected, setFilterToSelected] = useState(false);
+
+  // Filter alerts by search query or selected district
+  const filteredAlerts = alerts.filter((alert) => {
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      const enName = alert.district.name.toLowerCase();
+      const bnName = (DISTRICTS_BN[alert.district.pcode] || "").toLowerCase();
+      const divName = alert.district.division.toLowerCase();
+      return enName.includes(q) || bnName.includes(q) || divName.includes(q);
+    }
+    if (filterToSelected && selectedDistrictPcode) {
+      return alert.district.pcode === selectedDistrictPcode;
+    }
+    return true;
+  });
 
   return (
     <Card className="border-[#DFDDD3] bg-white rounded-3xl shadow-sm overflow-hidden">
@@ -92,14 +114,65 @@ export const AlertsFeed: React.FC<AlertsFeedProps> = ({
           )}
         </div>
 
+        {/* District Search & Quick Filter matching User Request */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#FAF9F5] p-3 rounded-2xl border border-[#DFDDD3]">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="w-4 h-4 text-[#6B7280] absolute left-3 top-1/2 -translate-y-1/2" />
+            <Input
+              type="text"
+              placeholder={isBn ? "জেলা অনুসন্ধান করুন (যেমন: সুনামগঞ্জ, সিলেট...)" : "Search district alerts (e.g. Sunamganj, Sylhet)..."}
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setFilterToSelected(false);
+              }}
+              className="pl-9 h-9 text-xs bg-white border-[#DFDDD3] rounded-xl"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            {selectedDistrictPcode && (
+              <Button
+                size="sm"
+                variant={filterToSelected ? "default" : "outline"}
+                onClick={() => {
+                  setFilterToSelected(!filterToSelected);
+                  setSearchQuery("");
+                }}
+                className={`text-xs font-bold h-8.5 rounded-xl ${
+                  filterToSelected
+                    ? "bg-[#183026] text-white"
+                    : "bg-white border-[#DFDDD3] text-[#183026] hover:bg-[#FAF9F5]"
+                }`}
+              >
+                {isBn
+                  ? `শুধুমাত্র ${DISTRICTS_BN[selectedDistrictPcode] || "নির্বাচিত জেলা"}`
+                  : `Show only ${DISTRICTS_BN[selectedDistrictPcode] || "selected district"}`}
+              </Button>
+            )}
+            {(searchQuery || filterToSelected) && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setSearchQuery("");
+                  setFilterToSelected(false);
+                }}
+                className="text-xs text-[#6B7280] hover:text-[#11241C] h-8.5 px-2"
+              >
+                {isBn ? "সব দেখান" : "Show all (15)"}
+              </Button>
+            )}
+          </div>
+        </div>
+
         {/* Alerts Grid: Fully responsive 1, 2, or 3 columns */}
         {isLoading ? (
           <div className="py-16 text-center text-base text-[#5C6863] animate-pulse">
             {t.alerts_checking}
           </div>
-        ) : alerts.length > 0 ? (
+        ) : filteredAlerts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {alerts.map((alert) => {
+            {filteredAlerts.map((alert) => {
               const dName = isBn
                 ? DISTRICTS_BN[alert.district.pcode] || alert.district.name
                 : alert.district.name;

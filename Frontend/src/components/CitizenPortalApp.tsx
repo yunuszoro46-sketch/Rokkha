@@ -1253,7 +1253,7 @@ export function CitizenPortalApp({
                   </Card>
                 </div>
 
-                {accountUser && (activeView === "map" || activeView === "alerts") && (
+                {accountUser && activeView === "alerts" && (
                   <MyLocationReport
                     user={accountUser}
                     targetDate={targetDate}
@@ -1374,11 +1374,23 @@ export function CitizenPortalApp({
                       isLoading={isForecastLoading}
                       hasForecast={hasForecast}
                       lang={lang}
+                      selectedDistrictPcode={selectedPcode}
                       onSelectDistrict={(pcode, name) => {
                         handleSelectDistrict(pcode, name);
-                        navigateToPage("map");
                       }}
                     />
+
+                    {/* Satellite Inundation Timeline & Graph for that district */}
+                    <div className="pt-2">
+                      <DistrictSatelliteTimeline
+                        districtPcode={selectedPcode}
+                        districtName={selectedName}
+                        lang={lang}
+                        onSelectDistrict={(pcode, name) =>
+                          handleSelectDistrict(pcode, name)
+                        }
+                      />
+                    </div>
                   </div>
                 )}
 
@@ -1593,6 +1605,20 @@ export function CitizenPortalApp({
                 </div>
               </DialogHeader>
 
+              {/* User's Own Flood Place Report (Shown after clicking See Details) */}
+              {accountUser && (
+                <div className="space-y-1">
+                  <MyLocationReport
+                    user={accountUser}
+                    targetDate={targetDate}
+                    lang={lang}
+                    onUserChange={setAccountUser}
+                    onLoggedOut={() => setAccountUser(null)}
+                    onLogOut={handleLogOut}
+                  />
+                </div>
+              )}
+
               {/* 1. Map of that location */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-[11px] font-bold text-[#183026]">
@@ -1671,7 +1697,42 @@ export function CitizenPortalApp({
                 </div>
               </div>
 
-              {/* 3. Hydrology Hazard Return Periods */}
+              {/* 3. Active District Alerts & Warnings */}
+              <div className="space-y-1.5">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-[#11241C] flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 text-[#C9443A]" />
+                  {lang === "bn" ? "সক্রিয় সতর্কতা ও আবহাওয়া বার্তা" : "Active Alerts & Weather Warnings"}
+                </h4>
+                {alerts.filter(a => a.district.pcode === selectedPcode || a.district.division === districtReport.division).length > 0 ? (
+                  <div className="space-y-1.5">
+                    {alerts.filter(a => a.district.pcode === selectedPcode || a.district.division === districtReport.division).slice(0, 3).map((alert) => (
+                      <div
+                        key={alert.alert_id}
+                        className={`p-2.5 rounded-xl border flex items-start gap-2 text-xs ${
+                          alert.level === "alert"
+                            ? "bg-[#FEF2F2] border-[#FCA5A5] text-[#991B1B]"
+                            : "bg-[#FFFBEB] border-[#FCD34D] text-[#92400E]"
+                        }`}
+                      >
+                        <span className="font-extrabold uppercase px-1.5 py-0.5 rounded text-[10px] shrink-0 bg-white/70">
+                          {alert.level === "alert" ? (lang === "bn" ? "জরুরি অ্যালার্ট" : "ALERT") : (lang === "bn" ? "সতর্কবার্তা" : "WATCH")}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-bold">{alert.district.name} ({lang === "bn" ? `${toBnNum(Math.round(alert.probability * 100))}% ঝুঁকি` : `${Math.round(alert.probability * 100)}% Risk`})</div>
+                          <div className="text-[11px] leading-snug mt-0.5">{alert.message}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-2.5 rounded-xl bg-[#F0FDF4] border border-[#BBF7D0] text-[#166534] text-xs flex items-center gap-2 font-medium">
+                    <span className="w-2 h-2 rounded-full bg-[#16A34A]"></span>
+                    <span>{lang === "bn" ? "এই জেলায় বর্তমানে কোনো চরম লাল সতর্কবার্তা নেই।" : "No extreme red flood alert active for this district currently."}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* 4. Hydrology Hazard Return Periods */}
               <div className="space-y-1.5">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-[#11241C]">
                   {lang === "bn" ? "দীর্ঘমেয়াদী প্লাবন ঝুঁকি (JRC / GloFAS)" : "LONG-TERM FLOOD RETURN PERIODS"}
