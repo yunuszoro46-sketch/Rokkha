@@ -1682,8 +1682,8 @@ export function CitizenPortalApp({
                 />
               </div>
 
-              {/* 2. Core Metrics 4-Card Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
+              {/* 2. Core Metrics 3-Card Grid */}
+              <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
                 {/* 1: Risk — the model's level for this district and day, never invented */}
                 {(() => {
                   const isBn = lang === "bn";
@@ -1743,19 +1743,6 @@ export function CitizenPortalApp({
                     </>
                   );
                 })()}
-
-                {/* 4: Rank */}
-                <div className="bg-white rounded-xl border border-[#DFDDD3] p-2 sm:p-2.5 text-center shadow-xs flex flex-col justify-between">
-                  <span className="text-[10px] sm:text-[11px] font-semibold text-[#5C6863]">
-                    {lang === "bn" ? "জাতীয় র‍্যাংক" : "National Rank"}
-                  </span>
-                  <div className="text-lg sm:text-xl font-bold text-[#11241C] my-0.5">
-                    #{lang === "bn" ? toBnNum(districtReport.rank) : districtReport.rank}
-                  </div>
-                  <span className="text-[9px] sm:text-[10px] font-medium text-[#4B5563]">
-                    {lang === "bn" ? "৬৪ জেলার মধ্যে" : "Out of 64"}
-                  </span>
-                </div>
               </div>
 
               {/* 3. Active District Alerts & Warnings */}
