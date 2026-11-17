@@ -1353,60 +1353,6 @@ export function CitizenPortalApp({
                 {/* PAGE 3: FORECAST & EARLY WARNINGS */}
                 {activeView === "alerts" && (
                   <div className="space-y-5">
-                    <div className="flex flex-wrap items-center gap-2 text-xs">
-                      <span className="font-bold text-[#12241C] text-xs">
-                        {lang === "bn" ? "পূর্বাভাস দৃশ্যপট:" : "Scenario Timeline:"}
-                      </span>
-                      <Button
-                        size="sm"
-                        variant={targetDate === "2022-06-18" ? "default" : "outline"}
-                        className={
-                          targetDate === "2022-06-18"
-                            ? "bg-[#122B1E] hover:bg-[#0C1F15] text-white font-bold h-8 px-3 rounded-lg text-xs shadow-sm"
-                            : "bg-white border-[#DFDDD3] text-[#12241C] hover:bg-[#FAF9F5] h-8 px-3 rounded-lg text-xs font-medium shadow-sm"
-                        }
-                        onClick={() => setTargetDate("2022-06-18")}
-                      >
-                        {t.scenario_sylhet}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant={targetDate === "2024-08-22" ? "default" : "outline"}
-                        className={
-                          targetDate === "2024-08-22"
-                            ? "bg-[#122B1E] hover:bg-[#0C1F15] text-white font-bold h-8 px-3 rounded-lg text-xs shadow-sm"
-                            : "bg-white border-[#DFDDD3] text-[#12241C] hover:bg-[#FAF9F5] h-8 px-3 rounded-lg text-xs font-medium shadow-sm"
-                        }
-                        onClick={() => setTargetDate("2024-08-22")}
-                      >
-                        {t.scenario_feni}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant={targetDate === "2023-04-10" ? "default" : "outline"}
-                        className={
-                          targetDate === "2023-04-10"
-                            ? "bg-[#122B1E] hover:bg-[#0C1F15] text-white font-bold h-8 px-3 rounded-lg text-xs shadow-sm"
-                            : "bg-white border-[#DFDDD3] text-[#12241C] hover:bg-[#FAF9F5] h-8 px-3 rounded-lg text-xs font-medium shadow-sm"
-                        }
-                        onClick={() => setTargetDate("2023-04-10")}
-                      >
-                        {t.scenario_dry}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant={targetDate === todayUtc ? "default" : "outline"}
-                        className={
-                          targetDate === todayUtc
-                            ? "bg-[#122B1E] hover:bg-[#0C1F15] text-white font-bold h-8 px-3 rounded-lg text-xs shadow-sm"
-                            : "bg-white border-[#DFDDD3] text-[#12241C] hover:bg-[#FAF9F5] h-8 px-3 rounded-lg text-xs font-medium shadow-sm"
-                        }
-                        onClick={() => setTargetDate(todayUtc)}
-                      >
-                        {lang === "bn" ? "আজ" : "Today"}
-                      </Button>
-                    </div>
-
                     <AlertsFeed
                       alerts={alerts}
                       targetDate={targetDate}
