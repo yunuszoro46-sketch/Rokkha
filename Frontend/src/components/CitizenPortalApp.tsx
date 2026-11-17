@@ -1905,21 +1905,32 @@ export function CitizenPortalApp({
               )}
 
               {/* 6. Footer Actions */}
-              <div className="pt-1 flex flex-col sm:flex-row items-center gap-2.5">
-                <Button
+              <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
+                <button
+                  type="button"
                   onClick={() => {
                     setIsDistrictReportOpen(false);
                     setIsSosOpen(true);
                   }}
-                  className="w-full sm:flex-1 h-10 text-[11px] font-black tracking-wider uppercase text-white rounded-xl sm:rounded-2xl shadow-md border-0 cursor-pointer transition-all active:scale-98 flex items-center justify-center gap-1.5 [background:linear-gradient(90deg,#3B7E5D_0%,#E9B441_34%,#E67328_67%,#D93829_100%)] hover:opacity-95"
+                  className="w-full sm:flex-1 h-12 px-5 rounded-full bg-[linear-gradient(90deg,#3B7E5D_0%,#E9B441_34%,#E67328_67%,#D93829_100%)] hover:opacity-95 text-white font-extrabold shadow-[0_8px_24px_rgba(217,56,41,0.25)] flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                  aria-label="Emergency Rescue Request"
                 >
-                  <AlertTriangle className="w-3.5 h-3.5 text-white animate-bounce" />
-                  <span>{lang === "bn" ? "জরুরি এসওএস উদ্ধার অনুরোধ পাঠান" : "Request Immediate SOS Rescue"}</span>
-                </Button>
+                  <div className="w-7 h-7 rounded-full border-2 border-white/95 flex items-center justify-center shrink-0 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
+                    <LifeBuoy className="w-4 h-4 text-white stroke-[2.5]" />
+                  </div>
+                  <div className="flex flex-col text-left leading-[1.1]">
+                    <span className="text-[10px] font-black tracking-wider text-white uppercase drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)]">
+                      {lang === "bn" ? "জরুরি" : "EMERGENCY"}
+                    </span>
+                    <span className="text-[11px] font-black tracking-wider text-white uppercase drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)]">
+                      {lang === "bn" ? "উদ্ধার অনুরোধ" : "RESCUE REQUEST"}
+                    </span>
+                  </div>
+                </button>
                 <Button
                   variant="outline"
                   onClick={() => setIsDistrictReportOpen(false)}
-                  className="w-full sm:w-auto h-10 px-5 rounded-xl sm:rounded-2xl border-[#DFDDD3] font-bold text-xs text-[#11241C] hover:bg-[#FAF9F5]"
+                  className="w-full sm:w-auto h-12 px-6 rounded-full border-[#DFDDD3] font-bold text-xs text-[#11241C] hover:bg-[#FAF9F5]"
                 >
                   {lang === "bn" ? "প্রতিবেদন বন্ধ করুন" : "Close Report"}
                 </Button>
