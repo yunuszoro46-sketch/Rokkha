@@ -1283,14 +1283,15 @@ export function CitizenPortalApp({
                         <p
                           role="status"
                           aria-live="polite"
-                          className={`mt-1.5 text-[11px] leading-snug ${gpsState.kind === "error" ? "text-[#B23A30] font-semibold" : "text-[#4B5563]"}`}
+                          title={gpsState.kind === "error" ? gpsState.message : undefined}
+                          className={`text-[11px] leading-snug whitespace-nowrap truncate max-w-[220px] ${gpsState.kind === "error" ? "text-[#B23A30] font-semibold" : "text-[#4B5563]"}`}
                         >
                           {gpsState.kind === "locating" &&
-                            (lang === "bn" ? "আপনার অবস্থান নেওয়া হচ্ছে (কয়েক সেকেন্ড লাগতে পারে)..." : "Reading your location (can take a few seconds)...")}
+                            (lang === "bn" ? "অবস্থান খোঁজা হচ্ছে..." : "Locating...")}
                           {gpsState.kind === "found" &&
                             (lang === "bn"
-                              ? `আপনার অবস্থান: ${toBnNum(gpsState.fix.lat.toFixed(4))}°N, ${toBnNum(gpsState.fix.lng.toFixed(4))}°E ${accuracyText(gpsState.fix, true)}`
-                              : `Your location: ${gpsState.fix.lat.toFixed(4)}°N, ${gpsState.fix.lng.toFixed(4)}°E ${accuracyText(gpsState.fix)}`)}
+                              ? `অবস্থান: ${toBnNum(gpsState.fix.lat.toFixed(3))}°N, ${toBnNum(gpsState.fix.lng.toFixed(3))}°E`
+                              : `Location: ${gpsState.fix.lat.toFixed(3)}°N, ${gpsState.fix.lng.toFixed(3)}°E`)}
                           {gpsState.kind === "error" && gpsState.message}
                         </p>
                       )}

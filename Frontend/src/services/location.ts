@@ -26,29 +26,29 @@ export class LocationError extends Error {
   }
 }
 
-/** A short explanation of what went wrong and what the user can do instead. */
+/** A short explanation of what went wrong (max 3 words to avoid breaking layouts). */
 export function locationProblemText(problem: LocationProblem, isBn = false): string {
   switch (problem) {
     case "unsupported":
       return isBn
-        ? "এই ব্রাউজার অবস্থান দিতে পারে না। মানচিত্রে আপনার জায়গায় ট্যাপ করুন বা জেলা বেছে নিন।"
-        : "This browser cannot share a location. Tap your place on the map or choose your district.";
+        ? "ব্রাউজারে অবস্থান অনুপলব্ধ"
+        : "Location unsupported";
     case "insecure":
       return isBn
-        ? "অবস্থান শুধু নিরাপদ (https) ঠিকানায় কাজ করে। মানচিত্রে আপনার জায়গায় ট্যাপ করুন।"
-        : "Location only works on a secure (https) address. Tap your place on the map instead.";
+        ? "নিরাপদ সংযোগ প্রয়োজন"
+        : "HTTPS required";
     case "denied":
       return isBn
-        ? "অবস্থানের অনুমতি বন্ধ আছে। ঠিকানা বারের পাশে লক চিহ্নে ট্যাপ করে \"অবস্থান\" চালু করুন, তারপর আবার চেষ্টা করুন।"
-        : "Location permission is blocked. Tap the lock icon next to the address bar, allow \"Location\", then try again.";
+        ? "লোকেশন পারমিশন বন্ধ"
+        : "Location permission blocked";
     case "unavailable":
       return isBn
-        ? "এই ডিভাইস এখন অবস্থান খুঁজে পাচ্ছে না। লোকেশন/জিপিএস চালু করুন, অথবা মানচিত্রে আপনার জায়গায় ট্যাপ করুন।"
-        : "This device could not find its location. Turn on Location/GPS, or tap your place on the map.";
+        ? "অবস্থান পাওয়া যায়নি"
+        : "Location unavailable";
     case "timeout":
       return isBn
-        ? "অবস্থান পেতে বেশি সময় লাগছে। খোলা জায়গায় গিয়ে আবার চেষ্টা করুন, অথবা মানচিত্রে ট্যাপ করুন।"
-        : "Finding your location took too long. Try again near a window or outdoors, or tap your place on the map.";
+        ? "সময় শেষ হয়েছে"
+        : "Location timed out";
   }
 }
 
