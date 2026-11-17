@@ -1212,88 +1212,90 @@ export function CitizenPortalApp({
                     </h1>
                   </div>
 
-                  {/* Active District & Date Context Bar */}
-                  <Card className="p-2 border-[#DFDDD3] bg-white rounded-xl shadow-xs flex flex-wrap items-center gap-2 shrink-0">
-                    <div className="flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5 text-[#5C6863]" />
-                      <span className="text-xs font-bold text-[#12241C]">
-                        {t.label_district}:
-                      </span>
-                      <Select
-                        value={selectedPcode}
-                        onValueChange={(val) => handleSelectDistrict(val)}
-                      >
-                        <SelectTrigger className="h-7.5 w-36 sm:w-44 text-xs font-semibold bg-[#FAF9F5] border-[#DFDDD3] rounded-lg">
-                          <SelectValue placeholder={t.placeholder_select_district} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {ALL_DISTRICTS.map((d) => (
-                            <SelectItem key={d.pcode} value={d.pcode}>
-                              {lang === "bn"
-                                ? `${DISTRICTS_BN[d.pcode] || d.name} (${DIVISIONS_BN[d.division] || d.division})`
-                                : `${d.name} (${d.division})`}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {(activeView === "map" || activeView === "alerts") && (
+                  {/* Active District & Date Context Bar (hidden on Forecast & Early Warnings to avoid redundancy with the section dropdown) */}
+                  {activeView !== "alerts" && (
+                    <Card className="p-2 border-[#DFDDD3] bg-white rounded-xl shadow-xs flex flex-wrap items-center gap-2 shrink-0">
                       <div className="flex items-center gap-1.5">
-                        <Calendar className="w-3.5 h-3.5 text-[#5C6863]" />
+                        <MapPin className="w-3.5 h-3.5 text-[#5C6863]" />
                         <span className="text-xs font-bold text-[#12241C]">
-                          {t.label_date}:
+                          {t.label_district}:
                         </span>
-                        <Input
-                          type="date"
-                          value={targetDate}
-                          onChange={(e) => setTargetDate(e.target.value)}
-                          className="h-7.5 w-32 font-mono text-xs bg-[#FAF9F5] border-[#DFDDD3] rounded-lg"
-                        />
+                        <Select
+                          value={selectedPcode}
+                          onValueChange={(val) => handleSelectDistrict(val)}
+                        >
+                          <SelectTrigger className="h-7.5 w-36 sm:w-44 text-xs font-semibold bg-[#FAF9F5] border-[#DFDDD3] rounded-lg">
+                            <SelectValue placeholder={t.placeholder_select_district} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {ALL_DISTRICTS.map((d) => (
+                              <SelectItem key={d.pcode} value={d.pcode}>
+                                {lang === "bn"
+                                  ? `${DISTRICTS_BN[d.pcode] || d.name} (${DIVISIONS_BN[d.division] || d.division})`
+                                  : `${d.name} (${d.division})`}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
-                    )}
 
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <Button
-                        onClick={() => setIsDistrictReportOpen(true)}
-                        className="bg-[#122B1E] hover:bg-[#0C1F15] text-white font-bold text-xs px-2.5 h-7.5 rounded-lg flex items-center gap-1.5 shadow-xs transition-all"
-                        title={`View comprehensive flood report for ${selectedName}`}
-                      >
-                        <FileText className="w-3 h-3 text-[#4ADE80]" />
-                        <span>{t.btn_my_district}</span>
-                        <span className="text-[10px] px-1 py-0.5 rounded bg-white/20 text-white font-semibold">
-                          {lang === "bn" ? (DISTRICTS_BN[selectedPcode] || selectedName) : selectedName}
-                        </span>
-                      </Button>
+                      {activeView === "map" && (
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5 text-[#5C6863]" />
+                          <span className="text-xs font-bold text-[#12241C]">
+                            {t.label_date}:
+                          </span>
+                          <Input
+                            type="date"
+                            value={targetDate}
+                            onChange={(e) => setTargetDate(e.target.value)}
+                            className="h-7.5 w-32 font-mono text-xs bg-[#FAF9F5] border-[#DFDDD3] rounded-lg"
+                          />
+                        </div>
+                      )}
 
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleDetectMyLocation}
-                        disabled={gpsState.kind === "locating"}
-                        className="h-7.5 px-2 border-[#DFDDD3] text-[#12241C] hover:bg-[#FAF9F5] flex items-center gap-1 text-xs font-semibold rounded-lg"
-                        title={lang === "bn" ? "আমার সঠিক অবস্থানের বন্যা তথ্য দেখুন" : "Check the flood report for my exact location"}
-                      >
-                        <Crosshair className={`w-3 h-3 text-[#12241C] ${gpsState.kind === "locating" ? "animate-spin" : ""}`} />
-                        <span>{gpsState.kind === "locating" ? (lang === "bn" ? "খোঁজা হচ্ছে..." : "Locating...") : t.btn_gps}</span>
-                      </Button>
-                    </div>
-                    {gpsState.kind !== "idle" && (
-                      <p
-                        role="status"
-                        aria-live="polite"
-                        className={`mt-1.5 text-[11px] leading-snug ${gpsState.kind === "error" ? "text-[#B23A30] font-semibold" : "text-[#4B5563]"}`}
-                      >
-                        {gpsState.kind === "locating" &&
-                          (lang === "bn" ? "আপনার অবস্থান নেওয়া হচ্ছে (কয়েক সেকেন্ড লাগতে পারে)..." : "Reading your location (can take a few seconds)...")}
-                        {gpsState.kind === "found" &&
-                          (lang === "bn"
-                            ? `আপনার অবস্থান: ${toBnNum(gpsState.fix.lat.toFixed(4))}°N, ${toBnNum(gpsState.fix.lng.toFixed(4))}°E ${accuracyText(gpsState.fix, true)}`
-                            : `Your location: ${gpsState.fix.lat.toFixed(4)}°N, ${gpsState.fix.lng.toFixed(4)}°E ${accuracyText(gpsState.fix)}`)}
-                        {gpsState.kind === "error" && gpsState.message}
-                      </p>
-                    )}
-                  </Card>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <Button
+                          onClick={() => setIsDistrictReportOpen(true)}
+                          className="bg-[#122B1E] hover:bg-[#0C1F15] text-white font-bold text-xs px-2.5 h-7.5 rounded-lg flex items-center gap-1.5 shadow-xs transition-all"
+                          title={`View comprehensive flood report for ${selectedName}`}
+                        >
+                          <FileText className="w-3 h-3 text-[#4ADE80]" />
+                          <span>{t.btn_my_district}</span>
+                          <span className="text-[10px] px-1 py-0.5 rounded bg-white/20 text-white font-semibold">
+                            {lang === "bn" ? (DISTRICTS_BN[selectedPcode] || selectedName) : selectedName}
+                          </span>
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleDetectMyLocation}
+                          disabled={gpsState.kind === "locating"}
+                          className="h-7.5 px-2 border-[#DFDDD3] text-[#12241C] hover:bg-[#FAF9F5] flex items-center gap-1 text-xs font-semibold rounded-lg"
+                          title={lang === "bn" ? "আমার সঠিক অবস্থানের বন্যা তথ্য দেখুন" : "Check the flood report for my exact location"}
+                        >
+                          <Crosshair className={`w-3 h-3 text-[#12241C] ${gpsState.kind === "locating" ? "animate-spin" : ""}`} />
+                          <span>{gpsState.kind === "locating" ? (lang === "bn" ? "খোঁজা হচ্ছে..." : "Locating...") : t.btn_gps}</span>
+                        </Button>
+                      </div>
+                      {gpsState.kind !== "idle" && (
+                        <p
+                          role="status"
+                          aria-live="polite"
+                          className={`mt-1.5 text-[11px] leading-snug ${gpsState.kind === "error" ? "text-[#B23A30] font-semibold" : "text-[#4B5563]"}`}
+                        >
+                          {gpsState.kind === "locating" &&
+                            (lang === "bn" ? "আপনার অবস্থান নেওয়া হচ্ছে (কয়েক সেকেন্ড লাগতে পারে)..." : "Reading your location (can take a few seconds)...")}
+                          {gpsState.kind === "found" &&
+                            (lang === "bn"
+                              ? `আপনার অবস্থান: ${toBnNum(gpsState.fix.lat.toFixed(4))}°N, ${toBnNum(gpsState.fix.lng.toFixed(4))}°E ${accuracyText(gpsState.fix, true)}`
+                              : `Your location: ${gpsState.fix.lat.toFixed(4)}°N, ${gpsState.fix.lng.toFixed(4)}°E ${accuracyText(gpsState.fix)}`)}
+                          {gpsState.kind === "error" && gpsState.message}
+                        </p>
+                      )}
+                    </Card>
+                  )}
                 </div>
 
                 {accountUser && activeView === "alerts" && (
