@@ -8,19 +8,8 @@ import {
   getFloodEvents,
 } from "../services/api";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
 import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import { Separator } from "./ui/separator";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "./ui/table";
 import {
   ResponsiveContainer,
   BarChart,
@@ -30,7 +19,7 @@ import {
   Tooltip,
   CartesianGrid,
 } from "recharts";
-import { Satellite, Info, Award, Search } from "lucide-react";
+import { Satellite, Info } from "lucide-react";
 import {
   Language,
   UI_TEXT,
@@ -57,7 +46,6 @@ export const DistrictSatelliteTimeline: React.FC<
   const [observations, setObservations] = useState<SatelliteObservation[]>([]);
   const [rankedDistricts, setRankedDistricts] = useState<any[]>([]);
   const [floodEvents, setFloodEvents] = useState<any[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
   const [seasonYear, setSeasonYear] = useState<"2022" | "2024">("2022");
   const [isLoading, setIsLoading] = useState(false);
   const [isUnsupported, setIsUnsupported] = useState(false);
@@ -96,13 +84,6 @@ export const DistrictSatelliteTimeline: React.FC<
     (d) => d.pcode === districtPcode
   );
 
-  const filteredDistricts = rankedDistricts.filter(
-    (d) =>
-      d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      d.division.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      d.pcode.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   const chartData = observations.map((o) => ({
     date: o.date.slice(5), // MM-DD
     fullDate: o.date,
@@ -112,130 +93,9 @@ export const DistrictSatelliteTimeline: React.FC<
   }));
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      {/* Left Column: 64-District Flood Frequency Table (Matching Image 2) */}
-      <Card className="lg:col-span-5 bg-white rounded-3xl border border-[#DFDDD3] p-6 shadow-sm flex flex-col">
-        <div className="border-b border-[#E5E3D8] pb-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center space-x-2">
-              <Award className="w-5 h-5 text-[#11241C]" />
-              <h2 className="text-xl font-black text-[#11241C] tracking-tight">
-                64-District Flood Frequency
-              </h2>
-            </div>
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#EAE6DD] text-[#3D4943] border border-[#DFDDD3]">
-              2016–2024 UNOSAT
-            </span>
-          </div>
-          <p className="text-xs text-[#5C6863] leading-relaxed mt-2">
-            Click any 64 districts by inspect its Copernicus Sentinel-1 satellite timeline and event history.
-          </p>
-          <div className="mt-4 relative">
-            <Search className="w-4 h-4 text-[#7C7567] absolute left-3.5 top-1/2 -translate-y-1/2 z-10" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search 64 districts..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#F5EEDB] border border-[#E5DAC6] text-xs font-medium text-[#11241C] placeholder:text-[#8C8474] focus:outline-none focus:ring-2 focus:ring-[#16A34A]/30 focus:bg-white transition"
-            />
-          </div>
-        </div>
-
-        <div className="p-0 flex-1 overflow-hidden mt-3">
-          <div className="max-h-[460px] overflow-y-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-b border-[#E5E3D8] hover:bg-transparent">
-                  <TableHead className="w-14 text-[11px] font-extrabold uppercase tracking-wider text-[#65716B] py-2.5">
-                    {t.th_rank}
-                  </TableHead>
-                  <TableHead className="text-[11px] font-extrabold uppercase tracking-wider text-[#65716B] py-2.5">
-                    {t.th_district}
-                  </TableHead>
-                  <TableHead className="text-center text-[11px] font-extrabold uppercase tracking-wider text-[#65716B] py-2.5">
-                    {t.th_events}
-                  </TableHead>
-                  <TableHead className="text-right text-[11px] font-extrabold uppercase tracking-wider text-[#65716B] py-2.5">
-                    {t.th_peak}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredDistricts.map((d) => {
-                  const isSelected = d.pcode === districtPcode;
-                  const maxPct = Math.round((d.max_flooded_share || 0) * 100);
-                  const dName = isBn
-                    ? DISTRICTS_BN[d.pcode] || d.name
-                    : d.name;
-                  const dDiv = isBn
-                    ? DIVISIONS_BN[d.division] || d.division
-                    : d.division;
-
-                  return (
-                    <TableRow
-                      key={d.pcode}
-                      onClick={() => onSelectDistrict?.(d.pcode, d.name)}
-                      className={`cursor-pointer transition-colors border-b border-[#F0EFEA] ${
-                        isSelected
-                          ? "bg-[#CDE3D2] border-y border-[#B5D3BC]"
-                          : "hover:bg-[#FAF9F5]"
-                      }`}
-                    >
-                      <TableCell className="font-bold text-xs text-[#11241C] py-3">
-                        #{isBn ? toBnNum(d.rank) : d.rank}
-                      </TableCell>
-                      <TableCell className="py-3">
-                        <div className="font-bold text-xs sm:text-sm text-[#11241C]">
-                          {dName}
-                        </div>
-                        <div
-                          className={`text-xs ${
-                            isSelected ? "text-[#3D4943]" : "text-[#6B7280]"
-                          }`}
-                        >
-                          {dDiv}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center py-3">
-                        <span
-                          className={`inline-flex items-center justify-center px-2.5 py-1 rounded-lg text-xs font-semibold ${
-                            isSelected
-                              ? "bg-[#BFD6C4] text-[#11241C]"
-                              : "bg-[#EFECE5] text-[#3D4943]"
-                          }`}
-                        >
-                          {isBn ? toBnNum(d.events_flooded) : d.events_flooded} /{" "}
-                          {isBn ? toBnNum(d.events_observed) : d.events_observed}{" "}
-                          events
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right py-3">
-                        <span
-                          className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-extrabold text-white shadow-xs ${
-                            maxPct >= 80
-                              ? "bg-[#A82525]"
-                              : maxPct >= 60
-                              ? "bg-[#B93838]"
-                              : maxPct >= 50
-                              ? "bg-[#DEA13B]"
-                              : "bg-[#E5A84B]"
-                          }`}
-                        >
-                          {isBn ? toBnNum(maxPct) : maxPct}%
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-      </Card>
-
-      {/* Right Column: Sentinel-1 Timeline & 10 Major Flood Events Record (Matching Image 2) */}
-      <Card className="lg:col-span-7 bg-white rounded-3xl border border-[#DFDDD3] p-6 shadow-sm flex flex-col justify-between">
+    <div className="w-full">
+      {/* Sentinel-1 Timeline & 10 Major Flood Events Record */}
+      <Card className="w-full bg-white rounded-3xl border border-[#DFDDD3] p-6 shadow-sm flex flex-col justify-between">
         <div>
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-2 border-b border-[#E5E3D8]">
             <div className="flex items-start gap-2.5">
