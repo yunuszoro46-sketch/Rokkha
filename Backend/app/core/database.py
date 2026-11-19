@@ -96,10 +96,27 @@ class Database:
         await sos.create_index([("status", ASCENDING), ("received_at", ASCENDING)], name="status_received")
         await sos.create_index([("user_id", ASCENDING)], name="user_id")
         await sos.create_index([("district.pcode", ASCENDING)], name="district_pcode")
+        # The short reference people read out. Only requests that have one (all new ones).
+        await sos.create_index(
+            [("reference", ASCENDING)], name="reference_unique", unique=True,
+            partialFilterExpression={"reference": {"$type": "string"}},
+        )
+        await sos.create_index([("team.id", ASCENDING)], name="team_id")
+        await cls.db["rescue_teams"].create_index(
+            [("organization", ASCENDING), ("name", ASCENDING)], name="organization_name_unique", unique=True
+        )
         await cls.db["sos_senders"].create_index(
             [("at", ASCENDING)], name="at_ttl", expireAfterSeconds=3600
         )
         await cls.db["sos_senders"].create_index([("sender_hash", ASCENDING)], name="sender_hash")
+
+        # Admin Control Centre: append-only audit log and administrative announcements.
+        audit = cls.db["admin_audit"]
+        await audit.create_index([("at", ASCENDING)], name="at")
+        await audit.create_index([("action", ASCENDING), ("at", ASCENDING)], name="action_at")
+        await audit.create_index([("actor.id", ASCENDING), ("at", ASCENDING)], name="actor_at")
+        await cls.db["announcements"].create_index([("status", ASCENDING), ("published_at", ASCENDING)], name="status_published")
+        await cls.db["users"].create_index([("role", ASCENDING), ("status", ASCENDING)], name="role_status")
 
     @classmethod
     async def disconnect(cls):

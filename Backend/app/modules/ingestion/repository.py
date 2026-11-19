@@ -74,6 +74,30 @@ async def find_series(collection: str, query: dict, sort_field: str) -> list[dic
     return [document async for document in cursor]
 
 
+async def delete_old_forecasts(site_ids: list[str], before) -> int:
+    """Remove rain-forecast values fetched before `before` for these sites."""
+
+    result = await _collection("rain_forecast_hourly").delete_many({"site_id": {"$in": site_ids}, "fetched_at": {"$lt": before}})
+
+    return result.deleted_count
+
+
+async def latest_forecast_values(site_ids: list[str]) -> dict:
+    """{site_id: (fetched_at, [values of that fetch sorted by valid_time])} for the newest fetch of each site."""
+
+    collection = _collection("rain_forecast_hourly")
+    groups = await collection.aggregate([
+        {"$match": {"site_id": {"$in": site_ids}}},
+        {"$group": {"_id": "$site_id", "fetched_at": {"$max": "$fetched_at"}}},
+    ])
+    newest = {row["_id"]: row["fetched_at"] async for row in groups}
+    out = {}
+    for site_id, fetched_at in newest.items():
+        cursor = collection.find({"site_id": site_id, "fetched_at": fetched_at}, {"_id": 0}).sort("valid_time", ASCENDING)
+        out[site_id] = (fetched_at, [d async for d in cursor])
+    return out
+
+
 async def latest_value(collection: str, query: dict, field: str):
 
     document = await _collection(collection).find_one(query, sort=[(field, DESCENDING)])

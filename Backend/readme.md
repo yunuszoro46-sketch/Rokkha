@@ -192,7 +192,7 @@ Rokkha/
     ├── docs/
     │   └── FRONTEND_API_GUIDE.md  guide for the frontend developer
     ├── scripts/                   rebuild the data files from their sources
-    ├── tests/                     355 automated tests
+    ├── tests/                     440 automated tests
     ├── ml/                        (placeholder)
     ├── pytest.ini
     ├── requirements.txt           pinned API dependencies
@@ -404,6 +404,7 @@ All module paths start with `/api/v1`. Full request and response shapes: `/docs`
 | GET | `/ingestion/rain-recent?site_id=&start_date=&end_date=` | Daily rain of the last days (GFS), kept apart from ERA5 |
 | GET | `/ingestion/river?site_id=&start_date=&end_date=` | Daily river discharge (GloFAS) |
 | GET | `/ingestion/rain-forecast?site_id=` | Latest hourly rain forecast (GFS) |
+| GET | `/ingestion/rain-forecast/summary?hours=72` | Every district's forecast rain total for the next 6–168 hours after its latest fetch, with `hours_covered` and the valid window (map layer) |
 
 Run kinds: `rain_history` and `river_history` (need `start_date`, `end_date`), `rain_forecast` and `river_forecast`
 (`forecast_days` 1–7), and `rain_recent` (`past_days` 1–30: the last finished days from GFS). Optional `site_ids` limits a run to some sites. Only one run at a time (409 otherwise).
@@ -472,39 +473,75 @@ the request says.
 The first admin is made on a developer's machine, straight in the database:
 `python scripts/set_role.py someone@example.org admin` (the person registers first).
 
+**Admin Control Centre** (`app/modules/admin`, guide section J2): permission-checked overview, analytics, data
+sources, ingestion runs, system health, account suspension, administrative announcements (never official warnings)
+and an append-only audit log (`admin_audit`). The admin area reads the science; it has no route that changes a
+prediction, an observation or the model.
+
+**Local test accounts for the portal's browser tests** (rescue board, two teams):
+`scripts/seed_local_test_accounts.py` creates one admin and two rescuers in "Local Test Team A" and "Local Test Team B"
+through the normal API (passwords hashed as for real users). It refuses to run unless the database and the API are both
+on this computer, reads every email and password from the environment (`E2E_ADMIN_*`, `E2E_RESCUER_*`, `E2E_RESCUER2_*`,
+kept in the git-ignored `Frontend/.env.e2e.local`) and changes nothing when run again. Usage is in the script's header.
+
 On the public server (`PUBLIC_READ_ONLY=true`) creating, changing and deleting **assets** needs an admin
 login; ingestion runs, new predictions, weather records and saved locations stay switched off there.
 
-### Rescue requests (SOS)
+### Rescue requests and the shared rescue board
+
+Since 18 November 2026. Full rules: [docs/RESCUE_COORDINATION_SPEC.md](docs/RESCUE_COORDINATION_SPEC.md); why it
+is built this way: [docs/decisions/ADR-001-shared-rescue-board.md](docs/decisions/ADR-001-shared-rescue-board.md).
 
 | Method | Endpoint | Who | Purpose |
 | --- | --- | --- | --- |
-| POST | `/sos` | anyone | Send a request: `client_id`, `location`, `people`, `need`, optional `note`, `contact_name`, `contact_phone`. 201 with a receipt; the same `client_id` again gives 200 and stores nothing new |
-| GET | `/sos/status/{client_id}` | the sender | Status, history and the rescuers' message |
+| POST | `/sos` | anyone | Send a request: `client_id`, `needs`, `people`, `serious_injury`, `vulnerable`, a GPS `location` **or** a typed `place`, optional `note`, `contact_name`, `contact_phone`. 201 with a receipt and a `reference` (`RK-XXXXXX`); the same `client_id` again gives 200 and stores nothing new |
+| GET | `/sos/status/{client_id}` | the sender | Status, history (with team names) and the team's message |
 | POST | `/sos/status/{client_id}/cancel` | the sender | "I no longer need help" |
 | GET | `/sos/mine` | logged-in user | Requests sent while logged in |
-| GET | `/sos?status=&district_pcode=&limit=` | rescuer, admin | Open requests (or one status), longest-waiting first, with location and contact |
-| PATCH | `/sos/{id}` | rescuer, admin | `{"status", "message_to_sender"}` |
+| GET | `/sos?status=&district_pcode=&mine=&limit=` | rescuer, admin | The shared board: open requests (or one status), untaken first |
+| POST | `/sos/{id}/accept` | a rescuer in a team | Become the primary team; 409 if another team was first |
+| POST | `/sos/{id}/progress` | the primary team | `en_route`, `arrived`, `in_progress`, `completed` (with `outcome`) |
+| POST | `/sos/{id}/release` | the primary team, admin | Back to the board with a reason (`unable_to_reach`, `lacks_resources`, `other`) |
+| POST | `/sos/{id}/support-request`, `/sos/{id}/support` | primary team / another team | Ask for and join as a support team |
+| POST | `/sos/{id}/close` | admin | Close a duplicate or false request |
+| GET, POST | `/admin/teams` | admin | List and create rescue teams (name + organisation) |
+| PATCH | `/admin/users/{user_id}/team` | admin | Put an account in a team (`{"team_id": ...}` or `null`) |
 
 How it is built:
 
 - **No login is needed to ask for help.** The phone makes a random `client_id` when the request is first
   saved and sends it unchanged on every retry. That makes retries safe (a phone with a bad connection may send
   the same request several times) and it is also the sender's private key for reading the status. Only its
-  SHA-256 hash is stored.
-- **Status only moves forward:** `new` → `acknowledged` → `team_sent` → `resolved`. A request can be cancelled
-  until it is resolved. A change is written only if the status is still the one the rescuer saw, so two rescuers
-  clicking at the same moment cannot overwrite each other.
-- **The receipt and the sender's status view hold no personal details.** Location, phone number and note are
-  returned only to rescuers and admins.
+  SHA-256 hash is stored. Requests queued by the previous portal (one `need`, no `location_source`) are still
+  accepted; their location source stays unknown instead of being guessed.
+- **A request without GPS is allowed.** The person chooses the district and describes the place (village, area,
+  landmark...). No coordinates are made up from a place name; `location` stays `null`.
+- **One primary team per request.** Teams (`rescue_teams`: name, organisation) are created by an admin, who also
+  puts each rescuer account into a team. Accepting is one atomic MongoDB update whose filter requires the
+  status `available`: when two teams press at the same moment exactly one wins, the other gets 409 (tested with
+  8 parallel accepts). Every later step also requires the expected status and the primary team in the filter.
+- **Statuses:** `available` → `accepted` → `en_route` → `arrived` → (`in_progress` →) `completed`; or
+  `cancelled` (by the sender, or closed by an admin). Steps cannot be skipped, so "on its way" always means the
+  team confirmed it. "Unable to reach" and "released" are reasons recorded in the history: the request goes back
+  to `available` at once instead of waiting on a team that gave up. An admin can release a stuck request.
+- **Support:** the primary team can ask for support; another team can join as support without taking over.
+- **Privacy:** the sender's view holds no personal details (only team names). On the board every rescuer sees
+  what is needed to judge the request (needs, people, injury, place, location); **contact name and phone only go
+  to the primary team, support teams and admins.** The acting account is stored in the history but never sent
+  to the sender.
 - **Flood protection:** at most 10 new requests per internet address per hour (the address is stored hashed
   and deleted after an hour). Retries are not counted. The address is the one Cloudflare (in front of Render)
   reports in `CF-Connecting-IP`; `X-Forwarded-For` is ignored because Render keeps whatever the visitor writes
   there, and a live test on 15 November 2026 showed that faking it skipped the limit (fixed the same day).
-- The location must be inside Bangladesh; the district is filled in from it.
+- A GPS point must be inside Bangladesh; the district is filled in from it.
+- **Readable place names** (`GET /geospatial/place-name`, and `area_name` on board items): the upazila and
+  district containing a GPS point, looked up on this server from `data/boundaries/bangladesh_upazilas.geojson`
+  (507 upazilas, HDX COD-AB v03 — the same BBS / OCHA release as the districts, CC BY-IGO; the answer includes
+  `upazila_pcode`). No outside geocoding service is used. `scripts/build_map_geography.py` rebuilds this file and
+  the portal's map geography from one archive.
 
 Not covered: requests are kept until someone deletes them (no retention period is set), there is no SMS or
-push notification to rescuers, and nothing verifies that a request is genuine.
+push notification to teams (they must look at the board), and nothing verifies that a request is genuine.
 
 ## 7. Try the API without writing code
 
@@ -722,7 +759,7 @@ Allowed by default: `http://localhost:3000` and `http://localhost:5173`. Add oth
 python -m pytest -v
 ```
 
-Expected: **355 passed**.
+Expected: **440 passed**.
 
 Tests that store data use a **separate local test MongoDB in Docker**, never Atlas:
 
@@ -738,7 +775,8 @@ test. Use another test server with `TEST_MONGODB_URI=mongodb://host:port`.
 | --- | --- |
 | `test_api_accounts.py` | Register, log in and out, wrong passwords, home location, report for it, account deletion |
 | `test_public_read_only.py` | Read-only mode: changes refused, reading, point checks and accounts still work; browser security headers on every answer |
-| `test_api_rescue.py` | Rescue requests (send, retry, follow, cancel, handle), the flood limit (a faked `X-Forwarded-For` does not skip it), roles and admin routes |
+| `test_api_rescue.py` | Rescue requests (send, retry, follow, cancel), the flood limit (a faked `X-Forwarded-For` does not skip it), roles and admin routes |
+| `test_api_rescue_board.py` | The shared rescue board: requests without GPS, several needs, teams, one primary team (8 parallel accepts, exactly one wins), explicit progress, release, support, contact privacy, the sender's status |
 | `test_osm_facilities.py` | OpenStreetMap facility selection and the built facility file |
 | `test_api_geospatial.py` | Geometry tools, locations, health, CORS |
 | `test_api_boundaries.py` | Dhaka boundaries |
@@ -754,7 +792,7 @@ test. Use another test server with `TEST_MONGODB_URI=mongodb://host:port`.
 | `test_prediction_features.py` | Model inputs, the no-future-data rule, training table rows and time split |
 | `test_api_prediction.py` | Prediction and alert API with a test-only model: no model (503), inputs shown, stored, alert levels, assets at risk, recent-rain fallback |
 | `test_train_flood_model.py` | Training script: measures, baselines, thresholds, calibration; whole pipeline on a made-up table; the API accepts its files (skipped without scikit-learn) |
-| `test_daily_update.py` | Daily chain: refresh data → predict today → alerts; no model; failing data source |
+| `test_daily_update.py` | Daily chain: refresh data → predict today → alerts → river and rain forecasts; no model; failing data source; a failing forecast does not undo the predictions |
 
 `tests/test_geospatial.py` is an older print-only Shapely demonstration, kept for reference.
 
@@ -877,8 +915,12 @@ satellite pass saw no flood), a model without satellite inputs, and held-out div
 
 **Daily use.** With the backend running: `python scripts/daily_update.py` refreshes river flow, ERA5 rain and
 recent rain, fetches the newest satellite passes (Copernicus GFM, this month and the last), predicts today and
-prints the alerts. It takes about a minute and a half and about 235 Open-Meteo calls. To run it every morning,
-add the cron line shown at the top of the script.
+prints the alerts. Then, for the map, it stores the **GloFAS river-flow forecast** (today + 6 days, 9 river sites)
+and the **GFS hourly rain forecast** (4 days from 00:00 UTC, so the 72 hours after a morning run are covered, 64
+district sites). These two forecast steps run after the predictions and are best effort: if one fails the update
+still succeeds and says "NOT refreshed". Rain-forecast fetches older than 3 days are deleted after each new fetch,
+so the collection stays small. In total about 310 Open-Meteo calls a day (free limit 10,000). To run it every
+morning, add the cron line shown at the top of the script.
 
 **Running it automatically.** `.github/workflows/daily-update.yml` runs the same script every day at 03:30 UTC
 (09:30 in Bangladesh) on a GitHub machine: it starts a copy of the backend there, runs the update, and the

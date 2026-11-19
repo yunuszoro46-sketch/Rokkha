@@ -89,17 +89,29 @@ class DistrictRef(BaseModel):
     division: str
 
 
+class TeamRef(BaseModel):
+
+    id: str
+    name: str
+    organization: str
+
+
 class UserResponse(BaseModel):
 
     id: str
     name: str
     email: str
     role: Role
+    # The rescue team the account works in (set by an admin), or None.
+    team: TeamRef | None = None
     location: GeoJSONPoint | None
     location_label: str | None
     district: DistrictRef | None
     location_updated_at: datetime | None
     created_at: datetime
+    # "suspended" accounts cannot log in; their sessions were ended when suspended.
+    status: Literal["active", "suspended"] = "active"
+    last_login_at: datetime | None = None
 
 
 class SessionResponse(BaseModel):
@@ -138,4 +150,14 @@ class LocationReportResponse(BaseModel):
 class UserListResponse(BaseModel):
 
     count: int
+    # Number of accounts matching the filters (for paging); count is the number on this page.
+    total: int | None = None
+    skip: int = 0
     users: list[UserResponse]
+
+
+class StatusRequest(BaseModel):
+
+    status: Literal["active", "suspended"]
+    # Why: kept in the audit log. Required so every suspension can be explained later.
+    reason: str = Field(min_length=3, max_length=300)

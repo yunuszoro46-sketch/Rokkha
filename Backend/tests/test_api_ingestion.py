@@ -353,8 +353,8 @@ def test_river_forecast_is_marked_as_forecast(client, fake_api):
     values = sorted(stored("river_discharge_daily"), key=lambda v: v["date"])
 
     assert len(values) == 7
-    assert values[0]["is_forecast"] is False       # today
-    assert values[-1]["is_forecast"] is True       # six days ahead
+    # Today's daily mean is not over at fetch time, so it is a forecast as well (changed 19 Nov 2026).
+    assert all(v["is_forecast"] for v in values)
 
 
 def test_river_forecast_is_refreshed_not_skipped(client, fake_api):
@@ -692,3 +692,42 @@ def test_no_forecast_yet(client):
 
     assert body["fetched_at"] is None
     assert body["count"] == 0
+
+
+def test_old_rain_forecast_fetches_are_removed(client, fake_api):
+
+    run(client, kind="rain_forecast", site_ids=[DHAKA], forecast_days=1)
+
+    # Pretend that fetch happened 4 days ago.
+    with MongoClient(TEST_MONGODB_URI) as mongo:
+        collection = mongo[TEST_DATABASE]["rain_forecast_hourly"]
+        for document in list(collection.find()):
+            collection.delete_one({"_id": document["_id"]})
+            document["_id"] = "old|" + document["_id"]
+            document["fetched_at"] = document["fetched_at"] - timedelta(days=4)
+            collection.insert_one(document)
+
+    run(client, kind="rain_forecast", site_ids=[DHAKA], forecast_days=1)
+
+    kept = stored("rain_forecast_hourly")
+    assert len(kept) == 24                            # only the new fetch
+    assert not any(d["_id"].startswith("old|") for d in kept)
+
+
+def test_rain_forecast_summary_adds_up_only_hours_after_the_fetch(client, fake_api):
+
+    empty = client.get(f"{BASE}/rain-forecast/summary").json()
+    assert empty["count"] == 0
+    assert all(d["total_mm"] is None and d["hours_covered"] == 0 for d in empty["districts"])
+
+    run(client, kind="rain_forecast", site_ids=[DHAKA], forecast_days=2)
+    summary = client.get(f"{BASE}/rain-forecast/summary", params={"hours": 24}).json()
+
+    dhaka = next(d for d in summary["districts"] if d["site_id"] == DHAKA)
+    others = [d for d in summary["districts"] if d["site_id"] != DHAKA]
+    assert summary["count"] == 1
+    assert summary["kind"] == "forecast"
+    assert 0 < dhaka["hours_covered"] <= 24            # only hours after the fetch, at most the 24 asked
+    assert dhaka["total_mm"] == pytest.approx(dhaka["hours_covered"] * 0.25)
+    assert all(d["total_mm"] is None for d in others)  # no fetch = no value, never 0
+    assert client.get(f"{BASE}/rain-forecast/summary", params={"hours": 1}).status_code == 422

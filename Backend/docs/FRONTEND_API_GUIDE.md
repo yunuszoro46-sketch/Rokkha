@@ -371,11 +371,15 @@ Shapes for drawing: `Backend/data/boundaries/dhaka_boundaries.geojson` and
 | `GET` | `/ingestion/rain-recent?site_id=&start_date=&end_date=` | daily rain of the last days from GFS (preliminary; ERA5 replaces it about 5 days later) |
 | `GET` | `/ingestion/river?site_id=&start_date=&end_date=` | daily river discharge (m³/s) — good for a line chart |
 | `GET` | `/ingestion/rain-forecast?site_id=` | latest hourly rain forecast + `total_precipitation_mm` |
+| `GET` | `/ingestion/rain-forecast/summary?hours=72` | all 64 districts at once: `total_mm` (null = no forecast stored, never 0), `hours_covered`, `window_start`/`window_end`, `fetched_at`; plus `latest_fetched_at`, `source`, `limitations` |
 
 Site ids: `district-<pcode>` (e.g. `district-BD3026` Dhaka, `district-BD6090` Sunamganj) and river ids such as
 `surma-sunamganj`. Values only exist after the backend developer has run an ingestion for those dates. Each value
 has `unit`, `statistic` (e.g. "24 h total, 00:00-24:00 UTC"), `missing` (show a gap, not 0), and `is_forecast`
-(draw forecasts differently from observed history). Show the `attribution` list (Open-Meteo, Copernicus ERA5 /
+(draw forecasts differently from observed history). River values from the daily forecast run are `is_forecast:
+true` from **today** onwards (today's daily mean is not over when it is fetched; changed 19 Nov 2026); the next
+day's history run replaces yesterday's forecast with the history value. The daily update stores the river forecast
+(7 days) and the rain forecast (4 days of hours) every morning. Show the `attribution` list (Open-Meteo, Copernicus ERA5 /
 GloFAS, NOAA GFS). A rain *forecast* is not a flood forecast.
 
 ### F. Flood prediction and alerts (working, with a trained model)
@@ -505,63 +509,150 @@ The report:
   separate blocks and never merge them into one "risk score".
 - `nearest_assets` lists only places registered in the backend, within 25 km, nearest first. An empty list
   means "none registered yet", not "no shelter exists".
-- Still no roles: every account is a normal user. Admin and rescue logins do not exist yet.
+- Roles and rescue teams exist: see section 3 J.
 
-### I. Rescue requests (SOS)
+### I. Rescue requests and the shared rescue board
 
-Anyone can ask for help, **without a login**.
+Changed on 18 November 2026 (spec: `docs/RESCUE_COORDINATION_SPEC.md`, decision: `docs/decisions/ADR-001-shared-rescue-board.md`).
+The old `PATCH /sos/{id}` and the statuses `new / acknowledged / team_sent / resolved` are gone: deploy the backend
+and the portal together.
+
+Anyone can ask for help, **without a login**. Rescue teams of several organisations share one board: one team
+accepts a request, every other team sees who is responding.
 
 | Method | Path | Who | What it does |
 |---|---|---|---|
 | `POST` | `/sos` | anyone | send a request → 201 with a receipt; the same `client_id` again → 200, nothing stored twice |
 | `GET` | `/sos/status/{client_id}` | the sender | the current status (404 = it has not reached the server) |
-| `POST` | `/sos/status/{client_id}/cancel` | the sender | "I no longer need help" (409 if already resolved or cancelled) |
+| `POST` | `/sos/status/{client_id}/cancel` | the sender | "I no longer need help" (409 if already completed or cancelled) |
 | `GET` | `/sos/mine` | logged-in user | requests sent while logged in |
-| `GET` | `/sos?status=&district_pcode=` | rescuer, admin | open requests, longest-waiting first, with location and contact |
-| `PATCH` | `/sos/{id}` | rescuer, admin | body `{"status": "acknowledged", "message_to_sender": "Boat leaving from the ghat"}` |
+| `GET` | `/sos?status=&district_pcode=&mine=` | rescuer, admin | the shared board (default: every open request) |
+| `POST` | `/sos/{id}/accept` | a team member | take responsibility; **409** if another team was first |
+| `POST` | `/sos/{id}/progress` | the primary team | `{"status": "en_route" \| "arrived" \| "in_progress" \| "completed", "message_to_sender", "outcome"}` |
+| `POST` | `/sos/{id}/release` | the primary team or an admin | `{"reason": "unable_to_reach" \| "lacks_resources" \| "other", "note"}` → back to `available` |
+| `POST` | `/sos/{id}/support-request` | the primary team | `{"note": "Need a second boat"}`: other teams see that support is asked |
+| `POST` | `/sos/{id}/support` | another team | join as support (never becomes the primary team) |
+| `POST` | `/sos/{id}/close` | admin | `{"reason": "duplicate" \| "not_genuine" \| "other", "note"}` → `cancelled` |
 
-Sending:
+Sending (with GPS):
 
 ```json
 {"client_id": "0b6f2c1e-7d1a-4e7e-9a0e-2f8f6f3d9c11",
- "location": {"type": "Point", "coordinates": [91.1428, 24.8474]}, "accuracy_m": 25,
- "people": 4, "need": "rescue", "note": "Water at the roof. Two children.",
- "contact_name": "Rahima", "contact_phone": "+880 1700 000000", "saved_at": "2026-11-13T09:00:00Z"}
+ "needs": ["medical", "food_water"], "people": 4, "serious_injury": true, "vulnerable": ["children"],
+ "location": {"type": "Point", "coordinates": [91.1428, 24.8474]}, "location_source": "gps", "accuracy_m": 25,
+ "note": "Grandmother has a fever.", "contact_name": "Rahima", "contact_phone": "+880 1700 000000",
+ "saved_at": "2026-11-18T09:00:00Z"}
+```
+
+Sending without GPS (the place the person typed; **no coordinates are made up**):
+
+```json
+{"client_id": "...", "needs": ["food_water"], "people": 3,
+ "location": null, "location_source": "manual",
+ "place": {"district_pcode": "BD6090", "upazila": "Tahirpur", "village": "Example Village",
+           "landmark": "Behind the primary school"}}
 ```
 
 The receipt (also what the status call returns):
 
 ```json
-{"id": "...", "status": "new", "district": {"pcode": "BD6090", "name": "Sunamganj", "division": "Sylhet"},
- "received_at": "2026-11-13T09:00:05Z", "updated_at": "2026-11-13T09:00:05Z",
- "history": [{"status": "new", "at": "2026-11-13T09:00:05Z"}], "message_to_sender": null}
+{"id": "...", "reference": "RK-7K3F9Q", "status": "available", "needs": ["food_water"],
+ "district": {"pcode": "BD6090", "name": "Sunamganj", "division": "Sylhet"}, "team": null,
+ "received_at": "2026-11-18T09:00:05Z", "updated_at": "2026-11-18T09:00:05Z",
+ "history": [{"event": "received", "status": "available", "at": "2026-11-18T09:00:05Z", "team": null, "reason": null}],
+ "message_to_sender": null}
 ```
 
-- **`client_id`** is a random UUID the phone makes **once**, when the person presses "send"
-  (`crypto.randomUUID()`), and keeps (for example in `localStorage`). Send the same request, unchanged, until
-  the server answers 200 or 201. It is also the only key to the status: keep it private, never put it in a
-  shared link.
-- **Be honest about delivery.** Until the server has answered 200/201, show "Saved on this phone, not sent
-  yet". Only then show "Received by the server". Never write "help is coming" unless `status` is `team_sent`.
-- `need`: `rescue`, `medical`, `food_water`, `shelter` or `other`. `people`: 1–1000. `note` ≤ 500 characters.
-  `location` must be inside Bangladesh (422 otherwise).
-- `status`: `new` → `acknowledged` (a rescuer has seen it) → `team_sent` → `resolved`; or `cancelled`. It never
-  goes backwards (409 if a rescuer tries).
+- **`client_id`** is a random UUID the phone makes **once** (`crypto.randomUUID()`) and keeps. Send the same
+  request, unchanged, until the server answers 200 or 201. It is the only key to the status: keep it private.
+  The **`reference`** (`RK-` + 6 characters) is for reading out on a phone call; it gives no access.
+- `needs`: 1–5 of `food_water`, `medical`, `house_danger`, `evacuation`, `other`. The old single `need` is still
+  accepted from older phones (`rescue` → `evacuation`, `shelter` → `other`).
+- `serious_injury`: `true`, `false` or `null` (not answered). `vulnerable`: any of `children`, `elderly`,
+  `disability`, `pregnant`.
+- **Location**: a GPS point inside Bangladesh, or `null` with a `place` that has a valid `district_pcode` and at
+  least one of `village`, `area`, `landmark`, `details`, `union`, `upazila` (422 otherwise). With a point the
+  district comes from the point. `location_source` is `gps`, `saved_place` or `manual`; send `accuracy_m` only
+  if the phone reported it.
+- **Statuses**: `available` → `accepted` → `en_route` → `arrived` → (`in_progress` →) `completed`, or
+  `cancelled`. Steps cannot be skipped (409): "on its way" needs the team's explicit `en_route`.
+  A release puts the request back to `available` with the reason in `history` (`event: "released"`).
+- **What to tell the sender**, only from the server's answer: `available` "received, rescue teams can see it, no
+  team has accepted it yet"; after a `released` step with `unable_to_reach` "the team could not reach your
+  location, your request is open again for other teams"; `accepted` "<team> accepted your request"; `en_route`
+  "the team is on its way"; `arrived`; `in_progress` "help is being given"; `completed`. Before 200/201: "Saved on
+  this phone, not sent yet". No SMS, call or push is sent by the backend: never claim one.
 - **429** = more than 10 new requests from one connection in an hour. Show the message and the 999 number.
-- A rescuer's list item has everything in the receipt plus `location`, `accuracy_m`, `people`, `need`, `note`,
-  `contact_name`, `contact_phone`, `saved_at`, `from_account`. The list answer also has `by_status` counts.
-  This is personal data: show it only on the rescuer screens.
+- A board item adds `team`, `support_teams`, `support_request`, `releases`, `outcome`, `location`,
+  `location_source`, `accuracy_m`, `place`, `people`, `serious_injury`, `vulnerable`, `note`, `contact_name`,
+  `contact_phone`, `contact_hidden`, `saved_at`, `from_account`. **Contact name and phone are `null` with
+  `contact_hidden: true` unless your team is the primary or a support team (admins always see them).**
+  The board answer also has `by_status` counts. Requests nobody has taken come first, someone seriously hurt
+  first among them, then the longest-waiting.
+- Errors: 401 not logged in; 403 wrong role, no team, or not your team's request; 404 unknown request; 409 the
+  request is not in a state that allows this (show the `detail` and reload the board); 422 invalid body.
 
-### J. Roles and admin
+### I2. Readable place name for a GPS point
 
-`user.role` (in every login and `/auth/me` answer) is `user`, `rescuer` or `admin`. Show the rescuer screens
-only for `rescuer` and `admin`, the admin screens only for `admin`. Hiding a screen is not the protection: the
-backend refuses the calls (403) whatever the page shows.
+`GET /geospatial/place-name?lng=91.1428&lat=24.8474` →
+`{"upazila": "Dharmapasha", "upazila_pcode": "BD60900032", "district": {"pcode": "BD6090", "name": "Sunamganj",
+"division": "Sylhet"}, "label": "Dharmapasha, Sunamganj", "attribution": "..."}`. Outside Bangladesh every field
+is `null` (except `attribution`). `upazila_pcode` is the stable COD-AB code (it starts with the district code);
+the portal's map uses it to select the upazila. The lookup runs on the backend from the official upazila
+boundaries (COD-AB v03, BBS / OCHA via HDX, CC BY-IGO — the same release as the districts): no outside geocoding service sees the point, and no village is ever guessed. Show
+"Near <label>" to the person instead of coordinates; if it is `null`, say the place name could not be found and
+ask them to describe the place. Board items carry the same name for GPS requests as `area_name` (`null` for typed
+places).
+
+### J. Roles, teams and admin
+
+`user.role` (in every login and `/auth/me` answer) is `user`, `rescuer` or `admin`; `user.team` is
+`{"id", "name", "organization"}` or `null`. Show the rescue board only for `rescuer` and `admin`, the admin
+screens only for `admin`. Only an account **in a team** can accept or work on requests. Hiding a screen is not the
+protection: the backend refuses the calls (403) whatever the page shows.
 
 | Method | Path | What it does |
 |---|---|---|
-| `GET` | `/admin/users` | `{"count", "users": [...]}`: every account with its role |
+| `GET` | `/admin/users` | `{"count", "users": [...]}`: every account with its role and team |
 | `PATCH` | `/admin/users/{user_id}/role` | body `{"role": "rescuer"}`. 409 for the admin's own account |
+| `GET` | `/admin/teams` | `{"teams": [{"id", "name", "organization", "created_at", "members"}]}` |
+| `POST` | `/admin/teams` | body `{"name": "Rescue Team Alpha", "organization": "Example NGO"}` → 201; 409 if that organisation already has the name |
+| `PATCH` | `/admin/users/{user_id}/team` | body `{"team_id": "..."}` or `{"team_id": null}`; 404 for an unknown team or user |
+
+`GET /admin/users` also takes `q` (name or email), `role`, `status` (`active` | `suspended`) and `skip`; the answer adds
+`total` and `skip` for paging. Every user now carries `status` and `last_login_at`. Changing the role of the **last active
+admin** is refused with 409.
+
+#### J2. Admin Control Centre (`/admin/*`, platform administrator)
+
+Every route checks a named permission on the server (`app/modules/admin/permissions.py`); today only `admin` has them.
+A refused request answers 403 and is written to the audit log as `permission_denied`.
+
+| Method | Path | What it does |
+|---|---|---|
+| `GET` | `/admin/me` | `{"user", "permissions": [...]}`: what this account may do in the control centre |
+| `GET` | `/admin/overview` | counts of accounts, teams and requests by status, the latest model levels, data freshness, recent rescue and admin activity (no contact details) |
+| `GET` | `/admin/analytics?days=30` | per-day counts (7–180 days): requests received and completed, registrations, ingestion runs by result, model Watch/Alert districts (`forecast: false` = nothing stored that day); needs, districts, team acceptances |
+| `GET` | `/admin/data-sources` | every data source with `latest_data`, `age_days`, `status` (`healthy` \| `delayed` \| `failing` \| `unknown` \| `fixed`), last successful and failed run |
+| `GET` | `/admin/ingestion-runs?kind=&status=&limit=` | recent ingestion runs with duration, values written and the provider's message |
+| `GET` | `/admin/system-health` | API, database ping, ingestion runs of the last 7 days; says plainly that application errors are not stored |
+| `GET` | `/admin/audit?action=&result=&q=&before=&limit=` | the append-only audit log, newest first; `next_before` for older pages. There is no route to change or delete an event |
+| `PATCH` | `/admin/users/{user_id}/status` | body `{"status": "suspended" \| "active", "reason": "..."}` (reason required). Suspension ends all the account's sessions; a suspended account gets 401 on every call and 403 at login. Not your own account, not the last active admin (409) |
+| `GET` | `/admin/announcements` | all administrative announcements with their history |
+| `POST` | `/admin/announcements` | body `{"title", "body", "level": "info" \| "important", "district_pcodes": []}` → 201. Text claiming to be an official or government warning is refused (422) |
+| `PATCH` | `/admin/announcements/{id}` | correct: `{"title", "body", "reason"}`; the earlier text stays in `history` |
+| `POST` | `/admin/announcements/{id}/withdraw` | `{"reason"}`; 404 if not published |
+| `GET` | `/announcements` | **public**: published announcements only, without author or history, plus a note that they are not official warnings |
+
+Audited automatically as well: role and team changes, team creation, admin release or close of a rescue request,
+and facility (asset) changes.
+
+A refusal repeated by the same account within a minute is not stored again: the existing `permission_denied`
+event gains `repeats` (and `last_at`), so one account cannot flood the log.
+
+Request limit note: the per-connection limit on new help requests reads the visitor's address from
+`CF-Connecting-IP` (set by Cloudflare) or the connection itself. `True-Client-IP` is ignored because a visitor can
+send it themselves.
 
 New accounts are always `user`. The first admin is made by the backend developer
 (`python scripts/set_role.py <email> admin`). On the hosted backend, adding, changing and deleting assets
@@ -601,7 +692,7 @@ and who each screen is for.
 | **Rain and river charts** | `GET /ingestion/rain`, `/ingestion/rain-forecast`, `/ingestion/river` | Bars for rain, line for river flow; draw forecast values differently |
 | **Check any place** | `POST /geospatial/flood/check` | Tap the map: flooded before? In the 10- or 100-year flood zone? |
 | **Nearest shelter or hospital** | `GET /assets/near?lng=&lat=&max_distance_m=&asset_type=` | A list, nearest first, with distance in metres. About 3,200 places come from OpenStreetMap (`source: "OpenStreetMap"`): show "© OpenStreetMap contributors" and that they are not checked on the ground |
-| **Ask for help (SOS)** without a login | `POST /sos`, then `GET /sos/status/{client_id}` (section 3 I) | "Saved on this phone" until the server answers, then the status |
+| **Ask for help** without a login, with or without GPS | `POST /sos`, then `GET /sos/status/{client_id}` (section 3 I) | Show what will be sent before saving; "Saved on this phone" until the server answers, then the reference and the status |
 | **How good the model is** | `GET /predictions/model` | An "About the forecast" panel with the test results and limits |
 
 Rules for every citizen screen:
@@ -622,6 +713,7 @@ Rules for every citizen screen:
 
 | What the user gets | Call | Show it like this |
 |---|---|---|
+| **The shared rescue board** | `GET /sos`, then `accept`, `progress`, `release`, `support` (section 3 I) | "Rescue Team Alpha is responding — Team en route" on every request a team holds; on 409 show the message and reload |
 | **Where to prepare first** | `GET /alerts?target_date=&min_level=watch` | Districts sorted by probability (the list already comes highest first) |
 | **Important places in an alerted district** | `assets_at_risk` inside each alert | Counts and a list of hospitals, schools and shelters, with the badges from `flags` |
 | **Places that flooded before** | `GET /assets/exposure?district_pcode=` | Filter to `flags.observed_flooding = true` |

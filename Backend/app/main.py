@@ -89,8 +89,9 @@ from app.modules.ingestion.router import router as ingestion_router
 from app.modules.ingestion.repository import close_interrupted_runs
 from app.modules.prediction.router import router as prediction_router
 from app.modules.alerts.router import router as alerts_router
+from app.modules.admin.router import router as admin_center_router, public_router as announcements_router
 from app.modules.accounts.router import router as accounts_router, admin_router
-from app.modules.rescue.router import router as rescue_router
+from app.modules.rescue.router import router as rescue_router, teams_router
 
 
 @asynccontextmanager
@@ -263,7 +264,23 @@ app.include_router(
     prefix=settings.API_V1_PREFIX
 )
 
+# Admin Control Centre (permission-checked) and the public list of administrative announcements.
+app.include_router(
+    admin_center_router,
+    prefix=settings.API_V1_PREFIX
+)
+
+app.include_router(
+    announcements_router,
+    prefix=settings.API_V1_PREFIX
+)
+
 app.include_router(
     rescue_router,
+    prefix=settings.API_V1_PREFIX
+)
+
+app.include_router(
+    teams_router,
     prefix=settings.API_V1_PREFIX
 )

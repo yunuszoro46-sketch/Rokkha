@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 
-from app.modules.accounts.router import admin_on_public_server
+from app.modules.accounts.router import admin_on_public_server, optional_user
+from app.modules.admin import audit
 
 from app.modules.assets.schemas import (
     AssetCreate,
@@ -57,10 +58,12 @@ DistrictFilter = Query(default=None, description="District code, e.g. BD3026 for
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(admin_on_public_server)]
 )
-async def create_asset(data: AssetCreate):
+async def create_asset(data: AssetCreate, who: dict | None = Depends(optional_user)):
 
     try:
-        return await add_asset(data.model_dump())
+        asset = await add_asset(data.model_dump())
+        await audit.record(who, "facility_added", "asset", asset["id"], asset.get("name"), details={"type": asset.get("asset_type")})
+        return asset
 
     except AssetOutsideCoverageError as error:
         raise HTTPException(status_code=422, detail=str(error))
@@ -173,7 +176,7 @@ async def get_asset(asset_id: str):
     response_model=AssetResponse,
     dependencies=[Depends(admin_on_public_server)]
 )
-async def update_asset(asset_id: str, data: AssetUpdate):
+async def update_asset(asset_id: str, data: AssetUpdate, who: dict | None = Depends(optional_user)):
 
     # exclude_unset: only the fields the client actually sent, so a
     # missing field means "leave unchanged", not "set to null".
@@ -188,6 +191,7 @@ async def update_asset(asset_id: str, data: AssetUpdate):
     if asset is None:
         raise _not_found()
 
+    await audit.record(who, "facility_changed", "asset", asset_id, asset.get("name"), details={"fields": sorted(changes)})
     return asset
 
 
@@ -196,10 +200,12 @@ async def update_asset(asset_id: str, data: AssetUpdate):
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(admin_on_public_server)]
 )
-async def delete_asset(asset_id: str):
+async def delete_asset(asset_id: str, who: dict | None = Depends(optional_user)):
 
     if not await remove_asset(asset_id):
         raise _not_found()
+
+    await audit.record(who, "facility_removed", "asset", asset_id)
 
     # 204 = success with no body.
     return Response(status_code=status.HTTP_204_NO_CONTENT)

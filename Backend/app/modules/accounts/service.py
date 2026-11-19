@@ -75,6 +75,14 @@ class UserNotFound(Exception):
     pass
 
 
+class AccountSuspended(Exception):
+    pass
+
+
+class LastAdmin(Exception):
+    pass
+
+
 class OwnRole(Exception):
     pass
 
@@ -178,7 +186,15 @@ async def login(email: str, password: str) -> dict:
 
     await repository.clear_login_failures(email)
 
-    return await _open_session(await repository.find_user(found[0]))
+    user = await repository.find_user(found[0])
+
+    # Checked only after a correct password, so the reply does not reveal whether an email exists.
+    if user.get("status") == "suspended":
+        raise AccountSuspended()
+
+    user = await repository.update_user(user["id"], {"last_login_at": repository.now()})
+
+    return await _open_session(user)
 
 
 async def user_for_token(token: str) -> dict | None:
@@ -190,7 +206,14 @@ async def user_for_token(token: str) -> dict | None:
     if session is None or session["expires_at"] <= repository.now():
         return None
 
-    return await repository.find_user(session["user_id"])
+    user = await repository.find_user(session["user_id"])
+
+    # Role and status are read from the database on every request, so a suspension or a role change
+    # takes effect at once, whatever the browser still holds.
+    if user is None or user.get("status") == "suspended":
+        return None
+
+    return user
 
 
 async def logout(token: str) -> None:
@@ -207,11 +230,19 @@ async def delete_account(user: dict) -> None:
 # ROLES (admin only)
 # ==========================================
 
-async def list_users(limit: int) -> dict:
+async def list_users(
+    limit: int, q: str | None = None, role: str | None = None, status: str | None = None, skip: int = 0
+) -> dict:
 
-    users = await repository.list_users(limit)
+    users = await repository.list_users(limit, q, role, status, skip)
+    total = await repository.count_users(q, role, status)
 
-    return {"count": len(users), "users": users}
+    return {"count": len(users), "total": total, "skip": skip, "users": users}
+
+
+async def find_user(user_id: str) -> dict | None:
+
+    return await repository.find_user(user_id)
 
 
 async def set_role(admin: dict, user_id: str, role: str) -> dict:
@@ -221,10 +252,55 @@ async def set_role(admin: dict, user_id: str, role: str) -> dict:
     if user_id == admin["id"]:
         raise OwnRole()
 
-    if await repository.find_user(user_id) is None:
+    target = await repository.find_user(user_id)
+
+    if target is None:
         raise UserNotFound()
 
-    return await repository.update_user(user_id, {"role": role})
+    # Never leave the platform without an active admin.
+    if target["role"] == "admin" and role != "admin" and target.get("status") != "suspended":
+        if await repository.count_active_admins() <= 1:
+            raise LastAdmin()
+
+    after = await repository.update_user(user_id, {"role": role})
+
+    # Two admins demoting each other at the same moment both pass the check above; re-check after the
+    # change and undo it if no active admin is left (worst case both are undone, never zero admins).
+    if target["role"] == "admin" and role != "admin" and await repository.count_active_admins() == 0:
+        await repository.update_user(user_id, {"role": "admin"})
+        raise LastAdmin()
+
+    return after
+
+
+async def set_status(admin: dict, user_id: str, status: str) -> tuple[dict, dict]:
+    """Suspend or reactivate an account. Returns (before, after). Suspension ends all its sessions."""
+
+    if user_id == admin["id"]:
+        raise OwnRole()
+
+    target = await repository.find_user(user_id)
+
+    if target is None:
+        raise UserNotFound()
+
+    if status == "suspended" and target["role"] == "admin" and target.get("status") != "suspended":
+        if await repository.count_active_admins() <= 1:
+            raise LastAdmin()
+
+    after = await repository.update_user(
+        user_id, {"status": status, "status_changed_at": repository.now()}
+    )
+
+    # Same race protection as for roles: never end with zero active admins.
+    if status == "suspended" and target["role"] == "admin" and await repository.count_active_admins() == 0:
+        await repository.update_user(user_id, {"status": target.get("status", "active")})
+        raise LastAdmin()
+
+    if status == "suspended":
+        await repository.delete_sessions_of(user_id)
+
+    return target, after
 
 
 # ==========================================

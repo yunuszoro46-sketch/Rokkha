@@ -1,3 +1,4 @@
+import re
 from datetime import datetime, timezone
 from uuid import uuid4
 
@@ -32,6 +33,9 @@ def _to_api(document: dict | None) -> dict | None:
     user["id"] = user.pop("_id")
     # Accounts made before roles existed have no role stored: they are users.
     user.setdefault("role", "user")
+    # Accounts made before suspension existed are active.
+    user.setdefault("status", "active")
+    user.setdefault("last_login_at", None)
     return user
 
 
@@ -47,6 +51,8 @@ async def create_user(name: str, email: str, password_hash: str) -> dict | None:
         "email": email,
         "password_hash": password_hash,
         "role": "user",
+        "status": "active",
+        "last_login_at": None,
         "location": None,
         "location_label": None,
         "district": None,
@@ -71,9 +77,22 @@ async def find_password_hash(email: str) -> tuple[str, str] | None:
     return (document["_id"], document["password_hash"]) if document else None
 
 
+async def _with_team(user: dict | None) -> dict | None:
+
+    # The rescue team the account works in ({id, name, organization}) or None.
+    if user is None:
+        return None
+
+    team_id = user.pop("team_id", None)
+    team = await get_db()["rescue_teams"].find_one({"_id": team_id}) if team_id else None
+    user["team"] = {"id": team["_id"], "name": team["name"], "organization": team["organization"]} if team else None
+
+    return user
+
+
 async def find_user(user_id: str) -> dict | None:
 
-    return _to_api(await get_db()[USERS].find_one({"_id": user_id}))
+    return await _with_team(_to_api(await get_db()[USERS].find_one({"_id": user_id})))
 
 
 async def update_user(user_id: str, changes: dict) -> dict | None:
@@ -83,11 +102,58 @@ async def update_user(user_id: str, changes: dict) -> dict | None:
     return await find_user(user_id)
 
 
-async def list_users(limit: int) -> list[dict]:
+def _user_filter(q: str | None, role: str | None, status: str | None) -> dict:
 
-    cursor = get_db()[USERS].find().sort("created_at", 1).limit(limit)
+    query: dict = {}
+    if q:
+        # Plain text search on name or email (escaped: the visitor's text is not a pattern).
+        pattern = {"$regex": re.escape(q.strip()), "$options": "i"}
+        query["$or"] = [{"name": pattern}, {"email": pattern}]
+    if role:
+        # Accounts without a stored role are users.
+        query["role"] = {"$in": ["user", None]} if role == "user" else role
+    if status == "suspended":
+        query["status"] = "suspended"
+    elif status == "active":
+        query["status"] = {"$ne": "suspended"}
+    return query
 
-    return [_to_api(document) async for document in cursor]
+
+async def count_users(q: str | None = None, role: str | None = None, status: str | None = None) -> int:
+
+    return await get_db()[USERS].count_documents(_user_filter(q, role, status))
+
+
+async def list_users(
+    limit: int, q: str | None = None, role: str | None = None, status: str | None = None, skip: int = 0
+) -> list[dict]:
+
+    cursor = get_db()[USERS].find(_user_filter(q, role, status)).sort("created_at", 1).skip(skip).limit(limit)
+
+    teams = {
+        team["_id"]: {"id": team["_id"], "name": team["name"], "organization": team["organization"]}
+        async for team in get_db()["rescue_teams"].find({})
+    }
+
+    users = []
+
+    async for document in cursor:
+        user = _to_api(document)
+        user["team"] = teams.get(user.pop("team_id", None))
+        users.append(user)
+
+    return users
+
+
+async def count_active_admins() -> int:
+
+    return await get_db()[USERS].count_documents({"role": "admin", "status": {"$ne": "suspended"}})
+
+
+async def delete_sessions_of(user_id: str) -> int:
+
+    result = await get_db()[SESSIONS].delete_many({"user_id": user_id})
+    return result.deleted_count
 
 
 async def delete_user(user_id: str) -> None:

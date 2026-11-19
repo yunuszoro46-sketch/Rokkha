@@ -1,9 +1,12 @@
+import json
 import math
+from pathlib import Path
 from datetime import date, timedelta
 from functools import lru_cache
 
 import numpy
 import shapely
+import shapely.geometry
 from geographiclib.geodesic import Geodesic
 from shapely.affinity import scale
 from shapely.geometry import Point, Polygon, MultiPolygon, LineString
@@ -947,3 +950,67 @@ def find_district(point_data: GeoJSONPoint):
         "name": properties["name"],
         "division": properties["parent_name"]
     }
+
+
+UPAZILAS_FILE = Path(__file__).resolve().parents[3] / "data" / "boundaries" / "bangladesh_upazilas.geojson"
+UPAZILA_ATTRIBUTION = (
+    "Upazila boundaries © Bangladesh Bureau of Statistics (BBS) and UN OCHA, COD-AB v03 (valid 2023-05-21), "
+    "via HDX, CC BY-IGO."
+)
+
+
+@lru_cache(maxsize=1)
+def _upazila_shapes():
+
+    # The 507 upazilas of COD-AB v03, the same release as the districts (see data/boundaries/README.md).
+    collection = json.loads(UPAZILAS_FILE.read_text(encoding="utf-8"))
+    shapes = []
+
+    for feature in collection["features"]:
+        shape = shapely.geometry.shape(feature["geometry"])
+        shapely.prepare(shape)
+        shapes.append((shape, feature["properties"]))
+
+    return shapes
+
+
+def place_name(point_data: GeoJSONPoint) -> dict:
+
+    # A readable name for a point: "Upazila, District". Only names from the
+    # boundary files; nothing outside Bangladesh, never a guessed village.
+    district = find_district(point_data)
+
+    if district is None:
+        return {"upazila": None, "upazila_pcode": None, "district": None, "label": None,
+                "attribution": UPAZILA_ATTRIBUTION}
+
+    point = Point(point_data.coordinates)
+    # Both files come from the same release, so the upazila must belong to this district.
+    upazila = next(
+        (props for shape, props in _upazila_shapes()
+         if props["parent_pcode"] == district["pcode"] and shape.covers(point)),
+        None,
+    )
+
+    return {
+        "upazila": upazila["name"] if upazila else None,
+        "upazila_pcode": upazila["pcode"] if upazila else None,
+        "district": district,
+        "label": f"{upazila['name']}, {district['name']}" if upazila else district["name"],
+        "attribution": UPAZILA_ATTRIBUTION,
+    }
+
+
+def district_by_pcode(pcode: str):
+
+    # The district with this code, as find_district returns it, or None.
+    for feature in get_district_collection().features:
+
+        if feature.properties["pcode"] == pcode.strip().upper():
+            return {
+                "pcode": feature.properties["pcode"],
+                "name": feature.properties["name"],
+                "division": feature.properties["parent_name"]
+            }
+
+    return None

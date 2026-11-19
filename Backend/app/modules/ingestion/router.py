@@ -16,6 +16,7 @@ from app.modules.ingestion.service import (
     IngestionRequestError,
     execute_run,
     latest_rain_forecast,
+    rain_forecast_summary,
     list_sites,
     rain_series,
     recent_rain_series,
@@ -149,6 +150,15 @@ async def get_recent_rain(site_id: str, start_date: date, end_date: date):
 async def get_river(site_id: str, start_date: date, end_date: date):
 
     return await _series(river_series, site_id, start_date, end_date)
+
+
+@router.get("/rain-forecast/summary")
+async def get_rain_forecast_summary(
+    hours: int = Query(default=72, ge=6, le=168, description="Hours after the latest fetch to add up"),
+):
+
+    # Every district's forecast rain total in one answer (for the map's rain-forecast layer).
+    return await rain_forecast_summary(hours)
 
 
 @router.get(
