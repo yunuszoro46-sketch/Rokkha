@@ -22,6 +22,12 @@ const nextConfig = {
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self)" },
         ],
       },
+      {
+        // Map geography (public/geo, rebuilt by Backend/scripts/build_map_geography.py): cached for a day,
+        // then revalidated, so a boundary update reaches visitors within a day.
+        source: "/geo/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
+      },
     ];
   },
 };

@@ -95,16 +95,16 @@ export const DistrictSatelliteTimeline: React.FC<
   return (
     <div className="w-full">
       {/* Sentinel-1 Timeline & 10 Major Flood Events Record */}
-      <Card className="w-full bg-white rounded-3xl border border-[#DFDDD3] p-6 shadow-sm flex flex-col justify-between">
+      <Card className="w-full bg-white rounded-3xl border border-rk-line p-6 shadow-sm flex flex-col justify-between">
         <div>
-          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-2 border-b border-[#E5E3D8]">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-2 border-b border-rk-line">
             <div className="flex items-start gap-2.5">
-              <span className="text-lg text-[#11241C] mt-0.5">✳</span>
+              <span className="text-lg text-rk-ink mt-0.5">✳</span>
               <div>
-                <div className="text-lg sm:text-xl font-black text-[#11241C] tracking-tight leading-snug">
+                <div className="text-lg sm:text-xl font-black text-rk-ink tracking-tight leading-snug">
                   Sentinel-1 Timeline:
                 </div>
-                <div className="text-lg sm:text-xl font-black text-[#11241C] tracking-tight leading-snug">
+                <div className="text-lg sm:text-xl font-black text-rk-ink tracking-tight leading-snug">
                   {displayDistrictName}
                 </div>
               </div>
@@ -115,8 +115,8 @@ export const DistrictSatelliteTimeline: React.FC<
                 onClick={() => setSeasonYear("2022")}
                 className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition shadow-xs ${
                   seasonYear === "2022"
-                    ? "bg-[#11241C] text-white"
-                    : "bg-white border border-[#DFDDD3] text-[#11241C] hover:bg-[#F7F6F0]"
+                    ? "bg-rk-ink text-white"
+                    : "bg-white border border-rk-line text-rk-ink hover:bg-rk-page"
                 }`}
               >
                 2022 Monsoon
@@ -125,8 +125,8 @@ export const DistrictSatelliteTimeline: React.FC<
                 onClick={() => setSeasonYear("2024")}
                 className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition shadow-xs ${
                   seasonYear === "2024"
-                    ? "bg-[#11241C] text-white"
-                    : "bg-white border border-[#DFDDD3] text-[#11241C] hover:bg-[#F7F6F0]"
+                    ? "bg-rk-ink text-white"
+                    : "bg-white border border-rk-line text-rk-ink hover:bg-rk-page"
                 }`}
               >
                 2024 Monsoon
@@ -134,17 +134,17 @@ export const DistrictSatelliteTimeline: React.FC<
             </div>
           </div>
 
-          <p className="text-xs text-[#5C6863] leading-relaxed mt-2 mb-3">
+          <p className="text-xs text-rk-muted leading-relaxed mt-2 mb-3">
             Share of observed district land covered by unusual flood water (Copernicus GFM). Gaps are days with no satellite pass, not dry days.
           </p>
 
           {/* Legend Matching Image 2 */}
-          <div className="flex flex-col items-end gap-1 text-[11px] text-[#4B5563] pb-1 pr-2">
+          <div className="flex flex-col items-end gap-1 text-[11px] text-rk-muted pb-1 pr-2">
             <div className="flex items-center gap-1.5">
-              <span className="w-3.5 h-3.5 rounded-xs bg-[#D89B37]" />
-              <span className="font-bold text-[#11241C]">Flood Coverage</span>
+              <span className="w-3.5 h-3.5 rounded-xs bg-rk-warning-accent" />
+              <span className="font-bold text-rk-ink">Flood Coverage</span>
             </div>
-            <div className="flex items-center gap-1.5 text-[#5C6863]">
+            <div className="flex items-center gap-1.5 text-rk-muted">
               <span>💧</span>
               <span>Water over district land</span>
             </div>
@@ -152,7 +152,7 @@ export const DistrictSatelliteTimeline: React.FC<
 
           <div className="pt-2">
             {isLoading ? (
-              <div className="py-12 text-center text-sm text-[#5C6863] animate-pulse">
+              <div className="py-12 text-center text-sm text-rk-muted animate-pulse">
                 {t.timeline_loading}
               </div>
             ) : isUnsupported ? (
@@ -216,7 +216,7 @@ export const DistrictSatelliteTimeline: React.FC<
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="p-4 text-center text-sm text-[#5C6863]">
+              <div className="p-4 text-center text-sm text-rk-muted">
                 {t.timeline_no_passes.replace(
                   "{district}",
                   displayDistrictName
@@ -228,12 +228,12 @@ export const DistrictSatelliteTimeline: React.FC<
 
         {/* 10 Major Flood Events Record (2016-2024) (Matching Image 2) */}
         {currentDistrictHistory?.events && (
-          <div className="pt-4 border-t border-[#E5E3D8] mt-4 space-y-2.5">
+          <div className="pt-4 border-t border-rk-line mt-4 space-y-2.5">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#11241C]">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-rk-ink">
                 10 MAJOR FLOOD EVENTS RECORD (2016–2024)
               </span>
-              <span className="text-[11px] text-[#5C6863]">
+              <span className="text-[11px] text-rk-muted">
                 Grey = Not observed by satellite (never implies safe)
               </span>
             </div>
@@ -247,15 +247,15 @@ export const DistrictSatelliteTimeline: React.FC<
                     : null;
 
                 // Color schemes strictly matching Image 2
-                let cardBg = "bg-[#F3F4F6] border-[#E5E7EB] text-[#6B7280]";
+                let cardBg = "bg-rk-secondary border-rk-line text-rk-muted";
                 if (isFlooded) {
                   if (pctNum !== null && pctNum >= 50) {
-                    cardBg = "bg-[#F87171] border-[#EF4444]/40 text-[#11241C]";
+                    cardBg = "bg-rk-danger-accent border-rk-danger-accent/40 text-rk-ink";
                   } else {
-                    cardBg = "bg-[#FCA5A5] border-[#F87171]/40 text-[#11241C]";
+                    cardBg = "bg-rk-danger-accent/40 border-rk-danger-accent/40 text-rk-ink";
                   }
                 } else if (ev.status === "not_flooded") {
-                  cardBg = "bg-[#D1FAE5] border-[#A7F3D0] text-[#065F46]";
+                  cardBg = "bg-rk-success-soft border-rk-success/30 text-rk-success";
                 }
 
                 // Format event id: e.g. "2016-07-mo..."
@@ -275,16 +275,16 @@ export const DistrictSatelliteTimeline: React.FC<
                     </span>
                     <div className="mt-1">
                       {isNotObserved ? (
-                        <div className="text-[11px] font-bold leading-tight text-[#6B7280]">
+                        <div className="text-[11px] font-bold leading-tight text-rk-muted">
                           <div>No</div>
                           <div>Data</div>
                         </div>
                       ) : isFlooded ? (
-                        <div className="text-[11px] font-extrabold leading-tight text-[#11241C]">
+                        <div className="text-[11px] font-extrabold leading-tight text-rk-ink">
                           Flooded {pctNum}%
                         </div>
                       ) : (
-                        <div className="text-[11px] font-extrabold leading-tight text-[#065F46]">
+                        <div className="text-[11px] font-extrabold leading-tight text-rk-success">
                           Dry {pctNum ?? 0}%
                         </div>
                       )}

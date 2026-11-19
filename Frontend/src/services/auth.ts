@@ -8,9 +8,7 @@
 import { DistrictPrediction, AssetNearResult } from "../types/api";
 import { readPreciseLocation } from "./location";
 
-const API_BASE =
-  (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL) ||
-  "http://localhost:8000/api/v1";
+import { API_BASE } from "./common/client";
 
 const TOKEN_KEY = "rokkha_token";
 
@@ -28,11 +26,16 @@ export interface AccountUser {
   // What the account may do. Decided by the backend only; the page uses it
   // to choose which screens to show, the backend to allow or refuse calls.
   role: Role;
+  // The rescue team the account works in (set by an admin), or null.
+  team: { id: string; name: string; organization: string } | null;
   location: GeoPoint | null;
   location_label: string | null;
   district: { pcode: string; name: string; division: string } | null;
   location_updated_at: string | null;
   created_at: string;
+  /** "suspended" accounts cannot log in (set by an admin). Older backends do not send it. */
+  status?: "active" | "suspended";
+  last_login_at?: string | null;
 }
 
 export interface LocationReport {
@@ -97,6 +100,9 @@ function readDetail(body: any, fallback: string): string {
   return fallback;
 }
 
+/** Fired on window when the server rejects the stored login (401). */
+export const SESSION_ENDED = "rokkha:session-ended";
+
 /** One call to the backend, with the login token when there is one. Throws AuthError. */
 export async function call<T>(path: string, init: RequestInit = {}, withToken = true): Promise<T> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
@@ -121,7 +127,11 @@ export async function call<T>(path: string, init: RequestInit = {}, withToken = 
 
   if (!res.ok) {
     // The login is no longer valid: forget it so the page shows the login form.
-    if (res.status === 401 && withToken) setToken(null);
+    if (res.status === 401 && withToken && token) {
+      setToken(null);
+      // Tell the page at once (expired session, suspended account, logged out elsewhere).
+      if (typeof window !== "undefined") window.dispatchEvent(new Event(SESSION_ENDED));
+    }
     throw new AuthError(res.status, readDetail(body, `Request failed (${res.status}).`));
   }
   return body as T;

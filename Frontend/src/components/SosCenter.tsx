@@ -1,20 +1,24 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
-import { Crosshair, LifeBuoy, MapPin, MessageSquare, Phone, X } from "lucide-react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Check, Crosshair, LifeBuoy, MapPin, MessageSquare, Minus, Pencil, Phone, Plus, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Language, toBnNum, DISTRICTS_BN } from "../lib/translations";
-import districtGeoData from "@/data/bangladesh_districts.json";
-import benchmarkData from "@/data/benchmark_predictions.json";
+import { Language, toBnNum, DISTRICTS_BN, localError } from "../lib/translations";
+import { ALL_DISTRICTS } from "@/lib/districts";
 import { readPreciseLocation } from "../services/location";
+import { NEED_LABEL, NEED_ORDER, VULNERABLE_LABEL } from "../lib/rescueLabels";
 import {
+  LocationSource,
   Need,
+  Place,
   SosDraft,
+  Vulnerable,
   StoredSos,
   cancelSos,
   forgetSos,
   isOpen as checkIsOpen,
+  lookupPlaceName,
   readQueue,
   saveSos,
   smsText,
@@ -29,32 +33,10 @@ interface SosCenterProps {
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
   hideFloatingButton?: boolean;
+  /** Needs to tick when the form opens (from the "Get Help" menu). */
+  presetNeeds?: Need[];
 }
 
-const ALL_DISTRICTS: Array<{ pcode: string; name: string; division: string }> = (
-  districtGeoData as any
-).features
-  .map((f: any) => ({
-    pcode: f.properties.pcode,
-    name: f.properties.name,
-    division: f.properties.parent_name || "",
-  }))
-  .sort((a: any, b: any) => a.name.localeCompare(b.name));
-
-const DISTRICT_CENTERS: Record<string, [number, number]> =
-  (benchmarkData as any).centroids || {
-    BD6090: [24.9602, 91.3992],
-    BD3026: [23.8103, 90.4125],
-    BD6091: [24.8949, 91.8687],
-  };
-
-const NEEDS: Array<{ id: Need; en: string; bn: string }> = [
-  { id: "rescue", en: "Rescue (trapped by water)", bn: "উদ্ধার (পানিতে আটকা)" },
-  { id: "medical", en: "Medical help", bn: "চিকিৎসা সহায়তা" },
-  { id: "food_water", en: "Food and drinking water", bn: "খাবার ও পানি" },
-  { id: "shelter", en: "A safe shelter", bn: "নিরাপদ আশ্রয়" },
-  { id: "other", en: "Other", bn: "অন্যান্য" },
-];
 
 const SYNC_EVERY_MS = 20000;
 
@@ -72,6 +54,7 @@ export const SosCenter: React.FC<SosCenterProps> = ({
   isOpen,
   onOpenChange,
   hideFloatingButton = false,
+  presetNeeds,
 }) => {
   const isBn = lang === "bn";
   const tr = (en: string, bn: string) => (isBn ? bn : en);
@@ -89,52 +72,72 @@ export const SosCenter: React.FC<SosCenterProps> = ({
     setIsOpenPanel(open);
     onOpenChange?.(open);
   };
+
+  // Dialog behaviour: focus moves into the dialog, Tab stays inside, Escape closes (same as the Close
+  // button: nothing typed is lost), and focus returns to where it was before.
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!isOpenPanel) return;
+    const before = document.activeElement as HTMLElement | null;
+    const box = dialogRef.current;
+    box?.querySelector<HTMLElement>("[data-autofocus]")?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setIsOpenPanel(false);
+        onOpenChange?.(false);
+        return;
+      }
+      if (e.key !== "Tab" || !box) return;
+      const items = Array.from(box.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')).filter((el) => el.offsetParent !== null);
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      if (before && document.contains(before)) before.focus();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpenPanel]);
   const [queue, setQueue] = useState<StoredSos[]>([]);
-  const [position, setPosition] = useState<{ lng: number; lat: number; accuracy_m: number | null; label?: string } | null>(null);
-  const [showOtherLocation, setShowOtherLocation] = useState(false);
-  const [otherDistrict, setOtherDistrict] = useState("");
-  const [otherArea, setOtherArea] = useState("");
+  // Only a point the phone (GPS) or the account (saved place) really gave. Never made up.
+  const [position, setPosition] = useState<{ lng: number; lat: number; accuracy_m: number | null; source: LocationSource; label: string } | null>(null);
+  const [showPlace, setShowPlace] = useState(false);
+  const [place, setPlace] = useState<Place>({ district_pcode: "" });
   const [isLocating, setIsLocating] = useState(false);
-  const [people, setPeople] = useState("1");
-  const [need, setNeed] = useState<Need>("rescue");
+  const [people, setPeople] = useState(1);
+  const [needs, setNeeds] = useState<Need[]>([]);
+  const [seriousInjury, setSeriousInjury] = useState<boolean | null>(null);
+  const [vulnerable, setVulnerable] = useState<Vulnerable[]>([]);
   const [note, setNote] = useState("");
   const [name, setName] = useState(contactName);
   const [phone, setPhone] = useState("");
   const [problem, setProblem] = useState<string | null>(null);
+  // The request as it will be sent, shown for a last check before saving.
+  const [review, setReview] = useState<SosDraft | null>(null);
 
-  const handleSelectDistrict = (pcode: string) => {
-    setOtherDistrict(pcode);
-    const center = DISTRICT_CENTERS[pcode];
+  // Opened from a "Get Help" menu item: tick that need (the person can change it).
+  useEffect(() => {
+    if (isOpen && presetNeeds && presetNeeds.length > 0) setNeeds(presetNeeds);
+  }, [isOpen, presetNeeds]);
+
+  const districtName = (pcode: string | null | undefined) => {
     const d = ALL_DISTRICTS.find((item) => item.pcode === pcode);
-    if (center && d) {
-      const distName = isBn ? (DISTRICTS_BN[pcode] || d.name) : d.name;
-      const label = otherArea.trim() ? `${otherArea.trim()}, ${distName}` : distName;
-      setPosition({
-        lat: center[0],
-        lng: center[1],
-        accuracy_m: null,
-        label,
-      });
-    }
+    return d ? (isBn ? DISTRICTS_BN[d.pcode] || d.name : d.name) : "";
   };
 
-  const handleOtherAreaChange = (val: string) => {
-    setOtherArea(val);
-    if (otherDistrict) {
-      const center = DISTRICT_CENTERS[otherDistrict];
-      const d = ALL_DISTRICTS.find((item) => item.pcode === otherDistrict);
-      if (center && d) {
-        const distName = isBn ? (DISTRICTS_BN[otherDistrict] || d.name) : d.name;
-        const label = val.trim() ? `${val.trim()}, ${distName}` : distName;
-        setPosition({
-          lat: center[0],
-          lng: center[1],
-          accuracy_m: null,
-          label,
-        });
-      }
-    }
-  };
+  const setPlaceField = (field: keyof Place, value: string) => setPlace((current) => ({ ...current, [field]: value }));
+
+  const toggle = <T,>(list: T[], value: T) => (list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
 
   const sync = useCallback(async () => {
     setQueue(await syncQueue());
@@ -165,49 +168,95 @@ export const SosCenter: React.FC<SosCenterProps> = ({
     try {
       // Rescuers need the most exact spot the phone can give, with its accuracy.
       const fix = await readPreciseLocation({ isBn });
-      setPosition({ lng: fix.lng, lat: fix.lat, accuracy_m: fix.accuracy_m, label: tr("My GPS location", "আমার জিপিএস অবস্থান") });
-      setShowOtherLocation(false);
+      // Show a readable place, not raw coordinates. The coordinates are still sent for the rescue teams.
+      const name = await lookupPlaceName(fix.lng, fix.lat);
+      setPosition({
+        lng: fix.lng,
+        lat: fix.lat,
+        accuracy_m: fix.accuracy_m,
+        source: "gps",
+        label: name
+          ? tr(`Near ${name}`, `${name} এর কাছে`)
+          : tr("My GPS location (place name could not be found)", "আমার জিপিএস অবস্থান (জায়গার নাম পাওয়া যায়নি)"),
+      });
     } catch (error) {
-      setProblem((error as Error).message);
+      // No GPS (refused, switched off, no signal): the person can still describe the place.
+      setProblem(
+        `${(error as Error).message} ${tr("You can still send the request: describe the place below.", "আপনি তবুও অনুরোধ পাঠাতে পারেন: নিচে জায়গার বর্ণনা দিন।")}`
+      );
+      setShowPlace(true);
     } finally {
       setIsLocating(false);
     }
   };
 
-  const submit = async (e: React.FormEvent) => {
+  const placeText = (p: Place | null) =>
+    p
+      ? [p.village, p.area, p.union, p.upazila, p.landmark, districtName(p.district_pcode)]
+          .map((v) => (v || "").trim())
+          .filter(Boolean)
+          .join(", ")
+      : "";
+
+  /** Check the form and show what will be sent. Nothing is saved yet. */
+  const prepare = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!position) {
-      setProblem(tr("Choose your location first.", "আগে আপনার অবস্থান দিন।"));
+    const typed: Place | null = showPlace
+      ? Object.fromEntries(Object.entries(place).map(([k, v]) => [k, (v || "").trim() || null])) as unknown as Place
+      : null;
+    const described = !!typed && !!typed.district_pcode && [typed.village, typed.area, typed.landmark, typed.details, typed.union, typed.upazila].some(Boolean);
+
+    if (needs.length === 0) {
+      setProblem(tr("Choose what help you need.", "কী সাহায্য দরকার তা বেছে নিন।"));
       return;
     }
-    const locationPrefix = position.label ? `[${position.label}] ` : "";
-    const noteWithLocation = note.trim().startsWith(locationPrefix)
-      ? note.trim()
-      : `${locationPrefix}${note.trim()}`;
-    const draft: SosDraft = {
-      lng: position.lng,
-      lat: position.lat,
-      accuracy_m: position.accuracy_m,
-      people: Math.min(1000, Math.max(1, Number(people) || 1)),
-      need,
-      note: noteWithLocation.trim().slice(0, 500),
+    if (!position && !described) {
+      setProblem(
+        tr(
+          "Give your location: use GPS, or choose the district and write the village, area or a landmark.",
+          "অবস্থান দিন: জিপিএস ব্যবহার করুন, অথবা জেলা বেছে নিয়ে গ্রাম, এলাকা বা পরিচিত স্থান লিখুন।"
+        )
+      );
+      return;
+    }
+    setProblem(null);
+    const placeLabel = [position ? position.label : "", described ? placeText(typed) : ""].filter(Boolean).join(" · ");
+    setReview({
+      needs,
+      people: Math.min(1000, Math.max(1, people)),
+      serious_injury: seriousInjury,
+      vulnerable,
+      location: position ? { lng: position.lng, lat: position.lat } : null,
+      location_source: position ? position.source : "manual",
+      accuracy_m: position ? position.accuracy_m : null,
+      place: described ? typed : null,
+      place_label: placeLabel,
+      note: note.trim().slice(0, 500),
       contact_name: name.trim().slice(0, 80),
       contact_phone: phone.trim().slice(0, 20),
-    };
-    // Saved on the phone first: it survives a dead connection and a closed page.
-    saveSos(draft);
+    });
+  };
+
+  /** Saved on the phone first: it survives a dead connection and a closed page. Then sent. */
+  const confirmAndSend = async () => {
+    if (!review) return;
+    saveSos(review);
     setQueue(readQueue());
+    setReview(null);
     setNote("");
-    setProblem(null);
+    setNeeds([]);
+    setSeriousInjury(null);
+    setVulnerable([]);
     await sync();
   };
 
+  /** One honest line from what the server reported. */
   const stateLine = (item: StoredSos): { text: string; tone: string } => {
-    const time = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const time = (iso: string) => num(new Date(iso).toLocaleTimeString(isBn ? "bn-BD" : undefined, { hour: "2-digit", minute: "2-digit" }));
     if (item.delivery === "refused") {
       return {
-        text: tr(`Not accepted by the server: ${item.last_problem || ""}`, `সার্ভার গ্রহণ করেনি: ${item.last_problem || ""}`),
-        tone: "bg-[#FEE2E2] text-[#991B1B] border-[#FCA5A5]",
+        text: tr(`Not accepted by the server: ${item.last_problem || ""}`, `সার্ভার গ্রহণ করেনি: ${localError(item.last_problem, "bn")}`),
+        tone: "bg-rk-danger-soft text-rk-danger border-rk-danger-accent/40",
       };
     }
     if (item.delivery === "saved" || !item.receipt) {
@@ -216,36 +265,52 @@ export const SosCenter: React.FC<SosCenterProps> = ({
           "Saved on this phone. NOT sent yet. It is sent by itself when the connection returns and this page is open.",
           "এই ফোনে সংরক্ষিত। এখনো পাঠানো হয়নি। সংযোগ ফিরে এলে এবং এই পাতা খোলা থাকলে নিজে থেকেই পাঠানো হবে।"
         ),
-        tone: "bg-[#FEF3C7] text-[#78350F] border-[#F59E0B]",
+        tone: "bg-rk-warning-soft text-rk-warning border-rk-warning-accent",
       };
     }
     const r = item.receipt;
-    const at = num(time(r.updated_at));
+    const last = r.history[r.history.length - 1];
+    const at = time(last ? last.at : r.updated_at);
+    const team = r.team ? `${r.team.name} (${r.team.organization})` : tr("The team", "দলটি");
+    const blue = "bg-rk-info-soft text-rk-info border-rk-info/40";
+    const green = "bg-rk-success-soft text-rk-success border-rk-success/40";
     switch (r.status) {
-      case "new":
+      case "available":
+        if (last && last.event === "released") {
+          const why = last.reason === "unable_to_reach"
+            ? tr("The team could not reach your location.", "দলটি আপনার জায়গায় পৌঁছাতে পারেনি।")
+            : tr("The team had to give the request back.", "দলটি অনুরোধটি ফিরিয়ে দিয়েছে।");
+          return {
+            text: `${why} (${at}) ${tr("Your request is open again for other rescue teams.", "আপনার অনুরোধ আবার অন্য উদ্ধারকারী দলের জন্য খোলা।")}`,
+            tone: "bg-rk-warning-soft text-rk-warning border-rk-warning-accent",
+          };
+        }
         return {
-          text: tr(`Received by the server at ${num(time(r.received_at))}. No rescuer has opened it yet.`, `সার্ভার ${num(time(r.received_at))} টায় পেয়েছে। এখনো কোনো উদ্ধারকারী দেখেননি।`),
-          tone: "bg-[#DBEAFE] text-[#1E3A8A] border-[#93C5FD]",
+          text: tr(
+            `Your request has been received (${time(r.received_at)}). Rescue teams can see it. No team has accepted it yet.`,
+            `আপনার অনুরোধ পৌঁছেছে (${time(r.received_at)})। উদ্ধারকারী দলগুলো এটি দেখতে পাচ্ছে। এখনো কোনো দল গ্রহণ করেনি।`
+          ),
+          tone: blue,
         };
-      case "acknowledged":
+      case "accepted":
         return {
-          text: tr(`A rescuer has seen your request (${at}).`, `একজন উদ্ধারকারী আপনার অনুরোধ দেখেছেন (${at})।`),
-          tone: "bg-[#DBEAFE] text-[#1E3A8A] border-[#93C5FD]",
+          text: tr(`A rescue team has accepted your request: ${team} (${at}). They have not confirmed they are on the way yet.`, `একটি উদ্ধারকারী দল আপনার অনুরোধ গ্রহণ করেছে: ${team} (${at})। তারা এখনো রওনা হওয়ার খবর দেয়নি।`),
+          tone: blue,
         };
-      case "team_sent":
-        return {
-          text: tr(`The rescuers marked a team as sent (${at}).`, `উদ্ধারকারীরা জানিয়েছেন একটি দল পাঠানো হয়েছে (${at})।`),
-          tone: "bg-[#DCFCE7] text-[#166534] border-[#86EFAC]",
-        };
-      case "resolved":
-        return {
-          text: tr(`Marked as resolved by the rescuers (${at}).`, `উদ্ধারকারীরা সমাধান হয়েছে বলে চিহ্নিত করেছেন (${at})।`),
-          tone: "bg-[#F3F4F6] text-[#374151] border-[#D1D5DB]",
-        };
+      case "en_route":
+        return { text: tr(`The rescue team is on its way: ${team} (${at}).`, `উদ্ধারকারী দল রওনা দিয়েছে: ${team} (${at})।`), tone: green };
+      case "arrived":
+        return { text: tr(`The rescue team has arrived: ${team} (${at}).`, `উদ্ধারকারী দল পৌঁছেছে: ${team} (${at})।`), tone: green };
+      case "in_progress":
+        return { text: tr(`Help is being given by ${team} (${at}).`, `${team} সাহায্য দিচ্ছে (${at})।`), tone: green };
+      case "completed":
+        return { text: tr(`${team} recorded that help was completed (${at}).`, `${team} জানিয়েছে সাহায্য সম্পন্ন হয়েছে (${at})।`), tone: "bg-rk-secondary text-rk-ink border-rk-line" };
       default:
         return {
-          text: tr(`Cancelled (${at}).`, `বাতিল করা হয়েছে (${at})।`),
-          tone: "bg-[#F3F4F6] text-[#374151] border-[#D1D5DB]",
+          text: last && last.event === "closed"
+            ? tr(`Closed by the Rokkha team (${at}). If you still need help, send a new request or call 999.`, `রক্ষা দল বন্ধ করেছে (${at})। এখনো সাহায্য লাগলে নতুন অনুরোধ পাঠান বা ৯৯৯ এ কল করুন।`)
+            : tr(`Cancelled (${at}).`, `বাতিল করা হয়েছে (${at})।`),
+          tone: "bg-rk-secondary text-rk-ink border-rk-line",
         };
     }
   };
@@ -259,7 +324,7 @@ export const SosCenter: React.FC<SosCenterProps> = ({
         <button
           type="button"
           onClick={() => handleOpenChange(true)}
-          className="fixed bottom-5 right-5 z-[900] h-14 px-5 rounded-full bg-[linear-gradient(90deg,#3B7E5D_0%,#E9B441_34%,#E67328_67%,#D93829_100%)] hover:opacity-95 text-white font-extrabold shadow-[0_8px_24px_rgba(217,56,41,0.25)] flex items-center gap-3 transition-all hover:scale-[1.03] active:scale-[0.98] cursor-pointer"
+          className="fixed bottom-5 right-5 z-[900] h-14 px-5 rounded-full bg-rk-brand hover:opacity-95 text-white font-extrabold shadow-[0_8px_24px_rgba(217,56,41,0.25)] flex items-center gap-3 transition-all hover:scale-[1.03] active:scale-[0.98] cursor-pointer"
           aria-label={tr("Emergency Rescue Request", "জরুরি উদ্ধার অনুরোধ")}
         >
           <div className="w-8 h-8 rounded-full border-2 border-white/95 flex items-center justify-center shrink-0 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
@@ -274,7 +339,7 @@ export const SosCenter: React.FC<SosCenterProps> = ({
             </span>
           </div>
           {openCount > 0 && (
-            <span className="ml-1 min-w-5 h-5 px-1.5 rounded-full bg-white text-[#D93829] text-xs font-black flex items-center justify-center shadow-xs">
+            <span className="ml-1 min-w-5 h-5 px-1.5 rounded-full bg-white text-rk-danger text-xs font-black flex items-center justify-center shadow-xs">
               {num(openCount)}
             </span>
           )}
@@ -282,27 +347,27 @@ export const SosCenter: React.FC<SosCenterProps> = ({
       )}
 
       {isOpenPanel && (
-        <div className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4" role="dialog" aria-modal="true">
+        <div className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4" role="dialog" aria-modal="true" aria-labelledby="rk-sos-title" ref={dialogRef}>
           <div className="w-full sm:max-w-xl max-h-[92vh] overflow-y-auto bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl">
-            <div className="sticky top-0 bg-[#C9443A] text-white px-5 py-4 flex items-center justify-between rounded-t-3xl">
-              <div className="flex items-center gap-2 font-extrabold text-lg">
-                <LifeBuoy className="w-5 h-5" />
+            <div className="sticky top-0 bg-rk-brand text-white px-5 py-4 flex items-center justify-between rounded-t-3xl">
+              <h2 id="rk-sos-title" className="flex items-center gap-2 font-extrabold text-lg">
+                <LifeBuoy className="w-5 h-5" aria-hidden="true" />
                 {tr("Ask for emergency help", "জরুরি সাহায্য চান")}
-              </div>
-              <button type="button" onClick={() => handleOpenChange(false)} aria-label={tr("Close", "বন্ধ করুন")} className="p-1.5 rounded-full hover:bg-white/20">
-                <X className="w-5 h-5" />
+              </h2>
+              <button type="button" data-autofocus onClick={() => handleOpenChange(false)} aria-label={tr("Close", "বন্ধ করুন")} className="h-10 w-10 inline-flex items-center justify-center rounded-full hover:bg-white/20 transition-colors focus-visible:outline-white">
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
 
             <div className="p-5 space-y-5">
               <a
                 href="tel:999"
-                className="flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-[#11241C] text-white font-extrabold text-base"
+                className="flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-rk-ink text-white font-extrabold text-base"
               >
                 <Phone className="w-4 h-4" />
                 {tr("Call 999 (national emergency number)", "৯৯৯ নম্বরে কল করুন (জাতীয় জরুরি সেবা)")}
               </a>
-              <p className="text-xs text-[#5C6863] -mt-3">
+              <p className="text-xs text-rk-muted -mt-3">
                 {tr(
                   "If you can make a call, call first. This form sends your request to the Rokkha rescue volunteers; it is not the government emergency service.",
                   "কল করা সম্ভব হলে আগে কল করুন। এই ফর্ম আপনার অনুরোধ রক্ষা উদ্ধার স্বেচ্ছাসেবকদের কাছে পাঠায়; এটি সরকারি জরুরি সেবা নয়।"
@@ -311,34 +376,43 @@ export const SosCenter: React.FC<SosCenterProps> = ({
 
               {queue.length > 0 && (
                 <div className="space-y-3">
-                  <div className="text-sm font-extrabold text-[#12241C]">
+                  <div className="text-sm font-extrabold text-rk-ink">
                     {tr("Your requests on this phone", "এই ফোনে আপনার অনুরোধ")}
                     {unsentCount > 0 && (
-                      <span className="ml-2 text-xs font-bold text-[#92400E]">
+                      <span className="ml-2 text-xs font-bold text-rk-warning">
                         {tr(`${unsentCount} not sent yet`, `${num(unsentCount)}টি এখনো পাঠানো হয়নি`)}
                       </span>
                     )}
                   </div>
                   {queue.map((item) => {
                     const line = stateLine(item);
-                    const needLabel = NEEDS.find((n) => n.id === item.draft.need);
                     return (
-                      <div key={item.client_id} className="rounded-2xl border border-[#DFDDD3] p-3.5 space-y-2.5">
-                        <div className="text-sm font-bold text-[#12241C]">
-                          {needLabel ? tr(needLabel.en, needLabel.bn) : item.draft.need} ·{" "}
-                          {tr(`${item.draft.people} people`, `${num(item.draft.people)} জন`)} ·{" "}
-                          {num(item.draft.lat.toFixed(4))}°N, {num(item.draft.lng.toFixed(4))}°E
+                      <div key={item.client_id} className="rounded-2xl border border-rk-line p-3.5 space-y-2.5">
+                        {item.receipt && (
+                          <div className="text-sm font-extrabold text-rk-ink">
+                            {tr("Reference", "রেফারেন্স")}: <span className="font-mono tracking-wider">{item.receipt.reference}</span>
+                          </div>
+                        )}
+                        <div className="text-sm font-bold text-rk-ink">
+                          {item.draft.needs.map((n) => tr(NEED_LABEL[n].en, NEED_LABEL[n].bn)).join(", ")} ·{" "}
+                          {tr(`${item.draft.people} ${item.draft.people === 1 ? "person" : "people"}`, `${num(item.draft.people)} জন`)}
+                          {item.draft.place_label ? (
+                            <span className="flex items-center gap-1 text-xs font-semibold text-rk-muted">
+                              <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
+                              {item.draft.place_label}
+                            </span>
+                          ) : null}
                         </div>
                         <div role="status" className={`rounded-lg border px-3 py-2 text-sm font-semibold ${line.tone}`}>
                           {line.text}
                           {item.delivery === "saved" && item.last_problem && (
                             <span className="block text-xs font-medium mt-1">
-                              {tr("Last try:", "শেষ চেষ্টা:")} {item.last_problem}
+                              {tr("Last try:", "শেষ চেষ্টা:")} {localError(item.last_problem, isBn ? "bn" : "en")}
                             </span>
                           )}
                         </div>
                         {item.receipt?.message_to_sender && (
-                          <div className="rounded-lg bg-[#FAF9F5] border border-[#EDEBE2] px-3 py-2 text-sm text-[#12241C]">
+                          <div className="rounded-lg bg-rk-page border border-rk-line px-3 py-2 text-sm text-rk-ink">
                             <span className="font-bold">{tr("Message from the rescuers: ", "উদ্ধারকারীদের বার্তা: ")}</span>
                             {item.receipt.message_to_sender}
                           </div>
@@ -351,7 +425,7 @@ export const SosCenter: React.FC<SosCenterProps> = ({
                               </Button>
                               <a
                                 href={`sms:?&body=${encodeURIComponent(smsText(item))}`}
-                                className="h-8 px-3 rounded-lg border border-[#DFDDD3] text-xs font-bold text-[#12241C] flex items-center gap-1.5"
+                                className="h-8 px-3 rounded-lg border border-rk-line text-xs font-bold text-rk-ink flex items-center gap-1.5"
                               >
                                 <MessageSquare className="w-3.5 h-3.5" />
                                 {tr("Send as SMS to someone", "কাউকে এসএমএস করে পাঠান")}
@@ -370,7 +444,7 @@ export const SosCenter: React.FC<SosCenterProps> = ({
                                 }
                                 setQueue(readQueue());
                               }}
-                              className="h-8 text-xs font-bold rounded-lg text-[#991B1B]"
+                              className="h-8 text-xs font-bold rounded-lg text-rk-danger"
                             >
                               {tr("I no longer need help", "আমার আর সাহায্য লাগবে না")}
                             </Button>
@@ -394,38 +468,97 @@ export const SosCenter: React.FC<SosCenterProps> = ({
                 </div>
               )}
 
-              <form onSubmit={submit} className="space-y-4 border-t border-[#EDEBE2] pt-4">
-                <div className="text-sm font-extrabold text-[#12241C]">{tr("New request", "নতুন অনুরোধ")}</div>
+              {review ? (
+                <div className="space-y-4 border-t border-rk-line pt-4" aria-live="polite">
+                  <div className="text-base font-extrabold text-rk-ink">{tr("Check before sending", "পাঠানোর আগে দেখে নিন")}</div>
+                  <dl className="rounded-2xl border-2 border-rk-brand p-4 space-y-2 text-sm text-rk-ink">
+                    <div>
+                      <dt className="font-bold text-rk-muted">{tr("Your request will be sent for this place:", "এই জায়গার জন্য অনুরোধ পাঠানো হবে:")}</dt>
+                      <dd className="font-extrabold">{review.place_label}</dd>
+                      {review.location ? (
+                        <dd className="text-xs text-rk-muted">
+                          {tr("Your exact GPS point is sent too, and is shown only to rescue teams.", "আপনার সঠিক জিপিএস অবস্থানও পাঠানো হবে, যা শুধু উদ্ধারকারী দল দেখতে পায়।")}
+                          {review.accuracy_m !== null ? ` ${tr(`Accuracy about ${Math.round(review.accuracy_m)} m.`, `নির্ভুলতা প্রায় ${num(Math.round(review.accuracy_m))} মিটার।`)}` : ""}
+                        </dd>
+                      ) : (
+                        <dd className="text-xs text-rk-muted">{tr("No GPS point: teams will use the place you described.", "জিপিএস নেই: দলগুলো আপনার দেওয়া বর্ণনা ব্যবহার করবে।")}</dd>
+                      )}
+                    </div>
+                    <div>
+                      <dt className="font-bold text-rk-muted">{tr("Help needed", "যে সাহায্য দরকার")}</dt>
+                      <dd className="font-bold">{review.needs.map((n) => tr(NEED_LABEL[n].en, NEED_LABEL[n].bn)).join(", ")}</dd>
+                    </div>
+                    <div>
+                      <dt className="font-bold text-rk-muted">{tr("People", "মানুষ")}</dt>
+                      <dd className="font-bold">
+                        {num(review.people)}
+                        {review.serious_injury === true ? ` · ${tr("someone is seriously ill or injured", "কেউ গুরুতর অসুস্থ বা আহত")}` : ""}
+                        {review.vulnerable.length > 0 ? ` · ${review.vulnerable.map((v) => tr(VULNERABLE_LABEL[v].en, VULNERABLE_LABEL[v].bn)).join(", ")}` : ""}
+                      </dd>
+                    </div>
+                  </dl>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button type="button" variant="outline" onClick={() => setReview(null)} className="h-12 rounded-xl font-bold flex items-center gap-2">
+                      <Pencil className="w-4 h-4" />
+                      {tr("Change", "পরিবর্তন")}
+                    </Button>
+                    <Button type="button" onClick={confirmAndSend} className="h-12 bg-rk-brand hover:bg-rk-brand-strong text-white font-extrabold rounded-xl">
+                      {tr("Confirm and send", "নিশ্চিত করে পাঠান")}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+              <form onSubmit={prepare} className="space-y-5 border-t border-rk-line pt-4" noValidate>
+                <div className="text-sm font-extrabold text-rk-ink">{tr("New request", "নতুন অনুরোধ")}</div>
 
-                <div className="space-y-2">
-                  <label className="block text-base sm:text-lg font-bold text-[#12241C]">{tr("Where are you?", "আপনি কোথায়?")}</label>
+                <fieldset className="space-y-2">
+                  <legend className="text-base sm:text-lg font-bold text-rk-ink mb-2">{tr("1. What help do you need?", "১. কী সাহায্য দরকার?")}</legend>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {NEED_ORDER.map((id) => {
+                      const on = needs.includes(id);
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          aria-pressed={on}
+                          onClick={() => setNeeds((list) => toggle(list, id))}
+                          className={`min-h-12 px-3 rounded-xl border-2 text-left text-sm font-bold transition-colors ${
+                            on ? "border-rk-brand bg-rk-brand-soft text-rk-ink" : "border-rk-line bg-white text-rk-ink"
+                          }`}
+                        >
+                          {on && <Check className="inline w-4 h-4 mr-1 -mt-0.5" aria-hidden="true" />}
+                          {tr(NEED_LABEL[id].en, NEED_LABEL[id].bn)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+
+                <fieldset className="space-y-2">
+                  <legend className="text-base sm:text-lg font-bold text-rk-ink mb-2">{tr("2. Where are you?", "২. আপনি কোথায়?")}</legend>
                   <div className="flex flex-wrap gap-2">
-                    <Button type="button" variant="outline" onClick={useGps} disabled={isLocating} className="h-10 rounded-xl text-sm font-bold flex items-center gap-2">
+                    <Button type="button" variant="outline" onClick={useGps} disabled={isLocating} className="h-11 rounded-xl text-sm font-bold flex items-center gap-2">
                       <Crosshair className="w-4 h-4" />
-                      {isLocating ? tr("Reading location...", "অবস্থান নেওয়া হচ্ছে...") : tr("Use my current location", "আমার বর্তমান অবস্থান")}
+                      {isLocating ? tr("Reading location...", "অবস্থান নেওয়া হচ্ছে...") : tr("Use my GPS location", "আমার জিপিএস অবস্থান")}
                     </Button>
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => setShowOtherLocation((prev) => !prev)}
-                      className={`h-10 rounded-xl text-sm font-bold flex items-center gap-2 transition-all ${
-                        showOtherLocation
-                          ? "bg-[#183026] text-white border-[#183026] hover:bg-[#12241C] hover:text-white"
-                          : "border-[#DFDDD3] hover:border-[#12241C]"
-                      }`}
+                      aria-expanded={showPlace}
+                      onClick={() => setShowPlace((prev) => !prev)}
+                      className={`h-11 rounded-xl text-sm font-bold flex items-center gap-2 ${showPlace ? "bg-rk-brand text-white border-rk-brand hover:bg-rk-ink hover:text-white" : ""}`}
                     >
-                      <MapPin className={`w-4 h-4 ${showOtherLocation ? "text-white" : "text-[#C9443A]"}`} />
-                      {tr("Use others location", "অন্যের অবস্থান")}
+                      <MapPin className="w-4 h-4" />
+                      {tr("Describe the place", "জায়গার বর্ণনা দিন")}
                     </Button>
                     {savedPlace && (
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => {
-                          setPosition({ lng: savedPlace.lng, lat: savedPlace.lat, accuracy_m: null, label: savedPlace.label || undefined });
-                          setShowOtherLocation(false);
-                        }}
-                        className="h-10 rounded-xl text-sm font-bold flex items-center gap-2"
+                        onClick={() =>
+                          setPosition({ lng: savedPlace.lng, lat: savedPlace.lat, accuracy_m: null, source: "saved_place", label: savedPlace.label || tr("My saved place", "আমার সংরক্ষিত স্থান") })
+                        }
+                        className="h-11 rounded-xl text-sm font-bold flex items-center gap-2"
                       >
                         <MapPin className="w-4 h-4" />
                         {savedPlace.label || tr("My saved place", "আমার সংরক্ষিত স্থান")}
@@ -433,126 +566,176 @@ export const SosCenter: React.FC<SosCenterProps> = ({
                     )}
                   </div>
 
-                  {showOtherLocation && (
-                    <div className="p-3.5 rounded-2xl bg-[#FAFAF7] border border-[#DFDDD3] space-y-3 mt-2">
-                      <div className="text-xs font-bold text-[#183026]">
-                        {tr("Specify location for someone else:", "অন্য কারো অবস্থান নির্বাচন করুন:")}
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                        <div>
-                          <label className="block text-[11px] font-bold text-[#5C6863] mb-1">
-                            {tr("District (Required)", "জেলা (আবশ্যক)")}
-                          </label>
-                          <select
-                            value={otherDistrict}
-                            onChange={(e) => handleSelectDistrict(e.target.value)}
-                            className="h-10 w-full rounded-xl border border-[#DFDDD3] bg-white px-3 text-xs font-semibold text-[#183026]"
-                          >
-                            <option value="">{tr("-- Select District --", "-- জেলা নির্বাচন করুন --")}</option>
-                            {ALL_DISTRICTS.map((d) => (
-                              <option key={d.pcode} value={d.pcode}>
-                                {isBn ? (DISTRICTS_BN[d.pcode] || d.name) : d.name} ({d.division})
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-[11px] font-bold text-[#5C6863] mb-1">
-                            {tr("Upazila / Area / Landmark (Optional)", "উপজেলা / গ্রাম / পরিচিত স্থান (ঐচ্ছিক)")}
-                          </label>
-                          <Input
-                            type="text"
-                            value={otherArea}
-                            onChange={(e) => handleOtherAreaChange(e.target.value)}
-                            placeholder={tr("e.g. Chhagalnaiya, near flood shelter", "যেমন: ছাগলনাইয়া, বন্যা আশ্রয়কেন্দ্রের কাছে")}
-                            className="h-10 rounded-xl text-xs bg-white"
-                          />
-                        </div>
-                      </div>
+                  {position && (
+                    <div className="flex items-start justify-between gap-2 rounded-xl bg-rk-success-soft border border-rk-success/40 px-3 py-2 text-sm text-rk-success">
+                      <span className="font-semibold flex items-start gap-1.5">
+                        <MapPin className="w-4 h-4 mt-0.5 shrink-0" aria-hidden="true" />
+                        <span>
+                          {position.label}
+                          {position.accuracy_m !== null ? (
+                            <span className="block text-xs font-medium">{tr(`Accuracy about ${Math.round(position.accuracy_m)} m (from your phone)`, `নির্ভুলতা প্রায় ${num(Math.round(position.accuracy_m))} মিটার (আপনার ফোন থেকে)`)}</span>
+                          ) : null}
+                          {position.source === "gps" && (
+                            <span className="block text-xs font-medium">{tr("Add the village or a landmark below so the team finds the house.", "দল যেন বাড়িটি খুঁজে পায়, নিচে গ্রাম বা পরিচিত স্থান লিখুন।")}</span>
+                          )}
+                        </span>
+                      </span>
+                      <button type="button" onClick={() => setPosition(null)} className="text-xs font-bold underline shrink-0">
+                        {tr("Remove", "সরান")}
+                      </button>
                     </div>
                   )}
 
-                  <div className="text-sm text-[#12241C]">
-                    {position ? (
-                      <span className="font-semibold">
-                        {position.label ? <span className="text-[#183026] mr-1.5 font-bold">📍 {position.label} —</span> : null}
-                        {num(position.lat.toFixed(5))}°N, {num(position.lng.toFixed(5))}°E
-                        {position.accuracy_m !== null ? <span className="ml-1.5 text-[#5C6863]">({tr("within", "নির্ভুলতা")} ±{num(String(position.accuracy_m))} {tr("m", "মি")})</span> : null}
-                      </span>
-                    ) : (
-                      tr("No location chosen yet.", "এখনো অবস্থান দেওয়া হয়নি।")
-                    )}
-                  </div>
-                </div>
+                  {showPlace && (
+                    <div className="p-3.5 rounded-2xl bg-rk-page border border-rk-line space-y-2.5">
+                      <div className="text-xs font-bold text-rk-brand">
+                        {position
+                          ? tr("Optional: help the team find the house.", "ঐচ্ছিক: দলকে বাড়িটি খুঁজে পেতে সাহায্য করুন।")
+                          : tr("Choose the district and write at least one of village, area or landmark.", "জেলা বেছে নিন এবং গ্রাম, এলাকা বা পরিচিত স্থানের অন্তত একটি লিখুন।")}
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <label className="block text-[11px] font-bold text-rk-muted">
+                          {tr("District", "জেলা")}{position ? "" : " *"}
+                          <select
+                            value={place.district_pcode || ""}
+                            onChange={(e) => setPlaceField("district_pcode", e.target.value)}
+                            className="mt-1 h-10 w-full rounded-xl border border-rk-line bg-white px-3 text-sm font-semibold text-rk-brand"
+                          >
+                            <option value="">{tr("-- Select district --", "-- জেলা নির্বাচন করুন --")}</option>
+                            {ALL_DISTRICTS.map((d) => (
+                              <option key={d.pcode} value={d.pcode}>
+                                {isBn ? DISTRICTS_BN[d.pcode] || d.name : d.name} ({d.division})
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        {([
+                          ["upazila", tr("Upazila", "উপজেলা")],
+                          ["union", tr("Union", "ইউনিয়ন")],
+                          ["village", tr("Village", "গ্রাম")],
+                          ["area", tr("Area / neighbourhood", "এলাকা / পাড়া")],
+                          ["landmark", tr("House or landmark", "বাড়ি বা পরিচিত স্থান")],
+                        ] as Array<[keyof Place, string]>).map(([field, label]) => (
+                          <label key={field} className="block text-[11px] font-bold text-rk-muted">
+                            {label}
+                            <Input
+                              value={(place[field] as string) || ""}
+                              onChange={(e) => setPlaceField(field, e.target.value)}
+                              maxLength={field === "landmark" ? 160 : 120}
+                              className="mt-1 h-10 rounded-xl text-sm bg-white"
+                            />
+                          </label>
+                        ))}
+                      </div>
+                      <label className="block text-[11px] font-bold text-rk-muted">
+                        {tr("More about the place (optional)", "জায়গা সম্পর্কে আরও (ঐচ্ছিক)")}
+                        <textarea
+                          value={place.details || ""}
+                          onChange={(e) => setPlaceField("details", e.target.value)}
+                          maxLength={300}
+                          rows={2}
+                          className="mt-1 w-full rounded-xl border border-rk-line px-3 py-2 text-sm bg-white"
+                        />
+                      </label>
+                    </div>
+                  )}
+                </fieldset>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-[#3B4740] mb-1">{tr("How many people?", "কতজন মানুষ?")}</label>
-                    <Input type="number" min={1} max={1000} required value={people} onChange={(e) => setPeople(e.target.value)} className="h-10 rounded-xl" />
+                <fieldset className="space-y-3">
+                  <legend className="text-base sm:text-lg font-bold text-rk-ink mb-2">{tr("3. Who is with you?", "৩. আপনার সাথে কারা আছেন?")}</legend>
+                  <div className="flex items-center gap-3">
+                    <span id="sos-people-label" className="text-sm font-bold text-rk-muted">{tr("Number of people", "মানুষের সংখ্যা")}</span>
+                    <div className="flex items-center gap-2" role="group" aria-labelledby="sos-people-label">
+                      <Button type="button" variant="outline" aria-label={tr("One less", "একজন কম")} onClick={() => setPeople((n) => Math.max(1, n - 1))} className="h-11 w-11 rounded-xl p-0">
+                        <Minus className="w-4 h-4" />
+                      </Button>
+                      <span className="w-10 text-center text-xl font-extrabold" aria-live="polite">{num(people)}</span>
+                      <Button type="button" variant="outline" aria-label={tr("One more", "একজন বেশি")} onClick={() => setPeople((n) => Math.min(1000, n + 1))} className="h-11 w-11 rounded-xl p-0">
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-[#3B4740] mb-1">{tr("What do you need most?", "সবচেয়ে বেশি কী দরকার?")}</label>
-                    <select
-                      value={need}
-                      onChange={(e) => setNeed(e.target.value as Need)}
-                      className="h-10 w-full rounded-xl border border-[#DFDDD3] bg-white px-3 text-sm"
-                    >
-                      {NEEDS.map((n) => (
-                        <option key={n.id} value={n.id}>
-                          {tr(n.en, n.bn)}
-                        </option>
+                    <div id="sos-injury-label" className="text-sm font-bold text-rk-muted mb-1.5">{tr("Is anyone seriously ill or injured?", "কেউ কি গুরুতর অসুস্থ বা আহত?")}</div>
+                    <div className="flex gap-2" role="group" aria-labelledby="sos-injury-label">
+                      {([[true, tr("Yes", "হ্যাঁ")], [false, tr("No", "না")]] as Array<[boolean, string]>).map(([value, label]) => (
+                        <button
+                          key={String(value)}
+                          type="button"
+                          aria-pressed={seriousInjury === value}
+                          onClick={() => setSeriousInjury((current) => (current === value ? null : value))}
+                          className={`h-11 px-5 rounded-xl border-2 text-sm font-bold ${seriousInjury === value ? "border-rk-danger bg-rk-danger-soft text-rk-danger" : "border-rk-line bg-white"}`}
+                        >
+                          {label}
+                        </button>
                       ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-[#3B4740] mb-1">
-                    {tr("Anything rescuers should know (optional)", "উদ্ধারকারীদের যা জানা দরকার (ঐচ্ছিক)")}
-                  </label>
-                  <textarea
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    maxLength={500}
-                    rows={2}
-                    placeholder={tr("Children, elderly, injuries, landmark nearby...", "শিশু, বয়স্ক, আহত, কাছের পরিচিত স্থান...")}
-                    className="w-full rounded-xl border border-[#DFDDD3] px-3 py-2 text-sm"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-[#3B4740] mb-1">{tr("Your name (optional)", "আপনার নাম (ঐচ্ছিক)")}</label>
-                    <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} className="h-10 rounded-xl" />
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-[#3B4740] mb-1">{tr("Phone number (optional)", "ফোন নম্বর (ঐচ্ছিক)")}</label>
-                    <Input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value.replace(/[^0-9+ ()-]/g, ""))}
-                      maxLength={20}
-                      className="h-10 rounded-xl"
+                    <div id="sos-vulnerable-label" className="text-sm font-bold text-rk-muted mb-1.5">{tr("Anyone who needs extra care? (optional)", "বিশেষ যত্ন দরকার এমন কেউ? (ঐচ্ছিক)")}</div>
+                    <div className="flex flex-wrap gap-2" role="group" aria-labelledby="sos-vulnerable-label">
+                      {(Object.keys(VULNERABLE_LABEL) as Vulnerable[]).map((id) => (
+                        <button
+                          key={id}
+                          type="button"
+                          aria-pressed={vulnerable.includes(id)}
+                          onClick={() => setVulnerable((list) => toggle(list, id))}
+                          className={`h-10 px-3 rounded-xl border-2 text-sm font-bold ${vulnerable.includes(id) ? "border-rk-brand bg-rk-brand text-white" : "border-rk-line bg-white"}`}
+                        >
+                          {tr(VULNERABLE_LABEL[id].en, VULNERABLE_LABEL[id].bn)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </fieldset>
+
+                <fieldset className="space-y-3">
+                  <legend className="text-base sm:text-lg font-bold text-rk-ink mb-2">{tr("4. How can the team reach you? (optional)", "৪. দল কীভাবে যোগাযোগ করবে? (ঐচ্ছিক)")}</legend>
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="block text-xs font-bold text-rk-muted">
+                      {tr("Your name", "আপনার নাম")}
+                      <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} className="mt-1 h-10 rounded-xl" />
+                    </label>
+                    <label className="block text-xs font-bold text-rk-muted">
+                      {tr("Phone number", "ফোন নম্বর")}
+                      <Input
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value.replace(/[^0-9+ ()-]/g, ""))}
+                        maxLength={20}
+                        className="mt-1 h-10 rounded-xl"
+                      />
+                    </label>
+                  </div>
+                  <label className="block text-xs font-bold text-rk-muted">
+                    {tr("Anything else the team should know", "দলের আর কিছু জানা দরকার")}
+                    <textarea
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                      maxLength={500}
+                      rows={2}
+                      className="mt-1 w-full rounded-xl border border-rk-line px-3 py-2 text-sm"
                     />
-                  </div>
-                </div>
+                  </label>
+                </fieldset>
 
                 {problem && (
-                  <div role="alert" className="rounded-xl border border-[#FCA5A5] bg-[#FEE2E2] px-3.5 py-2.5 text-sm font-semibold text-[#991B1B]">
+                  <div role="alert" className="rounded-xl border border-rk-danger-accent/40 bg-rk-danger-soft px-3.5 py-2.5 text-sm font-semibold text-rk-danger">
                     {problem}
                   </div>
                 )}
 
-                <Button type="submit" className="w-full h-12 bg-[#C9443A] hover:bg-[#A9362E] text-white font-extrabold text-base rounded-xl">
-                  {tr("Save and send the request", "অনুরোধ সংরক্ষণ করে পাঠান")}
+                <Button type="submit" className="w-full h-12 bg-rk-brand hover:bg-rk-brand-strong text-white font-extrabold text-base rounded-xl">
+                  {tr("Next: check the request", "পরবর্তী: অনুরোধ দেখে নিন")}
                 </Button>
-                <p className="text-[11px] text-[#5C6863] leading-snug">
+                <p className="text-[11px] text-rk-muted leading-snug">
                   {tr(
-                    "Your location, note and phone number are shown only to rescuers. The request is saved on this phone first, so it is not lost if the connection drops. Sending a request does not mean help is on the way: watch the status above.",
-                    "আপনার অবস্থান, বার্তা ও ফোন নম্বর শুধু উদ্ধারকারীরা দেখতে পান। অনুরোধটি আগে এই ফোনে সংরক্ষিত হয়, তাই সংযোগ বিচ্ছিন্ন হলেও হারায় না। অনুরোধ পাঠানো মানে সাহায্য আসছে, তা নয়: ওপরের অবস্থা দেখুন।"
+                    "Your location and phone number are shown only to rescue teams, and your phone number only to the team that accepts the request. The request is saved on this phone first, so it is not lost if the connection drops. No SMS or call is made: teams see requests on the Rokkha rescue board. Sending a request does not mean help is on the way: watch the status above.",
+                    "আপনার অবস্থান ও ফোন নম্বর শুধু উদ্ধারকারী দলগুলো দেখতে পায়, আর ফোন নম্বর শুধু যে দল অনুরোধ গ্রহণ করে সেই দল। অনুরোধটি আগে এই ফোনে সংরক্ষিত হয়, তাই সংযোগ বিচ্ছিন্ন হলেও হারায় না। কোনো এসএমএস বা কল করা হয় না: দলগুলো রক্ষা উদ্ধার বোর্ডে অনুরোধ দেখে। অনুরোধ পাঠানো মানে সাহায্য আসছে, তা নয়: ওপরের অবস্থা দেখুন।"
                   )}
                 </p>
               </form>
+              )}
             </div>
           </div>
         </div>

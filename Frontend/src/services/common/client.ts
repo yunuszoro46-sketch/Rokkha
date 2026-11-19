@@ -1,8 +1,12 @@
-import districtGeoData from "../../data/bangladesh_districts.json";
 
-export const API_BASE =
-  (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL) ||
-  "http://localhost:8000/api/v1";
+// The one place the backend address is decided. Production builds read it
+// from .env.production (or the Vercel setting); only `npm run dev` may fall
+// back to a backend on this computer. A production build without the setting
+// gets no address at all, so every call fails and the page says the data is
+// unavailable, instead of silently asking the visitor's own machine.
+export const API_BASE: string =
+  process.env.NEXT_PUBLIC_API_URL ||
+  (process.env.NODE_ENV === "production" ? "" : "http://localhost:8000/api/v1");
 
 export function pointInRing(lng: number, lat: number, ring: number[][]): boolean {
   let inside = false;
@@ -18,21 +22,8 @@ export function pointInRing(lng: number, lat: number, ring: number[][]): boolean
   return inside;
 }
 
-export function findDistrictByPoint(lng: number, lat: number): any | null {
-  const features = (districtGeoData as any).features || [];
-  for (const f of features) {
-    const geom = f.geometry;
-    if (!geom) continue;
-    if (geom.type === "Polygon") {
-      if (pointInRing(lng, lat, geom.coordinates[0])) return f.properties;
-    } else if (geom.type === "MultiPolygon") {
-      for (const poly of geom.coordinates) {
-        if (pointInRing(lng, lat, poly[0])) return f.properties;
-      }
-    }
-  }
-  return null;
-}
+// Point-in-district lookup now loads the boundary file on demand (see lib/districts.ts).
+export { findDistrictByPoint } from "@/lib/districts";
 
 export function haversineMeters(lng1: number, lat1: number, lng2: number, lat2: number): number {
   const R = 6371000;

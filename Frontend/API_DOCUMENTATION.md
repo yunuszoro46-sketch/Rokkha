@@ -442,9 +442,10 @@ Implemented in `src/services/rescue.ts`; full shapes in `Backend/docs/FRONTEND_A
 | `POST` | `/sos` | anyone | `SosCenter` (the red SOS button on every page) |
 | `GET` | `/sos/status/{client_id}` | the sender | `SosCenter`, every 20 seconds while a request is open |
 | `POST` | `/sos/status/{client_id}/cancel` | the sender | "I no longer need help" |
-| `GET` | `/sos?status=` | rescuer, admin | `RescuePanel` (`/rescue`), refreshed every 30 seconds |
-| `PATCH` | `/sos/{id}` | rescuer, admin | the status buttons in `RescuePanel` |
-| `GET` | `/admin/users`, `PATCH` `/admin/users/{id}/role` | admin | `AdminPanel` (`/admin`) |
+| `GET` | `/sos?status=&mine=` | rescuer, admin | `RescuePanel` (`/rescue`): the shared board, refreshed every 30 seconds |
+| `POST` | `/sos/{id}/accept`, `/progress`, `/release`, `/support-request`, `/support` | a rescuer in a team | the buttons in `RescuePanel` (since 18 Nov 2026; replaces `PATCH /sos/{id}`). A 409 shows the server's message and reloads the board |
+| `GET` | `/admin/users`, `PATCH` `/admin/users/{id}/role`, `PATCH` `/admin/users/{id}/team` | admin | `AdminPanel` (`/admin`) |
+| `GET` / `POST` | `/admin/teams` | admin | `AdminPanel`: list and create rescue teams |
 | `POST` / `DELETE` | `/assets`, `/assets/{id}` | admin (on the hosted backend) | `AdminPanel` |
 
 Rules the SOS screen follows:

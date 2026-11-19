@@ -33,7 +33,7 @@ export const DataSourceBanner: React.FC<{ lang?: Language }> = ({ lang = "en" })
   return (
     <div
       role="status"
-      className="w-full bg-[#FEF3C7] border-b border-[#F59E0B] text-[#78350F] px-4 py-2.5 text-sm font-semibold flex items-start gap-2"
+      className="w-full bg-rk-warning-soft border-b border-rk-warning-accent text-rk-warning px-4 py-2.5 text-sm font-semibold flex items-start gap-2"
     >
       <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
       <span>

@@ -33,3 +33,8 @@ next-env.d.ts
 
 .vercel
 .env*
+
+# Playwright test output
+/test-results/
+/playwright-report/
+DEMO_CREDENTIALS.local.md

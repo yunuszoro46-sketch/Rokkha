@@ -4,6 +4,17 @@ import React, { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import districtBoundariesData from "../data/bangladesh_districts.json";
+import { toBnNum } from "../lib/translations";
+
+// Names come from OpenStreetMap and the admin panel: escape them before they go into popup HTML.
+const esc = (v: string) => String(v).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+const TYPE_LABEL: Record<string, [string, string]> = {
+  flood_shelter: ["Flood shelter", "বন্যা আশ্রয়কেন্দ্র"],
+  hospital: ["Hospital", "হাসপাতাল"],
+  clinic: ["Clinic", "ক্লিনিক"],
+  school: ["School", "বিদ্যালয়"],
+};
+const typeLabel = (t: string, bn: boolean) => (TYPE_LABEL[t] ? TYPE_LABEL[t][bn ? 1 : 0] : t.replace(/_/g, " "));
 import { AssetNearResult } from "../types/api";
 
 interface DistrictDetailMapProps {
@@ -60,10 +71,10 @@ export const DistrictDetailMap: React.FC<DistrictDetailMapProps> = ({
     if (districtFeature) {
       const geoLayer = L.geoJSON(districtFeature, {
         style: {
-          color: "#8B5E3C",
-          weight: 3.5,
-          fillColor: "#C9443A",
-          fillOpacity: 0.26,
+          color: "#173D32",
+          weight: 3,
+          fillColor: "#DCEBE5",
+          fillOpacity: 0.35,
           dashArray: "3, 3",
         },
       }).addTo(map);
@@ -89,10 +100,10 @@ export const DistrictDetailMap: React.FC<DistrictDetailMapProps> = ({
     // Add prominent center pin marker with district badge
     const centerPinHtml = `
       <div style="display:flex;flex-direction:column;align-items:center;pointer-events:none;">
-        <div style="background:#183026;color:#FFFFFF;font-weight:800;font-size:11px;padding:3px 9px;border-radius:12px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.35);margin-bottom:3px;letter-spacing:0.3px;">
+        <div style="background:#173D32;color:#FFFFFF;font-weight:800;font-size:11px;padding:3px 9px;border-radius:12px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.35);margin-bottom:3px;letter-spacing:0.3px;">
           ${districtName}
         </div>
-        <div style="width:18px;height:18px;background:#C9443A;border:3px solid #FFFFFF;border-radius:50%;box-shadow:0 0 12px rgba(201,68,58,0.85);"></div>
+        <div style="width:18px;height:18px;background:#247A5B;border:3px solid #FFFFFF;border-radius:50%;box-shadow:0 2px 8px rgba(23,61,50,0.45);"></div>
       </div>
     `;
     const centerIcon = L.divIcon({
@@ -112,8 +123,11 @@ export const DistrictDetailMap: React.FC<DistrictDetailMapProps> = ({
         asset.asset_type.toLowerCase().includes("hospital") ||
         asset.asset_type.toLowerCase().includes("clinic") ||
         asset.asset_type.toLowerCase().includes("health");
-      const iconSymbol = isMedical ? "🏥" : "⛺";
-      const pinColor = isMedical ? "#7C3AED" : "#2563EB";
+      // Simple drawn symbols (no emoji): a cross for health sites, a roof for shelters.
+      const iconSymbol = isMedical
+        ? '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M5 1h4v4h4v4H9v4H5V9H1V5h4z" fill="#FFF"/></svg>'
+        : '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 7 7 1.5 13 7M3 6v6h8V6" fill="none" stroke="#FFF" stroke-width="2" stroke-linejoin="round"/></svg>';
+      const pinColor = isMedical ? "#8E5434" : "#2C6573";
 
       const shelterHtml = `
         <div style="width:26px;height:26px;background:${pinColor};color:#FFF;border:2px solid #FFF;border-radius:7px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 5px rgba(0,0,0,0.3);font-size:13px;cursor:pointer;">
@@ -128,12 +142,12 @@ export const DistrictDetailMap: React.FC<DistrictDetailMapProps> = ({
       });
 
       const distKm = item.distance_kilometers.toFixed(1);
-      L.marker([lat, lng], { icon: shelterIcon })
+      L.marker([lat, lng], { icon: shelterIcon, title: asset.name, alt: asset.name, keyboard: true })
         .bindPopup(
           `<div style="font-family:sans-serif;font-size:12px;line-height:1.4;">
-            <strong style="color:#11241C;">${asset.name}</strong><br/>
-            <span style="color:#5C6863;">${asset.asset_type}</span><br/>
-            <span style="color:#2563EB;font-weight:600;">${distKm} km ${isBn ? "দূরে" : "away"}</span>
+            <strong style="color:#173D32;">${esc(asset.name)}</strong><br/>
+            <span style="color:#4F5F53;">${esc(typeLabel(asset.asset_type, isBn))}</span><br/>
+            <span style="color:#2C6573;font-weight:600;">${isBn ? toBnNum(distKm) : distKm} ${isBn ? "কিমি দূরে" : "km away"}</span>
           </div>`
         )
         .addTo(map);
@@ -154,15 +168,15 @@ export const DistrictDetailMap: React.FC<DistrictDetailMapProps> = ({
   }, [pcode, districtName, lat, lng, assets, isBn]);
 
   return (
-    <div className="relative w-full h-[135px] sm:h-[155px] rounded-2xl overflow-hidden border border-[#DFDDD3] shadow-inner bg-[#EDEBE2]">
+    <div className="relative w-full h-[135px] sm:h-[155px] rounded-2xl overflow-hidden border border-rk-line shadow-inner bg-rk-page">
       <div ref={mapContainerRef} className="w-full h-full z-0" />
-      <div className="absolute top-2 right-2 z-10 bg-white/95 backdrop-blur-xs px-2 py-0.5 rounded-lg border border-[#DFDDD3] text-[10px] font-bold text-[#183026] shadow-xs flex items-center gap-1.5">
+      <div className="absolute top-2 right-2 z-10 bg-white/95 backdrop-blur-xs px-2 py-0.5 rounded-lg border border-rk-line text-[10px] font-bold text-rk-brand shadow-xs flex items-center gap-1.5">
         <span className="flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#C9443A]"></span>
-          {isBn ? "ঝুঁকিপূর্ণ কেন্দ্র" : "District Epicenter"}
+          <span className="w-1.5 h-1.5 rounded-full bg-rk-danger"></span>
+          {isBn ? "জেলার কেন্দ্র" : "District centre"}
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-sm bg-[#7C3AED]"></span>
+          <span className="w-1.5 h-1.5 rounded-sm bg-rk-info"></span>
           {isBn ? "আশ্রয়/হাসপাতাল" : "Shelters & Medical"}
         </span>
       </div>

@@ -180,7 +180,7 @@ export const UI_TEXT = {
     label_district: "District:",
     label_date: "Date:",
     btn_my_district: "My District Report",
-    btn_gps: "GPS",
+    btn_gps: "Use my location",
     placeholder_select_district: "Select District",
 
     // Map Section
@@ -280,9 +280,9 @@ export const UI_TEXT = {
     alerts_likelihood: "Likelihood",
     alerts_registered_assets: "registered critical assets",
     alerts_people_served: "people sheltered/served",
-    alerts_none_title: "No Districts Exceeded Alert Thresholds for {date}",
+    alerts_none_title: "No district reached watch or alert for {date}",
     alerts_none_sub:
-      "Note: This indicates none of the 64 districts triggered the ML alert model on this date. It does not guarantee absence of localized waterlogging.",
+      "The model forecasts 56 of the 64 districts (the other 8 are mostly hidden from radar). A low chance is not zero risk, and short floods or city waterlogging can be missed.",
 
     // Section 5: Hydro-Meteorological Observations
     hydro_card_title: "Hydro-Meteorological Observations:",
@@ -302,20 +302,20 @@ export const UI_TEXT = {
     shelters_card_title: "Nearest Flood Shelters & Healthcare Facilities",
     shelters_card_sub:
       "Registered emergency shelters, clinics, and critical facilities within {radius} km of {district} ({coords}).",
-    shelters_radius_label: "Radius:",
-    shelters_filter_label: "Filter by type:",
-    shelters_type_all: "All Types",
-    shelters_type_flood: "Flood Shelters",
+    shelters_radius_label: "Radius",
+    shelters_filter_label: "Show",
+    shelters_type_all: "All types",
+    shelters_type_flood: "Flood shelters",
     shelters_type_hospital: "Hospitals",
     shelters_type_clinic: "Clinics",
     shelters_type_school: "Schools",
     shelters_loading:
-      "Querying MongoDB geospatial 2dsphere index for nearby shelters...",
+      "Finding places near this location…",
     shelters_capacity: "Capacity:",
     shelters_people: "people",
     shelters_not_specified: "Not specified",
     shelters_empty:
-      "No registered shelters or hospitals within {radius} km of this coordinate. Expand the search radius above.",
+      "No registered shelter, hospital, clinic or school within {radius} km. Try a larger radius, or call 999 in an emergency.",
 
     // Interactive Map Inspection Card
     map_card_title: "National Flood Risk & Ground Inspection Map",
@@ -444,7 +444,7 @@ export const UI_TEXT = {
     label_district: "জেলা:",
     label_date: "তারিখ:",
     btn_my_district: "আমার জেলা প্রতিবেদন",
-    btn_gps: "জিপিএস",
+    btn_gps: "আমার অবস্থান",
     placeholder_select_district: "জেলা নির্বাচন করুন",
 
     // Map Section
@@ -545,9 +545,9 @@ export const UI_TEXT = {
     alerts_likelihood: "সম্ভাবনা",
     alerts_registered_assets: "নিবন্ধিত জরুরি স্থাপনা",
     alerts_people_served: "নাগরিককে আশ্রয় বা সেবা প্রদানে সক্ষম",
-    alerts_none_title: "{date} তারিখে কোনো জেলায় সতর্কতা সীমা অতিক্রম করেনি",
+    alerts_none_title: "{date} তারিখে কোনো জেলা ওয়াচ বা অ্যালার্ট স্তরে পৌঁছায়নি",
     alerts_none_sub:
-      "দ্রষ্টব্য: এই তারিখে ৬৪টি জেলার কোনোটিতেই এআই সতর্কবার্তা প্রযোজ্য হয়নি। তবে স্থানীয় জলাবদ্ধতা সম্পূর্ণ মুক্ত তা নির্দেশ করে না।",
+      "মডেলটি ৬৪টির মধ্যে ৫৬টি জেলার পূর্বাভাস দেয় (বাকি ৮টি রাডারে প্রায় দেখা যায় না)। কম সম্ভাবনা মানে শূন্য ঝুঁকি নয়; স্বল্পস্থায়ী বন্যা বা শহরের জলাবদ্ধতা ধরা না-ও পড়তে পারে।",
 
     // Section 5: Hydro-Meteorological Observations
     hydro_card_title: "জলবায়ু ও পানিসম্পদ পর্যবেক্ষণ:",
@@ -567,20 +567,20 @@ export const UI_TEXT = {
     shelters_card_title: "নিকটস্থ বন্যা আশ্রয়কেন্দ্র ও চিকিৎসাকেন্দ্র",
     shelters_card_sub:
       "{district} এর {radius} কিলোমিটারের মধ্যে নিবন্ধিত জরুরি আশ্রয়কেন্দ্র, ক্লিনিক ও সেবাকেন্দ্র ({coords})।",
-    shelters_radius_label: "অনুসন্ধান ব্যাসার্ধ:",
-    shelters_filter_label: "ধরন অনুযায়ী বাছাই:",
+    shelters_radius_label: "অনুসন্ধান ব্যাসার্ধ",
+    shelters_filter_label: "ধরন অনুযায়ী বাছাই",
     shelters_type_all: "সব ধরনের",
     shelters_type_flood: "বন্যা আশ্রয়কেন্দ্র",
     shelters_type_hospital: "হাসপাতাল",
     shelters_type_clinic: "ক্লিনিক",
     shelters_type_school: "বিদ্যালয়",
     shelters_loading:
-      "নিকটস্থ আশ্রয়কেন্দ্রের ডেটাবেস অনুসন্ধান করা হচ্ছে...",
+      "এই অবস্থানের কাছের স্থান খোঁজা হচ্ছে…",
     shelters_capacity: "ধারণক্ষমতা:",
     shelters_people: "জন",
     shelters_not_specified: "অনির্দিষ্ট",
     shelters_empty:
-      "এই অবস্থানের {radius} কিলোমিটারের মধ্যে কোনো নিবন্ধিত আশ্রয়কেন্দ্র বা হাসপাতাল পাওয়া যায়নি। উপরের অনুসন্ধান ব্যাসার্ধ বৃদ্ধি করুন।",
+      "{radius} কিলোমিটারের মধ্যে কোনো নিবন্ধিত আশ্রয়কেন্দ্র, হাসপাতাল, ক্লিনিক বা বিদ্যালয় পাওয়া যায়নি। ব্যাসার্ধ বাড়িয়ে দেখুন, অথবা জরুরি প্রয়োজনে ৯৯৯ নম্বরে কল করুন।",
 
     // Interactive Map Inspection Card
     map_card_title: "জাতীয় বন্যা ঝুঁকি ও মাঠ পর্যায়ের মানচিত্র",
@@ -617,3 +617,19 @@ export const UI_TEXT = {
     footer_helpline_109: "১০৯ (হেল্পলাইন)",
   },
 };
+
+/** JRC modelled flood-depth classes (from the backend's depth_label) in the visitor's language. */
+const DEPTH_BN: Record<string, string> = { "< 1 m": "১ মি.-এর কম", "1 to 3 m": "১–৩ মি.", "3 to 10 m": "৩–১০ মি.", "> 10 m": "১০ মি.-এর বেশি" };
+export function depthLabel(label: string, lang: Language | "en" | "bn" = "en"): string {
+  return lang === "bn" ? DEPTH_BN[label] || toBnNum(label) : label;
+}
+
+/** Bangla for the few error messages the portal itself writes (server messages stay as sent). */
+const CLIENT_ERRORS_BN: Record<string, string> = {
+  "No connection to the server.": "সার্ভারের সঙ্গে সংযোগ নেই।",
+  "The server could not be reached. Accounts need a connection.": "সার্ভারে পৌঁছানো যায়নি। অ্যাকাউন্ট ব্যবহারে ইন্টারনেট সংযোগ লাগে।",
+};
+export function localError(message: string | null | undefined, lang: Language | "en" | "bn" = "en"): string {
+  if (!message) return "";
+  return lang === "bn" ? CLIENT_ERRORS_BN[message] || message : message;
+}

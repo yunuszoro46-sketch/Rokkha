@@ -1,0 +1,575 @@
+{
+"generated_on": "2026-11-19",
+"derived_from": "Backend/data/labels/district_flood_observations.json (generated 2026-11-18)",
+"source": "Copernicus Emergency Management Service - Global Flood Monitoring (GFM), Sentinel-1 ensemble flood extent, EODC open archive (stac.eodc.eu, collection GFM)",
+"attribution": "Contains modified Copernicus Emergency Management Service information [2016-2024] (Global Flood Monitoring, GFM).",
+"method": "Per calendar month, over all 64 districts: district-passes stored; usable = pass observed at least 50 % of the district; flood-labelled = usable and flooded share >= 0.1 (the model's label rule).",
+"gfm_processing_versions_by_year": {
+"2016": [
+"GFM v3.1.0"
+],
+"2017": [
+"GFM v3.1.0"
+],
+"2018": [
+"GFM v3.1.0"
+],
+"2019": [
+"GFM v3.1.0"
+],
+"2020": [
+"GFM v3.1.0"
+],
+"2021": [
+"GFM v3.1.0"
+],
+"2022": [
+"GFM v3.1.0"
+],
+"2023": [
+"GFM v3.1.0"
+],
+"2024": [
+"GFM v3.1.0"
+],
+"2025": [
+"GFM v3.1.0",
+"v4.0.0",
+"v4.1.0"
+],
+"2026": [
+"v4.1.0",
+"v4.1.1"
+]
+},
+"months": [
+{
+"month": "2016-04",
+"passes": 250,
+"usable": 170,
+"flood_labelled": 6
+},
+{
+"month": "2016-05",
+"passes": 230,
+"usable": 155,
+"flood_labelled": 16
+},
+{
+"month": "2016-06",
+"passes": 167,
+"usable": 109,
+"flood_labelled": 7
+},
+{
+"month": "2016-07",
+"passes": 142,
+"usable": 84,
+"flood_labelled": 5
+},
+{
+"month": "2016-08",
+"passes": 235,
+"usable": 146,
+"flood_labelled": 1
+},
+{
+"month": "2016-09",
+"passes": 233,
+"usable": 156,
+"flood_labelled": 2
+},
+{
+"month": "2016-10",
+"passes": 258,
+"usable": 183,
+"flood_labelled": 0
+},
+{
+"month": "2016-11",
+"passes": 212,
+"usable": 144,
+"flood_labelled": 2
+},
+{
+"month": "2017-04",
+"passes": 435,
+"usable": 308,
+"flood_labelled": 26
+},
+{
+"month": "2017-05",
+"passes": 430,
+"usable": 307,
+"flood_labelled": 28
+},
+{
+"month": "2017-06",
+"passes": 358,
+"usable": 242,
+"flood_labelled": 17
+},
+{
+"month": "2017-07",
+"passes": 387,
+"usable": 258,
+"flood_labelled": 8
+},
+{
+"month": "2017-08",
+"passes": 404,
+"usable": 287,
+"flood_labelled": 27
+},
+{
+"month": "2017-09",
+"passes": 450,
+"usable": 337,
+"flood_labelled": 3
+},
+{
+"month": "2017-10",
+"passes": 402,
+"usable": 284,
+"flood_labelled": 6
+},
+{
+"month": "2017-11",
+"passes": 451,
+"usable": 329,
+"flood_labelled": 9
+},
+{
+"month": "2018-04",
+"passes": 358,
+"usable": 250,
+"flood_labelled": 0
+},
+{
+"month": "2018-05",
+"passes": 485,
+"usable": 357,
+"flood_labelled": 17
+},
+{
+"month": "2018-06",
+"passes": 402,
+"usable": 277,
+"flood_labelled": 18
+},
+{
+"month": "2018-07",
+"passes": 406,
+"usable": 275,
+"flood_labelled": 6
+},
+{
+"month": "2018-08",
+"passes": 489,
+"usable": 356,
+"flood_labelled": 4
+},
+{
+"month": "2018-09",
+"passes": 424,
+"usable": 301,
+"flood_labelled": 1
+},
+{
+"month": "2018-10",
+"passes": 491,
+"usable": 359,
+"flood_labelled": 0
+},
+{
+"month": "2018-11",
+"passes": 444,
+"usable": 307,
+"flood_labelled": 0
+},
+{
+"month": "2019-04",
+"passes": 430,
+"usable": 321,
+"flood_labelled": 0
+},
+{
+"month": "2019-05",
+"passes": 353,
+"usable": 251,
+"flood_labelled": 7
+},
+{
+"month": "2019-06",
+"passes": 425,
+"usable": 318,
+"flood_labelled": 0
+},
+{
+"month": "2019-07",
+"passes": 419,
+"usable": 295,
+"flood_labelled": 45
+},
+{
+"month": "2019-08",
+"passes": 402,
+"usable": 285,
+"flood_labelled": 1
+},
+{
+"month": "2019-09",
+"passes": 406,
+"usable": 289,
+"flood_labelled": 2
+},
+{
+"month": "2019-10",
+"passes": 474,
+"usable": 343,
+"flood_labelled": 0
+},
+{
+"month": "2019-11",
+"passes": 495,
+"usable": 360,
+"flood_labelled": 2
+},
+{
+"month": "2020-04",
+"passes": 429,
+"usable": 298,
+"flood_labelled": 0
+},
+{
+"month": "2020-05",
+"passes": 552,
+"usable": 408,
+"flood_labelled": 10
+},
+{
+"month": "2020-06",
+"passes": 356,
+"usable": 255,
+"flood_labelled": 9
+},
+{
+"month": "2020-07",
+"passes": 637,
+"usable": 471,
+"flood_labelled": 55
+},
+{
+"month": "2020-08",
+"passes": 471,
+"usable": 338,
+"flood_labelled": 30
+},
+{
+"month": "2020-09",
+"passes": 456,
+"usable": 327,
+"flood_labelled": 8
+},
+{
+"month": "2020-10",
+"passes": 511,
+"usable": 374,
+"flood_labelled": 5
+},
+{
+"month": "2020-11",
+"passes": 424,
+"usable": 297,
+"flood_labelled": 2
+},
+{
+"month": "2021-04",
+"passes": 471,
+"usable": 344,
+"flood_labelled": 0
+},
+{
+"month": "2021-05",
+"passes": 424,
+"usable": 298,
+"flood_labelled": 0
+},
+{
+"month": "2021-06",
+"passes": 471,
+"usable": 347,
+"flood_labelled": 7
+},
+{
+"month": "2021-07",
+"passes": 437,
+"usable": 305,
+"flood_labelled": 3
+},
+{
+"month": "2021-08",
+"passes": 477,
+"usable": 354,
+"flood_labelled": 6
+},
+{
+"month": "2021-09",
+"passes": 471,
+"usable": 338,
+"flood_labelled": 10
+},
+{
+"month": "2021-10",
+"passes": 456,
+"usable": 329,
+"flood_labelled": 0
+},
+{
+"month": "2021-11",
+"passes": 439,
+"usable": 313,
+"flood_labelled": 0
+},
+{
+"month": "2022-04",
+"passes": 372,
+"usable": 256,
+"flood_labelled": 1
+},
+{
+"month": "2022-05",
+"passes": 471,
+"usable": 339,
+"flood_labelled": 26
+},
+{
+"month": "2022-06",
+"passes": 444,
+"usable": 308,
+"flood_labelled": 52
+},
+{
+"month": "2022-07",
+"passes": 459,
+"usable": 344,
+"flood_labelled": 16
+},
+{
+"month": "2022-08",
+"passes": 424,
+"usable": 302,
+"flood_labelled": 8
+},
+{
+"month": "2022-09",
+"passes": 477,
+"usable": 351,
+"flood_labelled": 8
+},
+{
+"month": "2022-10",
+"passes": 451,
+"usable": 323,
+"flood_labelled": 0
+},
+{
+"month": "2022-11",
+"passes": 444,
+"usable": 320,
+"flood_labelled": 1
+},
+{
+"month": "2023-04",
+"passes": 443,
+"usable": 312,
+"flood_labelled": 0
+},
+{
+"month": "2023-05",
+"passes": 476,
+"usable": 338,
+"flood_labelled": 0
+},
+{
+"month": "2023-06",
+"passes": 399,
+"usable": 290,
+"flood_labelled": 11
+},
+{
+"month": "2023-07",
+"passes": 444,
+"usable": 310,
+"flood_labelled": 4
+},
+{
+"month": "2023-08",
+"passes": 471,
+"usable": 349,
+"flood_labelled": 7
+},
+{
+"month": "2023-09",
+"passes": 444,
+"usable": 312,
+"flood_labelled": 1
+},
+{
+"month": "2023-10",
+"passes": 445,
+"usable": 325,
+"flood_labelled": 2
+},
+{
+"month": "2023-11",
+"passes": 366,
+"usable": 248,
+"flood_labelled": 0
+},
+{
+"month": "2024-04",
+"passes": 299,
+"usable": 200,
+"flood_labelled": 0
+},
+{
+"month": "2024-05",
+"passes": 439,
+"usable": 305,
+"flood_labelled": 9
+},
+{
+"month": "2024-06",
+"passes": 404,
+"usable": 281,
+"flood_labelled": 33
+},
+{
+"month": "2024-07",
+"passes": 277,
+"usable": 199,
+"flood_labelled": 10
+},
+{
+"month": "2024-08",
+"passes": 441,
+"usable": 292,
+"flood_labelled": 20
+},
+{
+"month": "2024-09",
+"passes": 471,
+"usable": 349,
+"flood_labelled": 7
+},
+{
+"month": "2024-10",
+"passes": 444,
+"usable": 312,
+"flood_labelled": 3
+},
+{
+"month": "2024-11",
+"passes": 497,
+"usable": 361,
+"flood_labelled": 2
+},
+{
+"month": "2025-04",
+"passes": 458,
+"usable": 321,
+"flood_labelled": 0
+},
+{
+"month": "2025-05",
+"passes": 436,
+"usable": 307,
+"flood_labelled": 9
+},
+{
+"month": "2025-06",
+"passes": 343,
+"usable": 245,
+"flood_labelled": 23
+},
+{
+"month": "2025-07",
+"passes": 425,
+"usable": 284,
+"flood_labelled": 24
+},
+{
+"month": "2025-08",
+"passes": 491,
+"usable": 358,
+"flood_labelled": 21
+},
+{
+"month": "2025-09",
+"passes": 444,
+"usable": 314,
+"flood_labelled": 4
+},
+{
+"month": "2025-10",
+"passes": 471,
+"usable": 350,
+"flood_labelled": 0
+},
+{
+"month": "2025-11",
+"passes": 441,
+"usable": 306,
+"flood_labelled": 2
+},
+{
+"month": "2026-04",
+"passes": 430,
+"usable": 310,
+"flood_labelled": 0
+},
+{
+"month": "2026-05",
+"passes": 403,
+"usable": 273,
+"flood_labelled": 35
+},
+{
+"month": "2026-06",
+"passes": 480,
+"usable": 329,
+"flood_labelled": 13
+},
+{
+"month": "2026-07",
+"passes": 468,
+"usable": 335,
+"flood_labelled": 16
+},
+{
+"month": "2026-08",
+"passes": 435,
+"usable": 300,
+"flood_labelled": 6
+},
+{
+"month": "2026-09",
+"passes": 456,
+"usable": 331,
+"flood_labelled": 7
+},
+{
+"month": "2026-10",
+"passes": 421,
+"usable": 306,
+"flood_labelled": 0
+},
+{
+"month": "2026-11",
+"passes": 184,
+"usable": 124,
+"flood_labelled": 0
+}
+]
+}

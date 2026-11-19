@@ -6,7 +6,9 @@
     "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start -p 3000",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:unit": "playwright test --project=unit",
+    "test:e2e": "playwright test --project=e2e"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -26,6 +28,7 @@
     "framer-motion": "^12.4.3",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.475.0",
+    "maplibre-gl": "4.7.1",
     "next": "^14.2.24",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -37,6 +40,8 @@
     "terra-draw": "^1.39.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.10.2",
+    "@playwright/test": "1.48.2",
     "@types/node": "^22.13.4",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",

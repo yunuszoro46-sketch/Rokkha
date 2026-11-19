@@ -43,12 +43,21 @@ import {
 } from "@/components/ui/dialog";
 
 // Live Engine Components (strictly adhering to FRONTEND_API_GUIDE.md)
-import { SideDashboard, CitizenView } from "@/components/SideDashboard";
+import type { CitizenView } from "@/components/SideDashboard";
+import { NavAction, SiteHeader } from "@/components/site/SiteNavigation";
+import type { Need } from "@/services/rescue";
+import { HomePage, ForecastState } from "@/components/site/HomePage";
+import { ContactDirectory } from "@/components/site/ContactDirectory";
+import { useSampleParts } from "@/services/dataSource";
 import { AlertsFeed } from "@/components/AlertsFeed";
+import { AlertsContext } from "@/components/AlertsContext";
+import { AnnouncementsList } from "@/components/AnnouncementsList";
+import { usePlaceLabel } from "@/lib/placeName";
+import { displayName } from "@/lib/facilities";
 import { NearestShelters } from "@/components/NearestShelters";
 import { AttributionFooter } from "@/components/AttributionFooter";
 import { PortalAccessPage } from "@/components/PortalAccessPage";
-import districtGeoData from "@/data/bangladesh_districts.json";
+import { ALL_DISTRICTS } from "@/lib/districts";
 import districtFloodHistory from "@/data/district_flood_history.json";
 import benchmarkData from "@/data/benchmark_predictions.json";
 import mapAsset from "@/assets/map.png";
@@ -59,6 +68,7 @@ import {
   Language,
   UI_TEXT,
   toBnNum,
+  depthLabel,
   DISTRICTS_BN,
   DIVISIONS_BN,
 } from "@/lib/translations";
@@ -80,22 +90,40 @@ import { AssetNearResult } from "@/types/api";
 import { MyLocationReport } from "@/components/MyLocationReport";
 import { SosCenter } from "@/components/SosCenter";
 import { RescuePanel } from "@/components/RescuePanel";
-import { AdminPanel } from "@/components/AdminPanel";
-import { AccountUser, getCurrentUser, logOut } from "@/services/auth";
+import { AccountUser, SESSION_ENDED, getCurrentUser, logOut } from "@/services/auth";
+import { DataSourceBanner } from "@/components/DataSourceBanner";
 import { GpsFix, LocationError, accuracyText, readPreciseLocation } from "@/services/location";
 
 // Dynamically import Leaflet map for interactive exploration
-const LeafletFloodMap = dynamic(
-  () => import("@/components/LeafletFloodMap").then((mod) => mod.LeafletFloodMap),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="h-[540px] w-full rounded-2xl bg-[#EDEBE2] flex items-center justify-center text-[#263B32]/60 text-base font-medium">
-        Loading Interactive Cartographic Leaflet Engine...
-      </div>
-    ),
-  }
-);
+// Admin Control Centre: staff-only code, loaded only on /admin pages.
+const AdminConsole = dynamic(() => import("@/components/admin/AdminConsole").then((mod) => mod.AdminConsole), {
+  ssr: false,
+  loading: () => (
+    <div className="py-16 text-center text-sm text-rk-muted" role="status">
+      Loading the control centre…
+    </div>
+  ),
+});
+
+// Rokkha Intelligence page (charts and long text): loaded only on /intelligence.
+const IntelligencePage = dynamic(() => import("@/components/intelligence/IntelligencePage").then((mod) => mod.IntelligencePage), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[60vh] w-full flex items-center justify-center text-sm text-rk-muted" role="status">
+      Loading…
+    </div>
+  ),
+});
+
+// Bangladesh flood-intelligence map (MapLibre, docs/MAPPING_ARCHITECTURE.md). Loaded only on /map.
+const FloodMapExplorer = dynamic(() => import("@/components/map/FloodMapExplorer").then((mod) => mod.FloodMapExplorer), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[60vh] w-full rounded-2xl border border-rk-line bg-rk-page flex items-center justify-center text-sm text-rk-muted" role="status">
+      Loading the map…
+    </div>
+  ),
+});
 
 // Dynamically import focused district map for the details modal
 const DistrictDetailMap = dynamic(
@@ -103,23 +131,13 @@ const DistrictDetailMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="h-[260px] sm:h-[300px] w-full rounded-2xl bg-[#EDEBE2] flex items-center justify-center text-[#263B32]/60 text-sm font-medium animate-pulse">
+      <div className="h-[260px] sm:h-[300px] w-full rounded-2xl bg-rk-page flex items-center justify-center text-rk-muted text-sm font-medium animate-pulse">
         Loading District Map...
       </div>
     ),
   }
 );
 
-// 64 districts list extracted from official GeoJSON
-const ALL_DISTRICTS: Array<{ pcode: string; name: string; division: string }> = (
-  districtGeoData as any
-).features
-  .map((f: any) => ({
-    pcode: f.properties.pcode,
-    name: f.properties.name,
-    division: f.properties.parent_name || "",
-  }))
-  .sort((a: any, b: any) => a.name.localeCompare(b.name));
 
 const DISTRICT_CENTERS: Record<string, [number, number]> =
   (benchmarkData as any).centroids || {
@@ -307,8 +325,8 @@ function MapArtwork({
         className="absolute inset-0 pointer-events-none flex items-center justify-center z-0"
         aria-hidden="true"
       >
-        <div className="w-[88%] h-[88%] rounded-full border border-[#D5D2C5]/50 bg-gradient-to-br from-white/40 via-transparent to-transparent opacity-75" />
-        <div className="w-[64%] h-[64%] rounded-full border border-[#D5D2C5]/30" />
+        <div className="w-[88%] h-[88%] rounded-full border border-rk-line/50 bg-gradient-to-br from-white/40 via-transparent to-transparent opacity-75" />
+        <div className="w-[64%] h-[64%] rounded-full border border-rk-line/30" />
       </div>
 
       {/* Base Bangladesh District & River Network Map (Natural, organic river flow without artificial vector overlays) */}
@@ -320,25 +338,25 @@ function MapArtwork({
 
       {/* Flood Risk Level Legend on Bottom-Left (Matching Image 2) */}
       {!compact && (
-        <div className="absolute bottom-5 left-5 z-30 bg-white/95 backdrop-blur-sm border border-[#E2E0D6] rounded-2xl p-4 shadow-md min-w-[130px]">
-          <div className="font-bold text-xs text-[#1F2937] mb-2.5">
+        <div className="absolute bottom-5 left-5 z-30 bg-white/95 backdrop-blur-sm border border-rk-line rounded-2xl p-4 shadow-md min-w-[130px]">
+          <div className="font-bold text-xs text-rk-forest mb-2.5">
             {lang === "bn" ? "বন্যা ঝুঁকির মাত্রা" : "Flood Risk Level"}
           </div>
-          <div className="flex flex-col gap-2 text-xs font-medium text-[#374151]">
+          <div className="flex flex-col gap-2 text-xs font-medium text-rk-ink">
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#5A9E75] inline-block shadow-sm" />
+              <span className="w-3 h-3 rounded-full bg-rk-moss inline-block shadow-sm" />
               <span>{lang === "bn" ? "কম (Low)" : "Low"}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#F5C242] inline-block shadow-sm" />
+              <span className="w-3 h-3 rounded-full bg-rk-warning-accent inline-block shadow-sm" />
               <span>{lang === "bn" ? "মাঝারি (Moderate)" : "Moderate"}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#E88C30] inline-block shadow-sm" />
+              <span className="w-3 h-3 rounded-full bg-rk-warning-accent inline-block shadow-sm" />
               <span>{lang === "bn" ? "বেশি (High)" : "High"}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#D9381E] inline-block shadow-sm" />
+              <span className="w-3 h-3 rounded-full bg-rk-danger-accent inline-block shadow-sm" />
               <span>{lang === "bn" ? "ভয়াবহ (Severe)" : "Severe"}</span>
             </div>
           </div>
@@ -358,43 +376,53 @@ const PAGE_METADATA: Record<
   en: {
     map: {
       eyebrow: "GEOSPATIAL FLOOD ENGINE",
-      title: "Flood Map & Point Check",
+      title: "Flood map and Point Check",
       subtitle:
-        "Inspect all 64 Bangladesh districts, 24-hour ML flood probabilities, JRC modelled flood depth, and historical satellite inundation at any coordinate.",
+        "Explore the district forecast, observed satellite flooding, river flow, rain and the flood record for any place in Bangladesh.",
     },
     alerts: {
       eyebrow: "24-HOUR ML FORECAST",
-      title: "Forecast & Early Warnings",
+      title: "Forecasts and early warnings",
       subtitle:
-        "District-level flood watch and alert notifications with exposed critical assets and population capacity.",
+        "Districts on watch or alert for the chosen day, with the registered facilities in each.",
     },
     satellite: {
       eyebrow: "COPERNICUS SENTINEL-1 & UNOSAT",
-      title: "District Ranking & Satellite Timeline",
+      title: "District ranking and satellite timeline",
       subtitle:
         "Compare all 64 districts by historical flood frequency (2016–2024) and inspect daily Sentinel-1 radar flood coverage.",
     },
     hydro: {
       eyebrow: "ERA5 RAINFALL & GLOFAS DISCHARGE",
-      title: "Rain & River Gauges",
+      title: "Rain and river flow",
       subtitle:
-        "Daily precipitation and river basin discharge hydrographs driving district flood risk.",
+        "Daily rain (ERA5/GFS) and modelled river flow (GloFAS) used as model inputs; not gauge water levels.",
     },
     shelters: {
-      eyebrow: "2DSPHERE GEOSPATIAL INDEX",
-      title: "Nearest Emergency Shelters",
+      eyebrow: "SHELTERS AND FACILITIES",
+      title: "Nearest emergency shelters",
       subtitle:
         "Locate registered flood shelters, hospitals, clinics, and schools near any district or map coordinate.",
     },
     rescue: {
       eyebrow: "RESCUE COORDINATION",
-      title: "Requests for Help",
+      title: "Rescue board",
       subtitle:
         "Requests sent with the SOS button, longest-waiting first. For rescuer and admin accounts only.",
     },
+    contacts: {
+      eyebrow: "CONTACTS",
+      title: "Rescue and relief contacts",
+      subtitle: "Verified public numbers for flood help.",
+    },
+    intelligence: {
+      eyebrow: "ROKKHA INTELLIGENCE",
+      title: "The data, model and limits behind Rokkha",
+      subtitle: "How satellite, rain, river and geographic data become district flood forecasts.",
+    },
     admin: {
       eyebrow: "ADMINISTRATION",
-      title: "Roles & Registered Places",
+      title: "Teams, accounts and places",
       subtitle:
         "Give accounts the rescuer or admin role, and add or remove registered places. For admin accounts only.",
     },
@@ -432,13 +460,23 @@ const PAGE_METADATA: Record<
     },
     rescue: {
       eyebrow: "উদ্ধার সমন্বয়",
-      title: "সাহায্যের অনুরোধ",
+      title: "উদ্ধার বোর্ড",
       subtitle:
         "জরুরি সাহায্য বোতাম দিয়ে পাঠানো অনুরোধ; যিনি সবচেয়ে বেশি অপেক্ষা করছেন তিনি আগে। শুধু উদ্ধারকারী ও অ্যাডমিন অ্যাকাউন্টের জন্য।",
     },
+    contacts: {
+      eyebrow: "যোগাযোগ",
+      title: "উদ্ধার ও ত্রাণের যোগাযোগ",
+      subtitle: "বন্যা সহায়তার যাচাই করা সরকারি নম্বর।",
+    },
+    intelligence: {
+      eyebrow: "রক্ষা ইন্টেলিজেন্স",
+      title: "রক্ষার পেছনের তথ্য, মডেল ও সীমাবদ্ধতা",
+      subtitle: "স্যাটেলাইট, বৃষ্টি, নদী ও ভৌগোলিক তথ্য থেকে জেলাভিত্তিক পূর্বাভাস।",
+    },
     admin: {
       eyebrow: "প্রশাসন",
-      title: "ভূমিকা ও নিবন্ধিত স্থান",
+      title: "দল, অ্যাকাউন্ট ও স্থান",
       subtitle:
         "অ্যাকাউন্টকে উদ্ধারকারী বা অ্যাডমিনের ভূমিকা দিন, এবং নিবন্ধিত স্থান যোগ করুন বা মুছুন। শুধু অ্যাডমিন অ্যাকাউন্টের জন্য।",
     },
@@ -492,14 +530,23 @@ function LoadingScreen({ lang = "en" }: { lang?: Language }) {
 
 export function CitizenPortalApp({
   initialView = "overview",
+  adminSection,
 }: {
   initialView?: CitizenView;
+  /** Admin Control Centre section from the URL (/admin/<section>). */
+  adminSection?: string;
 }) {
   const [activeView, setActiveView] = useState<CitizenView>(initialView);
-  const [isPageLoading, setIsPageLoading] = useState(true);
+  // No artificial splash: on a help platform nothing may delay the "Request help" button.
+  const [isPageLoading, setIsPageLoading] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isBackendConnected, setIsBackendConnected] = useState(false);
-  const [targetDate, setTargetDate] = useState("2022-06-18"); // Benchmark flood date
+  // Today in Bangladesh, set after the page loads (a value fixed at build time
+  // would be an old day). The 2022 Sylhet flood stays one date-pick away.
+  const [targetDate, setTargetDate] = useState("");
+  useEffect(() => {
+    setTargetDate(new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Dhaka" }).format(new Date()));
+  }, []);
   const [predictions, setPredictions] = useState<DistrictPrediction[]>([]);
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   // The date whose forecast has finished loading (null while the first one loads).
@@ -510,10 +557,14 @@ export function CitizenPortalApp({
   const [accountUser, setAccountUser] = useState<AccountUser | null>(null);
   const [selectedPcode, setSelectedPcode] = useState("BD6090"); // Sunamganj default
   const [selectedName, setSelectedName] = useState("Sunamganj");
+  // Incremented by "Check a place" (menu or homepage): tells the map to start pick-a-place mode.
+  const [mapCheckRequest, setMapCheckRequest] = useState(0);
   const [inspectedPoint, setInspectedPoint] = useState<{ lat: number; lng: number } | null>({
     lat: 24.9602,
     lng: 91.3992,
   });
+  // Where the current point came from, so pages can say what distances are measured from.
+  const [pointSource, setPointSource] = useState<"district" | "gps" | "saved">("district");
   const [pointCheckResult, setPointCheckResult] = useState<PointFloodCheck | null>(null);
   const [isCheckingPoint, setIsCheckingPoint] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
@@ -524,6 +575,10 @@ export function CitizenPortalApp({
   const [isDistrictReportOpen, setIsDistrictReportOpen] = useState(false);
   const [modelStatus, setModelStatus] = useState<ModelStatus | null>(null);
   const [lang, setLang] = useState<Language>("en");
+  // Screen readers read with the right voice when the language changes.
+  useEffect(() => {
+    document.documentElement.lang = lang === "bn" ? "bn" : "en";
+  }, [lang]);
   const t = UI_TEXT[lang];
 
   useEffect(() => {
@@ -570,7 +625,7 @@ export function CitizenPortalApp({
     try {
       const fix = await readPreciseLocation({ isBn: lang === "bn" });
       setGpsState({ kind: "found", fix });
-      await handleInspectPoint(fix.lat, fix.lng);
+      await handleInspectPoint(fix.lat, fix.lng, "gps");
     } catch (error) {
       setGpsState({
         kind: "error",
@@ -617,27 +672,27 @@ export function CitizenPortalApp({
     const riskBadge =
       pred?.alert_level === "alert"
         ? {
-            text: isBn ? "জরুরি সতর্কতা (অ্যালার্ট)" : "CRITICAL ALERT",
-            color: "bg-[#C9443A] text-white",
+            text: isBn ? "সতর্কতা" : "ALERT",
+            color: "bg-rk-danger text-white",
           }
         : pred?.alert_level === "watch"
         ? {
-            text: isBn ? "নজরদারি (ওয়াচ)" : "FLOOD WATCH",
-            color: "bg-[#E08A24] text-white",
+            text: isBn ? "নজরদারি" : "WATCH",
+            color: "bg-rk-warning-accent text-white",
           }
         : pred?.alert_level === "none"
         ? {
-            text: isBn ? "সতর্কতা সীমার নিচে" : "BELOW ALERT LEVEL",
-            color: "bg-[#22C55E] text-white",
+            text: isBn ? "কম সম্ভাবনা" : "LOW CHANCE",
+            color: "bg-rk-risk-low text-rk-forest",
           }
         : pred?.status === "unsupported"
         ? {
             text: isBn ? "এই জেলায় পূর্বাভাস সম্ভব নয়" : "NO FORECAST POSSIBLE HERE",
-            color: "bg-[#6B7280] text-white",
+            color: "bg-rk-muted text-white",
           }
         : {
             text: isBn ? "এই দিনের পূর্বাভাস নেই" : "NO FORECAST FOR THIS DAY",
-            color: "bg-[#6B7280] text-white",
+            color: "bg-rk-muted text-white",
           };
 
     const formattedProb = hasProbability
@@ -674,7 +729,7 @@ export function CitizenPortalApp({
 
   // Initial check & data load + 3000ms Bangladesh Map Outline Loading Screen
   useEffect(() => {
-    const timer = window.setTimeout(() => setIsPageLoading(false), 3000);
+    const timer = window.setTimeout(() => setIsPageLoading(false), 0);
     checkBackendHealth().then(setIsBackendConnected);
     getModelStatus().then(setModelStatus);
     checkPointFlood(91.3992, 24.9602).then(setPointCheckResult);
@@ -683,6 +738,7 @@ export function CitizenPortalApp({
 
   // Fetch Predictions & Alerts when target date changes
   useEffect(() => {
+    if (!targetDate) return;
     let mounted = true;
     getPredictions(targetDate).then((data) => {
       if (!mounted) return;
@@ -735,7 +791,7 @@ export function CitizenPortalApp({
   useEffect(() => {
     if (gpsState.kind === "found") return;
     if (accountLat !== undefined && accountLng !== undefined) {
-      handleInspectPoint(accountLat, accountLng);
+      handleInspectPoint(accountLat, accountLng, "saved");
     } else if (accountPcode) {
       setSelectedPcode(accountPcode);
       const d = ALL_DISTRICTS.find((item) => item.pcode === accountPcode);
@@ -743,6 +799,27 @@ export function CitizenPortalApp({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accountPcode, accountLat, accountLng]);
+
+  // The navbar shows who is logged in only while the server still accepts that login: a 401
+  // anywhere (expired, suspended, logged out elsewhere) logs the page out; coming back to the tab
+  // re-reads the account so a role change by an admin shows without a reload.
+  useEffect(() => {
+    const ended = () => setAccountUser(null);
+    const refresh = () => {
+      if (document.visibilityState !== "visible") return;
+      getCurrentUser()
+        .then((user) => setAccountUser(user))
+        .catch(() => {
+          // offline: keep what is shown
+        });
+    };
+    window.addEventListener(SESSION_ENDED, ended);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      window.removeEventListener(SESSION_ENDED, ended);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, []);
 
   const handleLogOut = () => {
     logOut().finally(() => setAccountUser(null));
@@ -763,13 +840,14 @@ export function CitizenPortalApp({
     const center = DISTRICT_CENTERS[pcode];
     if (center) {
       setInspectedPoint({ lat: center[0], lng: center[1] });
-      handleInspectPoint(center[0], center[1]);
+      handleInspectPoint(center[0], center[1], "district");
     }
   };
 
   // Handle map click point inspection
-  const handleInspectPoint = async (lat: number, lng: number) => {
+  const handleInspectPoint = async (lat: number, lng: number, source: "district" | "gps" | "saved") => {
     setInspectedPoint({ lat, lng });
+    setPointSource(source);
     setIsCheckingPoint(true);
     const result = await checkPointFlood(lng, lat);
     setIsCheckingPoint(false);
@@ -788,8 +866,51 @@ export function CitizenPortalApp({
     if (window.innerWidth < 768) setIsSidebarCollapsed(true);
   }, []);
 
+  const sampleParts = useSampleParts();
+  const homeForecastState: ForecastState =
+    !targetDate || isForecastLoading
+      ? "loading"
+      : sampleParts.includes("predictions")
+        ? "unavailable"
+        : predictions.length === 0
+          ? "none"
+          : "ready";
+
+  // What a navigation item does (components/site/SiteNavigation.tsx).
+  const [sosPreset, setSosPreset] = useState<Need[] | undefined>(undefined);
+  const handleNavAction = (action: NavAction) => {
+    if (action.kind === "view") navigateToPage(action.view);
+    else if (action.kind === "check") {
+      // The map opens in "pick a place" mode: the next tap (or GPS, or search) checks that exact spot.
+      setMapCheckRequest((n) => n + 1);
+      navigateToPage("map");
+    }
+    else if (action.kind === "help") {
+      setSosPreset(action.needs);
+      setIsSosOpen(true);
+    } else if (action.kind === "track") {
+      setSosPreset(undefined);
+      setIsSosOpen(true);
+    } else if (action.kind === "about") setIsAboutOpen(true);
+    else if (action.kind === "external") window.open(action.href, "_blank", "noopener,noreferrer");
+    else if (action.kind === "anchor") {
+      // Go to the page first (it scrolls to the top), then jump to the section once it is drawn.
+      if (activeView !== action.view) navigateToPage(action.view);
+      window.setTimeout(() => document.getElementById(action.id)?.scrollIntoView({ block: "start" }), 700);
+    }
+  };
+
   const navigateToPage = (view: CitizenView) => {
     setActiveView(view);
+    // Logged in: confirm the login is still valid on each page change, so a suspension, expiry or
+    // role change made elsewhere shows at the next click (a 401 logs this page out).
+    if (accountUser) {
+      getCurrentUser()
+        .then((user) => setAccountUser(user))
+        .catch(() => {
+          // offline: keep what is shown
+        });
+    }
     if (typeof window !== "undefined") {
       if (window.innerWidth < 768) setIsSidebarCollapsed(true);
       const targetPath = view === "overview" ? "/" : `/${view}`;
@@ -802,7 +923,8 @@ export function CitizenPortalApp({
 
   useEffect(() => {
     const onPopState = () => {
-      const path = window.location.pathname.replace("/", "") as CitizenView;
+      // /admin/<section> belongs to the admin view (the console reads the section itself).
+      const path = window.location.pathname.replace("/", "").split("/")[0] as CitizenView;
       if (
         path === "map" ||
         path === "alerts" ||
@@ -811,6 +933,8 @@ export function CitizenPortalApp({
         path === "shelters" ||
         path === "rescue" ||
         path === "admin" ||
+        path === "contacts" ||
+        path === "intelligence" ||
         path === "login"
       ) {
         setActiveView(path);
@@ -826,404 +950,76 @@ export function CitizenPortalApp({
     lat: DISTRICT_CENTERS[selectedPcode]?.[0] || 24.9602,
     lng: DISTRICT_CENTERS[selectedPcode]?.[1] || 91.3992,
   };
+  // A readable name for that point (never shown as latitude / longitude to citizens).
+  const currentPlace = usePlaceLabel(currentCoords, lang === "bn" ? "bn" : "en");
 
   return (
     <>
       {isPageLoading && <LoadingScreen lang={lang} />}
       <div
-        className={`min-h-screen bg-[#EDEBE2] flex ${
+        className={`min-h-screen bg-rk-page flex ${
           isPageLoading ? "page-loading" : ""
         }`}
       >
-      {/* 1. Left Side Dashboard Rail - Multi-Page Navigation (only shown on functional pages, hidden on landing/overview and login) */}
-      {activeView !== "overview" && activeView !== "login" && (
-        <SideDashboard
-          activeView={activeView}
-          onSelectView={navigateToPage}
-          onOpenAbout={() => setIsAboutOpen(true)}
-          activeAlertCount={alerts.length}
-          isBackendConnected={isBackendConnected}
-          role={accountUser?.role || null}
-          isCollapsed={isSidebarCollapsed}
-          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          lang={lang}
-        />
-      )}
-
       {/* Main Content Area */}
       <div
-        className={`flex-1 w-full max-w-full bg-[#EDEBE2] bg-[url('/topo-pattern.svg')] bg-repeat transition-all duration-300 min-w-0 flex flex-col justify-between overflow-x-hidden ${
-          activeView === "overview" || activeView === "login"
-            ? "pl-0"
-            : isSidebarCollapsed
-            ? "pl-16 sm:pl-20"
-            : "pl-64 lg:pl-72"
+        className={`flex-1 w-full max-w-full bg-rk-page min-w-0 flex flex-col justify-between overflow-x-hidden ${
+          ""
         }`}
       >
         <main className="w-full max-w-full flex-1 flex flex-col justify-between overflow-x-hidden">
           <div className="w-full">
-            {/* Top Header / Site Header */}
-            <header className="w-full border-b border-[#DFDDD3]/50">
-              <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 site-header">
-                <a
-                  href="#overview"
-                  className="logo-link"
-                  aria-label="Rokkha home"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigateToPage("overview");
-                  }}
-                >
-                  <img src={logoAsset.src} alt="Rokkha" />
-                </a>
-                <nav aria-label="Primary navigation" className="flex items-center gap-7 sm:gap-9">
-                  <a
-                    className={`text-[17px] font-semibold transition pb-1 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 select-none ${
-                      activeView === "overview"
-                        ? "active text-[#183026] border-b-2 border-[#183026]"
-                        : "text-[#263B32]/80 hover:text-[#183026]"
-                    }`}
-                    href="#overview"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigateToPage("overview");
-                    }}
-                  >
-                    {t.nav_home}
-                  </a>
-                  <a
-                    className={`text-[17px] font-semibold transition pb-1 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 select-none ${
-                      activeView === "map"
-                        ? "active text-[#183026] border-b-2 border-[#183026]"
-                        : "text-[#263B32]/80 hover:text-[#183026]"
-                    }`}
-                    href="#map"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigateToPage("map");
-                    }}
-                  >
-                    {t.nav_map}
-                  </a>
-                  <a
-                    className={`text-[17px] font-semibold transition pb-1 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 select-none ${
-                      activeView === "alerts"
-                        ? "active text-[#183026] border-b-2 border-[#183026]"
-                        : "text-[#263B32]/80 hover:text-[#183026]"
-                    }`}
-                    href="#alerts"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigateToPage("alerts");
-                    }}
-                  >
-                    {t.nav_alerts}
-                  </a>
-                  <a
-                    className={`text-[17px] font-semibold transition pb-1 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 select-none ${
-                      activeView === "shelters"
-                        ? "active text-[#183026] border-b-2 border-[#183026]"
-                        : "text-[#263B32]/80 hover:text-[#183026]"
-                    }`}
-                    href="#shelters"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigateToPage("shelters");
-                    }}
-                  >
-                    {lang === "bn" ? "আশ্রয়কেন্দ্র" : "Shelters"}
-                  </a>
-                  <button
-                    type="button"
-                    onClick={() => setIsAboutOpen(true)}
-                    className="text-left font-semibold text-[17px] text-[#263B32]/80 hover:text-[#183026] transition cursor-pointer pb-1 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 select-none"
-                  >
-                    {t.nav_about}
-                  </button>
-                </nav>
-                <div className="header-actions flex items-center gap-2 sm:gap-3 shrink-0">
-                  <button
-                    type="button"
-                    onClick={toggleLanguage}
-                    className="h-11 px-2.5 sm:px-3.5 rounded-xl border border-[#DFDDD3] bg-white text-sm font-bold text-[#183026] hover:bg-[#FAF9F5] shadow-xs transition flex items-center gap-1.5 cursor-pointer"
-                    title="Switch Language / ভাষা পরিবর্তন করুন"
-                  >
-                    <span className={lang === "bn" ? "text-[#183026] font-extrabold" : "text-[#183026]/40"}>
-                      বাংলা
-                    </span>
-                    <span className="text-[#183026]/30 font-medium">|</span>
-                    <span className={lang === "en" ? "text-[#183026] font-extrabold" : "text-[#183026]/40"}>
-                      EN
-                    </span>
-                  </button>
-                  {/* Account: who is logged in, or a way to log in. */}
-                  {accountUser ? (
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span
-                        className="hidden sm:flex items-center gap-1.5 h-11 px-3 rounded-xl border border-[#DFDDD3] bg-white text-sm font-bold text-[#183026] max-w-[180px]"
-                        title={accountUser.email}
-                      >
-                        <span className="w-6 h-6 rounded-full bg-[#1F513F] text-white text-xs flex items-center justify-center shrink-0" aria-hidden="true">
-                          {(accountUser.name || accountUser.email).trim().charAt(0).toUpperCase()}
-                        </span>
-                        <span className="truncate">{accountUser.name}</span>
-                      </span>
-                      <Button
-                        onClick={handleLogOut}
-                        variant="outline"
-                        className="h-11 px-2.5 sm:px-3.5 rounded-xl border-[#DFDDD3] text-[13px] sm:text-sm font-bold text-[#183026] cursor-pointer whitespace-nowrap"
-                        aria-label={lang === "bn" ? `লগ আউট (${accountUser.name})` : `Log out (${accountUser.name})`}
-                      >
-                        {lang === "bn" ? "লগ আউট" : "Log out"}
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button
-                      onClick={() => navigateToPage("login")}
-                      className="button shadow-sm text-[14px] sm:text-[15px] font-bold h-11 px-3 sm:px-5 rounded-xl bg-[#11241C] hover:bg-[#0A1812] text-white flex items-center gap-2 cursor-pointer whitespace-nowrap"
-                    >
-                      <span>{lang === "bn" ? "লগ ইন" : "Log in"}</span>
-                      <span className="hidden sm:inline-flex"><Icon name="arrow" size={16} /></span>
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </header>
+            {/* Says when any part of the page shows the saved sample instead of live data. */}
+            <DataSourceBanner lang={lang} />
+            <SiteHeader
+              lang={lang}
+              activeView={activeView}
+              user={accountUser}
+              logoSrc={logoAsset.src}
+              onAction={handleNavAction}
+              onToggleLanguage={toggleLanguage}
+              onLogOut={handleLogOut}
+            />
 
-            {/* PAGE 1: PLATFORM OVERVIEW */}
+            {/* PAGE 1: PUBLIC HOMEPAGE (citizens first; no engineering facts) */}
             {activeView === "overview" && (
-              <>
-                {/* Hero Section */}
-                <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10">
-                  <section className="hero" id="overview">
-                    <div className="hero-copy">
-                      <div className="eyebrow">
-                        <Icon name="shield" size={16} /> {t.hero_tagline}
-                      </div>
-                      <div className="hero-headline-bar">
-                        <h1 className="text-[35px] font-extrabold leading-[1.15] tracking-tight text-[#121f17]">
-                          {t.hero_title_1}
-                          <br />
-                          {t.hero_title_2}
-                        </h1>
-                        <p className="text-xl sm:text-2xl font-bold text-[#11241C] mt-2">
-                          {t.hero_subtitle}
-                        </p>
-                      </div>
-                      <p>
-                        {t.hero_desc}
-                      </p>
-                      <div className="button-row flex items-center gap-4">
-                        <Button
-                          onClick={() => {
-                            if (accountUser) {
-                              navigateToPage("map");
-                            } else {
-                              setIsLoginOpen(true);
-                            }
-                          }}
-                          className="button gap-2 text-[14px] font-bold h-14 px-7 rounded-2xl shadow-sm m-0 cursor-pointer"
-                        >
-                          <span>{t.btn_get_started}</span>
-                          <Icon name="arrow" size={16} />
-                        </Button>
-
-                        <button
-                          type="button"
-                          onClick={() => setIsSosOpen(true)}
-                          className="flex items-center gap-3.5 px-6 py-2.5 h-14 rounded-full bg-[linear-gradient(90deg,#3B7E5D_0%,#E9B441_34%,#E67328_67%,#D93829_100%)] hover:opacity-95 text-white shadow-[0_8px_24px_rgba(217,56,41,0.25)] transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-                          aria-label="Emergency Rescue Request"
-                        >
-                          <div className="w-9 h-9 rounded-full border-2 border-white/95 flex items-center justify-center shrink-0 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
-                            <LifeBuoy className="w-5 h-5 text-white stroke-[2.5]" />
-                          </div>
-                          <div className="flex flex-col text-left leading-[1.1]">
-                            <span className="text-[12px] font-black tracking-wider text-white uppercase drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)]">
-                              {lang === "bn" ? "জরুরি" : "EMERGENCY"}
-                            </span>
-                            <span className="text-[12px] font-black tracking-wider text-white uppercase drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)]">
-                              {lang === "bn" ? "উদ্ধার" : "RESCUE"}
-                            </span>
-                            <span className="text-[12px] font-black tracking-wider text-white uppercase drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)]">
-                              {lang === "bn" ? "অনুরোধ" : "REQUEST"}
-                            </span>
-                          </div>
-                        </button>
-                      </div>
-                    </div>
-                    <div className="hero-map">
-                      <MapArtwork lang={lang} />
-                    </div>
-                  </section>
-                </div>
-
-                {/* Metrics Statistics Row */}
-                <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 mt-6">
-                  <section className="metrics" aria-label="Platform statistics">
-                    <div>
-                      <div className="metric-icon-circle">
-                        <Icon name="layers" />
-                      </div>
-                      <strong>Previous</strong>
-                      <span>Historical Analysis</span>
-                    </div>
-                    <div>
-                      <div className="metric-icon-circle">
-                        <Icon name="location" />
-                      </div>
-                      <strong>{t.metric_districts}</strong>
-                      <span>{t.metric_districts_sub}</span>
-                    </div>
-                    <div>
-                      <div className="metric-icon-circle">
-                        <Icon name="building" />
-                      </div>
-                      <strong>{t.metric_assets}</strong>
-                      <span>{t.metric_assets_sub}</span>
-                    </div>
-                    <div>
-                      <div className="metric-icon-circle">
-                        <Icon name="code" />
-                      </div>
-                      <strong>{t.metric_tests}</strong>
-                      <span>{t.metric_tests_sub}</span>
-                    </div>
-                  </section>
-                </div>
-
-
-                {/* End-to-End Architecture */}
-                <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 my-10 sm:my-14 md:my-16">
-                  <section id="architecture">
-                    <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-10">
-                      <span className="inline-block px-3.5 py-1 text-xs font-bold tracking-wider text-[#1F513F] bg-[#D8E6DF] rounded-full uppercase mb-4">
-                        END-TO-END ARCHITECTURE
-                      </span>
-                      <h2 className="text-3xl md:text-4xl font-extrabold text-[#12241C] tracking-tight leading-tight mb-4">
-                        How Rokkha Predicts & Protects
-                      </h2>
-                      <p className="text-sm md:text-base text-[#56635D] leading-relaxed">
-                        The model was tested on years it never saw (2023–2025) against simple baselines, and the backend is checked by 352 automated tests.
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      {/* Card 01 */}
-                      <Card className="bg-white rounded-2xl p-7 border border-[#E4E2D8] shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
-                        <div>
-                          <div className="flex items-center justify-between mb-6">
-                            <div className="w-9 h-9 rounded-full bg-[#11241C] text-white flex items-center justify-center font-bold text-xs tracking-wider">
-                              01
-                            </div>
-                            <Badge variant="outline" className="text-xs font-semibold text-[#526059] bg-[#F4F3ED] border-[#E2E0D6] rounded-md px-2.5 py-1">
-                              Data Ingestion
-                            </Badge>
-                          </div>
-                          <h3 className="text-xl font-bold text-[#12241C] mb-3">
-                            Rain, Rivers & Satellites
-                          </h3>
-                          <p className="text-sm text-[#5C6863] leading-relaxed">
-                            Collects daily rain (ERA5 and GFS), modelled river flow (GloFAS) and Sentinel-1 satellite flood maps (Copernicus GFM) for all 64 districts.
-                          </p>
-                        </div>
-                      </Card>
-
-                      {/* Card 02 */}
-                      <Card className="bg-white rounded-2xl p-7 border border-[#E4E2D8] shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
-                        <div>
-                          <div className="flex items-center justify-between mb-6">
-                            <div className="w-9 h-9 rounded-full bg-[#1F513F] text-white flex items-center justify-center font-bold text-xs tracking-wider">
-                              02
-                            </div>
-                            <Badge variant="outline" className="text-xs font-semibold text-[#0369A1] bg-[#E0F2FE] border-[#BAE6FD] rounded-md px-2.5 py-1">
-                              Machine Learning Model
-                            </Badge>
-                          </div>
-                          <h3 className="text-xl font-bold text-[#12241C] mb-3">
-                            24-Hour Flood Forecast
-                          </h3>
-                          <p className="text-sm text-[#5C6863] leading-relaxed">
-                            A model trained on 2016–2022 floods gives each district a flood probability for the day. Modelled flood-depth zones (JRC) show long-term risk at any point.
-                          </p>
-                        </div>
-                      </Card>
-
-                      {/* Card 03 */}
-                      <Card className="bg-white rounded-2xl p-7 border border-[#E4E2D8] shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
-                        <div>
-                          <div className="flex items-center justify-between mb-6">
-                            <div className="w-9 h-9 rounded-full bg-[#11241C] text-white flex items-center justify-center font-bold text-xs tracking-wider">
-                              03
-                            </div>
-                            <Badge variant="outline" className="text-xs font-semibold text-[#047857] bg-[#DCFCE7] border-[#BBF7D0] rounded-md px-2.5 py-1">
-                              Citizens & Rescuers
-                            </Badge>
-                          </div>
-                          <h3 className="text-xl font-bold text-[#12241C] mb-3">
-                            Alerts and Help Requests
-                          </h3>
-                          <p className="text-sm text-[#5C6863] leading-relaxed">
-                            Shows district alerts, nearby hospitals and shelters, and a personal location report. The SOS button sends help requests to volunteer rescuers.
-                          </p>
-                        </div>
-                      </Card>
-                    </div>
-                  </section>
-                </div>
-
-                {/* Banner Card: Building a more flood-resilient Bangladesh (Matching Image 2) */}
-                <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 my-6 sm:my-8 md:my-10">
-                  <div className="bg-white rounded-3xl border border-[#DFDDD3] p-5 sm:p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
-                    <div className="flex flex-col sm:flex-row items-center gap-5 w-full md:w-auto">
-                      <img
-                        src="/bangladesh-river.jpg"
-                        alt="Bangladesh flood resilience"
-                        className="w-full sm:w-64 h-24 rounded-2xl object-cover shadow-sm"
-                      />
-                      <div className="space-y-1 text-center sm:text-left">
-                        <div className="flex items-center justify-center sm:justify-start gap-1.5 text-base sm:text-lg font-extrabold text-[#11241C]">
-                          <Shield size={16} className="text-[#16A34A] shrink-0" />
-                          <span>
-                            {lang === "bn"
-                              ? "বন্যা-সহনশীল বাংলাদেশ বিনির্মাণে"
-                              : "Building a more flood-resilient Bangladesh"}
-                          </span>
-                        </div>
-                        <p className="text-xs sm:text-sm text-[#5C6863]">
-                          {lang === "bn"
-                            ? "উপাত্ত, পূর্বাভাস ও প্রস্তুতি—নিরাপদ জনগোষ্ঠীর লক্ষ্যে একসাথে।"
-                            : "Data, prediction, and preparedness—together for safer communities."}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </>
+              <HomePage
+                lang={lang}
+                targetDate={targetDate}
+                forecastState={homeForecastState}
+                issuedAt={predictions.find((p) => p.issued_at)?.issued_at || null}
+                alerts={alerts}
+                isStaff={accountUser?.role === "rescuer" || accountUser?.role === "admin"}
+                onAction={handleNavAction}
+              />
             )}
 
             {/* DEDICATED FEATURE PAGES (map, alerts, satellite, hydro, shelters) */}
-            {activeView !== "overview" && activeView !== "login" && (
+            {/* Rokkha Intelligence: full-width page */}
+            {activeView === "intelligence" && <IntelligencePage lang={lang} onAction={handleNavAction} />}
+
+            {activeView !== "overview" && activeView !== "login" && activeView !== "intelligence" && (
               <section className="w-full max-w-[1360px] mx-auto px-3 sm:px-6 md:px-8 py-2 sm:py-3 space-y-2 sm:space-y-3">
                 {/* Page Header & Global Context Controls (hidden on Forecast & Early Warnings to avoid duplicate titles with the section header) */}
-                {activeView !== "alerts" && (
+                {activeView === "shelters" && (
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-0.5">
                     <div className="max-w-xl">
-                      <h1 className="text-xl sm:text-2xl font-extrabold text-[#11241B] tracking-tight leading-tight">
+                      <h1 className="text-xl sm:text-2xl font-extrabold text-rk-ink tracking-tight leading-tight">
                         {PAGE_METADATA[lang][activeView].title}
                       </h1>
                     </div>
 
-                    <Card className="p-2 border-[#DFDDD3] bg-white rounded-xl shadow-xs flex flex-wrap items-center gap-2 shrink-0">
-                      <div className="flex items-center gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-[#5C6863]" />
-                        <span className="text-xs font-bold text-[#12241C]">
-                          {t.label_district}:
+                    <Card className="p-2 border-rk-line bg-white rounded-xl shadow-xs flex flex-wrap items-center gap-2 sm:shrink-0">
+                      <div className="flex items-center gap-1.5 flex-1 min-w-0 sm:flex-none">
+                        <MapPin className="w-4 h-4 text-rk-muted shrink-0" aria-hidden="true" />
+                        <span className="text-sm font-semibold text-rk-ink shrink-0">
+                          {t.label_district}
                         </span>
                         <Select
                           value={selectedPcode}
                           onValueChange={(val) => handleSelectDistrict(val)}
                         >
-                          <SelectTrigger className="h-7.5 w-36 sm:w-44 text-xs font-semibold bg-[#FAF9F5] border-[#DFDDD3] rounded-lg">
+                          <SelectTrigger aria-label={t.label_district} className="h-10 w-full min-w-0 sm:w-56 text-sm font-semibold bg-rk-page border-rk-line rounded-lg">
                             <SelectValue placeholder={t.placeholder_select_district} />
                           </SelectTrigger>
                           <SelectContent>
@@ -1238,30 +1034,16 @@ export function CitizenPortalApp({
                         </Select>
                       </div>
 
-                      {activeView === "map" && (
-                        <div className="flex items-center gap-1.5">
-                          <Calendar className="w-3.5 h-3.5 text-[#5C6863]" />
-                          <span className="text-xs font-bold text-[#12241C]">
-                            {t.label_date}:
-                          </span>
-                          <Input
-                            type="date"
-                            value={targetDate}
-                            onChange={(e) => setTargetDate(e.target.value)}
-                            className="h-7.5 w-32 font-mono text-xs bg-[#FAF9F5] border-[#DFDDD3] rounded-lg"
-                          />
-                        </div>
-                      )}
 
                       <div className="flex flex-wrap items-center gap-1.5">
                         <Button
                           onClick={() => setIsDistrictReportOpen(true)}
-                          className="bg-[#122B1E] hover:bg-[#0C1F15] text-white font-bold text-xs px-2.5 h-7.5 rounded-lg flex items-center gap-1.5 shadow-xs transition-all"
+                          className="bg-rk-brand hover:bg-rk-brand-strong text-white font-semibold text-sm px-3 h-10 rounded-lg flex items-center gap-1.5 shadow-xs transition-colors"
                           title={`View comprehensive flood report for ${selectedName}`}
                         >
-                          <FileText className="w-3 h-3 text-[#4ADE80]" />
+                          <FileText className="w-4 h-4 text-rk-mist" aria-hidden="true" />
                           <span>{t.btn_my_district}</span>
-                          <span className="text-[10px] px-1 py-0.5 rounded bg-white/20 text-white font-semibold">
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-black/25 text-white font-semibold">
                             {lang === "bn" ? (DISTRICTS_BN[selectedPcode] || selectedName) : selectedName}
                           </span>
                         </Button>
@@ -1271,10 +1053,10 @@ export function CitizenPortalApp({
                           size="sm"
                           onClick={handleDetectMyLocation}
                           disabled={gpsState.kind === "locating"}
-                          className="h-7.5 px-2 border-[#DFDDD3] text-[#12241C] hover:bg-[#FAF9F5] flex items-center gap-1 text-xs font-semibold rounded-lg"
+                          className="h-10 px-3 border-rk-line text-rk-ink hover:bg-rk-page flex items-center gap-1.5 text-sm font-semibold rounded-lg"
                           title={lang === "bn" ? "আমার সঠিক অবস্থানের বন্যা তথ্য দেখুন" : "Check the flood report for my exact location"}
                         >
-                          <Crosshair className={`w-3 h-3 text-[#12241C] ${gpsState.kind === "locating" ? "animate-spin" : ""}`} />
+                          <Crosshair aria-hidden="true" className={`w-4 h-4 text-rk-ink ${gpsState.kind === "locating" ? "motion-safe:animate-spin" : ""}`} />
                           <span>{gpsState.kind === "locating" ? (lang === "bn" ? "খোঁজা হচ্ছে..." : "Locating...") : t.btn_gps}</span>
                         </Button>
                       </div>
@@ -1283,14 +1065,14 @@ export function CitizenPortalApp({
                           role="status"
                           aria-live="polite"
                           title={gpsState.kind === "error" ? gpsState.message : undefined}
-                          className={`text-[11px] leading-snug whitespace-nowrap truncate max-w-[220px] ${gpsState.kind === "error" ? "text-[#B23A30] font-semibold" : "text-[#4B5563]"}`}
+                          className={`text-[11px] leading-snug whitespace-nowrap truncate max-w-[220px] ${gpsState.kind === "error" ? "text-rk-danger font-semibold" : "text-rk-muted"}`}
                         >
                           {gpsState.kind === "locating" &&
                             (lang === "bn" ? "অবস্থান খোঁজা হচ্ছে..." : "Locating...")}
                           {gpsState.kind === "found" &&
                             (lang === "bn"
-                              ? `অবস্থান: ${toBnNum(gpsState.fix.lat.toFixed(3))}°N, ${toBnNum(gpsState.fix.lng.toFixed(3))}°E`
-                              : `Location: ${gpsState.fix.lat.toFixed(3)}°N, ${gpsState.fix.lng.toFixed(3)}°E`)}
+                              ? `আপনার অবস্থান: ${currentPlace || "নাম খোঁজা হচ্ছে…"}`
+                              : `Your location: ${currentPlace || "finding the place name…"}`)}
                           {gpsState.kind === "error" && gpsState.message}
                         </p>
                       )}
@@ -1309,56 +1091,26 @@ export function CitizenPortalApp({
                   />
                 )}
 
-                {activeView === "alerts" &&
-                  !isForecastLoading &&
-                  !hasForecast && (
-                    <div
-                      role="status"
-                      className="mb-4 rounded-2xl border border-[#DFDDD3] bg-white px-5 py-4 text-sm text-[#12241C]"
-                    >
-                      <span className="font-extrabold">
-                        {lang === "bn"
-                          ? `${toBnNum(targetDate)} তারিখের কোনো পূর্বাভাস নেই।`
-                          : `No forecast for ${targetDate}.`}
-                      </span>{" "}
-                      {lang === "bn"
-                        ? "এর মানে ঝুঁকি নেই, তা নয়। অন্য তারিখ বেছে নিন।"
-                        : "This does not mean there is no risk. Choose another date."}
-                    </div>
-                  )}
-
                 {/* PAGE 2: FLOOD MAP & POINT CHECK */}
                 {activeView === "map" && (
-                  <LeafletFloodMap
-                    predictions={predictions}
-                    selectedDistrictPcode={selectedPcode}
-                    onSelectDistrict={(pcode, name) =>
-                      handleSelectDistrict(pcode, name)
-                    }
-                    inspectedPoint={inspectedPoint}
-                    onInspectPoint={handleInspectPoint}
-                    pointCheckResult={pointCheckResult}
-                    isCheckingPoint={isCheckingPoint}
-                    targetDate={targetDate}
+                  <FloodMapExplorer
                     lang={lang}
+                    targetDate={targetDate}
                     onChangeTargetDate={setTargetDate}
+                    checkRequest={mapCheckRequest}
+                    predictions={predictions}
                     isForecastLoading={isForecastLoading}
-                    userPlace={
-                      accountUser?.location
-                        ? {
-                            lng: accountUser.location.coordinates[0],
-                            lat: accountUser.location.coordinates[1],
-                            label: accountUser.location_label,
-                          }
-                        : null
-                    }
-                    onOpenEmergencyPlan={() => setIsDistrictReportOpen(true)}
+                    onOpenDistrictReport={(pcode, name) => {
+                      handleSelectDistrict(pcode, name);
+                      setIsDistrictReportOpen(true);
+                    }}
                   />
                 )}
 
                 {/* PAGE 3: FORECAST & EARLY WARNINGS */}
                 {activeView === "alerts" && (
                   <div className="space-y-5">
+                    <AnnouncementsList lang={lang} />
                     <AlertsFeed
                       alerts={alerts}
                       targetDate={targetDate}
@@ -1369,6 +1121,14 @@ export function CitizenPortalApp({
                       onSelectDistrict={(pcode, name) => {
                         handleSelectDistrict(pcode, name);
                       }}
+                      onChangeTargetDate={setTargetDate}
+                    />
+                    <AlertsContext
+                      lang={lang}
+                      predictions={predictions}
+                      isLoading={isForecastLoading}
+                      sample={sampleParts.includes("predictions")}
+                      onNavigate={(view) => navigateToPage(view)}
                     />
                   </div>
                 )}
@@ -1377,9 +1137,26 @@ export function CitizenPortalApp({
                 {activeView === "shelters" && (
                   <NearestShelters
                     currentCoords={currentCoords}
+                    origin={{ source: pointSource, place: currentPlace }}
+                    onUseMyLocation={handleDetectMyLocation}
+                    locating={gpsState.kind === "locating"}
                     districtName={selectedName}
                     lang={lang}
                   />
+                )}
+
+                {/* Verified rescue and relief contacts (citizens). */}
+                {activeView === "contacts" && (
+                  <div className="py-4">
+                    <ContactDirectory lang={lang} headingLevel="h1" />
+                  </div>
+                )}
+
+                {/* Staff pages: their own title, no citizen controls. */}
+                {activeView === "rescue" && (
+                  <h1 className="pt-2 text-2xl sm:text-[28px] font-extrabold text-rk-ink tracking-tight">
+                    {PAGE_METADATA[lang][activeView].title}
+                  </h1>
                 )}
 
                 {/* Rescuers: requests for help */}
@@ -1393,13 +1170,12 @@ export function CitizenPortalApp({
 
                 {/* Admins: roles and registered places */}
                 {activeView === "admin" && (
-                  <AdminPanel
+                  <AdminConsole
                     user={accountUser}
                     lang={lang}
+                    initialSection={adminSection}
                     onOpenLogin={() => navigateToPage("login")}
-                    districtPcode={selectedPcode}
-                    districtName={selectedName}
-                    pickedPoint={inspectedPoint}
+                    placesProps={{ districtPcode: selectedPcode, districtName: selectedName, pickedPoint: inspectedPoint }}
                   />
                 )}
               </section>
@@ -1407,142 +1183,48 @@ export function CitizenPortalApp({
           </div>
 
           {/* Data Transparency & Honesty Modal (shadcn Dialog with EN / BN support) */}
+          {/* Short entry point; the full explanation lives on /intelligence (one source of truth). */}
           <Dialog open={isAboutOpen} onOpenChange={setIsAboutOpen}>
-            <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-              <DialogHeader className="border-b border-[#EDEBE2] pb-3">
-                <div className="flex items-center justify-between gap-3 pr-6">
-                  <div className="flex items-center space-x-2">
-                    <ShieldAlert className="w-6 h-6 text-[#C69A50] shrink-0" />
-                    <DialogTitle className="text-xl sm:text-2xl font-black text-[#183026]">
-                      {aboutLang === "bn"
-                        ? "তথ্যের স্বচ্ছতা, মডেলের সক্ষমতা ও প্রাতিষ্ঠানিক সীমাবদ্ধতা"
-                        : "Data Honesty, Model Performance & Institutional Limitations"}
-                    </DialogTitle>
-                  </div>
-                  {/* EN | BN Switcher */}
-                  <div className="flex items-center shrink-0 bg-[#EDEBE2]/70 p-0.5 rounded-full border border-[#DFDDD3]">
-                    <button
-                      type="button"
-                      onClick={() => setAboutLang("en")}
-                      className={`px-2.5 py-0.5 text-xs font-black rounded-full transition-all ${
-                        aboutLang === "en"
-                          ? "bg-white text-[#183026] shadow-xs border border-[#183026]"
-                          : "text-[#5C6863] hover:text-[#183026]"
-                      }`}
-                    >
-                      EN
-                    </button>
-                    <span className="text-[#A3ADA6] text-[11px] font-bold select-none px-0.5">|</span>
-                    <button
-                      type="button"
-                      onClick={() => setAboutLang("bn")}
-                      className={`px-2.5 py-0.5 text-xs font-black rounded-full transition-all ${
-                        aboutLang === "bn"
-                          ? "bg-white text-[#183026] shadow-xs border border-[#183026]"
-                          : "text-[#5C6863] hover:text-[#183026]"
-                      }`}
-                    >
-                      BN
-                    </button>
+            <DialogContent className="max-w-lg rounded-2xl border-rk-line bg-rk-surface p-6">
+              <DialogHeader>
+                <div className="flex items-center justify-between gap-2">
+                  <DialogTitle className="text-xl font-extrabold text-rk-forest">
+                    {aboutLang === "bn" ? "রক্ষার তথ্য ও মডেল কীভাবে কাজ করে" : "How Rokkha's intelligence works"}
+                  </DialogTitle>
+                  <div className="flex items-center gap-1 rounded-full border border-rk-line px-1 py-0.5 text-xs font-bold">
+                    {(["en", "bn"] as const).map((l) => (
+                      <button key={l} type="button" onClick={() => setAboutLang(l)} aria-pressed={aboutLang === l} className={`rounded-full px-2 py-0.5 ${aboutLang === l ? "bg-rk-brand-soft text-rk-brand-strong" : "text-rk-muted"}`}>
+                        {l === "en" ? "EN" : "BN"}
+                      </button>
+                    ))}
                   </div>
                 </div>
-                <DialogDescription className="pt-2 text-sm text-[#5C6863]">
+                <DialogDescription className="text-[14.5px] text-rk-ink">
                   {aboutLang === "bn"
-                    ? "তথ্যের উৎস, স্যাটেলাইট রাডারের সীমাবদ্ধতা এবং সরকারি সতর্কতা ও মডেল পূর্বাভাসের মধ্যকার পার্থক্য জানুন।"
-                    : "Understanding data sources, radar boundaries, and the distinction between model predictions and official government alerts."}
+                    ? "রক্ষার পূর্বাভাসের পেছনের তথ্য, মডেল, পদ্ধতি, পরীক্ষার ফলাফল ও সীমাবদ্ধতা দেখুন।"
+                    : "Explore the data, models, methodology, measured results and limitations behind Rokkha's flood intelligence."}
                 </DialogDescription>
               </DialogHeader>
-
-              <div className="space-y-4 text-base text-[#263B32]/90 leading-relaxed py-2">
-                <div className="p-4 rounded-xl bg-[#FAFAF7] border border-[#EDEBE2] space-y-1.5">
-                  <h4 className="font-bold text-xl text-[#263B32] flex items-center gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-[#78958A] shrink-0" />
-                    {aboutLang === "bn"
-                      ? "১. এটি কোনো সরকারি বন্যা উচ্ছেদ বা স্থানান্তর সতর্কতা নয়"
-                      : "1. Not an Official Flood Evacuation Warning"}
-                  </h4>
-                  <p>
-                    {aboutLang === "bn" ? (
-                      <>
-                        রক্ষা (Rokkha) মানবিক ত্রাণ সমন্বয় এবং জনসচেতনতা বৃদ্ধির লক্ষ্যে উন্মুক্ত পূর্বাভাসমূলক তথ্য সরবরাহ করে।
-                        আনুষ্ঠানিকভাবে বন্যার সতর্কতা জারি, বিপৎসীমা ঘোষণা এবং স্থানান্তর নির্দেশনার একমাত্র এখতিয়ার
-                        <strong> বন্যা পূর্বাভাস ও সতর্কীকরণ কেন্দ্র (FFWC)</strong> এবং
-                        <strong> বাংলাদেশ পানি উন্নয়ন বোর্ডের (BWDB)</strong>।
-                      </>
-                    ) : (
-                      <>
-                        Rokkha provides open predictive intelligence for humanitarian coordination and community awareness.
-                        Official flood warnings, stage levels, and evacuation orders are mandated solely to the
-                        <strong> Flood Forecasting and Warning Centre (FFWC)</strong> and the
-                        <strong> Bangladesh Water Development Board (BWDB)</strong>.
-                      </>
-                    )}
-                  </p>
-                </div>
-
-                <div className="p-4 rounded-xl bg-[#FAFAF7] border border-[#EDEBE2] space-y-1.5">
-                  <h4 className="font-bold text-xl text-[#263B32] flex items-center gap-2">
-                    <AlertTriangle className="w-5 h-5 text-[#C69A50] shrink-0" />
-                    {aboutLang === "bn"
-                      ? "২. শহর ও পাহাড়ি অঞ্চলে স্যাটেলাইট রাডারের সীমাবদ্ধতা"
-                      : "2. Satellite Radar Limitations in Cities & Hills"}
-                  </h4>
-                  <p>
-                    {aboutLang === "bn" ? (
-                      <>
-                        কোপারনিকাস সেন্টিনেল-১ সিন্থেটিক অ্যাপারচার রাডার (SAR) গ্রামীণ ও হাওর অঞ্চলের জমে থাকা বন্যার পানি
-                        ম্যাপ করে। তবে বহুতল ভবনের কারণে শহরের কেন্দ্রে (যেমন ঢাকা, চট্টগ্রাম) রাডার সিগন্যাল বাধাগ্রস্ত হয়
-                        এবং গভীর বনভূমি ও পাহাড়ি অঞ্চলে (বান্দরবান, রাঙ্গামাটি, খাগড়াছড়ি) প্রবেশ করতে পারে না।
-                      </>
-                    ) : (
-                      <>
-                        Copernicus Sentinel-1 Synthetic Aperture Radar (SAR) maps standing flood water across rural and
-                        haor wetlands. However, radar pulses bounce between high-rise buildings in city centres (e.g. Dhaka,
-                        Chattogram) and cannot penetrate dense forested mountains (Bandarban, Rangamati, Khagrachhari).
-                      </>
-                    )}
-                  </p>
-                </div>
-
-                <div className="p-4 rounded-xl bg-[#FAFAF7] border border-[#EDEBE2] space-y-1.5">
-                  <h4 className="font-bold text-xl text-[#263B32] flex items-center gap-2">
-                    <AlertTriangle className="w-5 h-5 text-[#B94A48] shrink-0" />
-                    {aboutLang === "bn"
-                      ? "৩. বাস্তবে পর্যবেক্ষণকৃত বন্যা বনাম মডেলভিত্তিক ঝুঁকি অঞ্চল"
-                      : "3. Observed Flooding vs. Modelled Hazard"}
-                  </h4>
-                  <p>
-                    {aboutLang === "bn" ? (
-                      <>
-                        আমরা স্যাটেলাইটে বাস্তবে শনাক্তকৃত বন্যা (যেখানে ২০১৬ থেকে ২০২৪ সালের মধ্যে স্যাটেলাইট চিত্রে পানি ধরা পড়েছে)
-                        এবং গাণিতিক মডেলভিত্তিক বন্যা ঝুঁকি অঞ্চলকে (যেখানে হাইড্রোলজিক্যাল ফিজিক্স অনুযায়ী ১০ বা ১০০ বছর মেয়াদী বন্যার পানি পৌঁছাতে পারে)
-                        সুস্পষ্টভাবে আলাদা রাখি।
-                      </>
-                    ) : (
-                      <>
-                        We deliberately separate <strong>Observed Floods</strong> (where satellite imagery actually captured
-                        water between 2016 and 2024) from <strong>Modelled Hazard Zones</strong> (where hydrological physics
-                        indicate a 10-year or 100-year return period flood could reach).
-                      </>
-                    )}
-                  </p>
-                </div>
-
-                {modelStatus && (
-                  <div className="p-3.5 rounded-lg bg-[#EDEBE2]/50 border border-[#EDEBE2] text-base">
-                    <span className="font-bold text-[#263B32]">
-                      {aboutLang === "bn" ? "বর্তমান এআই মডেল অবস্থা: " : "Current ML Model Status: "}
-                    </span>
-                    <span className="font-mono text-[#263B32]/80 uppercase">
-                      {modelStatus.status || "Ready"}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              <DialogFooter className="pt-2">
-                <Button onClick={() => setIsAboutOpen(false)} className="font-bold">
-                  {aboutLang === "bn" ? "আমি বুঝতে পেরেছি" : "I Understand"}
+              <ul className="space-y-2 text-[14px] text-rk-ink">
+                <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-rk-brand" aria-hidden="true" />{aboutLang === "bn" ? "সরকারি সতর্কবার্তা নয়: সতর্কবার্তা ও বিপদসীমা দেয় FFWC (BWDB)।" : "Not an official warning: warnings and danger levels come from FFWC (BWDB)."}</li>
+                <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-rk-brand" aria-hidden="true" />{aboutLang === "bn" ? "পর্যবেক্ষিত বন্যা ও মডেলের ঝুঁকি-এলাকা আলাদা রাখা হয়।" : "Observed flooding and modelled hazard are kept apart."}</li>
+                <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-rk-brand" aria-hidden="true" />{aboutLang === "bn" ? "রাডার শহর, ঘন বন ও খাড়া পাহাড়ে ভালো দেখে না; ৮টি জেলায় পূর্বাভাস নেই।" : "Radar sees poorly in cities, dense forest and steep hills; 8 districts have no forecast."}</li>
+              </ul>
+              {modelStatus && (
+                <p className="font-mono text-[12px] text-rk-muted">{aboutLang === "bn" ? "মডেলের অবস্থা: " : "Model status: "}{modelStatus.status}</p>
+              )}
+              <DialogFooter className="gap-2 sm:gap-2">
+                <Button variant="outline" onClick={() => setIsAboutOpen(false)} className="rounded-xl border-rk-line">
+                  {aboutLang === "bn" ? "বন্ধ করুন" : "Close"}
+                </Button>
+                <Button
+                  onClick={() => {
+                    setIsAboutOpen(false);
+                    navigateToPage("intelligence");
+                  }}
+                  className="rounded-xl bg-rk-brand font-bold text-white hover:bg-rk-brand-strong"
+                >
+                  {aboutLang === "bn" ? "পুরো ব্যাখ্যা দেখুন" : "Explore the Intelligence System"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -1553,12 +1235,12 @@ export function CitizenPortalApp({
             open={isDistrictReportOpen}
             onOpenChange={setIsDistrictReportOpen}
           >
-            <DialogContent className="max-w-xl md:max-w-2xl w-[94vw] sm:w-[90vw] max-h-[84vh] overflow-y-auto bg-[#FAF9F5] border border-[#DFDDD3] rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-2xl space-y-2.5 sm:space-y-3 text-left">
+            <DialogContent className="max-w-xl md:max-w-2xl w-[94vw] sm:w-[90vw] max-h-[84vh] overflow-y-auto bg-rk-page border border-rk-line rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-2xl space-y-2.5 sm:space-y-3 text-left">
               <DialogHeader className="space-y-0.5 text-center pr-6">
-                <DialogTitle className="text-lg sm:text-xl font-bold tracking-wide text-[#8B5E3C]">
+                <DialogTitle className="text-lg sm:text-xl font-bold tracking-wide text-rk-clay-text">
                   {districtReport.name} - {lang === "bn" ? "বিস্তারিত বন্যা প্রতিবেদন ও জরুরি পরিকল্পনা" : "Detailed Flood Report & Emergency Plan"}
                 </DialogTitle>
-                <div className="text-[10px] sm:text-xs text-[#4B5563]">
+                <div className="text-[10px] sm:text-xs text-rk-muted">
                   {districtReport.division} {lang === "bn" ? "বিভাগ" : "Division"} • {lang === "bn" ? "জাতীয় র‍্যাংক #" : "National Rank #"}{lang === "bn" ? toBnNum(districtReport.rank) : districtReport.rank} / {lang === "bn" ? "৬৪" : "64"} • {lang === "bn" ? "পূর্বাভাস তারিখ:" : "Forecast Date:"} {lang === "bn" ? toBnNum(targetDate) : targetDate}
                 </div>
               </DialogHeader>
@@ -1579,13 +1261,13 @@ export function CitizenPortalApp({
 
               {/* 1. Map of that location */}
               <div className="space-y-1">
-                <div className="flex items-center justify-between text-[11px] font-bold text-[#183026]">
+                <div className="flex items-center justify-between text-[11px] font-bold text-rk-brand">
                   <span className="flex items-center gap-1">
-                    <MapPin className="w-3 h-3 text-[#C9443A]" />
-                    {lang === "bn" ? "এলাকার বিশদ মানচিত্র ও আশ্রয়কেন্দ্র:" : "Location Map & Emergency Shelters:"}
+                    <MapPin className="w-3 h-3 text-rk-danger" />
+                    {lang === "bn" ? "এলাকার মানচিত্র ও আশ্রয়কেন্দ্র" : "Area map and shelters"}
                   </span>
-                  <span className="text-[#5C6863] font-mono text-[10px]">
-                    {lang === "bn" ? toBnNum(currentCoords.lat.toFixed(4)) : currentCoords.lat.toFixed(4)}°N, {lang === "bn" ? toBnNum(currentCoords.lng.toFixed(4)) : currentCoords.lng.toFixed(4)}°E
+                  <span className="text-rk-muted text-[11px] font-semibold">
+                    {currentPlace || (lang === "bn" ? DISTRICTS_BN[selectedPcode] || selectedName : selectedName)}
                   </span>
                 </div>
                 <DistrictDetailMap
@@ -1596,6 +1278,23 @@ export function CitizenPortalApp({
                   assets={reportAssets}
                   isBn={lang === "bn"}
                 />
+                {reportAssets.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-[11px] font-semibold text-rk-muted">
+                      {lang === "bn" ? "মানচিত্রের স্থানগুলো (কাছের থেকে দূরে, OpenStreetMap; সরেজমিনে যাচাই করা নয়):" : "Places on the map (nearest first, OpenStreetMap; not checked on the ground):"}
+                    </p>
+                    <ol className="mt-1 grid gap-x-4 gap-y-0.5 text-xs text-rk-ink sm:grid-cols-2">
+                      {reportAssets.slice(0, 8).map((a) => (
+                        <li key={a.asset.id} className="flex justify-between gap-2">
+                          <span className="truncate">{displayName(a.asset.name)}</span>
+                          <span className="shrink-0 font-mono text-rk-muted">
+                            {lang === "bn" ? `${toBnNum(a.distance_kilometers.toFixed(1))} কিমি` : `${a.distance_kilometers.toFixed(1)} km`}
+                          </span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
               </div>
 
               {/* 2. Core Metrics 3-Card Grid */}
@@ -1611,7 +1310,7 @@ export function CitizenPortalApp({
                     : level === "none" ? (isBn ? "নিম্ন" : "Low")
                     : (isBn ? "নেই" : "No forecast");
                   const color =
-                    level === "alert" ? "text-[#C9443A]" : level === "watch" ? "text-[#E08A24]" : level === "none" ? "text-[#475569]" : "text-[#6B7280]";
+                    level === "alert" ? "text-rk-danger" : level === "watch" ? "text-rk-warning" : level === "none" ? "text-rk-muted" : "text-rk-muted";
                   const note =
                     level === "none" ? (isBn ? "কম, তবে শূন্য নয়" : "Low, not zero")
                     : level ? (isBn ? "মডেল পূর্বাভাস" : "Model forecast")
@@ -1624,7 +1323,7 @@ export function CitizenPortalApp({
                     : point.cell.permanent_water
                     ? (isBn ? "জলাশয়" : "Water body")
                     : h100?.depth_label
-                    ? (isBn ? ({ "< 1 m": "১ মি.-এর কম", "1 to 3 m": "১–৩ মি.", "3 to 10 m": "৩–১০ মি.", "> 10 m": "১০ মি.-এর বেশি" } as Record<string, string>)[h100.depth_label] || h100.depth_label : h100.depth_label)
+                    ? depthLabel(h100.depth_label, isBn ? "bn" : "en")
                     : (isBn ? "বাইরে" : "Outside");
                   const depthNote = !point?.cell
                     ? (isBn ? "মানচিত্রে স্থান বাছুন" : "Pick a spot on the map")
@@ -1634,27 +1333,27 @@ export function CitizenPortalApp({
                     ? (isBn ? "নদী বা স্থায়ী পানি" : "River or permanent water")
                     : (isBn ? "মডেল বন্যা এলাকার বাইরে" : "Outside modelled flood zone");
 
-                  const cardCls = "bg-white rounded-xl border border-[#DFDDD3] p-2 sm:p-2.5 text-center shadow-xs flex flex-col justify-between";
+                  const cardCls = "bg-white rounded-xl border border-rk-line p-2 sm:p-2.5 text-center shadow-xs flex flex-col justify-between";
                   return (
                     <>
                       <div className={cardCls}>
-                        <span className="text-[10px] sm:text-[11px] font-semibold text-[#5C6863]">{isBn ? "বন্যা ঝুঁকি" : "Flood Risk"}</span>
+                        <span className="text-[10px] sm:text-[11px] font-semibold text-rk-muted">{isBn ? "বন্যা ঝুঁকি" : "Flood Risk"}</span>
                         <div className={`text-lg sm:text-xl font-bold my-0.5 ${color}`}>{label}</div>
-                        <span className="text-[9px] sm:text-[10px] font-medium text-[#4B5563]">{note}</span>
+                        <span className="text-[9px] sm:text-[10px] font-medium text-rk-muted">{note}</span>
                       </div>
 
                       {/* 2: Forecast — the real probability, or "not available" */}
                       <div className={cardCls}>
-                        <span className="text-[10px] sm:text-[11px] font-semibold text-[#5C6863]">{isBn ? "বন্যার সম্ভাবনা" : "Chance of flooding"}</span>
-                        <div className="text-lg sm:text-xl font-bold text-[#1F513F] my-0.5">{districtReport.probabilityText}</div>
-                        <span className="text-[9px] sm:text-[10px] font-medium text-[#1F513F]">{isBn ? "জেলা, এই দিনের" : "District, this day"}</span>
+                        <span className="text-[10px] sm:text-[11px] font-semibold text-rk-muted">{isBn ? "বন্যার সম্ভাবনা" : "Chance of flooding"}</span>
+                        <div className="text-lg sm:text-xl font-bold text-rk-brand my-0.5">{districtReport.probabilityText}</div>
+                        <span className="text-[9px] sm:text-[10px] font-medium text-rk-brand">{isBn ? "জেলা, এই দিনের" : "District, this day"}</span>
                       </div>
 
                       {/* 3: Depth — JRC modelled depth at the checked spot */}
                       <div className={cardCls}>
-                        <span className="text-[10px] sm:text-[11px] font-semibold text-[#5C6863]">{isBn ? "গভীরতা (এই স্থানে)" : "Depth (this spot)"}</span>
-                        <div className="text-lg sm:text-xl font-bold text-[#11241C] my-0.5">{depth}</div>
-                        <span className="text-[9px] sm:text-[10px] font-medium text-[#4B5563]">{depthNote}</span>
+                        <span className="text-[10px] sm:text-[11px] font-semibold text-rk-muted">{isBn ? "গভীরতা (এই স্থানে)" : "Depth (this spot)"}</span>
+                        <div className="text-lg sm:text-xl font-bold text-rk-ink my-0.5">{depth}</div>
+                        <span className="text-[9px] sm:text-[10px] font-medium text-rk-muted">{depthNote}</span>
                       </div>
                     </>
                   );
@@ -1663,9 +1362,9 @@ export function CitizenPortalApp({
 
               {/* 3. Active District Alerts & Warnings */}
               <div className="space-y-1.5">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-[#11241C] flex items-center gap-1.5">
-                  <AlertTriangle className="w-3.5 h-3.5 text-[#C9443A]" />
-                  {lang === "bn" ? "সক্রিয় সতর্কতা ও আবহাওয়া বার্তা" : "Active Alerts & Weather Warnings"}
+                <h4 className="text-xs font-bold uppercase tracking-wider text-rk-ink flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 text-rk-danger" />
+                  {lang === "bn" ? "এই জেলা ও বিভাগে নজরদারি বা সতর্কতা (মডেল)" : "Watch or Alert in this district and division (model)"}
                 </h4>
                 {alerts.filter(a => a.district.pcode === selectedPcode || a.district.division === districtReport.division).length > 0 ? (
                   <div className="space-y-1.5">
@@ -1674,37 +1373,37 @@ export function CitizenPortalApp({
                         key={alert.alert_id}
                         className={`p-2.5 rounded-xl border flex items-start gap-2 text-xs ${
                           alert.level === "alert"
-                            ? "bg-[#FEF2F2] border-[#FCA5A5] text-[#991B1B]"
-                            : "bg-[#FFFBEB] border-[#FCD34D] text-[#92400E]"
+                            ? "bg-rk-danger-soft border-rk-danger-accent/40 text-rk-danger"
+                            : "bg-rk-warning-soft border-rk-warning-accent text-rk-warning"
                         }`}
                       >
                         <span className="font-extrabold uppercase px-1.5 py-0.5 rounded text-[10px] shrink-0 bg-white/70">
-                          {alert.level === "alert" ? (lang === "bn" ? "জরুরি অ্যালার্ট" : "ALERT") : (lang === "bn" ? "সতর্কবার্তা" : "WATCH")}
+                          {alert.level === "alert" ? (lang === "bn" ? "সতর্কতা" : "ALERT") : (lang === "bn" ? "নজরদারি" : "WATCH")}
                         </span>
                         <div className="flex-1 min-w-0">
-                          <div className="font-bold">{alert.district.name} ({lang === "bn" ? `${toBnNum(Math.round(alert.probability * 100))}% ঝুঁকি` : `${Math.round(alert.probability * 100)}% Risk`})</div>
+                          <div className="font-bold">{lang === "bn" ? DISTRICTS_BN[alert.district.pcode] || alert.district.name : alert.district.name} ({lang === "bn" ? `${toBnNum(Math.round(alert.probability * 100))}% সম্ভাবনা` : `${Math.round(alert.probability * 100)}% chance`})</div>
                           <div className="text-[11px] leading-snug mt-0.5">{alert.message}</div>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="p-2.5 rounded-xl bg-[#F0FDF4] border border-[#BBF7D0] text-[#166534] text-xs flex items-center gap-2 font-medium">
-                    <span className="w-2 h-2 rounded-full bg-[#16A34A]"></span>
-                    <span>{lang === "bn" ? "এই জেলায় বর্তমানে কোনো চরম লাল সতর্কবার্তা নেই।" : "No extreme red flood alert active for this district currently."}</span>
+                  <div className="p-2.5 rounded-xl bg-rk-page border border-rk-line text-rk-ink text-xs flex items-center gap-2 font-medium">
+                    <span className="w-2 h-2 rounded-full bg-rk-risk-unknown" aria-hidden="true"></span>
+                    <span>{lang === "bn" ? "এই দিনে এই জেলা বা বিভাগের কোনো জেলা নজরদারি বা সতর্কতা স্তরে নেই। কম সম্ভাবনা মানে শূন্য ঝুঁকি নয়।" : "Neither this district nor any other district in its division is on Watch or Alert for this day. A low chance is not zero risk."}</span>
                   </div>
                 )}
               </div>
 
               {/* 4. Actionable Emergency Evacuation Plan */}
-              <div className="space-y-2 bg-white rounded-2xl border border-[#DFDDD3] p-3.5 sm:p-4 shadow-xs">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-[#183026] flex items-center gap-1.5">
-                  <ShieldAlert className="w-3.5 h-3.5 text-[#C9443A]" />
-                  {lang === "bn" ? "জরুরি উচ্ছেদ ও নিরাপত্তা নির্দেশনা" : "EMERGENCY EVACUATION & ACTION GUIDELINES"}
+              <div className="space-y-2 bg-white rounded-2xl border border-rk-line p-3.5 sm:p-4 shadow-xs">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-rk-brand flex items-center gap-1.5">
+                  <ShieldAlert className="w-3.5 h-3.5 text-rk-danger" />
+                  {lang === "bn" ? "জরুরি অবস্থায় সরে যাওয়া ও নিরাপত্তা নির্দেশনা" : "Emergency evacuation and safety guidance"}
                 </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-[#263B32] leading-relaxed">
-                  <div className="p-2 sm:p-2.5 rounded-xl bg-[#FAF9F5] border border-[#DFDDD3] space-y-0.5">
-                    <div className="font-bold text-[#183026] text-[11px]">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-rk-forest leading-relaxed">
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-rk-page border border-rk-line space-y-0.5">
+                    <div className="font-bold text-rk-brand text-[11px]">
                       {lang === "bn" ? "১. আশ্রয়কেন্দ্রে স্থানান্তর:" : "1. Immediate Evacuation:"}
                     </div>
                     <div className="text-[11px]">
@@ -1713,8 +1412,8 @@ export function CitizenPortalApp({
                         : "Move children, elderly, and livestock immediately to the nearest designated elevated shelter."}
                     </div>
                   </div>
-                  <div className="p-2 sm:p-2.5 rounded-xl bg-[#FAF9F5] border border-[#DFDDD3] space-y-0.5">
-                    <div className="font-bold text-[#183026] text-[11px]">
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-rk-page border border-rk-line space-y-0.5">
+                    <div className="font-bold text-rk-brand text-[11px]">
                       {lang === "bn" ? "২. নিরাপদ পানি ও শুকনো খাবার:" : "2. Safe Water & Provisions:"}
                     </div>
                     <div className="text-[11px]">
@@ -1723,8 +1422,8 @@ export function CitizenPortalApp({
                         : "Secure 72 hours of clean drinking water, purification tablets (Halazone), saline, and dry rations."}
                     </div>
                   </div>
-                  <div className="p-2 sm:p-2.5 rounded-xl bg-[#FAF9F5] border border-[#DFDDD3] space-y-0.5">
-                    <div className="font-bold text-[#183026] text-[11px]">
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-rk-page border border-rk-line space-y-0.5">
+                    <div className="font-bold text-rk-brand text-[11px]">
                       {lang === "bn" ? "৩. বিদ্যুৎ ও যোগাযোগ ব্যবস্থা:" : "3. Power & Device Safety:"}
                     </div>
                     <div className="text-[11px]">
@@ -1733,8 +1432,8 @@ export function CitizenPortalApp({
                         : "Turn off main electrical breakers before water enters. Seal mobile phones and powerbanks in waterproof bags."}
                     </div>
                   </div>
-                  <div className="p-2 sm:p-2.5 rounded-xl bg-[#FAF9F5] border border-[#DFDDD3] space-y-0.5">
-                    <div className="font-bold text-[#183026] text-[11px]">
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-rk-page border border-rk-line space-y-0.5">
+                    <div className="font-bold text-rk-brand text-[11px]">
                       {lang === "bn" ? "৪. জরুরি হটলাইন নম্বরসমূহ:" : "4. Emergency Helplines:"}
                     </div>
                     <div className="text-[11px]">
@@ -1754,25 +1453,15 @@ export function CitizenPortalApp({
                     setIsDistrictReportOpen(false);
                     setIsSosOpen(true);
                   }}
-                  className="w-full sm:flex-1 h-12 px-5 rounded-full bg-[linear-gradient(90deg,#3B7E5D_0%,#E9B441_34%,#E67328_67%,#D93829_100%)] hover:opacity-95 text-white font-extrabold shadow-[0_8px_24px_rgba(217,56,41,0.25)] flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-                  aria-label="Emergency Rescue Request"
+                  className="w-full sm:flex-1 h-12 px-5 rounded-xl bg-rk-brand hover:bg-rk-brand-strong text-white font-bold inline-flex items-center justify-center gap-2"
                 >
-                  <div className="w-7 h-7 rounded-full border-2 border-white/95 flex items-center justify-center shrink-0 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
-                    <LifeBuoy className="w-4 h-4 text-white stroke-[2.5]" />
-                  </div>
-                  <div className="flex flex-col text-left leading-[1.1]">
-                    <span className="text-[10px] font-black tracking-wider text-white uppercase drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)]">
-                      {lang === "bn" ? "জরুরি" : "EMERGENCY"}
-                    </span>
-                    <span className="text-[11px] font-black tracking-wider text-white uppercase drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)]">
-                      {lang === "bn" ? "উদ্ধার অনুরোধ" : "RESCUE REQUEST"}
-                    </span>
-                  </div>
+                  <LifeBuoy className="w-5 h-5" aria-hidden="true" />
+                  {lang === "bn" ? "সাহায্য চান" : "Request assistance"}
                 </button>
                 <Button
                   variant="outline"
                   onClick={() => setIsDistrictReportOpen(false)}
-                  className="w-full sm:w-auto h-12 px-6 rounded-full border-[#DFDDD3] font-bold text-xs text-[#11241C] hover:bg-[#FAF9F5]"
+                  className="w-full sm:w-auto h-12 px-6 rounded-xl border-rk-line font-bold text-sm text-rk-forest hover:bg-rk-page"
                 >
                   {lang === "bn" ? "প্রতিবেদন বন্ধ করুন" : "Close Report"}
                 </Button>
@@ -1791,7 +1480,8 @@ export function CitizenPortalApp({
           contactName={accountUser?.name || ""}
           isOpen={isSosOpen}
           onOpenChange={setIsSosOpen}
-          hideFloatingButton={activeView === "overview"}
+          hideFloatingButton
+          presetNeeds={sosPreset}
           savedPlace={
             accountUser?.location
               ? {
@@ -1813,11 +1503,8 @@ export function CitizenPortalApp({
         onLoginSuccess={(user) => {
           if (user) setAccountUser(user);
           setIsLoginOpen(false);
-          setIsPageLoading(true);
-          window.setTimeout(() => {
-            setIsPageLoading(false);
-            navigateToPage("map");
-          }, 2400);
+          // Rescue teams and admins land on their board; everyone else on the forecast for their area.
+          navigateToPage(user && (user.role === "rescuer" || user.role === "admin") ? "rescue" : "map");
         }}
         lang={lang}
         onToggleLanguage={toggleLanguage}

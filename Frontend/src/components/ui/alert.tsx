@@ -7,11 +7,11 @@ const alertVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-[#FAFAF7] border-[#EDEBE2] text-[#263B32] [&>svg]:text-[#263B32]",
+        default: "bg-rk-page border-rk-line text-rk-forest [&>svg]:text-rk-forest",
         warning:
-          "bg-[#FAFAF7] border-[#C69A50]/40 text-[#263B32] [&>svg]:text-[#C69A50]",
+          "bg-rk-page border-rk-warning-accent/40 text-rk-forest [&>svg]:text-rk-warning",
         destructive:
-          "bg-[#B94A48]/5 border-[#B94A48]/30 text-[#263B32] [&>svg]:text-[#B94A48]",
+          "bg-rk-danger-accent/5 border-rk-danger-accent/30 text-rk-forest [&>svg]:text-rk-danger",
         muted:
           "bg-gray-50 border-gray-200 text-gray-700 [&>svg]:text-gray-500",
       },
@@ -53,7 +53,7 @@ const AlertDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("text-base leading-relaxed text-[#263B32]/80", className)}
+    className={cn("text-base leading-relaxed text-rk-ink", className)}
     {...props}
   />
 ));

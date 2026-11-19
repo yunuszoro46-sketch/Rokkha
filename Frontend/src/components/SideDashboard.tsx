@@ -24,6 +24,8 @@ export type CitizenView =
   | "shelters"
   | "rescue"
   | "admin"
+  | "contacts"
+  | "intelligence"
   | "login";
 
 interface SideDashboardProps {
@@ -104,7 +106,7 @@ export const SideDashboard: React.FC<SideDashboardProps> = ({
 
   return (
     <aside
-      className={`fixed top-0 left-0 h-screen z-40 bg-[#11241C] text-white flex flex-col justify-between border-r border-[#1F382D] transition-all duration-300 shadow-2xl ${
+      className={`fixed top-0 left-0 h-screen z-40 bg-rk-ink text-white flex flex-col justify-between border-r border-rk-forest transition-all duration-300 shadow-2xl ${
         isCollapsed ? "w-16 sm:w-20" : "w-64 lg:w-72"
       }`}
     >
@@ -113,7 +115,7 @@ export const SideDashboard: React.FC<SideDashboardProps> = ({
         <div
           className={`h-[68px] px-4 flex items-center ${
             isCollapsed ? "justify-center" : "justify-end"
-          } border-b border-[#1F382D]`}
+          } border-b border-rk-forest`}
         >
           <button
             onClick={onToggleCollapse}
@@ -135,7 +137,7 @@ export const SideDashboard: React.FC<SideDashboardProps> = ({
                 onClick={() => onSelectView(item.id)}
                 className={`w-full flex items-center space-x-4 px-4 py-3 rounded-xl text-left transition group relative ${
                   isActive
-                    ? "bg-[#223A2F] text-white shadow-md border border-[#C69A50]/60"
+                    ? "bg-rk-forest text-white shadow-md border border-rk-warning-accent/60"
                     : "text-white/80 hover:bg-white/10 hover:text-white"
                 }`}
                 title={isCollapsed ? item.label : undefined}
@@ -144,7 +146,7 @@ export const SideDashboard: React.FC<SideDashboardProps> = ({
                   size={20}
                   className={`flex-shrink-0 transition ${
                     isActive
-                      ? "text-[#C69A50]"
+                      ? "text-rk-warning"
                       : "text-white/70 group-hover:text-white"
                   }`}
                 />
@@ -154,14 +156,14 @@ export const SideDashboard: React.FC<SideDashboardProps> = ({
                       {item.label}
                     </span>
                     {item.badge !== undefined && (
-                      <span className="bg-[#C9443A] text-white text-sm font-bold px-2.5 py-0.5 rounded-full ml-2">
+                      <span className="bg-rk-danger text-white text-sm font-bold px-2.5 py-0.5 rounded-full ml-2">
                         {item.badge}
                       </span>
                     )}
                   </div>
                 )}
                 {isCollapsed && item.badge !== undefined && (
-                  <span className="absolute top-2.5 right-2.5 w-3 h-3 rounded-full bg-[#C9443A] border-2 border-[#11241C]"></span>
+                  <span className="absolute top-2.5 right-2.5 w-3 h-3 rounded-full bg-rk-danger border-2 border-rk-ink"></span>
                 )}
               </button>
             );

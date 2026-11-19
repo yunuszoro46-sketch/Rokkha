@@ -87,7 +87,10 @@ export interface PointFloodCheck {
       depth_label: string | null;
     }>;
     permanent_water?: boolean;
+    grid_cell_size_m?: number;
   } | null;
+  attribution?: string;
+  limitations?: string[];
 }
 
 export interface SatelliteObservation {
@@ -108,8 +111,13 @@ export interface AssetNearResult {
       coordinates: [number, number]; // [lng, lat]
     };
     criticality: "low" | "medium" | "high" | "critical";
-    occupancy: number;
-    replacement_value_bdt: number;
+    /** null = not recorded (most OpenStreetMap places); never read as 0 or unlimited. */
+    occupancy: number | null;
+    replacement_value_bdt: number | null;
+    /** e.g. "OpenStreetMap"; null = entered by hand. */
+    source?: string | null;
+    notes?: string | null;
+    updated_at?: string;
     district?: {
       pcode: string;
       name: string;

@@ -83,23 +83,23 @@ export const RainRiverCharts: React.FC<RainRiverChartsProps> = ({
   }, [districtPcode]);
 
   return (
-    <Card className="border-[#EDEBE2] bg-white shadow-sm">
-      <CardHeader className="border-b border-[#EDEBE2] pb-4">
+    <Card className="border-rk-line bg-white shadow-sm">
+      <CardHeader className="border-b border-rk-line pb-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="space-y-1">
             <div className="flex items-center space-x-2">
-              <CloudRain className="w-6 h-6 text-[#20362B]" />
+              <CloudRain className="w-6 h-6 text-rk-forest" />
               <CardTitle>
                 {t.hydro_card_title} {displayDistrictName}
               </CardTitle>
             </div>
-            <p className="text-base text-[#1A2820]/70 font-normal">
+            <p className="text-base text-rk-forest/70 font-normal">
               {t.hydro_card_sub}
             </p>
           </div>
 
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-            <TabsList className="bg-[#EDEBE2]/60">
+            <TabsList className="bg-rk-secondary/60">
               <TabsTrigger value="rain">{t.hydro_tab_rain}</TabsTrigger>
               <TabsTrigger value="river">{t.hydro_tab_river}</TabsTrigger>
             </TabsList>
@@ -109,11 +109,11 @@ export const RainRiverCharts: React.FC<RainRiverChartsProps> = ({
 
       <CardContent className="pt-5">
         {isLoading ? (
-          <div className="py-10 text-center text-base text-[#78958A] animate-pulse">
+          <div className="py-10 text-center text-base text-rk-muted animate-pulse">
             {t.hydro_loading}
           </div>
         ) : (activeTab === "rain" ? rainData : riverData).length === 0 ? (
-          <div className="py-10 text-center text-base text-[#5C6863]">
+          <div className="py-10 text-center text-base text-rk-muted">
             {lang === "bn"
               ? "এই তারিখগুলোর জন্য কোনো তথ্য পাওয়া যায়নি।"
               : "No data available for these dates."}
@@ -149,7 +149,7 @@ export const RainRiverCharts: React.FC<RainRiverChartsProps> = ({
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            <div className="flex flex-wrap items-center justify-between gap-2 text-base text-[#1A2820]/60 pt-2 border-t border-[#EDEBE2]">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-base text-rk-forest/60 pt-2 border-t border-rk-line">
               <span>{t.hydro_rain_sources}</span>
               <span>{t.hydro_rain_note}</span>
             </div>
@@ -187,7 +187,7 @@ export const RainRiverCharts: React.FC<RainRiverChartsProps> = ({
                 </LineChart>
               </ResponsiveContainer>
             </div>
-            <div className="flex flex-wrap items-center justify-between gap-2 text-base text-[#1A2820]/60 pt-2 border-t border-[#EDEBE2]">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-base text-rk-forest/60 pt-2 border-t border-rk-line">
               <span>{t.hydro_river_site}</span>
               <span>{t.hydro_river_source}</span>
             </div>

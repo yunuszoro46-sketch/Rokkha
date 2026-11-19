@@ -39,7 +39,7 @@ export function locationProblemText(problem: LocationProblem, isBn = false): str
         : "HTTPS required";
     case "denied":
       return isBn
-        ? "লোকেশন পারমিশন বন্ধ"
+        ? "অবস্থানের অনুমতি বন্ধ"
         : "Location permission blocked";
     case "unavailable":
       return isBn
@@ -47,7 +47,7 @@ export function locationProblemText(problem: LocationProblem, isBn = false): str
         : "Location unavailable";
     case "timeout":
       return isBn
-        ? "সময় শেষ হয়েছে"
+        ? "সময়মতো অবস্থান মেলেনি"
         : "Location timed out";
   }
 }

@@ -4,26 +4,26 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap text-base font-semibold ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#263B32] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]",
+  "inline-flex items-center justify-center whitespace-nowrap text-base font-semibold ring-offset-background transition-[background-color,border-color,color,box-shadow,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rk-forest focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98] motion-reduce:active:scale-100",
   {
     variants: {
       variant: {
         default:
-          "bg-[#20362B] text-white hover:bg-[#16271E] shadow-sm",
+          "bg-rk-forest text-white hover:bg-rk-forest/90 shadow-sm",
         secondary:
-          "bg-white text-[#1A2820] border border-[#D5D2C8] hover:bg-[#FAFAF7] shadow-sm",
+          "bg-white text-rk-forest border border-rk-line hover:bg-rk-page shadow-sm",
         outline:
-          "border border-[#D5D2C8] bg-transparent hover:bg-white text-[#1A2820]",
+          "border border-rk-line bg-transparent hover:bg-white text-rk-forest",
         ghost:
-          "hover:bg-[#EDEBE2]/60 text-[#263B32]",
+          "hover:bg-rk-secondary/60 text-rk-forest",
         pill:
-          "rounded-full bg-[#20362B] text-white hover:bg-[#16271E] shadow-sm",
+          "rounded-full bg-rk-forest text-white hover:bg-rk-forest/90 shadow-sm",
         pillOutline:
-          "rounded-full border border-[#D5D2C8] bg-white text-[#1A2820] hover:bg-[#FAFAF7]",
+          "rounded-full border border-rk-line bg-white text-rk-forest hover:bg-rk-page",
         alert:
-          "bg-[#B94A48] text-white hover:bg-[#a33e3c] shadow-sm",
+          "bg-rk-danger text-white hover:bg-rk-danger/90 shadow-sm",
         watch:
-          "bg-[#C69A50] text-white hover:bg-[#b08742] shadow-sm",
+          "bg-rk-warning-accent text-white hover:bg-rk-warning shadow-sm",
       },
       size: {
         default: "h-11 px-5 py-2.5 rounded-xl text-base",

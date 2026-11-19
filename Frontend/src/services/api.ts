@@ -12,47 +12,17 @@ import {
 import sitesData from "../data/sites.json";
 import benchmarkData from "../data/benchmark_predictions.json";
 import floodHistoryData from "../data/district_flood_history.json";
-import satelliteObsData from "../data/satellite_observations.json";
 import modelMeta from "../data/flood_model_meta.json";
-import districtGeoData from "../data/bangladesh_districts.json";
-import hydroSample from "../data/hydro_sample.json";
+import { findDistrictByPoint } from "@/lib/districts";
+// The saved samples below are only needed when the backend cannot be reached, so they are loaded on
+// demand instead of being shipped to every visitor (~0.85 MB of JSON).
+const loadSatelliteSample = async (): Promise<any> => (await import("../data/satellite_observations.json")).default;
+const loadHydroSample = async (): Promise<any> => (await import("../data/hydro_sample.json")).default;
 import { markLive, markSample } from "./dataSource";
 
-const API_BASE =
-  (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL) ||
-  "http://localhost:8000/api/v1";
+import { API_BASE } from "./common/client";
 
 const SUPPORTED_PCODES = new Set<string>((modelMeta as any).supported_pcodes || []);
-
-function pointInRing(lng: number, lat: number, ring: number[][]): boolean {
-  let inside = false;
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    const xi = ring[i][0],
-      yi = ring[i][1];
-    const xj = ring[j][0],
-      yj = ring[j][1];
-    const intersect =
-      yi > lat !== yj > lat && lng < ((xj - xi) * (lat - yi)) / (yj - yi + 1e-12) + xi;
-    if (intersect) inside = !inside;
-  }
-  return inside;
-}
-
-function findDistrictByPoint(lng: number, lat: number): any | null {
-  const features = (districtGeoData as any).features || [];
-  for (const f of features) {
-    const geom = f.geometry;
-    if (!geom) continue;
-    if (geom.type === "Polygon") {
-      if (pointInRing(lng, lat, geom.coordinates[0])) return f.properties;
-    } else if (geom.type === "MultiPolygon") {
-      for (const poly of geom.coordinates) {
-        if (pointInRing(lng, lat, poly[0])) return f.properties;
-      }
-    }
-  }
-  return null;
-}
 
 /**
  * Check if the FastAPI backend is reachable and returning valid JSON
@@ -178,7 +148,7 @@ export async function checkPointFlood(
   // Saved sample: the district and its real flood history. The ~90 m cell under
   // the point (times flooded, modelled depth) needs the backend, so it stays null.
   markSample("location");
-  const prop = findDistrictByPoint(lng, lat);
+  const prop = await findDistrictByPoint(lng, lat).catch(() => null);
   if (!prop) {
     return { district: null, cell: null };
   }
@@ -244,7 +214,8 @@ export async function getSatelliteObservations(
 
   // Saved sample: only the passes inside the asked dates (no passes = none shown).
   markSample("satellite");
-  const allObs: SatelliteObservation[] = (satelliteObsData as any)[pcode] || [];
+  const satelliteObsData = await loadSatelliteSample();
+  const allObs: SatelliteObservation[] = satelliteObsData[pcode] || [];
   const result = allObs.filter((o) => {
     if (startDate && o.date < startDate) return false;
     if (endDate && o.date > endDate) return false;
@@ -284,9 +255,10 @@ export async function getLatestSatelliteObservations(
   const day = new Date(`${date}T00:00:00Z`).getTime();
   if (Number.isNaN(day)) return [];
   const oldest = new Date(day - MAX_AGE_DAYS * 86400000).toISOString().slice(0, 10);
+  const satelliteObsData = await loadSatelliteSample();
 
   return ((floodHistoryData as any).districts || []).map((d: any) => {
-    const passes: SatelliteObservation[] = ((satelliteObsData as any)[d.pcode] || []).filter(
+    const passes: SatelliteObservation[] = (satelliteObsData[d.pcode] || []).filter(
       (o: SatelliteObservation) => o.date >= oldest && o.date <= date
     );
     const observation = passes.length > 0 ? passes[passes.length - 1] : null;
@@ -384,6 +356,16 @@ export async function getNearestAssets(
   maxDistanceM: number = 25000,
   assetType?: string
 ): Promise<AssetNearResult[]> {
+  return (await findNearestAssets(lng, lat, maxDistanceM, assetType)) ?? [];
+}
+
+/** Same request, but null when the backend could not be reached (so a page can say so instead of "none found"). */
+export async function findNearestAssets(
+  lng: number,
+  lat: number,
+  maxDistanceM: number = 25000,
+  assetType?: string
+): Promise<AssetNearResult[] | null> {
   try {
     let url = `${API_BASE}/assets/near?lng=${lng}&lat=${lat}&max_distance_m=${maxDistanceM}`;
     if (assetType) url += `&asset_type=${assetType}`;
@@ -400,7 +382,7 @@ export async function getNearestAssets(
   // No saved sample for shelters: a made-up shelter could send someone to a
   // place that does not exist. Only places registered in the backend are shown.
   markSample("shelters");
-  return [];
+  return null;
 }
 
 function inWindow(startDate?: string, endDate?: string) {
@@ -430,7 +412,7 @@ export async function getSiteRain(siteId: string, startDate?: string, endDate?: 
     // backend not reachable: saved sample below
   }
   markSample("hydro");
-  const saved = ((hydroSample as any).rain || {})[siteId.replace("district-", "")];
+  const saved = ((await loadHydroSample()).rain || {})[siteId.replace("district-", "")];
   if (!saved) return null;
   return { sample: true, values: saved.filter(inWindow(startDate, endDate)) };
 }
@@ -456,7 +438,7 @@ export async function getSiteRiver(siteId: string, startDate?: string, endDate?:
     // backend not reachable: saved sample below
   }
   markSample("hydro");
-  const saved = ((hydroSample as any).river || {})[siteId];
+  const saved = ((await loadHydroSample()).river || {})[siteId];
   if (!saved) return null;
   return { sample: true, values: saved.filter(inWindow(startDate, endDate)) };
 }
@@ -590,6 +572,21 @@ export async function getNearestWaterways(
     if (res.ok) return await res.json();
   } catch {
     // fallback
+  }
+  return null;
+}
+
+/**
+ * Every district's GFS rain-forecast total for the next `hours` hours after the latest fetch
+ * (GET /ingestion/rain-forecast/summary). No saved sample: without the backend there is no forecast,
+ * and the map says so instead of showing an old one.
+ */
+export async function getRainForecastSummary(hours = 72): Promise<any | null> {
+  try {
+    const res = await fetch(`${API_BASE}/ingestion/rain-forecast/summary?hours=${hours}`);
+    if (res.ok) return await res.json();
+  } catch {
+    // backend not reachable
   }
   return null;
 }
