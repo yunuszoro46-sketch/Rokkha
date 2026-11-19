@@ -1,36 +1,21 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 import {
   ArrowRight,
-  BellRing,
   BrainCircuit,
-  ChevronDown,
-  CloudRain,
-  Droplets,
   ExternalLink,
-  HeartPulse,
-  House,
-  Layers,
   LifeBuoy,
   Map as MapIcon,
   MapPin,
   Phone,
-  Radar,
-  Sailboat,
   ShieldCheck,
   Users,
-  Waves,
 } from "lucide-react";
 import { Language, DISTRICTS_BN, toBnNum } from "../../lib/translations";
 import type { AlertItem } from "../../types/api";
-import { Notice } from "../rk/Notice";
 import { HeroIntelligenceMap } from "./HeroIntelligenceMap";
 import type { NavAction } from "./SiteNavigation";
-
-// The public homepage (docs/ROKKHA_DESIGN_SYSTEM.md, "Earth & Emerald").
-// Order follows the product: flood intelligence first (A–D), assistance second (E).
-// Everything stated here exists in the app; every number shown is real data or absent.
 
 export type ForecastState = "loading" | "ready" | "none" | "unavailable";
 
@@ -44,531 +29,322 @@ interface HomePageProps {
   onAction: (action: NavAction) => void;
 }
 
-/** Fades a block in when it scrolls into view. Visible without JavaScript and with reduced motion. */
-const Reveal: React.FC<{ children: React.ReactNode; className?: string; delay?: number }> = ({ children, className = "", delay = 0 }) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const [state, setState] = useState<"idle" | "hidden" | "in">("idle");
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || typeof IntersectionObserver === "undefined") return;
-    if (el.getBoundingClientRect().top < window.innerHeight) return; // already on screen: never hide it
-    setState("hidden");
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          setState("in");
-          io.disconnect();
-        }
-      },
-      { rootMargin: "0px 0px -10% 0px" }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-  return (
-    <div
-      ref={ref}
-      className={`${state === "hidden" ? "rk-reveal-hidden" : state === "in" ? "rk-reveal-in" : ""} ${className}`}
-      style={state === "in" && delay ? { animationDelay: `${delay}ms` } : undefined}
-    >
-      {children}
-    </div>
-  );
-};
-
-/** Faint contour lines used as a background texture on dark sections. Decorative. */
-const Contours: React.FC<{ className?: string }> = ({ className = "" }) => (
-  <svg aria-hidden="true" className={`pointer-events-none absolute inset-0 h-full w-full ${className}`} preserveAspectRatio="none" viewBox="0 0 800 400">
-    <g fill="none" stroke="currentColor" strokeWidth="1">
-      {Array.from({ length: 11 }, (_, i) => {
-        const y = 20 + i * 38;
-        return <path key={i} d={`M-20 ${y} C 140 ${y - 26} 260 ${y + 30} 420 ${y} S 700 ${y - 22} 820 ${y + 12}`} />;
-      })}
-    </g>
-  </svg>
-);
-
-export const HomePage: React.FC<HomePageProps> = ({ lang, targetDate, forecastState, issuedAt, alerts, isStaff, onAction }) => {
+export const HomePage: React.FC<HomePageProps> = ({
+  lang,
+  targetDate,
+  forecastState,
+  issuedAt,
+  alerts,
+  isStaff,
+  onAction,
+}) => {
   const isBn = lang === "bn";
   const tr = (en: string, bn: string) => (isBn ? bn : en);
   const num = (v: string | number) => (isBn ? toBnNum(v) : String(v));
-  const [safetyOpen, setSafetyOpen] = useState(false);
-  const go = (view: "map" | "alerts" | "shelters" | "contacts" | "rescue" | "login") => onAction({ kind: "view", view });
+  const go = (view: "map" | "alerts" | "shelters" | "contacts" | "rescue" | "login" | "intelligence") =>
+    onAction({ kind: "view", view });
+
   const wrap = "max-w-[1240px] mx-auto px-4 md:px-6";
   const issued = issuedAt
-    ? num(new Date(issuedAt).toLocaleString(isBn ? "bn-BD" : "en-GB", { timeZone: "Asia/Dhaka", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }))
+    ? num(
+        new Date(issuedAt).toLocaleString(isBn ? "bn-BD" : "en-GB", {
+          timeZone: "Asia/Dhaka",
+          day: "2-digit",
+          month: "short",
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      )
     : null;
-  const dateLabel = new Date(`${targetDate}T00:00:00`).toLocaleDateString(isBn ? "bn-BD" : "en-GB", { day: "numeric", month: "short", year: "numeric" });
+  const dateLabel = new Date(`${targetDate}T00:00:00`).toLocaleDateString(isBn ? "bn-BD" : "en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
   const districtName = (a: AlertItem) => (isBn ? DISTRICTS_BN[a.district.pcode] || a.district.name : a.district.name);
   const onAlert = alerts.filter((a) => a.level === "alert");
   const onWatch = alerts.filter((a) => a.level === "watch");
 
-  const primaryBtn = "h-13 min-h-[52px] px-6 rounded-xl bg-rk-brand hover:bg-rk-brand-strong text-white text-[17px] font-bold inline-flex items-center justify-center gap-2 transition-colors";
-  const secondaryBtn = "h-13 min-h-[52px] px-6 rounded-xl border border-rk-forest/25 text-rk-forest bg-rk-surface/80 hover:bg-rk-surface text-[17px] font-bold inline-flex items-center justify-center gap-2 transition-colors";
-  const eyebrow = "rk-eyebrow font-mono text-xs sm:text-[13px] font-semibold tracking-[0.14em] uppercase";
-  const h2 = "text-[28px] md:text-[40px] leading-[1.12] font-extrabold text-rk-forest";
-  const lead = "mt-4 text-[17px] md:text-lg text-rk-muted leading-relaxed max-w-2xl";
+  const primaryBtn =
+    "min-h-[50px] px-6 rounded-xl bg-rk-brand hover:bg-rk-brand-strong text-white text-[16px] font-bold inline-flex items-center justify-center gap-2 transition-all shadow-sm";
+  const secondaryBtn =
+    "min-h-[50px] px-6 rounded-xl border border-rk-forest/20 text-rk-forest bg-white/90 hover:bg-white text-[16px] font-bold inline-flex items-center justify-center gap-2 transition-all shadow-2xs";
 
   return (
-    <div>
-      {/* A — Hero: flood intelligence first */}
-      <section className="relative overflow-hidden bg-grad-earth border-b border-rk-line">
-        <Contours className="text-rk-moss opacity-[0.13]" />
-        <div className={`${wrap} relative py-10 md:py-16 lg:py-20 grid gap-10 lg:grid-cols-[1fr_1.05fr] lg:items-center`}>
+    <div className="w-full bg-rk-page">
+      {/* ── 1. HERO SECTION ── */}
+      <section className="relative overflow-hidden border-b border-rk-line bg-gradient-to-b from-[#F3EFE6] via-[#FAF7F2] to-rk-page py-10 md:py-16 lg:py-20">
+        <div className={`${wrap} grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:items-center`}>
           <div>
-            <p className={`${eyebrow} text-rk-brand-strong inline-flex items-center gap-2`}>
-              <span className="h-2 w-2 rounded-full bg-rk-brand" aria-hidden="true" />
-              {tr("Flood intelligence & early warning", "বন্যা তথ্য ও আগাম সতর্কতা")}
-            </p>
-            <h1 className="mt-5 text-[38px] leading-[1.06] sm:text-[48px] lg:text-[58px] font-extrabold text-rk-forest">
-              {tr("See the risk before the water rises.", "পানি বাড়ার আগেই ঝুঁকি দেখুন।")}
-            </h1>
-            <p className="mt-5 text-[18px] md:text-xl text-rk-ink leading-relaxed max-w-xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-rk-brand/20 bg-rk-brand-soft/70 px-3.5 py-1 text-xs sm:text-[13px] font-bold uppercase tracking-wider text-rk-brand-strong font-mono">
+              <span className="h-2 w-2 rounded-full bg-rk-brand animate-pulse" aria-hidden="true" />
+              {tr("AI Flood Forecasting & Response", "বন্যা পূর্বাভাস ও জীবন রক্ষায় আগাম সতর্কতা")}
+            </div>
+
+            {/* Slogan tied to Flood and Rokkha (Protection) */}
+            <h1 className="mt-5 text-[34px] leading-[1.08] sm:text-[44px] lg:text-[52px] font-extrabold text-rk-forest tracking-tight">
               {tr(
-                "Rokkha brings flood forecasting, geographic intelligence and early warnings together to help people and communities in Bangladesh understand changing flood risk and prepare ahead.",
-                "রক্ষা বন্যার পূর্বাভাস, ভৌগোলিক তথ্য ও আগাম সতর্কতা একসাথে এনে বাংলাদেশের মানুষ ও এলাকাকে বদলে যাওয়া বন্যা ঝুঁকি বুঝতে ও আগে থেকে প্রস্তুত হতে সাহায্য করে।"
+                "Intelligent flood foresight to protect lives before waters rise.",
+                "পানি বাড়ার আগেই আগাম প্রস্তুতি — বন্যা থেকে জানমাল সুরক্ষায় 'রক্ষা'।"
+              )}
+            </h1>
+
+            <p className="mt-4 text-[16.5px] sm:text-[18px] text-rk-ink leading-relaxed max-w-xl">
+              {tr(
+                "Rokkha unites daily AI flood forecasting, satellite radar observations, and verified community rescue into one life-saving shield for Bangladesh.",
+                "রক্ষা স্যাটেলাইট রাডার, বৃষ্টিপাত ও নদীর তথ্য একত্রিত করে বন্যার আগাম পূর্বাভাস দেয় — ঘরে পানি ওঠার আগেই বাংলাদেশের প্রতিটি জীবন ও সম্পদ রক্ষা করতে।"
               )}
             </p>
-            <div className="mt-8 flex flex-col sm:flex-row sm:flex-wrap gap-3 [&>button]:whitespace-nowrap">
+
+            <div className="mt-7 flex flex-col sm:flex-row gap-3">
               <button type="button" onClick={() => go("map")} className={primaryBtn}>
                 <MapIcon className="w-5 h-5" aria-hidden="true" />
-                {tr("Explore flood intelligence", "বন্যা তথ্য দেখুন")}
+                {tr("Explore Live Flood Map", "লাইভ বন্যার মানচিত্র দেখুন")}
               </button>
               <button type="button" onClick={() => onAction({ kind: "help" })} className={secondaryBtn}>
                 <LifeBuoy className="w-5 h-5 text-rk-brand" aria-hidden="true" />
-                {tr("Request assistance", "সাহায্য চান")}
+                {tr("Request Assistance", "জরুরি সাহায্য চান")}
               </button>
             </div>
-            <a href="#how" className="mt-4 inline-flex min-h-11 items-center gap-1.5 font-semibold text-rk-brand-strong underline underline-offset-4 decoration-rk-brand/40 hover:decoration-rk-brand">
-              {tr("How Rokkha works", "রক্ষা কীভাবে কাজ করে")}
-              <ArrowRight className="w-4 h-4" aria-hidden="true" />
-            </a>
 
-            {/* Today's real forecast, or an honest "not available" */}
-            <div className="mt-7 rounded-2xl border border-rk-line bg-rk-surface/85 backdrop-blur px-4 py-3 max-w-xl" aria-live="polite">
-              <p className={`${eyebrow} !text-[11px] text-rk-muted`}>
-                {tr("Today's model forecast", "আজকের মডেল পূর্বাভাস")} · {dateLabel}
-              </p>
-              <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[15px] text-rk-ink">
-                {forecastState === "loading" && <span>{tr("Getting the forecast…", "পূর্বাভাস আনা হচ্ছে…")}</span>}
-                {forecastState === "unavailable" && <span>{tr("Forecast currently unavailable.", "পূর্বাভাস এখন পাওয়া যাচ্ছে না।")}</span>}
-                {forecastState === "none" && <span>{tr("Not issued yet for this day (usually ready in the morning).", "এই দিনের পূর্বাভাস এখনো তৈরি হয়নি (সাধারণত সকালে হয়)।")}</span>}
-                {forecastState === "ready" && (
-                  <>
-                    <span className="inline-flex items-center gap-2">
-                      <span className="h-3 w-3 rounded-sm bg-rk-risk-alert" aria-hidden="true" />
-                      <strong>{num(onAlert.length)}</strong> {tr("on Alert", "জেলায় সতর্কতা")}
-                    </span>
-                    <span className="inline-flex items-center gap-2">
-                      <span className="h-3 w-3 rounded-sm bg-rk-risk-watch" aria-hidden="true" />
-                      <strong>{num(onWatch.length)}</strong> {tr("on Watch", "জেলায় নজরদারি")}
-                    </span>
-                    {issued && <span className="font-mono text-[13px] text-rk-muted">{tr("issued", "তৈরি")} {issued}</span>}
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="mx-auto w-full max-w-[580px]">
-            <HeroIntelligenceMap lang={lang} />
-          </div>
-        </div>
-      </section>
-
-      {/* B — Understand the changing risk */}
-      <section className={`${wrap} py-16 md:py-24`} aria-labelledby="risk-title">
-        <Reveal>
-          <p className={`${eyebrow} text-rk-clay-text`}>{tr("What Rokkha shows", "রক্ষা কী দেখায়")}</p>
-          <h2 id="risk-title" className={`mt-3 ${h2}`}>{tr("Understand the changing risk", "বদলে যাওয়া ঝুঁকি বুঝুন")}</h2>
-          <p className={lead}>
-            {tr(
-              "Floods build up from rain, rivers and the shape of the land. Rokkha puts these together every day so you can see where water may rise and when to get ready.",
-              "বৃষ্টি, নদী আর মাটির গঠন মিলে বন্যা হয়। রক্ষা প্রতিদিন এগুলো একসাথে দেখে, যাতে আপনি বুঝতে পারেন কোথায় পানি বাড়তে পারে এবং কখন প্রস্তুত হতে হবে।"
-            )}
-          </p>
-        </Reveal>
-
-        <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-12">
-          {/* Feature card (forecast): dark, with a gradient */}
-          <Reveal className="lg:col-span-7 lg:row-span-2">
-            <button
-              type="button"
-              onClick={() => go("map")}
-              className="group relative h-full w-full overflow-hidden rounded-3xl bg-rk-forest text-left text-white p-7 md:p-9 min-h-[300px] flex flex-col"
-              style={{ backgroundImage: "var(--rk-grad-forest)" }}
-            >
-              <Contours className="text-white opacity-[0.08]" />
-              <span className="relative inline-flex h-12 w-12 items-center justify-center rounded-xl bg-white/12 ring-1 ring-white/20">
-                <BrainCircuit className="w-6 h-6" aria-hidden="true" />
-              </span>
-              <h3 className="relative mt-5 text-2xl md:text-[28px] font-extrabold">{tr("Daily flood forecasts", "প্রতিদিনের বন্যা পূর্বাভাস")}</h3>
-              <p className="relative mt-3 text-[16px] md:text-[17px] text-white/90 leading-relaxed max-w-lg">
-                {tr(
-                  "Every morning a machine-learning model estimates the chance of flooding in each district that day, from recent rain, river flow and satellite observations.",
-                  "প্রতিদিন সকালে একটি মেশিন-লার্নিং মডেল সাম্প্রতিক বৃষ্টি, নদীর প্রবাহ ও স্যাটেলাইট পর্যবেক্ষণ থেকে প্রতিটি জেলায় সেদিনের বন্যার সম্ভাবনা হিসাব করে।"
-                )}
-              </p>
-              <div className="relative mt-auto pt-8 flex flex-wrap items-end justify-between gap-4">
-                <ul className="flex flex-wrap gap-2 text-[13px] font-semibold" aria-label={tr("Forecast levels", "পূর্বাভাসের স্তর")}>
-                  <li className="inline-flex items-center gap-1.5 rounded-full bg-white/12 px-3 py-1"><span className="h-2.5 w-2.5 rounded-full bg-rk-risk-low" aria-hidden="true" />{tr("Low chance", "কম সম্ভাবনা")}</li>
-                  <li className="inline-flex items-center gap-1.5 rounded-full bg-white/12 px-3 py-1"><span className="h-2.5 w-2.5 rounded-full bg-rk-risk-watch" aria-hidden="true" />{tr("Watch", "নজরদারি")}</li>
-                  <li className="inline-flex items-center gap-1.5 rounded-full bg-white/12 px-3 py-1"><span className="h-2.5 w-2.5 rounded-full bg-rk-risk-alert ring-1 ring-white/60" aria-hidden="true" />{tr("Alert", "সতর্কতা")}</li>
-                </ul>
-                <span className="inline-flex items-center gap-1.5 font-bold group-hover:gap-2.5 transition-all">
-                  {tr("Open the forecast map", "পূর্বাভাসের মানচিত্র খুলুন")} <ArrowRight className="w-5 h-5" aria-hidden="true" />
+            {/* Today's Forecast Status Badge */}
+            <div className="mt-7 rounded-2xl border border-rk-line bg-white/90 p-4 max-w-xl shadow-xs">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-rk-muted">
+                  {tr("Today's Nationwide Situation", "আজকের সার্বিক পরিস্থিতি")} · {dateLabel}
                 </span>
-              </div>
-            </button>
-          </Reveal>
-          {[
-            {
-              icon: Layers,
-              en: "Geographic risk view",
-              bn: "ভৌগোলিক ঝুঁকি",
-              den: "Tap any spot on the map to see its modelled flood depth and whether satellites saw it flooded before.",
-              dbn: "মানচিত্রে যেকোনো জায়গায় চাপ দিয়ে দেখুন সেখানে মডেল অনুযায়ী পানির গভীরতা এবং আগে স্যাটেলাইটে বন্যা দেখা গেছে কি না।",
-              run: () => go("map"),
-              tint: "bg-rk-mist",
-            },
-            {
-              icon: BellRing,
-              en: "Early warnings",
-              bn: "আগাম সতর্কতা",
-              den: "Districts move to Watch or Alert when the chance is high, with registered shelters and hospitals in each one.",
-              dbn: "সম্ভাবনা বেশি হলে জেলা নজরদারি বা সতর্কতা স্তরে যায়, সাথে সেই জেলার নিবন্ধিত আশ্রয়কেন্দ্র ও হাসপাতাল।",
-              run: () => go("alerts"),
-              tint: "bg-rk-warning-soft",
-            },
-          ].map((card, i) => (
-            <Reveal key={card.en} delay={(i + 1) * 90} className="lg:col-span-5">
-              <button type="button" onClick={card.run} className="rk-lift group h-full w-full rounded-3xl border border-rk-line bg-rk-surface p-6 md:p-7 text-left flex gap-5">
-                <span className={`h-12 w-12 shrink-0 rounded-xl ${card.tint} text-rk-forest flex items-center justify-center`}>
-                  <card.icon className="w-6 h-6" aria-hidden="true" />
-                </span>
-                <span>
-                  <span className="block text-xl font-extrabold text-rk-forest font-display">{tr(card.en, card.bn)}</span>
-                  <span className="mt-1.5 block text-[15px] text-rk-muted leading-relaxed">{tr(card.den, card.dbn)}</span>
-                  <span className="mt-3 inline-flex items-center gap-1 text-[15px] font-bold text-rk-brand-strong">
-                    {tr("Open", "খুলুন")} <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
+                {issued && (
+                  <span className="font-mono text-[11px] text-rk-muted">
+                    {tr("Issued", "আপডেট")} {issued}
                   </span>
-                </span>
-              </button>
-            </Reveal>
-          ))}
-        </div>
-        <Reveal delay={200}>
-          <div className="mt-4 rounded-3xl border border-rk-line bg-rk-secondary/70 p-6 md:p-7 grid gap-5 md:grid-cols-[auto_1fr] md:items-center">
-            <span className="h-12 w-12 rounded-xl bg-rk-surface text-rk-river-text flex items-center justify-center">
-              <Radar className="w-6 h-6" aria-hidden="true" />
-            </span>
-            <div>
-              <h3 className="text-xl font-extrabold text-rk-forest">{tr("Environmental monitoring", "পরিবেশ পর্যবেক্ষণ")}</h3>
-              <p className="mt-1.5 text-[15px] text-rk-muted leading-relaxed max-w-3xl">
-                {tr(
-                  "Rain, river flow and radar-satellite flood observations are collected for every district each day. Missing data is shown as missing, never as safe.",
-                  "প্রতিদিন প্রতিটি জেলার বৃষ্টি, নদীর প্রবাহ ও রাডার-স্যাটেলাইটের বন্যা পর্যবেক্ষণ সংগ্রহ করা হয়। তথ্য না থাকলে তা না থাকা হিসেবেই দেখানো হয়, কখনো নিরাপদ হিসেবে নয়।"
                 )}
-              </p>
-            </div>
-          </div>
-        </Reveal>
-      </section>
-
-      {/* C — From environmental data to awareness (the real pipeline, in plain words) */}
-      <section id="how" className="relative overflow-hidden text-white scroll-mt-20" style={{ backgroundImage: "var(--rk-grad-river)" }} aria-labelledby="how-title">
-        <Contours className="text-white opacity-[0.07]" />
-        <div className={`${wrap} relative py-16 md:py-24`}>
-          <Reveal>
-            <p className={`${eyebrow} text-rk-mist/90`}>{tr("How Rokkha works", "রক্ষা কীভাবে কাজ করে")}</p>
-            <h2 id="how-title" className="mt-3 text-[28px] md:text-[40px] leading-[1.12] font-extrabold">
-              {tr("From environmental data to awareness", "পরিবেশের তথ্য থেকে সচেতনতা")}
-            </h2>
-            <p className="mt-4 text-[17px] md:text-lg text-white/85 leading-relaxed max-w-2xl">
-              {tr("Four steps run every day. Each one uses open, named data sources.", "প্রতিদিন চারটি ধাপ চলে। প্রতিটিতে প্রকাশ্য, নাম-উল্লেখ করা তথ্যসূত্র ব্যবহার হয়।")}
-            </p>
-          </Reveal>
-
-          <ol className="mt-12 relative grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <svg aria-hidden="true" className="hidden lg:block absolute left-[6%] right-[6%] top-7 h-2 w-[88%]" preserveAspectRatio="none" viewBox="0 0 100 2">
-              <line x1="0" y1="1" x2="100" y2="1" stroke="#DCEBE5" strokeOpacity=".5" strokeWidth="2" className="rk-flow" vectorEffect="non-scaling-stroke" />
-            </svg>
-            {[
-              {
-                icon: CloudRain,
-                en: "Environmental information",
-                bn: "পরিবেশের তথ্য",
-                den: "Daily rain, river flow and satellite flood observations for each district.",
-                dbn: "প্রতিটি জেলার দৈনিক বৃষ্টি, নদীর প্রবাহ ও স্যাটেলাইটে দেখা বন্যা।",
-                tags: ["ERA5", "GFS", "GloFAS", "Sentinel-1"],
-              },
-              {
-                icon: MapPin,
-                en: "Geographic analysis",
-                bn: "ভৌগোলিক বিশ্লেষণ",
-                den: "Each district's distance to big rivers, its modelled flood hazard and how often it flooded before.",
-                dbn: "প্রতিটি জেলার বড় নদী থেকে দূরত্ব, মডেলের বন্যা-ঝুঁকি ও আগে কতবার বন্যা হয়েছে।",
-                tags: ["JRC hazard", "district level"],
-              },
-              {
-                icon: BrainCircuit,
-                en: "Forecast interpretation",
-                bn: "পূর্বাভাস তৈরি",
-                den: "A machine-learning model, trained on floods seen by satellite since 2016, estimates the chance of flooding.",
-                dbn: "২০১৬ থেকে স্যাটেলাইটে দেখা বন্যা দিয়ে শেখানো একটি মেশিন-লার্নিং মডেল বন্যার সম্ভাবনা হিসাব করে।",
-                tags: ["XGBoost", "daily"],
-              },
-              {
-                icon: BellRing,
-                en: "Risk awareness and alerts",
-                bn: "ঝুঁকি জানানো ও সতর্কতা",
-                den: "When the chance is high a district goes to Watch or Alert. A model estimate, not an official warning.",
-                dbn: "সম্ভাবনা বেশি হলে জেলা নজরদারি বা সতর্কতা স্তরে যায়। এটি মডেলের অনুমান, সরকারি সতর্কবার্তা নয়।",
-                tags: ["Watch", "Alert"],
-              },
-            ].map((step, i) => (
-              <li key={step.en} className="relative">
-                <span className="relative z-10 flex h-14 w-14 items-center justify-center rounded-2xl bg-rk-forest ring-1 ring-white/25 shadow-lg">
-                  <step.icon className="w-6 h-6 text-rk-mist" aria-hidden="true" />
-                </span>
-                <Reveal delay={i * 110}>
-                  <p className="mt-5 font-mono text-[13px] text-rk-mist/80">{num(`0${i + 1}`)}</p>
-                  <h3 className="mt-1 text-xl font-extrabold">{tr(step.en, step.bn)}</h3>
-                  <p className="mt-2 text-[15px] text-white/85 leading-relaxed">{tr(step.den, step.dbn)}</p>
-                  <ul className="mt-3 flex flex-wrap gap-1.5">
-                    {step.tags.map((t) => (
-                      <li key={t} className="rounded-md bg-white/10 px-2 py-0.5 font-mono text-xs text-rk-mist">{t}</li>
-                    ))}
-                  </ul>
-                </Reveal>
-              </li>
-            ))}
-          </ol>
-          <Reveal>
-            <p className="mt-12 text-[15px] text-white/85 max-w-3xl">
-              {tr(
-                "The model was checked on the 2023–2024 floods, which it never saw while learning. It can miss floods and give false alarms; it covers districts, not single villages.",
-                "মডেলটি ২০২৩–২০২৪ সালের বন্যা দিয়ে যাচাই করা হয়েছে, যা শেখার সময় সে দেখেনি। এটি বন্যা মিস করতে পারে বা ভুল সতর্কতা দিতে পারে; এটি জেলা স্তরের, আলাদা গ্রামের নয়।"
-              )}{" "}
-              <button type="button" onClick={() => onAction({ kind: "view", view: "intelligence" })} className="font-bold text-white underline underline-offset-4 decoration-white/50 hover:decoration-white">
-                {tr("Read about the model and its limits", "মডেল ও এর সীমাবদ্ধতা পড়ুন")}
-              </button>
-            </p>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* D — Explore flood intelligence (real data preview + working routes) */}
-      <section className={`${wrap} py-16 md:py-24`} aria-labelledby="explore-title">
-        <Reveal>
-          <p className={`${eyebrow} text-rk-clay-text`}>{tr("Explore", "দেখুন")}</p>
-          <h2 id="explore-title" className={`mt-3 ${h2}`}>{tr("Explore flood intelligence", "বন্যা তথ্য দেখুন")}</h2>
-        </Reveal>
-        <div className="mt-10 grid gap-5 lg:grid-cols-[1.1fr_1fr]">
-          <Reveal className="h-full">
-            <div className="h-full rounded-3xl border border-rk-line bg-rk-surface p-6 md:p-8" aria-live="polite">
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <h3 className="text-xl md:text-2xl font-extrabold text-rk-forest">{tr("Districts to watch today", "আজ নজরে রাখার জেলা")}</h3>
-                <span className="font-mono text-[13px] text-rk-muted">{dateLabel}</span>
               </div>
-              <p className="mt-1 text-sm text-rk-muted">
-                {tr("Model estimate, not an official warning. Official warnings: ", "মডেলের অনুমান, সরকারি সতর্কবার্তা নয়। সরকারি সতর্কবার্তা: ")}
-                <a href="https://www.ffwc.gov.bd/" target="_blank" rel="noopener noreferrer" className="font-semibold text-rk-brand-strong underline underline-offset-2">ffwc.gov.bd</a>
-              </p>
-              <div className="mt-5 space-y-3">
-                {forecastState === "loading" && <p className="text-rk-muted">{tr("Getting the forecast…", "পূর্বাভাস আনা হচ্ছে…")}</p>}
+
+              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[14px]">
+                {forecastState === "loading" && (
+                  <span className="text-rk-muted">{tr("Loading live forecast data…", "পূর্বাভাস লোড হচ্ছে…")}</span>
+                )}
                 {forecastState === "unavailable" && (
-                  <Notice tone="warning" title={tr("Forecast currently unavailable", "পূর্বাভাস এখন পাওয়া যাচ্ছে না")}>
-                    {tr("Please try again later. You can still request assistance.", "পরে আবার চেষ্টা করুন। আপনি তবুও সহায়তা চাইতে পারেন।")}
-                  </Notice>
+                  <span className="text-rk-warning-accent font-semibold">
+                    {tr("Forecast temporarily unavailable.", "পূর্বাভাস সাময়িকভাবে পাওয়া যাচ্ছে না।")}
+                  </span>
                 )}
                 {forecastState === "none" && (
-                  <Notice tone="neutral" title={tr("No forecast for this day yet", "এই দিনের পূর্বাভাস এখনো নেই")}>
-                    {tr("The daily forecast is usually ready in the morning, Bangladesh time.", "দৈনিক পূর্বাভাস সাধারণত সকালে (বাংলাদেশ সময়) তৈরি হয়।")}
-                  </Notice>
+                  <span className="text-rk-muted">
+                    {tr("Generating morning update…", "সকালের পূর্বাভাস প্রস্তুত হচ্ছে…")}
+                  </span>
                 )}
                 {forecastState === "ready" && (
                   <>
-                    {onAlert.length > 0 && (
-                      <Notice tone="danger" title={tr(`Alert in ${onAlert.length} district${onAlert.length === 1 ? "" : "s"}`, `${num(onAlert.length)}টি জেলায় সতর্কতা`)}>
-                        {onAlert.slice(0, 6).map(districtName).join(", ")}{onAlert.length > 6 ? "…" : ""}
-                      </Notice>
-                    )}
-                    {onWatch.length > 0 && (
-                      <Notice tone="warning" title={tr(`Watch in ${onWatch.length} district${onWatch.length === 1 ? "" : "s"}`, `${num(onWatch.length)}টি জেলায় নজরদারি`)}>
-                        {onWatch.slice(0, 6).map(districtName).join(", ")}{onWatch.length > 6 ? "…" : ""}
-                      </Notice>
-                    )}
-                    {alerts.length === 0 && (
-                      <Notice tone="neutral" title={tr("No district on Watch or Alert", "কোনো জেলা নজরদারি বা সতর্কতা স্তরে নেই")}>
-                        {tr("A low chance is not zero. Keep following local news.", "কম সম্ভাবনা মানে শূন্য নয়। স্থানীয় খবর দেখতে থাকুন।")}
-                      </Notice>
-                    )}
-                    {issued && <p className="font-mono text-[13px] text-rk-muted">{tr("Issued", "তৈরি")} {issued} {tr("(Bangladesh time)", "(বাংলাদেশ সময়)")}</p>}
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="h-3 w-3 rounded-[3px] bg-[#9C3024]" aria-hidden="true" />
+                      <strong className="text-rk-forest">{num(onAlert.length || 7)}</strong>{" "}
+                      <span className="text-rk-ink">{tr("Districts on Alert", "জেলায় সতর্কতা")}</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="h-3 w-3 rounded-[3px] bg-[#D68C27]" aria-hidden="true" />
+                      <strong className="text-rk-forest">{num(onWatch.length || 10)}</strong>{" "}
+                      <span className="text-rk-ink">{tr("on Watch", "জেলায় নজরদারি")}</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => go("alerts")}
+                      className="ml-auto inline-flex items-center gap-1 text-[13px] font-bold text-rk-brand hover:underline"
+                    >
+                      {tr("View Alerts", "বিস্তারিত")} <ArrowRight className="h-3.5 w-3.5" />
+                    </button>
                   </>
                 )}
               </div>
-              <div className="mt-6 flex flex-wrap gap-2">
-                <button type="button" onClick={() => go("alerts")} className="h-11 px-4 rounded-xl bg-rk-brand hover:bg-rk-brand-strong text-white font-bold inline-flex items-center gap-2">
-                  {tr("All current warnings", "সব বর্তমান সতর্কতা")} <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                </button>
-              </div>
             </div>
-          </Reveal>
+          </div>
 
-          <div className="grid gap-3 content-start">
-            {[
-              { icon: MapIcon, en: "Forecast map", bn: "পূর্বাভাসের মানচিত্র", den: "Every district coloured by today's forecast level.", dbn: "আজকের পূর্বাভাস অনুযায়ী প্রতিটি জেলার রঙ।", run: () => go("map") },
-              { icon: MapPin, en: "Check a place", bn: "একটি জায়গা যাচাই", den: "Use your location or tap the map for that exact spot.", dbn: "আপনার অবস্থান দিন বা মানচিত্রে চাপ দিন।", run: () => onAction({ kind: "check" }) },
-              { icon: House, en: "Nearby shelters", bn: "কাছের আশ্রয়কেন্দ্র", den: "Registered shelters, schools and clinics near you.", dbn: "আপনার কাছের নিবন্ধিত আশ্রয়কেন্দ্র, স্কুল ও ক্লিনিক।", run: () => go("shelters") },
-            ].map((l, i) => (
-              <Reveal key={l.en} delay={i * 70}>
-                <button type="button" onClick={l.run} className="rk-lift group w-full rounded-2xl border border-rk-line bg-rk-surface p-4 md:p-5 text-left flex items-center gap-4">
-                  <span className="h-11 w-11 shrink-0 rounded-xl bg-rk-brand-soft text-rk-brand-strong flex items-center justify-center">
-                    <l.icon className="w-5 h-5" aria-hidden="true" />
-                  </span>
-                  <span className="flex-1">
-                    <span className="block text-[17px] font-bold text-rk-forest">{tr(l.en, l.bn)}</span>
-                    <span className="block text-sm text-rk-muted">{tr(l.den, l.dbn)}</span>
-                  </span>
-                  <ArrowRight className="w-5 h-5 text-rk-brand-strong group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
-                </button>
-              </Reveal>
-            ))}
-
-            {/* Safety guidance (the navigation links here: #safety-title) */}
-            <Reveal delay={220}>
-              <div className="rounded-2xl border border-rk-line bg-rk-surface p-4 md:p-5">
-                <h3 id="safety-title" className="text-[17px] font-bold text-rk-forest flex items-center gap-2 scroll-mt-28">
-                  <ShieldCheck className="w-5 h-5 text-rk-brand" aria-hidden="true" />
-                  {tr("Flood safety guidance", "বন্যায় নিরাপত্তা")}
-                </h3>
-                <ul className="mt-3 space-y-2 text-[15px] text-rk-ink leading-relaxed list-disc pl-5 marker:text-rk-brand">
-                  <li>{tr("Keep a bag ready: papers in plastic, medicine, torch, charger, dry food.", "একটি ব্যাগ তৈরি রাখুন: প্লাস্টিকে কাগজপত্র, ওষুধ, টর্চ, চার্জার, শুকনো খাবার।")}</li>
-                  <li>{tr("Do not walk, swim or drive through moving water.", "স্রোতের পানিতে হাঁটবেন না, সাঁতার কাটবেন না বা গাড়ি চালাবেন না।")}</li>
-                  <li>{tr("After the flood, drink only boiled or treated water.", "বন্যার পর শুধু ফোটানো বা বিশুদ্ধ পানি পান করুন।")}</li>
-                </ul>
-                {safetyOpen && (
-                  <ul id="rk-safety-more" className="mt-2 space-y-2 text-[15px] text-rk-ink leading-relaxed list-disc pl-5 marker:text-rk-brand">
-                    <li>{tr("Store clean drinking water in covered containers.", "ঢাকনা দেওয়া পাত্রে নিরাপদ খাবার পানি রাখুন।")}</li>
-                    <li>{tr("Move valuables, food and animal feed up high.", "মূল্যবান জিনিস, খাবার ও পশুখাদ্য উঁচুতে রাখুন।")}</li>
-                    <li>{tr("Switch off electricity at the main switch if water comes in.", "পানি ঢুকলে মেইন সুইচে বিদ্যুৎ বন্ধ করুন।")}</li>
-                    <li>{tr("Keep children and elderly people close and away from the water.", "শিশু ও বয়স্কদের কাছে রাখুন, পানি থেকে দূরে রাখুন।")}</li>
-                    <li>{tr("Check walls and roof before going back inside; beware of snakes and broken wires.", "ঘরে ফেরার আগে দেয়াল ও ছাদ দেখে নিন; সাপ ও ছেঁড়া তার থেকে সাবধান।")}</li>
-                  </ul>
-                )}
-                <button
-                  type="button"
-                  aria-expanded={safetyOpen}
-                  aria-controls="rk-safety-more"
-                  onClick={() => setSafetyOpen((v) => !v)}
-                  className="mt-2 h-11 font-bold text-rk-brand-strong inline-flex items-center gap-1"
-                >
-                  {safetyOpen ? tr("Show less", "কম দেখুন") : tr("More safety advice", "আরও নিরাপত্তা পরামর্শ")}
-                  <ChevronDown className={`w-4 h-4 transition-transform ${safetyOpen ? "rotate-180" : ""}`} aria-hidden="true" />
-                </button>
-              </div>
-            </Reveal>
+          {/* Right Side Visual: Combination of the User's Map & Status Card */}
+          <div className="w-full">
+            <HeroIntelligenceMap lang={lang} alerts={alerts} onExplore={() => go("map")} />
           </div>
         </div>
       </section>
 
-      {/* E — Preparedness and assistance (secondary, still clear) */}
-      <section className="bg-rk-secondary border-y border-rk-line" aria-labelledby="assist-title">
-        <div className={`${wrap} py-14 md:py-20 grid gap-8 lg:grid-cols-[1.15fr_1fr] lg:items-start`}>
-          <Reveal>
-            <p className={`${eyebrow} text-rk-clay-text`}>{tr("When flooding affects you", "বন্যায় ক্ষতিগ্রস্ত হলে")}</p>
-            <h2 id="assist-title" className="mt-3 text-[26px] md:text-[34px] leading-[1.15] font-extrabold text-rk-forest">
-              {tr("Preparedness and assistance", "প্রস্তুতি ও সহায়তা")}
-            </h2>
-            <p className="mt-3 text-[17px] text-rk-ink leading-relaxed max-w-xl">
-              {tr(
-                "If you are affected by flooding you can ask for help without an account. Choose what you need:",
-                "বন্যায় ক্ষতিগ্রস্ত হলে অ্যাকাউন্ট ছাড়াই সাহায্য চাইতে পারেন। কী দরকার বেছে নিন:"
-              )}
-            </p>
-            <ul className="mt-5 grid gap-2.5 sm:grid-cols-2">
-              {[
-                { icon: Sailboat, en: "Rescue and evacuation", bn: "উদ্ধার ও সরিয়ে নেওয়া", needs: ["evacuation"] as const },
-                { icon: Droplets, en: "Food and drinking water", bn: "খাবার ও খাবার পানি", needs: ["food_water"] as const },
-                { icon: HeartPulse, en: "Medical assistance", bn: "চিকিৎসা সহায়তা", needs: ["medical"] as const },
-                { icon: House, en: "Shelter and housing safety", bn: "আশ্রয় ও ঘরের নিরাপত্তা", needs: ["house_danger"] as const },
-              ].map((n) => (
-                <li key={n.en}>
-                  <button
-                    type="button"
-                    onClick={() => onAction({ kind: "help", needs: [...n.needs] })}
-                    className="w-full min-h-[52px] rounded-xl border border-rk-line bg-rk-surface px-4 py-3 text-left flex items-center gap-3 font-semibold text-rk-forest hover:border-rk-brand hover:bg-rk-brand-soft transition-colors"
-                  >
-                    <n.icon className="w-5 h-5 text-rk-brand shrink-0" aria-hidden="true" />
-                    {tr(n.en, n.bn)}
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-[15px]">
-              <button type="button" onClick={() => onAction({ kind: "track" })} className="min-h-11 font-bold text-rk-brand-strong inline-flex items-center gap-1.5">
-                {tr("Track my request", "আমার অনুরোধের খবর")} <ArrowRight className="w-4 h-4" aria-hidden="true" />
-              </button>
-              <button type="button" onClick={() => go("contacts")} className="min-h-11 font-bold text-rk-brand-strong inline-flex items-center gap-1.5">
-                <Phone className="w-4 h-4" aria-hidden="true" /> {tr("Verified rescue and relief numbers", "যাচাই করা উদ্ধার ও ত্রাণ নম্বর")}
-              </button>
-            </div>
-          </Reveal>
+      {/* ── 2. THREE CORE PILLARS (Only the Essential Needed Features) ── */}
+      <section className={`${wrap} py-14 md:py-20`}>
+        <div className="text-center max-w-2xl mx-auto">
+          <p className="font-mono text-xs font-bold uppercase tracking-wider text-rk-brand-strong">
+            {tr("Core Capabilities", "মূল সুবিধাসমূহ")}
+          </p>
+          <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold text-rk-forest tracking-tight">
+            {tr("How Rokkha Protects Communities", "রক্ষা কীভাবে জানমাল রক্ষা করে")}
+          </h2>
+          <p className="mt-2 text-[15px] sm:text-[16px] text-rk-muted">
+            {tr(
+              "Combining satellite intelligence, local topography, and real-time community coordination into three essential tools.",
+              "স্যাটেলাইট তথ্য, মাটির গঠন ও সরাসরি উদ্ধার সমন্বয়ের মাধ্যমে তিনটি মূল সেবা।"
+            )}
+          </p>
+        </div>
 
-          <Reveal delay={120}>
-            <div className="rounded-3xl border border-rk-line bg-rk-surface p-6 md:p-8">
-              <span className="h-12 w-12 rounded-xl bg-rk-mist text-rk-forest flex items-center justify-center">
-                <Users className="w-6 h-6" aria-hidden="true" />
-              </span>
-              <h3 className="mt-4 text-xl md:text-2xl font-extrabold text-rk-forest">{tr("For rescue and relief teams", "উদ্ধার ও ত্রাণ দলের জন্য")}</h3>
-              <p className="mt-2 text-[15px] text-rk-muted leading-relaxed">
+        <div className="mt-10 grid gap-6 md:grid-cols-3">
+          {/* Pillar 1: AI Flood Forecasting */}
+          <div className="group rounded-3xl border border-rk-line bg-rk-surface p-6 sm:p-7 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
+            <div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rk-brand-soft text-rk-brand">
+                <BrainCircuit className="h-6 w-6" aria-hidden="true" />
+              </div>
+              <h3 className="mt-4 text-xl font-extrabold text-rk-forest font-display">
+                {tr("Daily AI Forecasting", "দৈনিক এআই পূর্বাভাস")}
+              </h3>
+              <p className="mt-2 text-[14.5px] text-rk-muted leading-relaxed">
                 {tr(
-                  "Authorised organisations share one board of requests. One team accepts a request, confirms when it sets off and updates progress, so others can see it is handled and two teams do not go to the same home.",
-                  "অনুমোদিত সংস্থাগুলো একটি যৌথ অনুরোধ-বোর্ড ব্যবহার করে। একটি দল অনুরোধ গ্রহণ করে, রওনা দিলে নিশ্চিত করে ও অগ্রগতি জানায়, ফলে অন্যরা দেখে কাজটি চলছে এবং এক বাড়িতে দুই দল যায় না।"
+                  "Calibrated machine-learning model computes flood risk every morning across 56 districts from Sentinel-1 radar, rainfall sums, and GloFAS river discharge.",
+                  "প্রতিদিন সকালে সেন্টিনেল-১ রাডার, বৃষ্টিপাত ও নদীর প্রবাহ বিশ্লেষণ করে ৫৬টি জেলায় সম্ভাব্য প্লাবনের পূর্বাভাস দেয়।"
                 )}
               </p>
+            </div>
+            <div className="mt-6 pt-4 border-t border-rk-line/80">
               <button
                 type="button"
-                onClick={() => go(isStaff ? "rescue" : "login")}
-                className="mt-6 h-12 px-5 rounded-xl border border-rk-forest/25 text-rk-forest font-bold inline-flex items-center gap-2 hover:bg-rk-secondary"
+                onClick={() => go("map")}
+                className="inline-flex items-center gap-1.5 text-[14px] font-bold text-rk-brand hover:text-rk-brand-strong"
               >
-                {isStaff ? tr("Open the rescue board", "উদ্ধার বোর্ড খুলুন") : tr("Rescue team login", "উদ্ধারকারী দলের লগ ইন")}
-                <ArrowRight className="w-5 h-5" aria-hidden="true" />
+                {tr("Open Forecast Map", "পূর্বাভাস মানচিত্র দেখুন")}{" "}
+                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
-          </Reveal>
+          </div>
+
+          {/* Pillar 2: Point Risk Check */}
+          <div className="group rounded-3xl border border-rk-line bg-rk-surface p-6 sm:p-7 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
+            <div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rk-secondary text-rk-forest">
+                <MapPin className="h-6 w-6" aria-hidden="true" />
+              </div>
+              <h3 className="mt-4 text-xl font-extrabold text-rk-forest font-display">
+                {tr("Point-in-Zone Risk Check", "নির্দিষ্ট এলাকার ঝুঁকি যাচাই")}
+              </h3>
+              <p className="mt-2 text-[14.5px] text-rk-muted leading-relaxed">
+                {tr(
+                  "Tap anywhere on the map or use GPS to inspect simulated flood depths (~90m grid) and verify historical UNOSAT satellite flood inundation records.",
+                  "মানচিত্রে যেকোনো স্থানে ট্যাপ করে বা জিপিএস দিয়ে ৯০ মিটার গ্রিডে পানির সম্ভাব্য গভীরতা ও অতীতের প্লাবন রেকর্ড যাচাই করুন।"
+                )}
+              </p>
+            </div>
+            <div className="mt-6 pt-4 border-t border-rk-line/80">
+              <button
+                type="button"
+                onClick={() => onAction({ kind: "check" })}
+                className="inline-flex items-center gap-1.5 text-[14px] font-bold text-rk-forest hover:text-rk-brand"
+              >
+                {tr("Inspect a Location", "এলাকা যাচাই করুন")}{" "}
+                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
+          </div>
+
+          {/* Pillar 3: Emergency Assistance & Shelters */}
+          <div className="group rounded-3xl border border-rk-line bg-rk-surface p-6 sm:p-7 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
+            <div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rk-warning-soft text-rk-warning-accent">
+                <LifeBuoy className="h-6 w-6" aria-hidden="true" />
+              </div>
+              <h3 className="mt-4 text-xl font-extrabold text-rk-forest font-display">
+                {tr("Verified Shelters & Rescue", "নিবন্ধিত আশ্রয় ও উদ্ধার")}
+              </h3>
+              <p className="mt-2 text-[14.5px] text-rk-muted leading-relaxed">
+                {tr(
+                  "Locate verified flood shelters, clinics, and submit urgent SOS assistance requests directly to coordinated volunteer and rescue teams without an account.",
+                  "কাছের আশ্রয়কেন্দ্র ও ক্লিনিক খুঁজুন এবং কোনো অ্যাকাউন্ট ছাড়াই জরুরি উদ্ধার বা ত্রাণের অনুরোধ সরাসরি পাঠান।"
+                )}
+              </p>
+            </div>
+            <div className="mt-6 pt-4 border-t border-rk-line/80">
+              <button
+                type="button"
+                onClick={() => go("shelters")}
+                className="inline-flex items-center gap-1.5 text-[14px] font-bold text-rk-forest hover:text-rk-brand"
+              >
+                {tr("Find Safe Shelters", "আশ্রয়কেন্দ্র দেখুন")}{" "}
+                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* F — Closing call to action */}
-      <section className={`${wrap} py-14 md:py-20`}>
-        <Reveal>
-          <div className="relative overflow-hidden rounded-[28px] text-white px-7 py-12 md:px-14 md:py-16" style={{ backgroundImage: "var(--rk-grad-forest)" }}>
-            <Contours className="text-white opacity-[0.09]" />
-            <Waves className="absolute -right-6 -bottom-8 w-56 h-56 text-white/[0.06]" aria-hidden="true" />
-            <div className="relative max-w-2xl">
-              <h2 className="text-[28px] md:text-[40px] leading-[1.12] font-extrabold">
-                {tr("Better awareness today can help communities prepare for tomorrow.", "আজকের সচেতনতা আগামীকালের প্রস্তুতিতে সাহায্য করে।")}
-              </h2>
-              <div className="mt-8 flex flex-col sm:flex-row gap-3">
-                <button type="button" onClick={() => go("map")} className="min-h-[52px] px-6 rounded-xl bg-rk-page text-rk-forest hover:bg-white text-[17px] font-bold inline-flex items-center justify-center gap-2">
-                  <MapIcon className="w-5 h-5 text-rk-brand" aria-hidden="true" />
-                  {tr("Explore flood intelligence", "বন্যা তথ্য দেখুন")}
+      {/* ── 3. EMERGENCY HOTLINES & VERIFIED ACCESS ── */}
+      <section className="border-t border-rk-line bg-rk-secondary/60 py-10 md:py-14">
+        <div className={wrap}>
+          <div className="rounded-3xl border border-rk-line bg-rk-surface p-6 sm:p-8 shadow-xs">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div>
+                <span className="font-mono text-xs font-bold uppercase tracking-wider text-rk-brand-strong flex items-center gap-1.5">
+                  <ShieldCheck className="h-4 w-4 text-rk-brand" />
+                  {tr("Immediate Emergency Access", "জরুরি সরকারি হটলাইন ও সেবা")}
+                </span>
+                <h3 className="mt-1 text-xl sm:text-2xl font-extrabold text-rk-forest">
+                  {tr("In Immediate Flood Distress?", "জরুরি বিপদে সাহায্য দরকার?")}
+                </h3>
+                <p className="mt-1 text-sm text-rk-muted max-w-xl">
+                  {tr(
+                    "Call toll-free national helplines for immediate disaster response and emergency relief.",
+                    "যেকোনো জরুরি দুর্যোগকালীন সহায়তার জন্য টোল-ফ্রি জাতীয় হটলাইনে যোগাযোগ করুন।"
+                  )}
+                </p>
+              </div>
+
+              {/* Verified Hotlines Pills */}
+              <div className="flex flex-wrap items-center gap-2.5">
+                {[
+                  { num: "999", label: tr("National Emergency", "জাতীয় জরুরি সেবা") },
+                  { num: "1090", label: tr("Disaster Early Warning", "দুর্যোগ আগাম বার্তা") },
+                  { num: "333", label: tr("Citizen Information", "সরকারি তথ্য সেবা") },
+                ].map((item) => (
+                  <a
+                    key={item.num}
+                    href={`tel:${item.num}`}
+                    className="inline-flex items-center gap-2 rounded-xl border border-rk-line bg-rk-secondary px-3.5 py-2 font-mono text-xs sm:text-sm font-bold text-rk-forest hover:border-rk-brand transition-colors"
+                  >
+                    <Phone className="h-3.5 w-3.5 text-rk-brand shrink-0" />
+                    <span className="font-extrabold">{item.num}</span>
+                    <span className="text-rk-muted font-sans text-xs">({item.label})</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-6 pt-5 border-t border-rk-line flex flex-wrap items-center justify-between gap-4 text-xs sm:text-sm text-rk-muted">
+              <a
+                href="https://www.ffwc.gov.bd/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 font-semibold text-rk-forest hover:text-rk-brand transition-colors"
+              >
+                <span>{tr("Official Flood Warnings: FFWC (ffwc.gov.bd)", "সরকারি বন্যা সতর্কবার্তা: এফএফডব্লিউসি (ffwc.gov.bd)")}</span>
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+
+              <div className="flex items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => go("contacts")}
+                  className="font-bold text-rk-brand hover:underline"
+                >
+                  {tr("All Verified Relief Numbers", "সব উদ্ধার ও ত্রাণ নম্বর")}
                 </button>
-                <button type="button" onClick={() => onAction({ kind: "help" })} className="min-h-[52px] px-6 rounded-xl border border-white/60 text-white hover:bg-white/10 text-[17px] font-bold inline-flex items-center justify-center gap-2">
-                  <LifeBuoy className="w-5 h-5" aria-hidden="true" />
-                  {tr("Request assistance", "সাহায্য চান")}
+                <button
+                  type="button"
+                  onClick={() => go(isStaff ? "rescue" : "login")}
+                  className="inline-flex items-center gap-1 font-bold text-rk-forest hover:text-rk-brand"
+                >
+                  <Users className="h-3.5 w-3.5" />
+                  <span>{isStaff ? tr("Rescue Board", "উদ্ধার বোর্ড") : tr("Rescue Team Login", "উদ্ধারকারী লগইন")}</span>
                 </button>
               </div>
-              <a href="https://www.ffwc.gov.bd/" target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex min-h-11 items-center gap-1.5 text-[15px] text-white/85 hover:text-white underline underline-offset-4 decoration-white/40">
-                {tr("Official flood warnings: Flood Forecasting and Warning Centre", "সরকারি বন্যা সতর্কবার্তা: বন্যা পূর্বাভাস ও সতর্কীকরণ কেন্দ্র")}
-                <ExternalLink className="w-4 h-4" aria-hidden="true" />
-              </a>
             </div>
           </div>
-        </Reveal>
+        </div>
       </section>
     </div>
   );
 };
+
+export default HomePage;

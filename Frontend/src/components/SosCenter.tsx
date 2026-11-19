@@ -193,9 +193,9 @@ export const SosCenter: React.FC<SosCenterProps> = ({
   const placeText = (p: Place | null) =>
     p
       ? [p.village, p.area, p.union, p.upazila, p.landmark, districtName(p.district_pcode)]
-          .map((v) => (v || "").trim())
-          .filter(Boolean)
-          .join(", ")
+        .map((v) => (v || "").trim())
+        .filter(Boolean)
+        .join(", ")
       : "";
 
   /** Check the form and show what will be sent. Nothing is saved yet. */
@@ -367,12 +367,7 @@ export const SosCenter: React.FC<SosCenterProps> = ({
                 <Phone className="w-4 h-4" />
                 {tr("Call 999 (national emergency number)", "৯৯৯ নম্বরে কল করুন (জাতীয় জরুরি সেবা)")}
               </a>
-              <p className="text-xs text-rk-muted -mt-3">
-                {tr(
-                  "If you can make a call, call first. This form sends your request to the Rokkha rescue volunteers; it is not the government emergency service.",
-                  "কল করা সম্ভব হলে আগে কল করুন। এই ফর্ম আপনার অনুরোধ রক্ষা উদ্ধার স্বেচ্ছাসেবকদের কাছে পাঠায়; এটি সরকারি জরুরি সেবা নয়।"
-                )}
-              </p>
+
 
               {queue.length > 0 && (
                 <div className="space-y-3">
@@ -508,233 +503,227 @@ export const SosCenter: React.FC<SosCenterProps> = ({
                   </div>
                 </div>
               ) : (
-              <form onSubmit={prepare} className="space-y-5 border-t border-rk-line pt-4" noValidate>
-                <div className="text-sm font-extrabold text-rk-ink">{tr("New request", "নতুন অনুরোধ")}</div>
+                <form onSubmit={prepare} className="space-y-5 border-t border-rk-line pt-4" noValidate>
 
-                <fieldset className="space-y-2">
-                  <legend className="text-base sm:text-lg font-bold text-rk-ink mb-2">{tr("1. What help do you need?", "১. কী সাহায্য দরকার?")}</legend>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {NEED_ORDER.map((id) => {
-                      const on = needs.includes(id);
-                      return (
-                        <button
-                          key={id}
-                          type="button"
-                          aria-pressed={on}
-                          onClick={() => setNeeds((list) => toggle(list, id))}
-                          className={`min-h-12 px-3 rounded-xl border-2 text-left text-sm font-bold transition-colors ${
-                            on ? "border-rk-brand bg-rk-brand-soft text-rk-ink" : "border-rk-line bg-white text-rk-ink"
-                          }`}
-                        >
-                          {on && <Check className="inline w-4 h-4 mr-1 -mt-0.5" aria-hidden="true" />}
-                          {tr(NEED_LABEL[id].en, NEED_LABEL[id].bn)}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </fieldset>
 
-                <fieldset className="space-y-2">
-                  <legend className="text-base sm:text-lg font-bold text-rk-ink mb-2">{tr("2. Where are you?", "২. আপনি কোথায়?")}</legend>
-                  <div className="flex flex-wrap gap-2">
-                    <Button type="button" variant="outline" onClick={useGps} disabled={isLocating} className="h-11 rounded-xl text-sm font-bold flex items-center gap-2">
-                      <Crosshair className="w-4 h-4" />
-                      {isLocating ? tr("Reading location...", "অবস্থান নেওয়া হচ্ছে...") : tr("Use my GPS location", "আমার জিপিএস অবস্থান")}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      aria-expanded={showPlace}
-                      onClick={() => setShowPlace((prev) => !prev)}
-                      className={`h-11 rounded-xl text-sm font-bold flex items-center gap-2 ${showPlace ? "bg-rk-brand text-white border-rk-brand hover:bg-rk-ink hover:text-white" : ""}`}
-                    >
-                      <MapPin className="w-4 h-4" />
-                      {tr("Describe the place", "জায়গার বর্ণনা দিন")}
-                    </Button>
-                    {savedPlace && (
+                  <fieldset className="space-y-2">
+                    <legend className="text-base sm:text-lg font-bold text-rk-ink mb-2">{tr("1. What help do you need?", "১. কী সাহায্য দরকার?")}</legend>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {NEED_ORDER.map((id) => {
+                        const on = needs.includes(id);
+                        return (
+                          <button
+                            key={id}
+                            type="button"
+                            aria-pressed={on}
+                            onClick={() => setNeeds((list) => toggle(list, id))}
+                            className={`min-h-12 px-3 rounded-xl border-2 text-left text-sm font-bold transition-colors ${on ? "border-rk-brand bg-rk-brand-soft text-rk-ink" : "border-rk-line bg-white text-rk-ink"
+                              }`}
+                          >
+                            {on && <Check className="inline w-4 h-4 mr-1 -mt-0.5" aria-hidden="true" />}
+                            {tr(NEED_LABEL[id].en, NEED_LABEL[id].bn)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </fieldset>
+
+                  <fieldset className="space-y-2">
+                    <legend className="text-base sm:text-lg font-bold text-rk-ink mb-2">{tr("2. Where are you?", "২. আপনি কোথায়?")}</legend>
+                    <div className="flex flex-wrap gap-2">
+                      <Button type="button" variant="outline" onClick={useGps} disabled={isLocating} className="h-11 rounded-xl text-sm font-bold flex items-center gap-2">
+                        <Crosshair className="w-4 h-4" />
+                        {isLocating ? tr("Reading location...", "অবস্থান নেওয়া হচ্ছে...") : tr("Use my GPS location", "আমার জিপিএস অবস্থান")}
+                      </Button>
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() =>
-                          setPosition({ lng: savedPlace.lng, lat: savedPlace.lat, accuracy_m: null, source: "saved_place", label: savedPlace.label || tr("My saved place", "আমার সংরক্ষিত স্থান") })
-                        }
-                        className="h-11 rounded-xl text-sm font-bold flex items-center gap-2"
+                        aria-expanded={showPlace}
+                        onClick={() => setShowPlace((prev) => !prev)}
+                        className={`h-11 rounded-xl text-sm font-bold flex items-center gap-2 ${showPlace ? "bg-rk-brand text-white border-rk-brand hover:bg-rk-ink hover:text-white" : ""}`}
                       >
                         <MapPin className="w-4 h-4" />
-                        {savedPlace.label || tr("My saved place", "আমার সংরক্ষিত স্থান")}
+                        {tr("Describe the place", "জায়গার বর্ণনা দিন")}
                       </Button>
-                    )}
-                  </div>
-
-                  {position && (
-                    <div className="flex items-start justify-between gap-2 rounded-xl bg-rk-success-soft border border-rk-success/40 px-3 py-2 text-sm text-rk-success">
-                      <span className="font-semibold flex items-start gap-1.5">
-                        <MapPin className="w-4 h-4 mt-0.5 shrink-0" aria-hidden="true" />
-                        <span>
-                          {position.label}
-                          {position.accuracy_m !== null ? (
-                            <span className="block text-xs font-medium">{tr(`Accuracy about ${Math.round(position.accuracy_m)} m (from your phone)`, `নির্ভুলতা প্রায় ${num(Math.round(position.accuracy_m))} মিটার (আপনার ফোন থেকে)`)}</span>
-                          ) : null}
-                          {position.source === "gps" && (
-                            <span className="block text-xs font-medium">{tr("Add the village or a landmark below so the team finds the house.", "দল যেন বাড়িটি খুঁজে পায়, নিচে গ্রাম বা পরিচিত স্থান লিখুন।")}</span>
-                          )}
-                        </span>
-                      </span>
-                      <button type="button" onClick={() => setPosition(null)} className="text-xs font-bold underline shrink-0">
-                        {tr("Remove", "সরান")}
-                      </button>
+                      {savedPlace && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() =>
+                            setPosition({ lng: savedPlace.lng, lat: savedPlace.lat, accuracy_m: null, source: "saved_place", label: savedPlace.label || tr("My saved place", "আমার সংরক্ষিত স্থান") })
+                          }
+                          className="h-11 rounded-xl text-sm font-bold flex items-center gap-2"
+                        >
+                          <MapPin className="w-4 h-4" />
+                          {savedPlace.label || tr("My saved place", "আমার সংরক্ষিত স্থান")}
+                        </Button>
+                      )}
                     </div>
-                  )}
 
-                  {showPlace && (
-                    <div className="p-3.5 rounded-2xl bg-rk-page border border-rk-line space-y-2.5">
-                      <div className="text-xs font-bold text-rk-brand">
-                        {position
-                          ? tr("Optional: help the team find the house.", "ঐচ্ছিক: দলকে বাড়িটি খুঁজে পেতে সাহায্য করুন।")
-                          : tr("Choose the district and write at least one of village, area or landmark.", "জেলা বেছে নিন এবং গ্রাম, এলাকা বা পরিচিত স্থানের অন্তত একটি লিখুন।")}
+                    {position && (
+                      <div className="flex items-start justify-between gap-2 rounded-xl bg-rk-success-soft border border-rk-success/40 px-3 py-2 text-sm text-rk-success">
+                        <span className="font-semibold flex items-start gap-1.5">
+                          <MapPin className="w-4 h-4 mt-0.5 shrink-0" aria-hidden="true" />
+                          <span>
+                            {position.label}
+                            {position.accuracy_m !== null ? (
+                              <span className="block text-xs font-medium">{tr(`Accuracy about ${Math.round(position.accuracy_m)} m (from your phone)`, `নির্ভুলতা প্রায় ${num(Math.round(position.accuracy_m))} মিটার (আপনার ফোন থেকে)`)}</span>
+                            ) : null}
+                            {position.source === "gps" && (
+                              <span className="block text-xs font-medium">{tr("Add the village or a landmark below so the team finds the house.", "দল যেন বাড়িটি খুঁজে পায়, নিচে গ্রাম বা পরিচিত স্থান লিখুন।")}</span>
+                            )}
+                          </span>
+                        </span>
+                        <button type="button" onClick={() => setPosition(null)} className="text-xs font-bold underline shrink-0">
+                          {tr("Remove", "সরান")}
+                        </button>
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                        <label className="block text-[11px] font-bold text-rk-muted">
-                          {tr("District", "জেলা")}{position ? "" : " *"}
-                          <select
-                            value={place.district_pcode || ""}
-                            onChange={(e) => setPlaceField("district_pcode", e.target.value)}
-                            className="mt-1 h-10 w-full rounded-xl border border-rk-line bg-white px-3 text-sm font-semibold text-rk-brand"
-                          >
-                            <option value="">{tr("-- Select district --", "-- জেলা নির্বাচন করুন --")}</option>
-                            {ALL_DISTRICTS.map((d) => (
-                              <option key={d.pcode} value={d.pcode}>
-                                {isBn ? DISTRICTS_BN[d.pcode] || d.name : d.name} ({d.division})
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                        {([
-                          ["upazila", tr("Upazila", "উপজেলা")],
-                          ["union", tr("Union", "ইউনিয়ন")],
-                          ["village", tr("Village", "গ্রাম")],
-                          ["area", tr("Area / neighbourhood", "এলাকা / পাড়া")],
-                          ["landmark", tr("House or landmark", "বাড়ি বা পরিচিত স্থান")],
-                        ] as Array<[keyof Place, string]>).map(([field, label]) => (
-                          <label key={field} className="block text-[11px] font-bold text-rk-muted">
-                            {label}
-                            <Input
-                              value={(place[field] as string) || ""}
-                              onChange={(e) => setPlaceField(field, e.target.value)}
-                              maxLength={field === "landmark" ? 160 : 120}
-                              className="mt-1 h-10 rounded-xl text-sm bg-white"
-                            />
+                    )}
+
+                    {showPlace && (
+                      <div className="p-3.5 rounded-2xl bg-rk-page border border-rk-line space-y-2.5">
+                        <div className="text-xs font-bold text-rk-brand">
+                          {position
+                            ? tr("Optional: help the team find the house.", "ঐচ্ছিক: দলকে বাড়িটি খুঁজে পেতে সাহায্য করুন।")
+                            : tr("Choose the district and write at least one of village, area or landmark.", "জেলা বেছে নিন এবং গ্রাম, এলাকা বা পরিচিত স্থানের অন্তত একটি লিখুন।")}
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                          <label className="block text-[11px] font-bold text-rk-muted">
+                            {tr("District", "জেলা")}{position ? "" : " *"}
+                            <select
+                              value={place.district_pcode || ""}
+                              onChange={(e) => setPlaceField("district_pcode", e.target.value)}
+                              className="mt-1 h-10 w-full rounded-xl border border-rk-line bg-white px-3 text-sm font-semibold text-rk-brand"
+                            >
+                              <option value="">{tr("-- Select district --", "-- জেলা নির্বাচন করুন --")}</option>
+                              {ALL_DISTRICTS.map((d) => (
+                                <option key={d.pcode} value={d.pcode}>
+                                  {isBn ? DISTRICTS_BN[d.pcode] || d.name : d.name} ({d.division})
+                                </option>
+                              ))}
+                            </select>
                           </label>
+                          {([
+                            ["upazila", tr("Upazila", "উপজেলা")],
+                            ["union", tr("Union", "ইউনিয়ন")],
+                            ["village", tr("Village", "গ্রাম")],
+                            ["area", tr("Area / neighbourhood", "এলাকা / পাড়া")],
+                            ["landmark", tr("House or landmark", "বাড়ি বা পরিচিত স্থান")],
+                          ] as Array<[keyof Place, string]>).map(([field, label]) => (
+                            <label key={field} className="block text-[11px] font-bold text-rk-muted">
+                              {label}
+                              <Input
+                                value={(place[field] as string) || ""}
+                                onChange={(e) => setPlaceField(field, e.target.value)}
+                                maxLength={field === "landmark" ? 160 : 120}
+                                className="mt-1 h-10 rounded-xl text-sm bg-white"
+                              />
+                            </label>
+                          ))}
+                        </div>
+                        <label className="block text-[11px] font-bold text-rk-muted">
+                          {tr("More about the place (optional)", "জায়গা সম্পর্কে আরও (ঐচ্ছিক)")}
+                          <textarea
+                            value={place.details || ""}
+                            onChange={(e) => setPlaceField("details", e.target.value)}
+                            maxLength={300}
+                            rows={2}
+                            className="mt-1 w-full rounded-xl border border-rk-line px-3 py-2 text-sm bg-white"
+                          />
+                        </label>
+                      </div>
+                    )}
+                  </fieldset>
+
+                  <fieldset className="space-y-3">
+                    <legend className="text-base sm:text-lg font-bold text-rk-ink mb-2">{tr("3. Who is with you?", "৩. আপনার সাথে কারা আছেন?")}</legend>
+                    <div className="flex items-center gap-3">
+                      <span id="sos-people-label" className="text-sm font-bold text-rk-muted">{tr("Number of people", "মানুষের সংখ্যা")}</span>
+                      <div className="flex items-center gap-2" role="group" aria-labelledby="sos-people-label">
+                        <Button type="button" variant="outline" aria-label={tr("One less", "একজন কম")} onClick={() => setPeople((n) => Math.max(1, n - 1))} className="h-11 w-11 rounded-xl p-0">
+                          <Minus className="w-4 h-4" />
+                        </Button>
+                        <span className="w-10 text-center text-xl font-extrabold" aria-live="polite">{num(people)}</span>
+                        <Button type="button" variant="outline" aria-label={tr("One more", "একজন বেশি")} onClick={() => setPeople((n) => Math.min(1000, n + 1))} className="h-11 w-11 rounded-xl p-0">
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div>
+                      <div id="sos-injury-label" className="text-sm font-bold text-rk-muted mb-1.5">{tr("Is anyone seriously ill or injured?", "কেউ কি গুরুতর অসুস্থ বা আহত?")}</div>
+                      <div className="flex gap-2" role="group" aria-labelledby="sos-injury-label">
+                        {([[true, tr("Yes", "হ্যাঁ")], [false, tr("No", "না")]] as Array<[boolean, string]>).map(([value, label]) => (
+                          <button
+                            key={String(value)}
+                            type="button"
+                            aria-pressed={seriousInjury === value}
+                            onClick={() => setSeriousInjury((current) => (current === value ? null : value))}
+                            className={`h-11 px-5 rounded-xl border-2 text-sm font-bold ${seriousInjury === value ? "border-rk-danger bg-rk-danger-soft text-rk-danger" : "border-rk-line bg-white"}`}
+                          >
+                            {label}
+                          </button>
                         ))}
                       </div>
-                      <label className="block text-[11px] font-bold text-rk-muted">
-                        {tr("More about the place (optional)", "জায়গা সম্পর্কে আরও (ঐচ্ছিক)")}
-                        <textarea
-                          value={place.details || ""}
-                          onChange={(e) => setPlaceField("details", e.target.value)}
-                          maxLength={300}
-                          rows={2}
-                          className="mt-1 w-full rounded-xl border border-rk-line px-3 py-2 text-sm bg-white"
+                    </div>
+                    <div>
+                      <div id="sos-vulnerable-label" className="text-sm font-bold text-rk-muted mb-1.5">{tr("Anyone who needs extra care? (optional)", "বিশেষ যত্ন দরকার এমন কেউ? (ঐচ্ছিক)")}</div>
+                      <div className="flex flex-wrap gap-2" role="group" aria-labelledby="sos-vulnerable-label">
+                        {(Object.keys(VULNERABLE_LABEL) as Vulnerable[]).map((id) => (
+                          <button
+                            key={id}
+                            type="button"
+                            aria-pressed={vulnerable.includes(id)}
+                            onClick={() => setVulnerable((list) => toggle(list, id))}
+                            className={`h-10 px-3 rounded-xl border-2 text-sm font-bold ${vulnerable.includes(id) ? "border-rk-brand bg-rk-brand text-white" : "border-rk-line bg-white"}`}
+                          >
+                            {tr(VULNERABLE_LABEL[id].en, VULNERABLE_LABEL[id].bn)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </fieldset>
+
+                  <fieldset className="space-y-3">
+                    <legend className="text-base sm:text-lg font-bold text-rk-ink mb-2">{tr("4. How can the team reach you? (optional)", "৪. দল কীভাবে যোগাযোগ করবে? (ঐচ্ছিক)")}</legend>
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className="block text-xs font-bold text-rk-muted">
+                        {tr("Your name", "আপনার নাম")}
+                        <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} className="mt-1 h-10 rounded-xl" />
+                      </label>
+                      <label className="block text-xs font-bold text-rk-muted">
+                        {tr("Phone number", "ফোন নম্বর")}
+                        <Input
+                          type="tel"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value.replace(/[^0-9+ ()-]/g, ""))}
+                          maxLength={20}
+                          className="mt-1 h-10 rounded-xl"
                         />
                       </label>
                     </div>
-                  )}
-                </fieldset>
-
-                <fieldset className="space-y-3">
-                  <legend className="text-base sm:text-lg font-bold text-rk-ink mb-2">{tr("3. Who is with you?", "৩. আপনার সাথে কারা আছেন?")}</legend>
-                  <div className="flex items-center gap-3">
-                    <span id="sos-people-label" className="text-sm font-bold text-rk-muted">{tr("Number of people", "মানুষের সংখ্যা")}</span>
-                    <div className="flex items-center gap-2" role="group" aria-labelledby="sos-people-label">
-                      <Button type="button" variant="outline" aria-label={tr("One less", "একজন কম")} onClick={() => setPeople((n) => Math.max(1, n - 1))} className="h-11 w-11 rounded-xl p-0">
-                        <Minus className="w-4 h-4" />
-                      </Button>
-                      <span className="w-10 text-center text-xl font-extrabold" aria-live="polite">{num(people)}</span>
-                      <Button type="button" variant="outline" aria-label={tr("One more", "একজন বেশি")} onClick={() => setPeople((n) => Math.min(1000, n + 1))} className="h-11 w-11 rounded-xl p-0">
-                        <Plus className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  <div>
-                    <div id="sos-injury-label" className="text-sm font-bold text-rk-muted mb-1.5">{tr("Is anyone seriously ill or injured?", "কেউ কি গুরুতর অসুস্থ বা আহত?")}</div>
-                    <div className="flex gap-2" role="group" aria-labelledby="sos-injury-label">
-                      {([[true, tr("Yes", "হ্যাঁ")], [false, tr("No", "না")]] as Array<[boolean, string]>).map(([value, label]) => (
-                        <button
-                          key={String(value)}
-                          type="button"
-                          aria-pressed={seriousInjury === value}
-                          onClick={() => setSeriousInjury((current) => (current === value ? null : value))}
-                          className={`h-11 px-5 rounded-xl border-2 text-sm font-bold ${seriousInjury === value ? "border-rk-danger bg-rk-danger-soft text-rk-danger" : "border-rk-line bg-white"}`}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <div id="sos-vulnerable-label" className="text-sm font-bold text-rk-muted mb-1.5">{tr("Anyone who needs extra care? (optional)", "বিশেষ যত্ন দরকার এমন কেউ? (ঐচ্ছিক)")}</div>
-                    <div className="flex flex-wrap gap-2" role="group" aria-labelledby="sos-vulnerable-label">
-                      {(Object.keys(VULNERABLE_LABEL) as Vulnerable[]).map((id) => (
-                        <button
-                          key={id}
-                          type="button"
-                          aria-pressed={vulnerable.includes(id)}
-                          onClick={() => setVulnerable((list) => toggle(list, id))}
-                          className={`h-10 px-3 rounded-xl border-2 text-sm font-bold ${vulnerable.includes(id) ? "border-rk-brand bg-rk-brand text-white" : "border-rk-line bg-white"}`}
-                        >
-                          {tr(VULNERABLE_LABEL[id].en, VULNERABLE_LABEL[id].bn)}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </fieldset>
-
-                <fieldset className="space-y-3">
-                  <legend className="text-base sm:text-lg font-bold text-rk-ink mb-2">{tr("4. How can the team reach you? (optional)", "৪. দল কীভাবে যোগাযোগ করবে? (ঐচ্ছিক)")}</legend>
-                  <div className="grid grid-cols-2 gap-3">
                     <label className="block text-xs font-bold text-rk-muted">
-                      {tr("Your name", "আপনার নাম")}
-                      <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} className="mt-1 h-10 rounded-xl" />
-                    </label>
-                    <label className="block text-xs font-bold text-rk-muted">
-                      {tr("Phone number", "ফোন নম্বর")}
-                      <Input
-                        type="tel"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value.replace(/[^0-9+ ()-]/g, ""))}
-                        maxLength={20}
-                        className="mt-1 h-10 rounded-xl"
+                      {tr("Anything else the team should know", "দলের আর কিছু জানা দরকার")}
+                      <textarea
+                        value={note}
+                        onChange={(e) => setNote(e.target.value)}
+                        maxLength={500}
+                        rows={2}
+                        className="mt-1 w-full rounded-xl border border-rk-line px-3 py-2 text-sm"
                       />
                     </label>
-                  </div>
-                  <label className="block text-xs font-bold text-rk-muted">
-                    {tr("Anything else the team should know", "দলের আর কিছু জানা দরকার")}
-                    <textarea
-                      value={note}
-                      onChange={(e) => setNote(e.target.value)}
-                      maxLength={500}
-                      rows={2}
-                      className="mt-1 w-full rounded-xl border border-rk-line px-3 py-2 text-sm"
-                    />
-                  </label>
-                </fieldset>
+                  </fieldset>
 
-                {problem && (
-                  <div role="alert" className="rounded-xl border border-rk-danger-accent/40 bg-rk-danger-soft px-3.5 py-2.5 text-sm font-semibold text-rk-danger">
-                    {problem}
-                  </div>
-                )}
-
-                <Button type="submit" className="w-full h-12 bg-rk-brand hover:bg-rk-brand-strong text-white font-extrabold text-base rounded-xl">
-                  {tr("Next: check the request", "পরবর্তী: অনুরোধ দেখে নিন")}
-                </Button>
-                <p className="text-[11px] text-rk-muted leading-snug">
-                  {tr(
-                    "Your location and phone number are shown only to rescue teams, and your phone number only to the team that accepts the request. The request is saved on this phone first, so it is not lost if the connection drops. No SMS or call is made: teams see requests on the Rokkha rescue board. Sending a request does not mean help is on the way: watch the status above.",
-                    "আপনার অবস্থান ও ফোন নম্বর শুধু উদ্ধারকারী দলগুলো দেখতে পায়, আর ফোন নম্বর শুধু যে দল অনুরোধ গ্রহণ করে সেই দল। অনুরোধটি আগে এই ফোনে সংরক্ষিত হয়, তাই সংযোগ বিচ্ছিন্ন হলেও হারায় না। কোনো এসএমএস বা কল করা হয় না: দলগুলো রক্ষা উদ্ধার বোর্ডে অনুরোধ দেখে। অনুরোধ পাঠানো মানে সাহায্য আসছে, তা নয়: ওপরের অবস্থা দেখুন।"
+                  {problem && (
+                    <div role="alert" className="rounded-xl border border-rk-danger-accent/40 bg-rk-danger-soft px-3.5 py-2.5 text-sm font-semibold text-rk-danger">
+                      {problem}
+                    </div>
                   )}
-                </p>
-              </form>
+
+                  <Button type="submit" className="w-full h-12 bg-rk-brand hover:bg-rk-brand-strong text-white font-extrabold text-base rounded-xl">
+                    {tr("SUBMIT", "পরবর্তী")}
+                  </Button>
+
+                </form>
               )}
             </div>
           </div>
