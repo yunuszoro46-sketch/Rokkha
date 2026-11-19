@@ -27,8 +27,10 @@ function sectionsFor(): NavSection[] {
     { id: "home", label: { en: "Home", bn: "হোম" }, action: { kind: "view", view: "overview" } },
 
 
-    { id: "warnings", label: { en: "Current warnings", bn: "বর্তমান সতর্কতা" }, action: { kind: "view", view: "alerts" } },
     { id: "safety", label: { en: "Check your safety", bn: "আপনার এলাকার ঝুঁকি দেখুন" }, action: { kind: "view", view: "map" } },
+
+    { id: "warnings", label: { en: "Current warnings", bn: "বর্তমান সতর্কতা" }, action: { kind: "view", view: "alerts" } },
+
 
     { id: "intelligence", label: { en: "AI performance", bn: "এআই পূর্বাভাসের নির্ভুলতা" }, action: { kind: "view", view: "intelligence" } },
     { id: "rescuers", label: { en: "For rescuers", bn: "উদ্ধারকর্মীদের জন্য" }, action: { kind: "view", view: "login" } },

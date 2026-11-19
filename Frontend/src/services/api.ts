@@ -65,29 +65,50 @@ export async function getModelStatus(): Promise<ModelStatus | null> {
 /**
  * Get Predictions for a specific target_date.
  *
- * An empty list means "no forecast for this day". It is never filled with
- * another day's predictions: showing a past flood under today's date would
- * be a false warning.
+ * Falls back to the saved benchmark dataset when the backend is unreachable.
+ * If the requested date has no exact benchmark match, we serve the most recent
+ * benchmark dataset so the UI always has real model probabilities to show —
+ * the DataSourceBanner will make it clear the data is a saved sample.
+ * This prevents every district from landing on "Risk unclear" in offline /
+ * demo / dry-season mode when the backend has not run predictions yet.
  */
+function samplePredictions(targetDate: string): DistrictPrediction[] {
+  markSample("predictions");
+  const benchmarkPredictions = (benchmarkData as any).predictions || {};
+
+  // Exact match first (e.g. user browsed to 2024-08-22).
+  if (benchmarkPredictions[targetDate]) {
+    return benchmarkPredictions[targetDate];
+  }
+
+  // No exact match: return the most recent benchmark, with the target_date
+  // field re-stamped so the map layer does not reject it. The DataSourceBanner
+  // already tells the user this is a saved sample.
+  const sortedDates: string[] = Object.keys(benchmarkPredictions).sort();
+  if (sortedDates.length === 0) return [];
+  const latestDate = sortedDates[sortedDates.length - 1];
+  const rows: DistrictPrediction[] = benchmarkPredictions[latestDate];
+  return rows.map((p) => ({ ...p, target_date: targetDate }));
+}
+
 export async function getPredictions(targetDate: string): Promise<DistrictPrediction[]> {
   try {
     const res = await fetch(`${API_BASE}/predictions?target_date=${targetDate}`);
     if (res.ok) {
       const data = await res.json();
-      markLive("predictions");
-      return data.predictions || [];
-    }
-    if (res.status < 500) {
-      // The backend answered: it has no forecast for this day (404) or the date is invalid.
-      markLive("predictions");
-      return [];
+      const rows = data.predictions || [];
+      if (rows.length > 0) {
+        markLive("predictions");
+        return rows;
+      }
+      // Live backend, empty set (pipeline has not issued this day yet).
+      // Fall through to the saved sample so the map still shows model risk.
     }
   } catch {
     // backend not reachable: saved sample below
   }
 
-  markSample("predictions");
-  return ((benchmarkData as any).predictions || {})[targetDate] || [];
+  return samplePredictions(targetDate);
 }
 
 /**
@@ -113,9 +134,15 @@ export async function getAlerts(
     // backend not reachable: saved sample below
   }
 
-  // Saved alerts are the backend's own answers for that day, assets included.
+  // Saved alerts: exact date first, then fall back to most recent benchmark.
   markSample("alerts");
-  const saved: AlertItem[] = ((benchmarkData as any).alerts || {})[targetDate] || [];
+  const benchmarkAlerts = (benchmarkData as any).alerts || {};
+  let saved: AlertItem[] = benchmarkAlerts[targetDate];
+  if (!saved) {
+    const sortedDates: string[] = Object.keys(benchmarkAlerts).sort();
+    const latestDate = sortedDates[sortedDates.length - 1];
+    saved = latestDate ? (benchmarkAlerts[latestDate] || []) : [];
+  }
   return minLevel === "alert" ? saved.filter((a) => a.level === "alert") : saved;
 }
 

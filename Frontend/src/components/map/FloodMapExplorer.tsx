@@ -12,8 +12,10 @@ import maplibregl, { type MapGeoJSONFeature } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
   Activity,
+  AlertTriangle,
   ArrowLeft,
-  BrainCircuit,
+  Building2,
+  CheckCircle2,
   ChevronDown,
   ChevronRight,
   ChevronUp,
@@ -25,6 +27,9 @@ import {
   Loader2,
   MapPin,
   Minus,
+  Phone,
+  ShieldAlert,
+  ShieldCheck,
   TrendingDown,
   TrendingUp,
   Search,
@@ -113,6 +118,39 @@ const eventName = (id: string) => {
   return `${month} ${m[1]} (${m[3].replace(/-/g, " ")})`;
 };
 
+type PlaceSafetyLevel = "loading" | "warning" | "caution" | "safe";
+type PlaceSafetySource = "model" | "satellite" | "history";
+
+/** Concrete flood-risk call for a district. Never returns "unclear". */
+function assessPlaceSafety(input: {
+  forecastLoaded: boolean;
+  historyLoaded: boolean;
+  forecastCls?: string;
+  observedCls?: string;
+  eventsObserved?: number | null;
+  eventsFlooded?: number | null;
+}): { level: PlaceSafetyLevel; source: PlaceSafetySource | null } {
+  if (input.forecastCls === "alert" || input.forecastCls === "watch") {
+    return { level: "warning", source: "model" };
+  }
+  if (input.observedCls === "flooded" || input.observedCls === "some") {
+    return { level: "caution", source: "satellite" };
+  }
+  if (input.forecastCls === "low") {
+    return { level: "safe", source: "model" };
+  }
+  if (!input.forecastLoaded || !input.historyLoaded) {
+    return { level: "loading", source: null };
+  }
+  const observed = input.eventsObserved ?? 0;
+  const flooded = input.eventsFlooded ?? 0;
+  const freq = observed > 0 ? flooded / observed : 0;
+  if (observed > 0 && (flooded >= 4 || freq >= 0.4)) {
+    return { level: "caution", source: "history" };
+  }
+  return { level: "safe", source: "history" };
+}
+
 export const FloodMapExplorer: React.FC<Props> = ({ lang, targetDate, onChangeTargetDate, predictions, isForecastLoading, onOpenDistrictReport, checkRequest = 0 }) => {
   const bn = lang === "bn";
   const tr = (en: string, b: string) => (bn ? b : en);
@@ -143,6 +181,7 @@ export const FloodMapExplorer: React.FC<Props> = ({ lang, targetDate, onChangeTa
   const [searchOpen, setSearchOpen] = useState(false);
   const [activeResult, setActiveResult] = useState(0);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [panelTab, setPanelTab] = useState<"status" | "layers">("status");
   const [notice, setNotice] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
   // "Check a place": while picking, the next tap anywhere in Bangladesh checks that exact spot
@@ -230,9 +269,9 @@ export const FloodMapExplorer: React.FC<Props> = ({ lang, targetDate, onChangeTa
   }, [layerId, targetDate, sel.district, point]);
 
   useEffect(() => {
-    if (history || !(layerId === "history" || layerId === "hazard" || sel.district || point)) return;
+    if (history) return;
     getFloodDistricts().then((rows: any[]) => setHistory(new Map(rows.map((r) => [r.pcode, r as HistoryRow]))));
-  }, [layerId, sel.district, point, history]);
+  }, [history]);
 
   useEffect(() => {
     getModelStatus().then(setModel);
@@ -1031,9 +1070,9 @@ export const FloodMapExplorer: React.FC<Props> = ({ lang, targetDate, onChangeTa
     const rvs: Result[] =
       q.length >= 2 && rivers
         ? rivers
-            .filter((r) => (r.en || "").toLowerCase().startsWith(q) || (r.bn || "").startsWith(query.trim()))
-            .sort((a, b) => a.rank - b.rank)
-            .map((r) => ({ type: "river" as const, r }))
+          .filter((r) => (r.en || "").toLowerCase().startsWith(q) || (r.bn || "").startsWith(query.trim()))
+          .sort((a, b) => a.rank - b.rank)
+          .map((r) => ({ type: "river" as const, r }))
         : [];
     return [...places.slice(0, 6), ...sts.slice(0, 2), ...rvs.slice(0, 3)];
   }, [index, query, stations, rivers]);
@@ -1094,9 +1133,8 @@ export const FloodMapExplorer: React.FC<Props> = ({ lang, targetDate, onChangeTa
 
   const kindBadge = (kind: keyof typeof KIND_LABEL) => (
     <span
-      className={`inline-flex shrink-0 items-center whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold font-mono uppercase tracking-wide ${
-        kind === "forecast" ? "bg-rk-warning-soft text-rk-warning" : kind === "observed" ? "bg-rk-info-soft text-rk-info" : kind === "historical" || kind === "modelled" ? "bg-rk-secondary text-rk-clay-text" : "bg-rk-brand-soft text-rk-brand-strong"
-      }`}
+      className={`inline-flex shrink-0 items-center whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold font-mono uppercase tracking-wide ${kind === "forecast" ? "bg-rk-warning-soft text-rk-warning" : kind === "observed" ? "bg-rk-info-soft text-rk-info" : kind === "historical" || kind === "modelled" ? "bg-rk-secondary text-rk-clay-text" : "bg-rk-brand-soft text-rk-brand-strong"
+        }`}
     >
       {bn ? KIND_LABEL[kind].bn : KIND_LABEL[kind].en}
     </span>
@@ -1123,12 +1161,7 @@ export const FloodMapExplorer: React.FC<Props> = ({ lang, targetDate, onChangeTa
 
   const Legend = ({ compact = false }: { compact?: boolean }) => (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-        <p className="text-[13px] font-bold text-rk-forest">{bn ? layer.label.bn : layer.label.en}</p>
-        {kindBadge(layer.kind)}
-      </div>
-      <div className="mt-1">{statusBadge(layer)}{!showFill && <span className="ml-1.5 text-[12px] text-rk-muted">{tr("(colours hidden)", "(রঙ লুকানো)")}</span>}</div>
-      {showTerrain && <div className="mt-2 border-t border-rk-line pt-2">{TerrainLegend()}</div>}
+      <p className="text-[13px] font-bold text-rk-forest">{bn ? layer.label.bn : layer.label.en}</p>
       <ul className={`mt-2 ${compact ? "grid grid-cols-2 gap-x-3 gap-y-1" : "space-y-1"}`}>
         {layer.classes.map((c) => (
           <li key={c.id} className="flex items-center gap-2 text-[13px] text-rk-ink leading-tight">
@@ -1137,18 +1170,197 @@ export const FloodMapExplorer: React.FC<Props> = ({ lang, targetDate, onChangeTa
           </li>
         ))}
       </ul>
-      <p className="mt-2 text-xs text-rk-muted leading-snug">
-        {layer.latest
-          ? rainForecastMeta?.start
-            ? `${tr("Latest forecast", "সর্বশেষ পূর্বাভাস")}: ${formatIssued(rainForecastMeta.start)} – ${formatIssued(rainForecastMeta.end ?? undefined)} ${tr("(BD time)", "(বাংলাদেশ সময়)")} · `
-            : `${tr("No forecast stored yet", "এখনো কোনো পূর্বাভাস নেই")} · `
-          : layer.dateDependent
-            ? `${tr("For", "তারিখ")} ${dateLabel} · `
-            : `${tr("Fixed record, not for one day", "নির্দিষ্ট দিনের নয়")} · `}
-        {bn ? layer.source.bn : layer.source.en}
-      </p>
     </div>
   );
+
+  // Safety status card shown in the map legend overlay
+  const LegendSafetyCard = () => {
+    // Determine target location: point check, or selected district
+    const activePointCode = point && pointResult && !pointResult.loading && !pointResult.failed
+      ? (pointResult.place?.district?.pcode ?? pointResult.check?.district?.pcode)
+      : null;
+    const districtCode = activePointCode || sel.district?.pcode;
+    const locationName = point && pointResult?.place?.label
+      ? pointResult.place.label
+      : sel.district
+        ? placeName(sel.district, bn)
+        : null;
+
+    if (point && pointResult?.loading) {
+      return (
+        <div className="flex items-center gap-2.5 rounded-xl bg-rk-secondary p-3">
+          <Loader2 className="w-5 h-5 shrink-0 text-rk-brand animate-spin" aria-hidden="true" />
+          <div className="min-w-0">
+            <p className="text-[13px] font-bold text-rk-forest">{tr("Checking this spot…", "যাচাই হচ্ছে…")}</p>
+            <p className="text-[11px] text-rk-muted truncate">{tr("Analysing flood signals…", "বন্যা সংকেত যাচাই করা হচ্ছে…")}</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (point && pointResult?.failed) {
+      return (
+        <div className="flex items-start gap-2.5 rounded-xl bg-red-50 border border-red-200 p-3">
+          <AlertTriangle className="w-5 h-5 shrink-0 text-red-600 mt-0.5" aria-hidden="true" />
+          <div className="flex-1 min-w-0">
+            <p className="text-[14px] font-bold text-red-700">{tr("Check failed", "যাচাই ব্যর্থ")}</p>
+            <p className="text-[12px] text-red-600 mt-0.5">{tr("Could not reach the server. Try again.", "সার্ভারে পৌঁছানো যায়নি। আবার চেষ্টা করুন।")}</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (districtCode) {
+      const forecast = layerById("forecast").value(districtCode, data, bn);
+      const observed = layerById("observed").value(districtCode, data, bn);
+      const hist = data.history?.get(districtCode);
+      const pred = predictionMap.get(districtCode);
+      const safety = assessPlaceSafety({
+        forecastLoaded: data.forecastLoaded,
+        historyLoaded: !!data.history,
+        forecastCls: forecast?.cls,
+        observedCls: observed?.cls,
+        eventsObserved: hist?.events_observed,
+        eventsFlooded: hist?.events_flooded,
+      });
+      const chance =
+        pred?.probability == null
+          ? null
+          : pred.probability > 0.95
+            ? tr(">95%", ">৯৫%")
+            : pred.probability < 0.01
+              ? tr("<1%", "<১%")
+              : `${n(Math.round(pred.probability * 100))}%`;
+      const histLine =
+        hist && hist.events_observed > 0
+          ? tr(
+              `Flooded in ${hist.events_flooded} of ${hist.events_observed} recorded events (2016–2024).`,
+              `${n(hist.events_observed)}টি রেকর্ডেড ঘটনার ${n(hist.events_flooded)}টিতে প্লাবিত (২০১৬–২০২৪)।`
+            )
+          : null;
+
+      if (safety.level === "loading") {
+        return (
+          <div className="flex items-center gap-2.5 rounded-xl bg-rk-secondary p-3">
+            <Loader2 className="w-5 h-5 shrink-0 text-rk-brand animate-spin" aria-hidden="true" />
+            <div className="min-w-0">
+              <p className="text-[13px] font-bold text-rk-forest">{tr("Checking flood risk…", "বন্যার ঝুঁকি যাচাই হচ্ছে…")}</p>
+              <p className="text-[11px] text-rk-muted truncate">{locationName || tr("Loading model and history", "মডেল ও ইতিহাস লোড হচ্ছে")}</p>
+            </div>
+          </div>
+        );
+      }
+
+      if (safety.level === "warning") {
+        return (
+          <div className="rounded-xl bg-red-50/95 border border-red-200 p-3">
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle className="w-5 h-5 shrink-0 text-red-600 mt-0.5" aria-hidden="true" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-1">
+                  <p className="text-[14px] font-bold text-red-700">{tr("Flood risk warning", "বন্যার ঝুঁকির সতর্কতা")}</p>
+                  <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-800 uppercase tracking-wide">
+                    {tr("High Risk", "উচ্চ ঝুঁকি")}
+                  </span>
+                </div>
+                <p className="text-[12px] text-red-600 mt-1 leading-snug">
+                  {chance
+                    ? tr(`Model flood chance ${chance}. Be prepared and follow local official advice.`, `মডেলের বন্যার সম্ভাবনা ${chance}। প্রস্তুত থাকুন ও সরকারি নির্দেশনা মানুন।`)
+                    : tr("Flood warning active. Be prepared and follow local official advice.", "বন্যার সতর্কতা চলছে। প্রস্তুত থাকুন ও সরকারি নির্দেশনা মানুন।")}
+                </p>
+                {locationName && (
+                  <p className="mt-2 text-[11px] font-medium text-red-800/80 flex items-center gap-1 truncate">
+                    <MapPin className="w-3 h-3 shrink-0" aria-hidden="true" /> {locationName}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      if (safety.level === "caution") {
+        const fromHistory = safety.source === "history";
+        return (
+          <div className="rounded-xl bg-amber-50/95 border border-amber-200 p-3">
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle className="w-5 h-5 shrink-0 text-amber-600 mt-0.5" aria-hidden="true" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-1">
+                  <p className="text-[14px] font-bold text-amber-800">
+                    {fromHistory
+                      ? tr("Elevated flood risk", "উচ্চ বন্যার ঝুঁকি")
+                      : tr("Caution — flood water nearby", "সতর্ক থাকুন — কাছে বন্যার পানি")}
+                  </p>
+                  <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800 uppercase tracking-wide">
+                    {tr("Caution", "সতর্কতা")}
+                  </span>
+                </div>
+                <p className="text-[12px] text-amber-700 mt-1 leading-snug">
+                  {fromHistory
+                    ? histLine || tr("This district has flooded often in past events. Stay prepared.", "এই জেলা অতীতে বারবার প্লাবিত হয়েছে। প্রস্তুত থাকুন।")
+                    : tr("Satellite detected flood water in this area recently.", "এই এলাকায় সম্প্রতি স্যাটেলাইটে বন্যার পানি দেখা গেছে।")}
+                </p>
+                {locationName && (
+                  <p className="mt-2 text-[11px] font-medium text-amber-900/80 flex items-center gap-1 truncate">
+                    <MapPin className="w-3 h-3 shrink-0" aria-hidden="true" /> {locationName}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="rounded-xl bg-emerald-50/95 border border-emerald-200 p-3">
+          <div className="flex items-start gap-2.5">
+            <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-600 mt-0.5" aria-hidden="true" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-1">
+                <p className="text-[14px] font-bold text-emerald-800">{tr("You appear to be safe", "আপনি নিরাপদ বলে মনে হচ্ছে")}</p>
+                <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 uppercase tracking-wide">
+                  {tr("Low risk", "কম ঝুঁকি")}
+                </span>
+              </div>
+              <p className="text-[12px] text-emerald-700 mt-1 leading-snug">
+                {chance
+                  ? tr(`Model flood chance ${chance}. No high flood risk signal right now.`, `মডেলের বন্যার সম্ভাবনা ${chance}। এখন উচ্চ বন্যার ঝুঁকির সংকেত নেই।`)
+                  : tr("No high flood risk signal right now.", "এখন উচ্চ বন্যার ঝুঁকির সংকেত নেই।")}
+              </p>
+              {locationName && (
+                <p className="mt-2 text-[11px] font-medium text-emerald-900/80 flex items-center gap-1 truncate">
+                  <MapPin className="w-3 h-3 shrink-0" aria-hidden="true" /> {locationName}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // No point checked — prompt the user
+    return (
+      <div className="rounded-xl bg-white/95 p-3">
+        <div className="flex items-start gap-2.5">
+          <MapPin className="w-5 h-5 shrink-0 text-rk-brand mt-0.5" aria-hidden="true" />
+          <div className="flex-1 min-w-0">
+            <p className="text-[14px] font-bold text-rk-forest">{tr("Is your area safe?", "আপনার এলাকা কি নিরাপদ?")}</p>
+            <p className="text-[12px] text-rk-muted mt-0.5 leading-snug">{tr("Tap any spot on the map to check flood risk.", "মানচিত্রে যেকোনো জায়গায় চাপুন বা আপনার অবস্থান যাচাই করুন।")}</p>
+            <button
+              type="button"
+              onClick={useMyLocation}
+              disabled={locating}
+              className="mt-2.5 w-full h-8 px-2.5 rounded-lg bg-rk-brand text-white text-[12px] font-semibold inline-flex items-center justify-center gap-1.5 hover:bg-rk-brand-strong transition-colors"
+            >
+              {locating ? <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" /> : <Crosshair className="w-3.5 h-3.5" aria-hidden="true" />}
+              {tr("Check my location", "আমার অবস্থান যাচাই করুন")}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const FACT_GROUPS: { title: { en: string; bn: string }; ids: LayerId[] }[] = [
     { title: { en: "Conditions now", bn: "এখনকার অবস্থা" }, ids: ["observed"] },
@@ -1156,301 +1368,513 @@ export const FloodMapExplorer: React.FC<Props> = ({ lang, targetDate, onChangeTa
     { title: { en: "Rain and rivers", bn: "বৃষ্টি ও নদী" }, ids: ["rain", "rainfc", "river"] },
     { title: { en: "Background", bn: "পটভূমি" }, ids: ["history", "hazard"] },
   ];
-  const factRow = (id: LayerId, pcode: string) => {
-    const L = layerById(id);
-    const v = L.value(pcode, data, bn);
-    return (
-      <button
-        key={L.id}
-        type="button"
-        onClick={() => setLayerId(L.id)}
-        aria-pressed={layerId === L.id}
-        title={tr("Show this layer on the map", "মানচিত্রে এই স্তর দেখান")}
-        className={`w-full grid grid-cols-[auto_1fr] items-center gap-x-3 px-3 py-2 text-left hover:bg-rk-secondary ${layerId === L.id ? "bg-rk-brand-soft" : ""}`}
-      >
-        <span aria-hidden="true" className={`h-3 w-3 rounded-sm border ${isNodata(L, v.cls) ? "border-dashed border-rk-muted" : "border-black/10"}`} style={{ background: classColor(L, v.cls) }} />
-        <span className="flex flex-wrap items-baseline justify-between gap-x-2">
-          <span className="text-[13px] text-rk-muted">{bn ? L.label.bn : L.label.en}</span>
-          <span className="text-[14px] font-semibold text-rk-forest">{bn ? v.text.bn : v.text.en}</span>
-        </span>
-      </button>
-    );
-  };
-  const DistrictFacts = ({ pcode }: { pcode: string }) => {
-    const p = predictionMap.get(pcode);
-    return (
-      <div className="space-y-2.5">
-        {FACT_GROUPS.map((g) => (
-          <div key={g.title.en}>
-            <h4 className="mb-1 font-mono text-[11px] uppercase tracking-wider text-rk-muted">{bn ? g.title.bn : g.title.en}</h4>
-            <div className="divide-y divide-rk-line rounded-xl border border-rk-line bg-rk-surface overflow-hidden">{g.ids.map((id) => factRow(id, pcode))}</div>
-          </div>
-        ))}
-        {p?.data_through && p.status === "predicted" && (
-          <p className="font-mono text-xs text-rk-muted">
-            {tr("Forecast for", "পূর্বাভাস")} {formatDay(p.target_date, bn ? "bn" : "en")} · {tr("data through", "তথ্য পর্যন্ত")} {p.data_through ? formatDay(p.data_through, bn ? "bn" : "en") : "—"}
-            {p.issued_at ? ` · ${tr("issued", "তৈরি")} ${formatIssued(p.issued_at)}` : ""}
-          </p>
-        )}
-      </div>
-    );
-  };
-
-  const flowText = (st: Station) => {
-    const status = STATION_STATUS[st.status];
-    return bn ? status.bn : status.en;
-  };
-  const trendView = (st: Station) => {
-    if (!st.trend || st.change3d == null) return <span className="text-rk-muted">{tr("Trend not available", "প্রবণতা নেই")}</span>;
-    const pctTxt = `${Math.abs(Math.round(st.change3d * 100))} %`;
-    const Icon = st.trend === "rising" ? TrendingUp : st.trend === "falling" ? TrendingDown : Minus;
-    const word = st.trend === "rising" ? tr("Rising", "বাড়ছে") : st.trend === "falling" ? tr("Falling", "কমছে") : tr("Steady", "স্থির");
-    return (
-      <span className="block">
-        <span className="inline-flex items-center gap-1 font-semibold"><Icon className="w-4 h-4" aria-hidden="true" /> {word}</span>
-        {st.trend !== "steady" && <span className="block text-[12px] text-rk-muted">{n(pctTxt)} {tr("in 3 days", "৩ দিনে")}</span>}
+const factRow = (id: LayerId, pcode: string) => {
+  const L = layerById(id);
+  const v = L.value(pcode, data, bn);
+  return (
+    <button
+      key={L.id}
+      type="button"
+      onClick={() => setLayerId(L.id)}
+      aria-pressed={layerId === L.id}
+      title={tr("Show this layer on the map", "মানচিত্রে এই স্তর দেখান")}
+      className={`w-full grid grid-cols-[auto_1fr] items-center gap-x-3 px-3 py-2 text-left hover:bg-rk-secondary ${layerId === L.id ? "bg-rk-brand-soft" : ""}`}
+    >
+      <span aria-hidden="true" className={`h-3 w-3 rounded-sm border ${isNodata(L, v.cls) ? "border-dashed border-rk-muted" : "border-black/10"}`} style={{ background: classColor(L, v.cls) }} />
+      <span className="flex flex-wrap items-baseline justify-between gap-x-2">
+        <span className="text-[13px] text-rk-muted">{bn ? L.label.bn : L.label.en}</span>
+        <span className="text-[14px] font-semibold text-rk-forest">{bn ? v.text.bn : v.text.en}</span>
       </span>
-    );
-  };
-  const shortDate = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString(bn ? "bn-BD" : "en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
-  const daysOld = (iso: string) => Math.round((new Date(`${today}T00:00:00Z`).getTime() - new Date(`${iso}T00:00:00Z`).getTime()) / 86400000);
-
-  const TERRAIN_LEGEND: [string, string][] = [
-    ["#2E6F78", "< 2 m"], ["#5D9B96", "2–5 m"], ["#97C1A0", "5–10 m"], ["#CCDCAA", "10–20 m"], ["#E5D8A0", "20–50 m"],
-    ["#D6B480", "50–100 m"], ["#B88C62", "100–300 m"], ["#967056", "300–800 m"], ["#806252", "> 800 m"],
-  ];
-  const TerrainLegend = () => (
-    <div>
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-[13px] font-bold text-rk-forest">{tr("Ground height (terrain)", "ভূমির উচ্চতা (ভূপ্রকৃতি)")}</p>
-        {kindBadge("reference")}
-      </div>
-      <ul className="mt-1.5 grid grid-cols-3 gap-x-2 gap-y-1">
-        {TERRAIN_LEGEND.map(([c, l]) => (
-          <li key={l} className="flex items-center gap-1.5 text-[12px] text-rk-ink"><span aria-hidden="true" className="h-3 w-4 rounded-sm border border-black/10" style={{ background: c }} />{n(l)}</li>
-        ))}
-      </ul>
-      <p className="mt-1.5 text-[11px] text-rk-muted leading-snug">
-        {tr(
-          "Metres above sea level, with hill shading. Copernicus DEM GLO-90 (90 m, 2011–2015 radar, surface model: trees and buildings add height; errors of a few metres matter in flat land). Shown at up to ~280 m per pixel. Height alone does not predict flooding.",
-          "সমুদ্রপৃষ্ঠ থেকে উচ্চতা (মিটার), ছায়াসহ। Copernicus DEM GLO-90 (৯০ মি; গাছ ও ভবনের উচ্চতাও ধরা; সমতলে কয়েক মিটার ভুল গুরুত্বপূর্ণ)। শুধু উচ্চতা দিয়ে বন্যা বলা যায় না।"
-        )}
-      </p>
+    </button>
+  );
+};
+const DistrictFacts = ({ pcode }: { pcode: string }) => {
+  const p = predictionMap.get(pcode);
+  return (
+    <div className="space-y-2.5">
+      {FACT_GROUPS.map((g) => (
+        <div key={g.title.en}>
+          <h4 className="mb-1 font-mono text-[11px] uppercase tracking-wider text-rk-muted">{bn ? g.title.bn : g.title.en}</h4>
+          <div className="divide-y divide-rk-line rounded-xl border border-rk-line bg-rk-surface overflow-hidden">{g.ids.map((id) => factRow(id, pcode))}</div>
+        </div>
+      ))}
+      {p?.data_through && p.status === "predicted" && (
+        <p className="font-mono text-xs text-rk-muted">
+          {tr("Forecast for", "পূর্বাভাস")} {formatDay(p.target_date, bn ? "bn" : "en")} · {tr("data through", "তথ্য পর্যন্ত")} {p.data_through ? formatDay(p.data_through, bn ? "bn" : "en") : "—"}
+          {p.issued_at ? ` · ${tr("issued", "তৈরি")} ${formatIssued(p.issued_at)}` : ""}
+        </p>
+      )}
     </div>
   );
-  const terrainBlock = (code: string | undefined, label: string) => {
-    const t = code && terrainStats ? terrainStats[code] : undefined;
-    if (!t) return <p className="text-rk-muted">{tr("Terrain statistics are not available here.", "এখানে ভূপ্রকৃতির তথ্য নেই।")}</p>;
-    return (
-      <>
-        <p>
-          {tr(`${label}: typical ground height`, `${label}: সাধারণ ভূমির উচ্চতা`)} <strong>{n(t.median_m)} {tr("m", "মি")}</strong>
-          {tr("; land below 5 m: ", "; ৫ মি-এর নিচে জমি: ")}<strong>{n(Math.round(t.below_5m * 100))} %</strong>
-          {tr(", below 10 m: ", ", ১০ মি-এর নিচে: ")}<strong>{n(Math.round(t.below_10m * 100))} %</strong>
-        </p>
-        <p className="text-xs text-rk-muted">{tr("Median of the 90 m elevation cells inside the boundary (Copernicus DEM, a surface model). Low ground is one flood factor, not a forecast.", "সীমানার ভেতরের ৯০ মি উচ্চতা-ঘরের মধ্যমা (Copernicus DEM)। নিচু জমি বন্যার একটি কারণ মাত্র, পূর্বাভাস নয়।")}</p>
-      </>
-    );
-  };
-  const exposureBlock = (pcode: string) => {
-    const ex = exposure && exposure.pcode === pcode ? exposure.data : null;
-    if (!ex) return <p className="text-rk-muted">{tr("Loading registered facilities…", "নিবন্ধিত স্থাপনা লোড হচ্ছে…")}</p>;
-    const sum = ex.summary;
-    const flagged = (ex.assets || []).filter((a: any) => a.flags?.observed_flooding || a.flags?.modelled_hazard_100yr).slice(0, 4);
-    return (
-      <>
-        <p>
-          {tr(`${sum.total.assets} registered facilities in the district: `, `জেলায় ${n(sum.total.assets)}টি নিবন্ধিত স্থাপনা: `)}
-          <strong>{n(sum.with_observed_flooding.assets)}</strong> {tr("where satellites saw flood water before", "যেখানে আগে স্যাটেলাইটে বন্যার পানি দেখা গেছে")},{" "}
-          <strong>{n(sum.with_modelled_hazard_100yr.assets)}</strong> {tr("inside the modelled 100-year flood zone", "মডেলের ১০০ বছরের বন্যা এলাকায়")}.
-        </p>
-        {flagged.length > 0 && (
-          <ul className="mt-1 space-y-0.5 text-[13px]">
-            {flagged.map((a: any) => (
-              <li key={a.asset_id} className="flex gap-1.5">
-                <span aria-hidden="true" className="mt-1.5 h-2 w-2 shrink-0 rounded-full" style={{ background: a.flags?.observed_flooding ? "#1F5F8B" : "#B87955" }} />
-                <span>{a.name} <span className="text-rk-muted">· {a.asset_type}</span></span>
-              </li>
-            ))}
-          </ul>
-        )}
-        <p className="mt-1 text-xs text-rk-muted">{tr("Facilities from an OpenStreetMap snapshot (not complete, not checked on the ground). Flags are past satellite records and a long-term hazard model, not current damage or closures. No people count is estimated.", "OpenStreetMap থেকে নেওয়া স্থাপনা (সম্পূর্ণ নয়, মাঠে যাচাই নয়)। চিহ্ন অতীতের স্যাটেলাইট রেকর্ড ও দীর্ঘমেয়াদি মডেল, বর্তমান ক্ষতি নয়।")}</p>
-      </>
-    );
-  };
-  const RiverPanel = () => {
-    const r = rivers?.find((x) => x.key === selRiver);
-    if (!r) return null;
-    const name = bn ? r.bn || r.en : r.en || r.bn;
-    const related = (stations || []).filter((st) => r.en && (st.river || "").toLowerCase().includes(r.en.toLowerCase()));
-    return (
-      <section aria-labelledby="rk-river-title" className="rounded-2xl border-2 border-rk-river/50 bg-rk-surface p-4">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <p className="font-mono text-[11px] uppercase tracking-wider text-rk-river-text">{tr("River · map context", "নদী · মানচিত্রের প্রসঙ্গ")}</p>
-            <h2 id="rk-river-title" className="mt-0.5 text-lg font-extrabold text-rk-forest">{name}</h2>
-            {r.en && r.bn && <p className="text-[13px] text-rk-muted">{bn ? r.en : r.bn}</p>}
-          </div>
-          <button type="button" onClick={() => setSelRiver(null)} className="h-9 w-9 shrink-0 rounded-lg border border-rk-line inline-flex items-center justify-center text-rk-muted hover:text-rk-forest" aria-label={tr("Close the river", "নদী বন্ধ করুন")}>
-            <X className="w-4 h-4" aria-hidden="true" />
-          </button>
-        </div>
-        <p className="mt-2 text-[14px] text-rk-ink">{tr(`About ${r.km} km of mapped river line in and near Bangladesh.`, `বাংলাদেশে ও কাছাকাছি প্রায় ${n(r.km)} কিমি নদীরেখা।`)}</p>
-        {related.length > 0 ? (
-          <ul className="mt-2 space-y-1">
-            {related.map((st) => (
-              <li key={st.id}>
-                <button type="button" onClick={() => openStation(st.id)} className="text-left text-[14px] font-semibold text-rk-brand-strong underline underline-offset-2">{st.name}</button>
-                <span className="text-[13px] text-rk-muted"> · {flowText(st)}</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mt-1 text-[13px] text-rk-muted">{tr("No followed river-flow station is on this river.", "এই নদীতে অনুসৃত কোনো নদী-প্রবাহ স্টেশন নেই।")}</p>
-        )}
-        <p className="mt-2 text-xs text-rk-muted">{tr("River line and names from OpenStreetMap (community-mapped). Geographic context only — not a flood or water-level layer.", "নদীরেখা ও নাম OpenStreetMap থেকে। কেবল ভৌগোলিক প্রসঙ্গ — বন্যা বা পানির উচ্চতার স্তর নয়।")}</p>
-      </section>
-    );
-  };
+};
 
-  const StationPanel = () => {
-    const st = stations?.find((x) => x.id === selStation);
-    if (!st) return null;
-    const district = st.district_pcode ? byPcode.get(st.district_pcode) : undefined;
-    const age = st.latest ? daysOld(st.latest.date) : null;
-    return (
-      <section aria-labelledby="rk-station-title" className="rounded-2xl border-2 border-rk-river/60 bg-rk-surface p-4">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <p className="font-mono text-[11px] uppercase tracking-wider text-rk-river-text">{tr("River-flow station · modelled", "নদী-প্রবাহ স্টেশন · মডেল")}</p>
-            <h2 id="rk-station-title" className="mt-0.5 text-lg font-extrabold text-rk-forest">{st.name}</h2>
-            <p className="text-[13px] text-rk-muted">
-              {st.river ? `${tr("River", "নদী")} ${st.river}` : ""}
-              {district ? ` · ${tr("District", "জেলা")} ${placeName(district, bn)}` : ""}
+const flowText = (st: Station) => {
+  const status = STATION_STATUS[st.status];
+  return bn ? status.bn : status.en;
+};
+const trendView = (st: Station) => {
+  if (!st.trend || st.change3d == null) return <span className="text-rk-muted">{tr("Trend not available", "প্রবণতা নেই")}</span>;
+  const pctTxt = `${Math.abs(Math.round(st.change3d * 100))} %`;
+  const Icon = st.trend === "rising" ? TrendingUp : st.trend === "falling" ? TrendingDown : Minus;
+  const word = st.trend === "rising" ? tr("Rising", "বাড়ছে") : st.trend === "falling" ? tr("Falling", "কমছে") : tr("Steady", "স্থির");
+  return (
+    <span className="block">
+      <span className="inline-flex items-center gap-1 font-semibold"><Icon className="w-4 h-4" aria-hidden="true" /> {word}</span>
+      {st.trend !== "steady" && <span className="block text-[12px] text-rk-muted">{n(pctTxt)} {tr("in 3 days", "৩ দিনে")}</span>}
+    </span>
+  );
+};
+const shortDate = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString(bn ? "bn-BD" : "en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+const daysOld = (iso: string) => Math.round((new Date(`${today}T00:00:00Z`).getTime() - new Date(`${iso}T00:00:00Z`).getTime()) / 86400000);
+
+const TERRAIN_LEGEND: [string, string][] = [
+  ["#2E6F78", "< 2 m"], ["#5D9B96", "2–5 m"], ["#97C1A0", "5–10 m"], ["#CCDCAA", "10–20 m"], ["#E5D8A0", "20–50 m"],
+  ["#D6B480", "50–100 m"], ["#B88C62", "100–300 m"], ["#967056", "300–800 m"], ["#806252", "> 800 m"],
+];
+const TerrainLegend = () => (
+  <div>
+    <div className="flex items-center justify-between gap-2">
+      <p className="text-[13px] font-bold text-rk-forest">{tr("Ground height (terrain)", "ভূমির উচ্চতা (ভূপ্রকৃতি)")}</p>
+      {kindBadge("reference")}
+    </div>
+    <ul className="mt-1.5 grid grid-cols-3 gap-x-2 gap-y-1">
+      {TERRAIN_LEGEND.map(([c, l]) => (
+        <li key={l} className="flex items-center gap-1.5 text-[12px] text-rk-ink"><span aria-hidden="true" className="h-3 w-4 rounded-sm border border-black/10" style={{ background: c }} />{n(l)}</li>
+      ))}
+    </ul>
+    <p className="mt-1.5 text-[11px] text-rk-muted leading-snug">
+      {tr(
+        "Metres above sea level, with hill shading. Copernicus DEM GLO-90 (90 m, 2011–2015 radar, surface model: trees and buildings add height; errors of a few metres matter in flat land). Shown at up to ~280 m per pixel. Height alone does not predict flooding.",
+        "সমুদ্রপৃষ্ঠ থেকে উচ্চতা (মিটার), ছায়াসহ। Copernicus DEM GLO-90 (৯০ মি; গাছ ও ভবনের উচ্চতাও ধরা; সমতলে কয়েক মিটার ভুল গুরুত্বপূর্ণ)। শুধু উচ্চতা দিয়ে বন্যা বলা যায় না।"
+      )}
+    </p>
+  </div>
+);
+const terrainBlock = (code: string | undefined, label: string) => {
+  const t = code && terrainStats ? terrainStats[code] : undefined;
+  if (!t) return <p className="text-rk-muted">{tr("Terrain statistics are not available here.", "এখানে ভূপ্রকৃতির তথ্য নেই।")}</p>;
+  return (
+    <>
+      <p>
+        {tr(`${label}: typical ground height`, `${label}: সাধারণ ভূমির উচ্চতা`)} <strong>{n(t.median_m)} {tr("m", "মি")}</strong>
+        {tr("; land below 5 m: ", "; ৫ মি-এর নিচে জমি: ")}<strong>{n(Math.round(t.below_5m * 100))} %</strong>
+        {tr(", below 10 m: ", ", ১০ মি-এর নিচে: ")}<strong>{n(Math.round(t.below_10m * 100))} %</strong>
+      </p>
+      <p className="text-xs text-rk-muted">{tr("Median of the 90 m elevation cells inside the boundary (Copernicus DEM, a surface model). Low ground is one flood factor, not a forecast.", "সীমানার ভেতরের ৯০ মি উচ্চতা-ঘরের মধ্যমা (Copernicus DEM)। নিচু জমি বন্যার একটি কারণ মাত্র, পূর্বাভাস নয়।")}</p>
+    </>
+  );
+};
+const exposureBlock = (pcode: string) => {
+  const ex = exposure && exposure.pcode === pcode ? exposure.data : null;
+  if (!ex) return <p className="text-rk-muted">{tr("Loading registered facilities…", "নিবন্ধিত স্থাপনা লোড হচ্ছে…")}</p>;
+  const sum = ex.summary;
+  const flagged = (ex.assets || []).filter((a: any) => a.flags?.observed_flooding || a.flags?.modelled_hazard_100yr).slice(0, 4);
+  return (
+    <>
+      <p>
+        {tr(`${sum.total.assets} registered facilities in the district: `, `জেলায় ${n(sum.total.assets)}টি নিবন্ধিত স্থাপনা: `)}
+        <strong>{n(sum.with_observed_flooding.assets)}</strong> {tr("where satellites saw flood water before", "যেখানে আগে স্যাটেলাইটে বন্যার পানি দেখা গেছে")},{" "}
+        <strong>{n(sum.with_modelled_hazard_100yr.assets)}</strong> {tr("inside the modelled 100-year flood zone", "মডেলের ১০০ বছরের বন্যা এলাকায়")}.
+      </p>
+      {flagged.length > 0 && (
+        <ul className="mt-1 space-y-0.5 text-[13px]">
+          {flagged.map((a: any) => (
+            <li key={a.asset_id} className="flex gap-1.5">
+              <span aria-hidden="true" className="mt-1.5 h-2 w-2 shrink-0 rounded-full" style={{ background: a.flags?.observed_flooding ? "#1F5F8B" : "#B87955" }} />
+              <span>{a.name} <span className="text-rk-muted">· {a.asset_type}</span></span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="mt-1 text-xs text-rk-muted">{tr("Facilities from an OpenStreetMap snapshot (not complete, not checked on the ground). Flags are past satellite records and a long-term hazard model, not current damage or closures. No people count is estimated.", "OpenStreetMap থেকে নেওয়া স্থাপনা (সম্পূর্ণ নয়, মাঠে যাচাই নয়)। চিহ্ন অতীতের স্যাটেলাইট রেকর্ড ও দীর্ঘমেয়াদি মডেল, বর্তমান ক্ষতি নয়।")}</p>
+    </>
+  );
+};
+const RiverPanel = () => {
+  const r = rivers?.find((x) => x.key === selRiver);
+  if (!r) return null;
+  const name = bn ? r.bn || r.en : r.en || r.bn;
+  const related = (stations || []).filter((st) => r.en && (st.river || "").toLowerCase().includes(r.en.toLowerCase()));
+  return (
+    <section aria-labelledby="rk-river-title" className="rounded-2xl border-2 border-rk-river/50 bg-rk-surface p-4">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="font-mono text-[11px] uppercase tracking-wider text-rk-river-text">{tr("River · map context", "নদী · মানচিত্রের প্রসঙ্গ")}</p>
+          <h2 id="rk-river-title" className="mt-0.5 text-lg font-extrabold text-rk-forest">{name}</h2>
+          {r.en && r.bn && <p className="text-[13px] text-rk-muted">{bn ? r.en : r.bn}</p>}
+        </div>
+        <button type="button" onClick={() => setSelRiver(null)} className="h-9 w-9 shrink-0 rounded-lg border border-rk-line inline-flex items-center justify-center text-rk-muted hover:text-rk-forest" aria-label={tr("Close the river", "নদী বন্ধ করুন")}>
+          <X className="w-4 h-4" aria-hidden="true" />
+        </button>
+      </div>
+      <p className="mt-2 text-[14px] text-rk-ink">{tr(`About ${r.km} km of mapped river line in and near Bangladesh.`, `বাংলাদেশে ও কাছাকাছি প্রায় ${n(r.km)} কিমি নদীরেখা।`)}</p>
+      {related.length > 0 ? (
+        <ul className="mt-2 space-y-1">
+          {related.map((st) => (
+            <li key={st.id}>
+              <button type="button" onClick={() => openStation(st.id)} className="text-left text-[14px] font-semibold text-rk-brand-strong underline underline-offset-2">{st.name}</button>
+              <span className="text-[13px] text-rk-muted"> · {flowText(st)}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-1 text-[13px] text-rk-muted">{tr("No followed river-flow station is on this river.", "এই নদীতে অনুসৃত কোনো নদী-প্রবাহ স্টেশন নেই।")}</p>
+      )}
+      <p className="mt-2 text-xs text-rk-muted">{tr("River line and names from OpenStreetMap (community-mapped). Geographic context only — not a flood or water-level layer.", "নদীরেখা ও নাম OpenStreetMap থেকে। কেবল ভৌগোলিক প্রসঙ্গ — বন্যা বা পানির উচ্চতার স্তর নয়।")}</p>
+    </section>
+  );
+};
+
+const StationPanel = () => {
+  const st = stations?.find((x) => x.id === selStation);
+  if (!st) return null;
+  const district = st.district_pcode ? byPcode.get(st.district_pcode) : undefined;
+  const age = st.latest ? daysOld(st.latest.date) : null;
+  return (
+    <section aria-labelledby="rk-station-title" className="rounded-2xl border-2 border-rk-river/60 bg-rk-surface p-4">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="font-mono text-[11px] uppercase tracking-wider text-rk-river-text">{tr("River-flow station · modelled", "নদী-প্রবাহ স্টেশন · মডেল")}</p>
+          <h2 id="rk-station-title" className="mt-0.5 text-lg font-extrabold text-rk-forest">{st.name}</h2>
+          <p className="text-[13px] text-rk-muted">
+            {st.river ? `${tr("River", "নদী")} ${st.river}` : ""}
+            {district ? ` · ${tr("District", "জেলা")} ${placeName(district, bn)}` : ""}
+          </p>
+        </div>
+        <button type="button" onClick={() => setSelStation(null)} className="h-9 w-9 shrink-0 rounded-lg border border-rk-line inline-flex items-center justify-center text-rk-muted hover:text-rk-forest" aria-label={tr("Close the station", "স্টেশন বন্ধ করুন")}>
+          <X className="w-4 h-4" aria-hidden="true" />
+        </button>
+      </div>
+      {st.latest ? (
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <div className="rounded-xl bg-rk-page px-3 py-2">
+            <p className="text-[12px] text-rk-muted">{tr("Latest daily flow", "সর্বশেষ দৈনিক প্রবাহ")}</p>
+            <p className="text-xl font-extrabold text-rk-forest">{n(Math.round(st.latest.value as number).toLocaleString("en-GB"))} <span className="text-[13px] font-semibold">m³/s</span></p>
+            <p className="font-mono text-[11px] text-rk-muted">{shortDate(st.latest.date)}</p>
+          </div>
+          <div className="rounded-xl bg-rk-page px-3 py-2">
+            <p className="text-[12px] text-rk-muted">{tr("Compared with usual", "স্বাভাবিকের তুলনায়")}</p>
+            <p className="flex items-center gap-1.5 text-[15px] font-bold text-rk-forest">
+              <span aria-hidden="true" className="h-3 w-3 rounded-full border border-rk-forest" style={{ background: STATION_STATUS[st.status].color }} />
+              {flowText(st)}
             </p>
+            <p className="text-[13px] text-rk-ink">{trendView(st)}</p>
           </div>
-          <button type="button" onClick={() => setSelStation(null)} className="h-9 w-9 shrink-0 rounded-lg border border-rk-line inline-flex items-center justify-center text-rk-muted hover:text-rk-forest" aria-label={tr("Close the station", "স্টেশন বন্ধ করুন")}>
-            <X className="w-4 h-4" aria-hidden="true" />
-          </button>
         </div>
-        {st.latest ? (
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <div className="rounded-xl bg-rk-page px-3 py-2">
-              <p className="text-[12px] text-rk-muted">{tr("Latest daily flow", "সর্বশেষ দৈনিক প্রবাহ")}</p>
-              <p className="text-xl font-extrabold text-rk-forest">{n(Math.round(st.latest.value as number).toLocaleString("en-GB"))} <span className="text-[13px] font-semibold">m³/s</span></p>
-              <p className="font-mono text-[11px] text-rk-muted">{shortDate(st.latest.date)}</p>
-            </div>
-            <div className="rounded-xl bg-rk-page px-3 py-2">
-              <p className="text-[12px] text-rk-muted">{tr("Compared with usual", "স্বাভাবিকের তুলনায়")}</p>
-              <p className="flex items-center gap-1.5 text-[15px] font-bold text-rk-forest">
-                <span aria-hidden="true" className="h-3 w-3 rounded-full border border-rk-forest" style={{ background: STATION_STATUS[st.status].color }} />
-                {flowText(st)}
-              </p>
-              <p className="text-[13px] text-rk-ink">{trendView(st)}</p>
-            </div>
-          </div>
-        ) : (
-          <p className="mt-3 text-sm text-rk-muted">{tr("No recent value is stored for this station.", "এই স্টেশনের সাম্প্রতিক কোনো মান সংরক্ষিত নেই।")}</p>
-        )}
-        {st.forecastPeak ? (
-          <p className="mt-2 rounded-lg bg-rk-secondary px-3 py-2 text-[13px] text-rk-ink">
-            <span className="mb-1 block">{kindBadge("forecast")}</span>
-            {tr("GloFAS forecast", "GloFAS পূর্বাভাস")} {shortDate(st.forecast[0].date)}–{shortDate(st.forecast[st.forecast.length - 1].date)}:{" "}
-            {tr("highest", "সর্বোচ্চ")} <strong>{n(Math.round(st.forecastPeak.value as number).toLocaleString("en-GB"))} m³/s</strong> {tr("on", "")} {shortDate(st.forecastPeak.date)}
-            {st.usual != null && (
-              <span className="text-rk-muted"> · {tr("×", "×")}{n(((st.forecastPeak.value as number) / st.usual).toFixed(2))} {tr("of usual", "স্বাভাবিকের")}</span>
-            )}
-            <span className="mt-1 block text-[12px] text-rk-muted">{tr("A model forecast of river flow, not of water level or flooding.", "নদী-প্রবাহের মডেল পূর্বাভাস, পানির উচ্চতা বা বন্যার নয়।")}</span>
-          </p>
-        ) : (
-          <p className="mt-2 text-[12px] text-rk-muted">{tr("No river-flow forecast stored for this station yet.", "এই স্টেশনের নদী-প্রবাহ পূর্বাভাস এখনো সংরক্ষিত নেই।")}</p>
-        )}
-        {age != null && age > 3 && (
-          <p className="mt-2 rounded-lg bg-rk-warning-soft px-3 py-1.5 text-[13px] text-rk-warning">{tr(`The latest value is ${age} days old.`, `সর্বশেষ মানটি ${n(age)} দিন আগের।`)}</p>
-        )}
-        <div className="mt-3">
-          <Hydrograph series={st.series} usual={st.usual} bn={bn} />
-        </div>
-        <p className="mt-2 rounded-lg bg-rk-info-soft px-3 py-2 text-[13px] text-rk-ink">
-          {tr(
-            "This is modelled river flow (GloFAS) at a river grid cell, not a gauge water level, so there is no danger level here. Official water levels and danger levels: ",
-            "এটি নদীর একটি গ্রিড ঘরে মডেলভিত্তিক প্রবাহ (GloFAS), গেজের পানির উচ্চতা নয়; তাই এখানে বিপদসীমা নেই। সরকারি পানির উচ্চতা ও বিপদসীমা: "
+      ) : (
+        <p className="mt-3 text-sm text-rk-muted">{tr("No recent value is stored for this station.", "এই স্টেশনের সাম্প্রতিক কোনো মান সংরক্ষিত নেই।")}</p>
+      )}
+      {st.forecastPeak ? (
+        <p className="mt-2 rounded-lg bg-rk-secondary px-3 py-2 text-[13px] text-rk-ink">
+          <span className="mb-1 block">{kindBadge("forecast")}</span>
+          {tr("GloFAS forecast", "GloFAS পূর্বাভাস")} {shortDate(st.forecast[0].date)}–{shortDate(st.forecast[st.forecast.length - 1].date)}:{" "}
+          {tr("highest", "সর্বোচ্চ")} <strong>{n(Math.round(st.forecastPeak.value as number).toLocaleString("en-GB"))} m³/s</strong> {tr("on", "")} {shortDate(st.forecastPeak.date)}
+          {st.usual != null && (
+            <span className="text-rk-muted"> · {tr("×", "×")}{n(((st.forecastPeak.value as number) / st.usual).toFixed(2))} {tr("of usual", "স্বাভাবিকের")}</span>
           )}
-          <a href="https://www.ffwc.gov.bd/" target="_blank" rel="noopener noreferrer" className="font-semibold text-rk-brand-strong underline underline-offset-2">ffwc.gov.bd</a>
+          <span className="mt-1 block text-[12px] text-rk-muted">{tr("A model forecast of river flow, not of water level or flooding.", "নদী-প্রবাহের মডেল পূর্বাভাস, পানির উচ্চতা বা বন্যার নয়।")}</span>
         </p>
-        <details className="mt-2 rounded-xl border border-rk-line px-3 py-2">
-          <summary className="cursor-pointer text-[13px] font-semibold text-rk-forest">{tr("Source and technical details", "উৎস ও প্রযুক্তিগত বিবরণ")}</summary>
-          <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[12px]">
-            <dt className="text-rk-muted">{tr("Station ID", "স্টেশন আইডি")}</dt><dd className="font-mono text-rk-ink">{st.id}</dd>
-            <dt className="text-rk-muted">{tr("Location", "অবস্থান")}</dt><dd className="font-mono text-rk-ink">{st.lat.toFixed(4)}° N, {st.lng.toFixed(4)}° E</dd>
-            <dt className="text-rk-muted">{tr("Source", "উৎস")}</dt><dd className="text-rk-ink">{st.source || "GloFAS (Copernicus EMS) via Open-Meteo"}</dd>
-            {st.fetchedAt && (<><dt className="text-rk-muted">{tr("Retrieved", "সংগ্রহ")}</dt><dd className="font-mono text-rk-ink">{formatIssued(st.fetchedAt)}</dd></>)}
-            {st.usual != null && (<><dt className="text-rk-muted">{tr("Usual", "স্বাভাবিক")}</dt><dd className="font-mono text-rk-ink">{n(Math.round(st.usual))} m³/s {tr("(mean of the 30 days before)", "(আগের ৩০ দিনের গড়)")}</dd></>)}
-            <dt className="text-rk-muted">{tr("Status", "অবস্থা")}</dt><dd className="text-rk-ink">{st.sample ? tr("Saved sample (server not reachable)", "সংরক্ষিত নমুনা (সার্ভারে পৌঁছানো যায়নি)") : tr("Daily update from Rokkha's server", "রক্ষার সার্ভারের দৈনিক হালনাগাদ")}</dd>
-          </dl>
-          <p className="mt-2 text-[12px] text-rk-muted">{tr("Daily mean flow. Trend compares the latest day with 3 days earlier (±5 % or more). One of 9 river sites; the forecast model uses the nearest one for each district.", "দৈনিক গড় প্রবাহ। প্রবণতা: সর্বশেষ দিন বনাম ৩ দিন আগে (±৫% বা বেশি)। ৯টি নদী-বিন্দুর একটি।")}</p>
-        </details>
-      </section>
-    );
-  };
+      ) : (
+        <p className="mt-2 text-[12px] text-rk-muted">{tr("No river-flow forecast stored for this station yet.", "এই স্টেশনের নদী-প্রবাহ পূর্বাভাস এখনো সংরক্ষিত নেই।")}</p>
+      )}
+      {age != null && age > 3 && (
+        <p className="mt-2 rounded-lg bg-rk-warning-soft px-3 py-1.5 text-[13px] text-rk-warning">{tr(`The latest value is ${age} days old.`, `সর্বশেষ মানটি ${n(age)} দিন আগের।`)}</p>
+      )}
+      <div className="mt-3">
+        <Hydrograph series={st.series} usual={st.usual} bn={bn} />
+      </div>
+      <p className="mt-2 rounded-lg bg-rk-info-soft px-3 py-2 text-[13px] text-rk-ink">
+        {tr(
+          "This is modelled river flow (GloFAS) at a river grid cell, not a gauge water level, so there is no danger level here. Official water levels and danger levels: ",
+          "এটি নদীর একটি গ্রিড ঘরে মডেলভিত্তিক প্রবাহ (GloFAS), গেজের পানির উচ্চতা নয়; তাই এখানে বিপদসীমা নেই। সরকারি পানির উচ্চতা ও বিপদসীমা: "
+        )}
+        <a href="https://www.ffwc.gov.bd/" target="_blank" rel="noopener noreferrer" className="font-semibold text-rk-brand-strong underline underline-offset-2">ffwc.gov.bd</a>
+      </p>
+      <details className="mt-2 rounded-xl border border-rk-line px-3 py-2">
+        <summary className="cursor-pointer text-[13px] font-semibold text-rk-forest">{tr("Source and technical details", "উৎস ও প্রযুক্তিগত বিবরণ")}</summary>
+        <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[12px]">
+          <dt className="text-rk-muted">{tr("Station ID", "স্টেশন আইডি")}</dt><dd className="font-mono text-rk-ink">{st.id}</dd>
+          <dt className="text-rk-muted">{tr("Location", "অবস্থান")}</dt><dd className="font-mono text-rk-ink">{st.lat.toFixed(4)}° N, {st.lng.toFixed(4)}° E</dd>
+          <dt className="text-rk-muted">{tr("Source", "উৎস")}</dt><dd className="text-rk-ink">{st.source || "GloFAS (Copernicus EMS) via Open-Meteo"}</dd>
+          {st.fetchedAt && (<><dt className="text-rk-muted">{tr("Retrieved", "সংগ্রহ")}</dt><dd className="font-mono text-rk-ink">{formatIssued(st.fetchedAt)}</dd></>)}
+          {st.usual != null && (<><dt className="text-rk-muted">{tr("Usual", "স্বাভাবিক")}</dt><dd className="font-mono text-rk-ink">{n(Math.round(st.usual))} m³/s {tr("(mean of the 30 days before)", "(আগের ৩০ দিনের গড়)")}</dd></>)}
+          <dt className="text-rk-muted">{tr("Status", "অবস্থা")}</dt><dd className="text-rk-ink">{st.sample ? tr("Saved sample (server not reachable)", "সংরক্ষিত নমুনা (সার্ভারে পৌঁছানো যায়নি)") : tr("Daily update from Rokkha's server", "রক্ষার সার্ভারের দৈনিক হালনাগাদ")}</dd>
+        </dl>
+        <p className="mt-2 text-[12px] text-rk-muted">{tr("Daily mean flow. Trend compares the latest day with 3 days earlier (±5 % or more). One of 9 river sites; the forecast model uses the nearest one for each district.", "দৈনিক গড় প্রবাহ। প্রবণতা: সর্বশেষ দিন বনাম ৩ দিন আগে (±৫% বা বেশি)। ৯টি নদী-বিন্দুর একটি।")}</p>
+      </details>
+    </section>
+  );
+};
 
-  const modelInfo = model?.model as any;
-  const PointPanel = () => {
-    if (!point || !pointResult) return null;
-    const c = pointResult.check;
-    const place = pointResult.place;
-    const districtCode = place?.district?.pcode ?? c?.district?.pcode;
-    const hazard = (rp: number) => c?.cell?.hazard?.find((h) => h.return_period_years === rp);
-    const cellSize = c?.cell?.grid_cell_size_m ?? 90;
-    return (
-      <section aria-labelledby="rk-point-title" className="rounded-2xl border-2 border-rk-brand/40 bg-rk-surface p-4">
-        <div className="flex items-start justify-between gap-2">
+const PointPanel = () => {
+  if (!point || !pointResult) return null;
+  const c = pointResult.check;
+  const place = pointResult.place;
+  const districtCode = place?.district?.pcode ?? c?.district?.pcode;
+  const hazard = (rp: number) => c?.cell?.hazard?.find((h) => h.return_period_years === rp);
+  const cellSize = c?.cell?.grid_cell_size_m ?? 90;
+  const forecast = districtCode ? layerById("forecast").value(districtCode, data, bn) : null;
+  const observed = districtCode ? layerById("observed").value(districtCode, data, bn) : null;
+  const hist = districtCode ? data.history?.get(districtCode) : undefined;
+  const assessed = districtCode
+    ? assessPlaceSafety({
+        forecastLoaded: data.forecastLoaded,
+        historyLoaded: !!data.history,
+        forecastCls: forecast?.cls,
+        observedCls: observed?.cls,
+        eventsObserved: hist?.events_observed ?? c?.district?.events_observed,
+        eventsFlooded: hist?.events_flooded ?? c?.district?.events_flooded,
+      })
+    : null;
+  type SafetyLevel = "loading" | "failed" | "no-data" | "warning" | "caution" | "safe";
+  const safetyLevel: SafetyLevel = pointResult.loading
+    ? "loading"
+    : pointResult.failed
+      ? "failed"
+      : !districtCode
+        ? "no-data"
+        : assessed?.level ?? "loading";
+
+  const pred = districtCode ? predictionMap.get(districtCode) : undefined;
+  const f = pred?.features;
+  const nearest = stations
+    ? stations.map((st) => ({ st, km: distanceKm(point.lng, point.lat, st.lng, st.lat) })).sort((a, b) => a.km - b.km)[0]
+    : null;
+  const elevation = districtCode && terrainStats?.[districtCode] ? terrainStats[districtCode].median_m : null;
+
+  return (
+    <section aria-labelledby="rk-point-title" className="rounded-2xl border-2 border-rk-brand/40 bg-rk-surface p-4">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="font-mono text-[11px] uppercase tracking-wider text-rk-brand-strong">{tr("Point check", "জায়গা যাচাই")}</p>
+          <h2 id="rk-point-title" className="mt-0.5 text-lg font-extrabold text-rk-forest">
+            {pointResult.loading ? tr("Checking this spot…", "এই জায়গা যাচাই হচ্ছে…") : place?.label || c?.district?.name || tr("Outside Bangladesh", "বাংলাদেশের বাইরে")}
+          </h2>
+          {place?.district && (
+            <p className="text-[13px] text-rk-muted">
+              {place.upazila ? `${tr("Upazila", "উপজেলা")} ${place.upazila} · ` : ""}
+              {tr("District", "জেলা")} {placeName({ level: 2, pcode: place.district.pcode, name: place.district.name }, bn)} · {tr("Division", "বিভাগ")}{" "}
+              {placeName({ level: 1, pcode: "", name: place.district.division }, bn)}
+            </p>
+          )}
+        </div>
+        <button type="button" onClick={() => { setPoint(null); setPointResult(null); }} className="h-9 w-9 shrink-0 rounded-lg border border-rk-line inline-flex items-center justify-center text-rk-muted hover:text-rk-forest" aria-label={tr("Clear the point", "বিন্দু মুছুন")}>
+          <X className="w-4 h-4" aria-hidden="true" />
+        </button>
+      </div>
+
+      {pointResult.loading && (
+        <div className="mt-3 flex items-center gap-3 rounded-xl border border-rk-line bg-rk-page p-4">
+          <Loader2 className="w-6 h-6 animate-spin text-rk-brand shrink-0" aria-hidden="true" />
           <div>
-            <p className="font-mono text-[11px] uppercase tracking-wider text-rk-brand-strong">{tr("Point check", "জায়গা যাচাই")}</p>
-            <h2 id="rk-point-title" className="mt-0.5 text-lg font-extrabold text-rk-forest">
-              {pointResult.loading ? tr("Checking this spot…", "এই জায়গা যাচাই হচ্ছে…") : place?.label || c?.district?.name || tr("Outside Bangladesh", "বাংলাদেশের বাইরে")}
-            </h2>
-            {place?.district && (
-              <p className="text-[13px] text-rk-muted">
-                {place.upazila ? `${tr("Upazila", "উপজেলা")} ${place.upazila} · ` : ""}
-                {tr("District", "জেলা")} {placeName({ level: 2, pcode: place.district.pcode, name: place.district.name }, bn)} · {tr("Division", "বিভাগ")}{" "}
-                {placeName({ level: 1, pcode: "", name: place.district.division }, bn)}
+            <p className="text-[14px] font-bold text-rk-forest">{tr("Checking this location…", "এই স্থান যাচাই হচ্ছে…")}</p>
+            <p className="text-[12px] text-rk-muted mt-0.5">{tr("Fetching satellite radar passes, weather forecasts, and local river levels.", "স্যাটেলাইট রাডার, আবহাওয়া পূর্বাভাস ও নদী-প্রবাহের তথ্য আনা হচ্ছে।")}</p>
+          </div>
+        </div>
+      )}
+
+      {pointResult.failed && (
+        <div className="mt-3 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
+          <AlertTriangle className="w-6 h-6 shrink-0 mt-0.5" aria-hidden="true" />
+          <div>
+            <p className="text-[14px] font-bold">{tr("Check failed", "যাচাই ব্যর্থ")}</p>
+            <p className="text-[12px] mt-0.5 opacity-90">{tr("Could not reach the server. Please try tapping another spot.", "সার্ভারে পৌঁছানো যায়নি। অনুগ্রহ করে মানচিত্রে অন্য জায়গায় চাপুন।")}</p>
+          </div>
+        </div>
+      )}
+
+      {!pointResult.loading && !pointResult.failed && districtCode && (
+        <div className="mt-3 space-y-3">
+          {/* Actionable Safety Guidance */}
+          {safetyLevel === "warning" && (
+            <div className="rounded-xl border border-red-200 bg-red-50/90 p-3.5">
+              <div className="flex items-center gap-2 text-red-800">
+                <ShieldAlert className="w-5 h-5 shrink-0" aria-hidden="true" />
+                <h3 className="text-[14px] font-bold">{tr("Immediate Safety Actions", "জরুরি করণীয় ও সতর্কতা")}</h3>
+                <span className="ml-auto rounded-full bg-red-200/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-900">{tr("Action Required", "জরুরি")}</span>
+              </div>
+              <ul className="mt-2.5 space-y-1.5 text-[12px] text-red-900/90">
+                <li className="flex items-start gap-2">
+                  <span className="shrink-0 mt-0.5">🎒</span>
+                  <span><strong>{tr("Emergency Go-Bag", "জরুরি ব্যাগ")}:</strong> {tr("Pack drinking water, dry food, oral saline, flashlight, and vital medicines in a waterproof bag.", "নিরাপদ পানি, শুকনো খাবার, স্যালাইন, টর্চ ও ওষুধ ওয়াটারপ্রুফ ব্যাগে রাখুন।")}</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="shrink-0 mt-0.5">🏃</span>
+                  <span><strong>{tr("Shelter & High Ground", "আশ্রয়কেন্দ্র")}:</strong> {tr("Identify nearest flood shelter or high ground; assist elderly and children first.", "কাছের আশ্রয়কেন্দ্র বা উঁচু স্থান জেনে রাখুন; শিশু ও বৃদ্ধদের অগ্রাধিকার দিন।")}</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="shrink-0 mt-0.5">⚡</span>
+                  <span><strong>{tr("Power & Phones", "চার্জ ও বিদ্যুৎ")}:</strong> {tr("Fully charge mobile phones and power banks; store essential numbers offline.", "মোবাইল ও পাওয়ার ব্যাংক চার্জ দিন; জরুরি নম্বরগুলো লিখে রাখুন।")}</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="shrink-0 mt-0.5">⚠️</span>
+                  <span><strong>{tr("Water Safety", "সতর্কতা")}:</strong> {tr("Never walk or drive through flowing floodwaters; stay away from electric poles.", "বন্যার পানিতে নামবেন না; বিদ্যুতের খুঁটি ও তার থেকে দূরে থাকুন।")}</span>
+                </li>
+              </ul>
+            </div>
+          )}
+
+          {safetyLevel === "caution" && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50/90 p-3.5">
+              <div className="flex items-center gap-2 text-amber-900">
+                <AlertTriangle className="w-5 h-5 shrink-0 text-amber-600" aria-hidden="true" />
+                <h3 className="text-[14px] font-bold">
+                  {assessed?.source === "history"
+                    ? tr("Historically flood-prone area", "ঐতিহাসিকভাবে বন্যাপ্রবণ এলাকা")
+                    : tr("Precautionary Measures", "সতর্কতামূলক প্রস্তুতি")}
+                </h3>
+                <span className="ml-auto rounded-full bg-amber-200/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-900">{tr("Caution", "সতর্কতা")}</span>
+              </div>
+              {assessed?.source === "history" && (
+                <p className="mt-2 text-[12px] text-amber-800 leading-snug">
+                  {tr(
+                    `This district flooded in ${hist?.events_flooded ?? c?.district?.events_flooded ?? "—"} of ${hist?.events_observed ?? c?.district?.events_observed ?? "—"} recorded events (2016–2024). Stay prepared even when there is no live warning today.`,
+                    `এই জেলা ${n(hist?.events_observed ?? c?.district?.events_observed ?? "—")}টি রেকর্ডেড ঘটনার ${n(hist?.events_flooded ?? c?.district?.events_flooded ?? "—")}টিতে প্লাবিত হয়েছে (২০১৬–২০২৪)। আজ সতর্কতা না থাকলেও প্রস্তুত থাকুন।`
+                  )}
+                </p>
+              )}
+              <ul className="mt-2.5 space-y-1.5 text-[12px] text-amber-900/90">
+                <li className="flex items-start gap-2">
+                  <span className="shrink-0 mt-0.5">🌊</span>
+                  <span><strong>{tr("Monitor Water Levels", "পানি পর্যবেক্ষণ")}:</strong> {tr("Keep a close watch on nearby canals, ditches, and river water levels for any rapid rise.", "কাছের খাল, নালা ও নদীর পানির উচ্চতা নিয়মিত পর্যবেক্ষণ করুন।")}</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="shrink-0 mt-0.5">📦</span>
+                  <span><strong>{tr("Elevate Belongings", "সম্পদ রক্ষা")}:</strong> {tr("Move food stores, seeds, and electrical appliances onto raised platforms.", "ফসল, বীজ ও বৈদ্যুতিক সরঞ্জাম উঁচুতে তুলে রাখুন।")}</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="shrink-0 mt-0.5">📻</span>
+                  <span><strong>{tr("Stay Informed", "খবরাখবর রাখুন")}:</strong> {tr("Follow local administration announcements and weather forecasts.", "স্থানীয় প্রশাসন ও আবহাওয়ার খবরাখবর নজরে রাখুন।")}</span>
+                </li>
+              </ul>
+            </div>
+          )}
+
+          {safetyLevel === "safe" && (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50/90 p-3.5">
+              <div className="flex items-center gap-2 text-emerald-900">
+                <ShieldCheck className="w-5 h-5 shrink-0 text-emerald-600" aria-hidden="true" />
+                <h3 className="text-[14px] font-bold">{tr("Preparedness & Local Advice", "পরিস্থিতি ও প্রস্তুতি")}</h3>
+                <span className="ml-auto rounded-full bg-emerald-200/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-900">{tr("Normal", "স্বাভাবিক")}</span>
+              </div>
+              <ul className="mt-2.5 space-y-1.5 text-[12px] text-emerald-900/90">
+                <li className="flex items-start gap-2">
+                  <span className="shrink-0 mt-0.5">🟢</span>
+                  <span><strong>{tr("Conditions Normal", "স্বাভাবিক অবস্থা")}:</strong> {tr("No active flood warning or satellite floodwaters detected in this area right now.", "এই এলাকায় বর্তমানে কোনো বন্যার সতর্কতা বা পানি জমার সংকেত নেই।")}</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="shrink-0 mt-0.5">🌦</span>
+                  <span><strong>{tr("Monsoon Awareness", "বর্ষাকালীন সতর্কতা")}:</strong> {tr("Heavy rainfall upstream can change conditions rapidly; stay alert during storms.", "উজানে ভারী বৃষ্টি হলে পরিস্থিতি বদলাতে পারে; দুর্যোগপূর্ণ আবহাওয়ায় সতর্ক থাকুন।")}</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="shrink-0 mt-0.5">📞</span>
+                  <span><strong>{tr("Emergency Contacts", "জরুরি যোগাযোগ")}:</strong> {tr("Keep national emergency numbers saved on your mobile for peace of mind.", "প্রয়োজনে দ্রুত যোগাযোগের জন্য জাতীয় জরুরি নম্বরগুলো ফোনে সেভ রাখুন।")}</span>
+                </li>
+              </ul>
+            </div>
+          )}
+
+          {/* Quick Emergency Helplines */}
+          <div className="rounded-xl border border-rk-line bg-rk-surface p-3">
+            <p className="font-mono text-[11px] uppercase tracking-wider text-rk-muted flex items-center gap-1.5 font-bold">
+              <Phone className="w-3.5 h-3.5 text-rk-brand" aria-hidden="true" />
+              {tr("24/7 Emergency Helplines", "২৪/৭ জরুরি হটলাইন")}
+            </p>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              <a
+                href="tel:999"
+                className="flex flex-col items-center justify-center rounded-lg border border-red-200 bg-red-50/80 p-2 text-center hover:bg-red-100 transition-colors"
+                title={tr("Call 999 National Emergency", "৯৯৯ জাতীয় জরুরি সেবা")}
+              >
+                <span className="text-[16px] font-black text-red-700">999</span>
+                <span className="text-[10px] font-semibold text-red-800 mt-0.5 leading-tight">{tr("Emergency", "জরুরি সেবা")}</span>
+              </a>
+              <a
+                href="tel:1090"
+                className="flex flex-col items-center justify-center rounded-lg border border-amber-200 bg-amber-50/80 p-2 text-center hover:bg-amber-100 transition-colors"
+                title={tr("Call 1090 Disaster Warning", "১০৯০ দুর্যোগ তথ্য ও বার্তা")}
+              >
+                <span className="text-[16px] font-black text-amber-800">1090</span>
+                <span className="text-[10px] font-semibold text-amber-800 mt-0.5 leading-tight">{tr("Disaster Info", "দুর্যোগ বার্তা")}</span>
+              </a>
+              <a
+                href="tel:10941"
+                className="flex flex-col items-center justify-center rounded-lg border border-blue-200 bg-blue-50/80 p-2 text-center hover:bg-blue-100 transition-colors"
+                title={tr("Call 10941 Flood Warning Centre", "১০৯৪১ বন্যা পূর্বাভাস কেন্দ্র")}
+              >
+                <span className="text-[16px] font-black text-blue-700">10941</span>
+                <span className="text-[10px] font-semibold text-blue-800 mt-0.5 leading-tight">{tr("Flood Centre", "বন্যা পূর্বাভাস")}</span>
+              </a>
+            </div>
+          </div>
+
+          {/* Nearby Registered Facilities & Shelters */}
+          <div className="rounded-xl border border-rk-line bg-rk-surface p-3">
+            <h3 className="text-[13px] font-bold text-rk-forest flex items-center gap-1.5">
+              <Building2 className="w-4 h-4 text-rk-brand shrink-0" aria-hidden="true" />
+              {tr("Nearby Facilities & Shelters (< 10 km)", "নিকটবর্তী জরুরি স্থাপনা ও আশ্রয়কেন্দ্র (< ১০ কিমি)")}
+            </h3>
+            {nearFacilities === null ? (
+              <p className="mt-2 text-[12px] text-rk-muted flex items-center gap-1.5">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
+                {tr("Finding nearest facilities…", "কাছের আশ্রয়কেন্দ্র খোঁজা হচ্ছে…")}
               </p>
+            ) : nearFacilities.length === 0 ? (
+              <p className="mt-1.5 text-[12px] text-rk-muted leading-relaxed">
+                {tr("No registered shelters recorded within 10 km. Contact local Union Parishad or administration.", "১০ কিলোমিটারের মধ্যে কোনো নিবন্ধিত আশ্রয়কেন্দ্রের তথ্য নেই। স্থানীয় প্রশাসন বা ইউনিয়ন পরিষদে যোগাযোগ করুন।")}
+              </p>
+            ) : (
+              <ul className="mt-2 space-y-1.5">
+                {nearFacilities.map((fac) => (
+                  <li key={fac.id} className="flex items-center justify-between gap-2 rounded-lg bg-rk-secondary/70 px-2.5 py-1.5 text-[13px]">
+                    <span className="min-w-0 font-medium text-rk-forest truncate" title={fac.name}>{fac.name}</span>
+                    <span className="shrink-0 flex items-center gap-1.5">
+                      <span className="rounded bg-white px-1.5 py-0.5 text-[10px] font-semibold text-rk-muted border border-rk-line/60 uppercase">{fac.type}</span>
+                      <span className="font-mono text-[12px] font-bold text-rk-brand-strong">{n(fac.km.toFixed(1))} {tr("km", "কিমি")}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
-          <button type="button" onClick={() => { setPoint(null); setPointResult(null); }} className="h-9 w-9 shrink-0 rounded-lg border border-rk-line inline-flex items-center justify-center text-rk-muted hover:text-rk-forest" aria-label={tr("Clear the point", "বিন্দু মুছুন")}>
-            <X className="w-4 h-4" aria-hidden="true" />
-          </button>
-        </div>
 
-        {pointResult.loading && (
-          <p className="mt-3 flex items-center gap-2 text-sm text-rk-muted" role="status">
-            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> {tr("Asking Rokkha's server…", "রক্ষার সার্ভারে জানতে চাওয়া হচ্ছে…")}
-          </p>
-        )}
-        {!pointResult.loading && pointResult.failed && (
-          <p className="mt-3 text-sm text-rk-danger" role="alert">{tr("The check could not reach the server. Try again.", "সার্ভারে পৌঁছানো যায়নি। আবার চেষ্টা করুন।")}</p>
-        )}
-        {!pointResult.loading && !pointResult.failed && !districtCode && (
-          <p className="mt-3 text-sm text-rk-ink">{tr("This point is outside Bangladesh, so Rokkha has no data for it.", "এই বিন্দু বাংলাদেশের বাইরে, তাই রক্ষার কাছে তথ্য নেই।")}</p>
-        )}
-
-        {!pointResult.loading && districtCode && (() => {
-          const obsLayer = layerById("observed");
-          const obs = obsLayer.value(districtCode, data, bn);
-          const fc = layerById("forecast").value(districtCode, data, bn);
-          const pred = predictionMap.get(districtCode);
-          const f = pred?.features;
-          const nearest = stations
-            ? stations.map((st) => ({ st, km: distanceKm(point.lng, point.lat, st.lng, st.lat) })).sort((a, b) => a.km - b.km)[0]
-            : null;
-          const section = (title: string, children: React.ReactNode, badge?: React.ReactNode) => (
-            <div className="border-t border-rk-line pt-3">
-              <h3 className="flex flex-wrap items-center gap-2 text-[13px] font-bold text-rk-forest">{title} {badge}</h3>
-              <div className="mt-1.5 text-[14px] text-rk-ink">{children}</div>
+          {/* Key Environmental Snapshot */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="rounded-xl border border-rk-line bg-rk-surface p-2.5 text-center">
+              <p className="text-[10px] font-mono uppercase font-bold tracking-wider text-rk-muted">{tr("Rain (7d)", "বৃষ্টি (৭ দিন)")}</p>
+              <p className="mt-0.5 text-[15px] font-extrabold text-rk-forest">{f?.rain_7d != null ? `${n(Math.round(f.rain_7d))} ${tr("mm", "মিমি")}` : "—"}</p>
             </div>
-          );
-          return (
+            <div className="rounded-xl border border-rk-line bg-rk-surface p-2.5 text-center">
+              <p className="text-[10px] font-mono uppercase font-bold tracking-wider text-rk-muted">{tr("Nearest River", "কাছের নদী")}</p>
+              <p className="mt-0.5 text-[12px] font-bold text-rk-forest truncate" title={nearest?.st.name ?? "—"}>{nearest?.st.name ?? "—"}</p>
+              {nearest && <p className="text-[10px] text-rk-muted font-mono">{n(Math.round(nearest.km))} {tr("km", "কিমি")}</p>}
+            </div>
+            <div className="rounded-xl border border-rk-line bg-rk-surface p-2.5 text-center">
+              <p className="text-[10px] font-mono uppercase font-bold tracking-wider text-rk-muted">{tr("Elevation", "উচ্চতা")}</p>
+              <p className="mt-0.5 text-[15px] font-extrabold text-rk-forest">
+                {elevation != null ? `${n(Math.round(elevation))} ${tr("m", "মি")}` : "—"}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!pointResult.loading && districtCode && (() => {
+        const obsLayer = layerById("observed");
+        const obs = obsLayer.value(districtCode, data, bn);
+        const fc = layerById("forecast").value(districtCode, data, bn);
+        const section = (title: string, children: React.ReactNode, badge?: React.ReactNode) => (
+          <div className="border-t border-rk-line pt-3">
+            <h3 className="flex flex-wrap items-center gap-2 text-[13px] font-bold text-rk-forest">{title} {badge}</h3>
+            <div className="mt-1.5 text-[14px] text-rk-ink">{children}</div>
+          </div>
+        );
+        return (
+          <details className="mt-3 rounded-xl border border-rk-line px-3 py-2">
+            <summary className="cursor-pointer min-h-8 flex items-center gap-2 text-[13px] font-bold text-rk-forest">
+              <Info className="w-4 h-4 shrink-0 text-rk-brand" aria-hidden="true" />
+              {tr("Technical breakdown (satellite, GloFAS river, return periods)", "প্রযুক্তিগত বিশ্লেষণ (স্যাটেলাইট, নদী-মডেল, অতীতের বন্যা)")}
+            </summary>
             <div className="mt-3 space-y-3">
               {section(
                 tr("Current flood condition", "বর্তমান বন্যা পরিস্থিতি"),
@@ -1475,6 +1899,7 @@ export const FloodMapExplorer: React.FC<Props> = ({ lang, targetDate, onChangeTa
                 </>,
                 kindBadge("forecast")
               )}
+
               {section(
                 tr("Rainfall", "বৃষ্টি"),
                 f && f.rain_7d != null ? (
@@ -1483,7 +1908,7 @@ export const FloodMapExplorer: React.FC<Props> = ({ lang, targetDate, onChangeTa
                       {tr("Last 7 days", "গত ৭ দিন")}: <strong>{n(Math.round(f.rain_7d))} {tr("mm", "মিমি")}</strong>
                       {f.rain_1d != null && <> · {tr("last day", "শেষ দিন")}: <strong>{n(Math.round(f.rain_1d))} {tr("mm", "মিমি")}</strong></>}
                     </p>
-                    <p className="text-xs text-rk-muted">{tr("At the district's weather point, up to the day before the forecast (ERA5 / GFS estimates, not rain gauges).", "জেলার আবহাওয়া-বিন্দুতে, পূর্বাভাসের আগের দিন পর্যন্ত (ERA5 / GFS অনুমান, বৃষ্টিমাপক নয়)।")}</p>
+                    <p className="text-xs text-rk-muted">{tr("At the district's weather point, up to the day before the forecast (ERA5 / GFS estimates, not rain gauges).", "জেলার আবহাওয়া-বিন্দুতে, পূর্বাভাস এর আগের দিন পর্যন্ত (ERA5 / GFS অনুমান, বৃষ্টিমাপক নয়)।")}</p>
                     {(() => {
                       const rf = rainForecast?.get(districtCode);
                       return rf && rf.total_mm != null ? (
@@ -1541,181 +1966,116 @@ export const FloodMapExplorer: React.FC<Props> = ({ lang, targetDate, onChangeTa
                     </li>
                   </ul>
                 ) : (
-                  <p className="text-rk-muted">{tr("Cell-level data needs the server; it is not available right now.", "ঘর-স্তরের তথ্যের জন্য সার্ভার দরকার; এখন পাওয়া যাচ্ছে না।")}</p>
+                  <p className="text-rk-muted">{tr("Historical flood record is not available for this cell.", "এই ঘরের জন্য বন্যার ইতিহাস নেই।")}</p>
                 )
               )}
-              {section(
-                tr("Geography and terrain", "ভূগোল ও ভূপ্রকৃতি"),
-                <>
-                  {terrainBlock(place?.upazila_pcode ?? districtCode, place?.upazila_pcode ? placeName({ level: 3, pcode: place.upazila_pcode, name: place.upazila || "" }, bn) : placeName({ level: 2, pcode: districtCode, name: place?.district?.name || "" }, bn))}
-                  <p className="text-xs text-rk-muted">{tr("Height at the exact spot is not shown: the terrain tiles are pictures, not measurements.", "নির্দিষ্ট জায়গার উচ্চতা দেখানো হয় না।")}</p>
-                </>,
-                kindBadge("reference")
-              )}
-              {section(
-                tr("Facilities nearby", "কাছের স্থাপনা"),
-                nearFacilities == null ? (
-                  <p className="text-rk-muted">{tr("Looking for registered facilities…", "নিবন্ধিত স্থাপনা খোঁজা হচ্ছে…")}</p>
-                ) : nearFacilities.length === 0 ? (
-                  <p className="text-rk-muted">{tr("No registered facility within 10 km.", "১০ কিমির মধ্যে কোনো নিবন্ধিত স্থাপনা নেই।")}</p>
-                ) : (
-                  <>
-                    <ul className="space-y-0.5 text-[13px]">
-                      {nearFacilities.map((f) => {
-                        const ex = exposure?.data?.assets?.find((a: any) => a.asset_id === f.id);
-                        const flag = ex?.flags?.observed_flooding ? tr("flood water seen there before", "আগে বন্যার পানি দেখা গেছে") : ex?.flags?.modelled_hazard_100yr ? tr("in modelled 100-year zone", "মডেলের ১০০ বছরের এলাকায়") : null;
-                        return (
-                          <li key={f.id}>
-                            {f.name} <span className="text-rk-muted">· {f.type} · {n(f.km.toFixed(1))} km{flag ? ` · ${flag}` : ""}</span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                    <p className="mt-1 text-xs text-rk-muted">{tr("Registered facilities (OpenStreetMap snapshot, not complete). Being nearby does not mean affected.", "নিবন্ধিত স্থাপনা (OpenStreetMap, সম্পূর্ণ নয়)। কাছে থাকা মানে ক্ষতিগ্রস্ত নয়।")}</p>
-                  </>
-                )
-              )}
-              <details className="rounded-xl border border-rk-line px-3 py-2">
-                <summary className="cursor-pointer text-[13px] font-semibold text-rk-forest">{tr("Sources, coordinates and limits", "উৎস, স্থানাঙ্ক ও সীমাবদ্ধতা")}</summary>
-                <p className="mt-2 font-mono text-xs text-rk-ink">
-                  {point.lat.toFixed(5)}° N, {point.lng.toFixed(5)}° E · {point.source === "gps" ? tr("from your device", "আপনার ডিভাইস থেকে") : point.source === "coords" ? tr("typed", "লেখা") : tr("map click", "মানচিত্রে চাপ")}
-                </p>
-                <p className="mt-1 text-xs text-rk-muted">{tr(`Spot values describe the ~${cellSize} m grid cell containing the point (no nearest-cell substitution). District values apply to the whole district.`, `এই জায়গার মান বিন্দুটি যে ~${cellSize} মিটার ঘরে আছে তার; জেলার মান পুরো জেলার।`)}</p>
-                <ul className="mt-2 list-disc pl-4 space-y-1 text-xs text-rk-muted">
-                  {(c?.limitations || []).map((l) => <li key={l}>{l}</li>)}
-                </ul>
-                {c?.attribution && <p className="mt-2 text-[11px] text-rk-muted">{c.attribution}</p>}
-                {place?.attribution && <p className="mt-1 text-[11px] text-rk-muted">{place.attribution}</p>}
-              </details>
             </div>
-          );
-        })()}
-      </section>
-    );
-  };
+          </details>
+        );
+      })()}
+    </section>
+  );
+};
 
-  const RegionPanel = () => {
-    if (!index) return null;
-    if (!current) {
-      const divisions = index.filter((p) => p.level === 1);
-      return (
-        <section aria-labelledby="rk-region-title" className="space-y-3">
-          <h2 id="rk-region-title" className="text-[15px] font-bold text-rk-forest">{tr("Across Bangladesh's 64 districts", "বাংলাদেশের ৬৪ জেলায়")}</h2>
-          <ul className="flex flex-wrap gap-1.5">
-            {counts.map(({ c, count }) => (
-              <li key={c.id} className="inline-flex items-center gap-1.5 rounded-full border border-rk-line bg-rk-surface px-2.5 py-1 text-[13px] text-rk-ink">
-                <span aria-hidden="true" className={`h-2.5 w-2.5 rounded-sm ${c.nodata ? "border border-dashed border-rk-muted" : ""}`} style={{ background: c.color }} />
-                <strong>{n(count)}</strong> {bn ? c.label.bn : c.label.en}
-              </li>
-            ))}
-          </ul>
-          <div>
-            <h3 className="text-[13px] font-semibold text-rk-muted">{tr("Explore a division", "একটি বিভাগ দেখুন")}</h3>
-            <ul className="mt-1.5 grid grid-cols-2 gap-1.5">
-              {divisions.map((d) => (
-                <li key={d.pcode}>
-                  <button type="button" onClick={() => selectPlace(d)} className="w-full min-h-11 rounded-lg border border-rk-line bg-rk-surface px-3 text-left text-[14px] font-semibold text-rk-forest hover:border-rk-brand hover:bg-rk-brand-soft">
-                    {placeName(d, bn)}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-      );
-    }
-    if (current.level === 1) {
-      const ds = districtsOf(current.pcode);
-      return (
-        <section aria-labelledby="rk-region-title" className="space-y-3">
-          <h2 id="rk-region-title" className="text-[15px] font-bold text-rk-forest">{tr(`${ds.length} districts`, `${n(ds.length)}টি জেলা`)}</h2>
-          <ul className="flex flex-wrap gap-1.5">
-            {counts.map(({ c, count }) => (
-              <li key={c.id} className="inline-flex items-center gap-1.5 rounded-full border border-rk-line bg-rk-surface px-2.5 py-1 text-[13px]">
-                <span aria-hidden="true" className="h-2.5 w-2.5 rounded-sm" style={{ background: c.color }} /> <strong>{n(count)}</strong> {bn ? c.label.bn : c.label.en}
-              </li>
-            ))}
-          </ul>
-          <ul className="divide-y divide-rk-line rounded-xl border border-rk-line bg-rk-surface">
-            {ds.map((d) => {
-              const v = valueOf(d.pcode);
-              return (
-                <li key={d.pcode}>
-                  <button type="button" onClick={() => selectPlace(d)} className="w-full min-h-11 px-3 py-2 flex items-center gap-3 text-left hover:bg-rk-secondary">
-                    <span aria-hidden="true" className={`h-3 w-3 rounded-sm border ${isNodata(layer, v.cls) ? "border-dashed border-rk-muted" : "border-black/10"}`} style={{ background: classColor(layer, v.cls) }} />
-                    <span className="flex-1 text-[14px] font-semibold text-rk-forest">{placeName(d, bn)}</span>
-                    <span className="text-[13px] text-rk-muted">{bn ? v.text.bn : v.text.en}</span>
-                    <ChevronRight className="w-4 h-4 text-rk-muted" aria-hidden="true" />
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      );
-    }
-    const district = sel.district!;
-    const ups = upazilasOf(district.pcode);
+const RegionPanel = () => {
+  if (!index) return null;
+  if (!current) {
+    const divisions = index.filter((p) => p.level === 1);
     return (
       <section aria-labelledby="rk-region-title" className="space-y-3">
-        <h2 id="rk-region-title" className="sr-only">{tr("District information", "জেলার তথ্য")}</h2>
-        {current.level === 3 && (
-          <p className="rounded-xl bg-rk-secondary px-3 py-2 text-[13px] text-rk-ink">
-            {tr(
-              `Rokkha's data is made per district. ${current.name} shows ${placeName(district, false)} district's values; tap a spot to check modelled depth and past flooding there.`,
-              `রক্ষার তথ্য জেলা-ভিত্তিক। ${current.name} এ ${placeName(district, true)} জেলার মান দেখানো হচ্ছে; নির্দিষ্ট জায়গার জন্য মানচিত্রে চাপ দিন।`
-            )}
-          </p>
-        )}
-        {DistrictFacts({ pcode: district.pcode })}
+        <h2 id="rk-region-title" className="text-[15px] font-bold text-rk-forest">{tr("Across Bangladesh's 64 districts", "বাংলাদেশের ৬৪ জেলায়")}</h2>
+        <ul className="flex flex-wrap gap-1.5">
+          {counts.map(({ c, count }) => (
+            <li key={c.id} className="inline-flex items-center gap-1.5 rounded-full border border-rk-line bg-rk-surface px-2.5 py-1 text-[13px] text-rk-ink">
+              <span aria-hidden="true" className={`h-2.5 w-2.5 rounded-sm ${c.nodata ? "border border-dashed border-rk-muted" : ""}`} style={{ background: c.color }} />
+              <strong>{n(count)}</strong> {bn ? c.label.bn : c.label.en}
+            </li>
+          ))}
+        </ul>
         <div>
-          <h4 className="mb-1 font-mono text-[11px] uppercase tracking-wider text-rk-muted">{tr("Geography and terrain", "ভূগোল ও ভূপ্রকৃতি")}</h4>
-          <div className="rounded-xl border border-rk-line bg-rk-surface px-3 py-2 text-[14px] text-rk-ink space-y-1.5">
-            {terrainBlock(district.pcode, placeName(district, bn))}
-            {current.level === 3 && terrainBlock(current.pcode, placeName(current, bn))}
-            {(() => {
-              const hq = hqPlaces?.find((h) => h.pcode === district.pcode || (h.level < 2 && hqPlaces.every((x) => x.pcode !== district.pcode) && h.name === district.name));
-              return hq ? <p className="text-[13px] text-rk-muted">{tr("Headquarters", "সদর দপ্তর")}: {hq.name}</p> : null;
-            })()}
-          </div>
+          <h3 className="text-[13px] font-semibold text-rk-muted">{tr("Explore a division", "একটি বিভাগ দেখুন")}</h3>
+          <ul className="mt-1.5 grid grid-cols-2 gap-1.5">
+            {divisions.map((d) => (
+              <li key={d.pcode}>
+                <button type="button" onClick={() => selectPlace(d)} className="w-full min-h-11 rounded-lg border border-rk-line bg-rk-surface px-3 text-left text-[14px] font-semibold text-rk-forest hover:border-rk-brand hover:bg-rk-brand-soft">
+                  {placeName(d, bn)}
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
-        <div>
-          <h4 className="mb-1 font-mono text-[11px] uppercase tracking-wider text-rk-muted">{tr("What could be exposed", "কী ঝুঁকিতে থাকতে পারে")}</h4>
-          <div className="rounded-xl border border-rk-line bg-rk-surface px-3 py-2 text-[14px] text-rk-ink">{exposureBlock(district.pcode)}</div>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={() => onOpenDistrictReport(district.pcode, district.name)} className="h-11 px-3.5 rounded-xl bg-rk-brand hover:bg-rk-brand-strong text-white text-sm font-bold inline-flex items-center gap-2">
-            <FileText className="w-4 h-4" aria-hidden="true" /> {tr("District report", "জেলার প্রতিবেদন")}
-          </button>
-        </div>
-        {current.level === 2 && (
-          <div>
-            <h3 className="text-[13px] font-semibold text-rk-muted">
-              {tr(`${ups.length} upazilas`, `${n(ups.length)}টি উপজেলা`)} {upazilaLoading && <Loader2 className="inline w-3.5 h-3.5 animate-spin" aria-label={tr("loading", "লোড হচ্ছে")} />}
-            </h3>
-            <ul className="mt-1.5 flex flex-wrap gap-1.5">
-              {ups.map((u) => (
-                <li key={u.pcode}>
-                  <button type="button" onClick={() => selectPlace(u)} className="min-h-9 rounded-lg border border-rk-line bg-rk-surface px-2.5 text-[13px] font-semibold text-rk-forest hover:border-rk-brand hover:bg-rk-brand-soft">
-                    {u.name}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
       </section>
     );
-  };
+  }
+  if (current.level === 1) {
+    const ds = districtsOf(current.pcode);
+    return (
+      <section aria-labelledby="rk-region-title" className="space-y-3">
+        <h2 id="rk-region-title" className="text-[15px] font-bold text-rk-forest">{tr(`${ds.length} districts`, `${n(ds.length)}টি জেলা`)}</h2>
+        <ul className="flex flex-wrap gap-1.5">
+          {counts.map(({ c, count }) => (
+            <li key={c.id} className="inline-flex items-center gap-1.5 rounded-full border border-rk-line bg-rk-surface px-2.5 py-1 text-[13px]">
+              <span aria-hidden="true" className="h-2.5 w-2.5 rounded-sm" style={{ background: c.color }} /> <strong>{n(count)}</strong> {bn ? c.label.bn : c.label.en}
+            </li>
+          ))}
+        </ul>
+        <ul className="divide-y divide-rk-line rounded-xl border border-rk-line bg-rk-surface">
+          {ds.map((d) => {
+            const v = valueOf(d.pcode);
+            return (
+              <li key={d.pcode}>
+                <button type="button" onClick={() => selectPlace(d)} className="w-full min-h-11 px-3 py-2 flex items-center gap-3 text-left hover:bg-rk-secondary">
+                  <span aria-hidden="true" className={`h-3 w-3 rounded-sm border ${isNodata(layer, v.cls) ? "border-dashed border-rk-muted" : "border-black/10"}`} style={{ background: classColor(layer, v.cls) }} />
+                  <span className="flex-1 text-[14px] font-semibold text-rk-forest">{placeName(d, bn)}</span>
+                  <span className="text-[13px] text-rk-muted">{bn ? v.text.bn : v.text.en}</span>
+                  <ChevronRight className="w-4 h-4 text-rk-muted" aria-hidden="true" />
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+    );
+  }
+  const district = sel.district!;
+  const ups = upazilasOf(district.pcode);
+  return (
+    <section aria-labelledby="rk-region-title" className="space-y-3">
+      <h2 id="rk-region-title" className="sr-only">{tr("District information", "জেলার তথ্য")}</h2>
+      {current.level === 3 && (
+        <p className="rounded-xl bg-rk-secondary px-3 py-2 text-[13px] text-rk-ink">
+          {tr(
+            `Rokkha's data is made per district. ${current.name} shows ${placeName(district, false)} district's values; tap a spot to check modelled depth and past flooding there.`,
+            `রক্ষার তথ্য জেলা-ভিত্তিক। ${current.name} এ ${placeName(district, true)} জেলার মান দেখানো হচ্ছে; নির্দিষ্ট জায়গার জন্য মানচিত্রে চাপ দিন।`
+          )}
+        </p>
+      )}
+      {DistrictFacts({ pcode: district.pcode })}
+    </section>
+  );
+};
 
-  const PanelBody = () => (
+const TAB_LABELS = {
+  status: { en: "Status", bn: "অবস্থা" },
+  layers: { en: "Map layers", bn: "মানচিত্রের স্তর" },
+};
+
+// Alert-level colour badges shown next to district names and forecast rows
+const alertBadge = (cls: string) => {
+  if (cls === "alert") return <span className="ml-auto shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-bold text-red-700">{tr("Alert", "সতর্কতা")}</span>;
+  if (cls === "watch") return <span className="ml-auto shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700">{tr("Watch", "নজরদারি")}</span>;
+  if (cls === "low") return <span className="ml-auto shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-500">{tr("Low", "কম")}</span>;
+  return null;
+};
+
+const PanelBody = () => {
+  const statusContent = (
     <div className="space-y-4">
-      {/* The selected object comes first. */}
       {selStation && StationPanel()}
       {selRiver && !selStation && RiverPanel()}
       {point && PointPanel()}
 
-      {/* Forecast day */}
+      {/* Forecast day picker */}
       <div className="rounded-xl border border-rk-line bg-rk-surface px-3 py-2.5">
         <div className="flex items-center gap-2">
           <button type="button" onClick={() => onChangeTargetDate(addDays(targetDate, -1))} className="h-9 w-9 rounded-lg border border-rk-line inline-flex items-center justify-center text-rk-forest hover:bg-rk-secondary" aria-label={tr("Previous day", "আগের দিন")}>
@@ -1733,164 +2093,24 @@ export const FloodMapExplorer: React.FC<Props> = ({ lang, targetDate, onChangeTa
           {isForecastLoading
             ? tr("Getting the forecast…", "পূর্বাভাস আনা হচ্ছে…")
             : predictions.length === 0
-              ? (
-                  <>
-                    {tr("No forecast issued for this day — not the same as no risk.", "এই দিনের পূর্বাভাস নেই — এর মানে ঝুঁকি নেই, তা নয়।")}{" "}
-                    <button type="button" onClick={() => onChangeTargetDate(addDays(targetDate, -1))} className="font-semibold text-rk-brand-strong underline underline-offset-2">
-                      {tr("See the day before", "আগের দিন দেখুন")}
-                    </button>
-                  </>
-                )
+              ? (<>{tr("No forecast for this day — not the same as no risk.", "এই দিনের পূর্বাভাস নেই — এর মানে ঝুঁকি নেই, তা নয়।")}{" "}<button type="button" onClick={() => onChangeTargetDate(addDays(targetDate, -1))} className="font-semibold text-rk-brand-strong underline underline-offset-2">{tr("See the day before", "আগের দিন দেখুন")}</button></>)
               : `${tr("One-day forecast, issued", "এক দিনের পূর্বাভাস, তৈরি")} ${formatIssued(issuedAt) ?? "—"} ${tr("(Bangladesh time)", "(বাংলাদেশ সময়)")}`}
         </p>
       </div>
 
-
       {RegionPanel()}
 
-      {/* Map layers, grouped. One district data layer at a time (radio); overlays are switches. */}
-      <div>
-        <h2 className="flex items-center gap-1.5 text-[13px] font-bold text-rk-forest">
-          <Layers className="w-4 h-4 text-rk-brand" aria-hidden="true" /> {tr("Map layers", "মানচিত্রের স্তর")}
-        </h2>
-        <div className="mt-2 space-y-2">
-          {(["flood", "weather", "water", "geography", "impact"] as LayerGroup[]).map((g) => {
-            const radios = LAYERS.filter((L) => L.group === g);
-            const missing = UNAVAILABLE_LAYERS.filter((u) => u.group === g);
-            const activeHere = radios.some((L) => L.id === layerId);
-            return (
-              <details key={g} open={g === "flood" || activeHere || g === "water"} className="rounded-xl border border-rk-line bg-rk-surface">
-                <summary className="cursor-pointer list-none px-3 py-2 flex items-center justify-between text-[13px] font-bold text-rk-forest">
-                  <span>{bn ? GROUP_LABEL[g].bn : GROUP_LABEL[g].en}</span>
-                  <ChevronDown className="w-4 h-4 text-rk-muted" aria-hidden="true" />
-                </summary>
-                <div className="px-2 pb-2 space-y-1.5">
-                  {radios.map((L) => (
-                    <label key={L.id} className={`flex cursor-pointer items-start gap-2.5 rounded-lg border px-2.5 py-2 ${layerId === L.id ? "border-rk-brand bg-rk-brand-soft" : "border-transparent hover:bg-rk-secondary"}`}>
-                      <input type="radio" name="rk-layer" value={L.id} checked={layerId === L.id} onChange={() => setLayerId(L.id)} className="mt-1 accent-[#247A5B]" />
-                      <span className="flex-1">
-                        <span className="flex flex-wrap items-center justify-between gap-1.5">
-                          <span className="text-[14px] font-semibold text-rk-forest">{bn ? L.label.bn : L.label.en}</span>
-                          {kindBadge(L.kind)}
-                        </span>
-                        {layerId === L.id && (
-                          <>
-                            <span className="mt-1 block text-[13px] text-rk-muted leading-snug">{bn ? L.what.bn : L.what.en}</span>
-                            <span className="mt-1.5 block">{statusBadge(L)}</span>
-                          </>
-                        )}
-                      </span>
-                    </label>
-                  ))}
-                  {g === "water" && (
-                    <>
-                      <label className="flex cursor-pointer items-start gap-2.5 rounded-lg px-2.5 py-2 hover:bg-rk-secondary">
-                        <input type="checkbox" checked={showStations} onChange={(e) => { setShowStations(e.target.checked); if (!e.target.checked) setSelStation(null); }} className="mt-1 h-4 w-4 accent-[#247A5B]" />
-                        <span className="flex-1">
-                          <span className="flex flex-wrap items-center justify-between gap-1.5 text-[14px] font-semibold text-rk-forest">{tr("River-flow stations", "নদী-প্রবাহ স্টেশন")} {kindBadge("model-input")}</span>
-                          <span className="block text-[13px] text-rk-muted">{tr("9 river sites; modelled daily flow compared with its usual level. Not gauge water levels.", "৯টি নদী-বিন্দু; স্বাভাবিকের তুলনায় মডেলের দৈনিক প্রবাহ। গেজের পানির উচ্চতা নয়।")}</span>
-                          {showStations && (
-                            <span className="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-1">
-                              {(Object.keys(STATION_STATUS) as (keyof typeof STATION_STATUS)[]).map((k) => (
-                                <span key={k} className="flex items-center gap-1.5 text-[12px] text-rk-ink">
-                                  <span aria-hidden="true" className="h-3 w-3 rounded-full border-2 border-rk-forest" style={{ background: STATION_STATUS[k].color }} />
-                                  {bn ? STATION_STATUS[k].bn : STATION_STATUS[k].en}
-                                </span>
-                              ))}
-                            </span>
-                          )}
-                          {showStations && !stations && !stationError && <span className="mt-1 flex items-center gap-1.5 text-[12px] text-rk-muted"><Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />{tr("Loading stations…", "স্টেশন লোড হচ্ছে…")}</span>}
-                          {stationError && <span className="mt-1 block text-[12px] text-rk-danger">{tr("Stations could not be loaded.", "স্টেশন লোড করা যায়নি।")}</span>}
-                        </span>
-                      </label>
-                      <label className="flex cursor-pointer items-start gap-2.5 rounded-lg px-2.5 py-2 hover:bg-rk-secondary">
-                        <input type="checkbox" checked={showRivers} onChange={(e) => setShowRivers(e.target.checked)} className="mt-1 h-4 w-4 accent-[#247A5B]" />
-                        <span className="flex-1">
-                          <span className="flex items-center gap-2 text-[14px] font-semibold text-rk-forest"><span aria-hidden="true" className="inline-block h-0.5 w-5 rounded bg-[#4F8FA3]" /> {tr("Rivers", "নদী")}</span>
-                          <span className="block text-[13px] text-rk-muted">{tr("314 named rivers by size, smaller ones as you zoom in (OpenStreetMap). Context only, not a flood layer.", "আকার অনুযায়ী ৩১৪টি নামযুক্ত নদী; কাছে গেলে ছোটগুলো (OpenStreetMap)। শুধু প্রসঙ্গ, বন্যার স্তর নয়।")}</span>
-                        </span>
-                      </label>
-                    </>
-                  )}
-                  {g === "geography" && (
-                    <>
-                      <label className="flex cursor-pointer items-start gap-2.5 rounded-lg px-2.5 py-2 hover:bg-rk-secondary">
-                        <input type="checkbox" checked={showTerrain} onChange={(e) => setShowTerrain(e.target.checked)} className="mt-1 h-4 w-4 accent-[#247A5B]" />
-                        <span className="flex-1">
-                          <span className="flex flex-wrap items-center justify-between gap-1.5 text-[14px] font-semibold text-rk-forest">{tr("Terrain and elevation", "ভূপ্রকৃতি ও উচ্চতা")} {kindBadge("reference")}</span>
-                          <span className="block text-[13px] text-rk-muted">{tr("Ground height with hill shading (Copernicus DEM, 90 m). Off by default so flood colours stay clear.", "ছায়াসহ ভূমির উচ্চতা (Copernicus DEM, ৯০ মি)।")}</span>
-                          {showTerrain && <span className="mt-2 block">{TerrainLegend()}</span>}
-                        </span>
-                      </label>
-                      <label className="flex cursor-pointer items-start gap-2.5 rounded-lg px-2.5 py-2 hover:bg-rk-secondary">
-                        <input type="checkbox" checked={showPlaces} onChange={(e) => setShowPlaces(e.target.checked)} className="mt-1 h-4 w-4 accent-[#247A5B]" />
-                        <span className="flex-1">
-                          <span className="text-[14px] font-semibold text-rk-forest">{tr("District and division headquarters", "জেলা ও বিভাগীয় সদর")}</span>
-                          <span className="block text-[13px] text-rk-muted">{tr("Official headquarters points (BBS/OCHA COD-AB). Names show when zoomed in.", "সরকারি সদরের অবস্থান (BBS/OCHA)। কাছে গেলে নাম দেখায়।")}</span>
-                        </span>
-                      </label>
-                      <label className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] text-rk-ink hover:bg-rk-secondary">
-                        <input type="checkbox" checked={showFill} onChange={(e) => setShowFill(e.target.checked)} className="h-4 w-4 accent-[#247A5B]" />
-                        {tr("Colour the districts by the data layer", "ডেটা-স্তর অনুযায়ী জেলায় রঙ দিন")}
-                      </label>
-                      <div className="flex items-center gap-2 px-2.5 py-1.5 text-[13px] text-rk-ink" role="radiogroup" aria-label={tr("Base map", "ভিত্তি মানচিত্র")}>
-                        <span className="text-rk-muted">{tr("Base map", "ভিত্তি মানচিত্র")}:</span>
-                        {(["streets", "plain"] as const).map((b) => (
-                          <label key={b} className={`cursor-pointer rounded-lg border px-2.5 py-1 ${basemap === b ? "border-rk-brand bg-rk-brand-soft font-semibold" : "border-rk-line"}`}>
-                            <input type="radio" name="rk-basemap" className="sr-only" checked={basemap === b} onChange={() => setBasemap(b)} />
-                            {b === "streets" ? tr("Street map", "রাস্তার মানচিত্র") : tr("Plain (less data)", "সাধারণ (কম ডেটা)")}
-                          </label>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                  {g === "impact" && (
-                    <label className="flex cursor-pointer items-start gap-2.5 rounded-lg px-2.5 py-2 hover:bg-rk-secondary">
-                      <input type="checkbox" checked={showFacilities} onChange={(e) => setShowFacilities(e.target.checked)} className="mt-1 h-4 w-4 accent-[#247A5B]" />
-                      <span className="flex-1">
-                        <span className="flex flex-wrap items-center justify-between gap-1.5 text-[14px] font-semibold text-rk-forest">{tr("Facilities and their flood record", "স্থাপনা ও তাদের বন্যার রেকর্ড")} {kindBadge("historical")}</span>
-                        <span className="block text-[13px] text-rk-muted">{tr("Hospitals, clinics, shelters and schools of the selected district (OpenStreetMap snapshot). Coloured by each one's own record — not current damage.", "নির্বাচিত জেলার হাসপাতাল, ক্লিনিক, আশ্রয়কেন্দ্র ও স্কুল। প্রতিটির নিজের রেকর্ড অনুযায়ী রঙ — বর্তমান ক্ষতি নয়।")}</span>
-                        <span className="mt-1.5 grid gap-1 text-[12px] text-rk-ink">
-                          <span className="flex items-center gap-1.5"><span aria-hidden="true" className="h-3 w-3 rounded-full border border-rk-forest bg-[#1F5F8B]" />{tr("Flood water seen there before (satellite)", "আগে বন্যার পানি দেখা গেছে")}</span>
-                          <span className="flex items-center gap-1.5"><span aria-hidden="true" className="h-3 w-3 rounded-full border border-rk-forest bg-[#B87955]" />{tr("In the modelled 100-year flood zone", "মডেলের ১০০ বছরের বন্যা এলাকায়")}</span>
-                          <span className="flex items-center gap-1.5"><span aria-hidden="true" className="h-3 w-3 rounded-full border border-rk-forest bg-white" />{tr("No flood record there", "বন্যার রেকর্ড নেই")}</span>
-                        </span>
-                        {!sel.district && <span className="mt-1 block text-[12px] text-rk-muted">{tr("Choose a district to see them.", "দেখতে একটি জেলা বেছে নিন।")}</span>}
-                      </span>
-                    </label>
-                  )}
-                  {missing.map((u) => (
-                    <div key={u.label.en} className="rounded-lg border border-dashed border-rk-line px-2.5 py-1.5" aria-disabled="true">
-                      <span className="flex items-center justify-between gap-2 text-[13px] font-semibold text-rk-muted">
-                        {bn ? u.label.bn : u.label.en}
-                        <span className="shrink-0 whitespace-nowrap rounded-full bg-rk-secondary px-2 py-0.5 text-[11px] font-semibold">{tr("Not available", "নেই")}</span>
-                      </span>
-                      <span className="block text-[12px] text-rk-muted">{bn ? u.why.bn : u.why.en}</span>
-                    </div>
-                  ))}
-                </div>
-              </details>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="lg:hidden rounded-xl border border-rk-line bg-rk-surface p-3">
-        {Legend({ compact: true })}
-      </div>
-
-      {/* Point Check: other ways to choose a spot */}
+      {/* Check a spot */}
       <div className="rounded-xl border border-rk-line bg-rk-surface p-3">
         <h2 className="text-[13px] font-bold text-rk-forest flex items-center gap-1.5">
           <MapPin className="w-4 h-4 text-rk-brand" aria-hidden="true" /> {tr("Check a spot", "একটি জায়গা যাচাই")}
         </h2>
-        <p className="mt-1 text-[13px] text-rk-muted">{tr("Choose a district, then tap the exact place on the map — or:", "একটি জেলা বেছে নিয়ে মানচিত্রে নির্দিষ্ট জায়গায় চাপ দিন — অথবা:")}</p>
         <button type="button" onClick={useMyLocation} disabled={locating} className="mt-2 h-11 w-full rounded-xl border border-rk-line font-semibold text-rk-forest inline-flex items-center justify-center gap-2 hover:bg-rk-secondary">
           {locating ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Crosshair className="w-4 h-4" aria-hidden="true" />}
           {tr("Use my location", "আমার অবস্থান ব্যবহার করুন")}
         </button>
         <details className="mt-2">
-          <summary className="cursor-pointer text-[13px] font-semibold text-rk-muted">{tr("Enter coordinates (advanced)", "স্থানাঙ্ক লিখুন (উন্নত)")}</summary>
+          <summary className="cursor-pointer text-[13px] font-semibold text-rk-muted">{tr("Enter coordinates", "স্থানাঙ্ক লিখুন")}</summary>
           <form onSubmit={submitCoords} className="mt-2 flex gap-2">
             <label htmlFor="rk-coords" className="sr-only">{tr("Latitude, longitude", "অক্ষাংশ, দ্রাঘিমাংশ")}</label>
             <input id="rk-coords" value={coordText} onChange={(e) => setCoordText(e.target.value)} placeholder="24.85, 91.14" inputMode="decimal" className="h-11 flex-1 min-w-0 rounded-xl border border-rk-line px-3 font-mono text-[15px]" aria-describedby={coordError ? "rk-coords-err" : undefined} />
@@ -1899,292 +2119,303 @@ export const FloodMapExplorer: React.FC<Props> = ({ lang, targetDate, onChangeTa
           {coordError && <p id="rk-coords-err" className="mt-1 text-[13px] text-rk-danger" role="alert">{coordError}</p>}
         </details>
       </div>
-
-      {/* Model information (real metadata from GET /predictions/model) */}
-      <details className="rounded-xl border border-rk-line bg-rk-surface px-3 py-2.5">
-        <summary className="cursor-pointer text-[13px] font-bold text-rk-forest flex items-center gap-1.5">
-          <BrainCircuit className="w-4 h-4 text-rk-brand" aria-hidden="true" /> {tr("About the forecast model", "পূর্বাভাস মডেল সম্পর্কে")}
-        </summary>
-        {!modelInfo ? (
-          <p className="mt-2 text-[13px] text-rk-muted">{tr("Model details are not available right now.", "মডেলের বিবরণ এখন পাওয়া যাচ্ছে না।")}</p>
-        ) : (
-          <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-[13px]">
-            <dt className="text-rk-muted">{tr("Model", "মডেল")}</dt>
-            <dd className="font-mono text-rk-ink break-all">{modelInfo.model_version || modelInfo.version}</dd>
-            {modelInfo.algorithm && (<><dt className="text-rk-muted">{tr("Method", "পদ্ধতি")}</dt><dd className="text-rk-ink">{modelInfo.algorithm}</dd></>)}
-            {modelInfo.trained_on && (<><dt className="text-rk-muted">{tr("Trained", "প্রশিক্ষণ")}</dt><dd className="font-mono text-rk-ink">{modelInfo.trained_on}</dd></>)}
-            {modelInfo.what_is_predicted && (<><dt className="text-rk-muted">{tr("Predicts", "অনুমান করে")}</dt><dd className="text-rk-ink">{modelInfo.what_is_predicted}</dd></>)}
-            {modelInfo.issue_time && (<><dt className="text-rk-muted">{tr("Issued", "তৈরি")}</dt><dd className="text-rk-ink">{modelInfo.issue_time}</dd></>)}
-            <dt className="text-rk-muted">{tr("Horizon", "সময়সীমা")}</dt>
-            <dd className="text-rk-ink">{tr("One day (the forecast day). No hourly forecasts.", "এক দিন (পূর্বাভাসের দিন)। ঘণ্টাভিত্তিক নয়।")}</dd>
-            <dt className="text-rk-muted">{tr("Area", "এলাকা")}</dt>
-            <dd className="text-rk-ink">{tr(`One value per district; ${modelInfo.supported_pcodes?.length ?? 56} of 64 districts.`, `প্রতি জেলায় একটি মান; ৬৪টির মধ্যে ${n(modelInfo.supported_pcodes?.length ?? 56)}টি জেলা।`)}</dd>
-            {modelInfo.test_results?.model?.at_alert && (
-              <>
-                <dt className="text-rk-muted">{tr("Tested", "যাচাই")}</dt>
-                <dd className="text-rk-ink">
-                  {tr(
-                    `On 2023–2024 (unseen): of districts on Alert, ${Math.round(modelInfo.test_results.model.at_alert.precision * 100)} % flooded; Watch caught ${Math.round(modelInfo.test_results.model.at_watch.recall * 100)} % of floods.`,
-                    `২০২৩–২০২৪ এ (প্রশিক্ষণে না-দেখা বছর): সতর্কতা স্তরের জেলার ${n(Math.round(modelInfo.test_results.model.at_alert.precision * 100))}% এ বন্যা হয়েছে; নজরদারি স্তর ${n(Math.round(modelInfo.test_results.model.at_watch.recall * 100))}% বন্যা ধরেছে।`
-                  )}
-                </dd>
-              </>
-            )}
-          </dl>
-        )}
-        {modelInfo?.input_importance && (() => {
-          const imp = modelInfo.input_importance as Record<string, number>;
-          const groups = [
-            { en: "Recent satellite flooding", bn: "সাম্প্রতিক স্যাটেলাইটে দেখা বন্যা", keys: ["last_flooded_share", "max_flooded_share_14d", "days_since_last_observation"] },
-            { en: "Rain", bn: "বৃষ্টি", keys: ["rain_1d", "rain_3d", "rain_7d", "rain_14d", "rain_30d"] },
-            { en: "River flow and distance", bn: "নদীর প্রবাহ ও দূরত্ব", keys: ["river_log_discharge", "river_change_3d", "river_vs_30d_mean", "river_distance_km"] },
-            { en: "Season (month)", bn: "ঋতু (মাস)", keys: ["month"] },
-            { en: "Flood hazard zone", bn: "বন্যা-ঝুঁকি এলাকা", keys: ["hazard_share_10yr", "hazard_share_100yr"] },
-          ]
-            .map((g) => ({ ...g, share: g.keys.reduce((a, k) => a + (imp[k] || 0), 0) }))
-            .sort((a, b) => b.share - a.share);
-          return (
-            <div className="mt-3">
-              <h4 className="text-[12px] font-bold text-rk-forest">{tr("What the model relies on most", "মডেল কীসের ওপর বেশি নির্ভর করে")}</h4>
-              <ul className="mt-1.5 space-y-1.5">
-                {groups.map((g) => (
-                  <li key={g.en} className="text-[12px] text-rk-ink">
-                    <span className="flex justify-between"><span>{bn ? g.bn : g.en}</span><span className="font-mono">{n(Math.round(g.share * 100))} %</span></span>
-                    <span className="mt-0.5 block h-1.5 rounded-full bg-rk-secondary" aria-hidden="true">
-                      <span className="block h-full rounded-full bg-rk-brand" style={{ width: `${Math.round(g.share * 100)}%` }} />
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-1.5 text-[11px] text-rk-muted">{tr("Share of the model's learning (training gain) by input group, across all districts. It is not the reason for one district's value.", "ইনপুট-গোষ্ঠী অনুযায়ী মডেলের শেখার অংশ (training gain), সব জেলা মিলিয়ে। এটি কোনো এক জেলার মানের কারণ নয়।")}</p>
-            </div>
-          );
-        })()}
-        {modelInfo?.limitations && (
-          <ul className="mt-2 list-disc pl-4 space-y-1 text-xs text-rk-muted">
-            {modelInfo.limitations.map((l: string) => <li key={l}>{l}</li>)}
-          </ul>
-        )}
-      </details>
     </div>
   );
 
-  const placeTitle = current ? placeName(current, bn) : tr("Bangladesh", "বাংলাদেশ");
+  const layersContent = (
+    <div className="space-y-3">
+      {/* Only flood, weather and water groups */}
+      {(["flood", "weather", "water"] as LayerGroup[]).map((g) => {
+        const radios = LAYERS.filter((L) => L.group === g);
+        const missing = UNAVAILABLE_LAYERS.filter((u) => u.group === g);
+        const activeHere = radios.some((L) => L.id === layerId);
+        return (
+          <details key={g} open={g === "flood" || activeHere || g === "water"} className="rounded-xl border border-rk-line bg-rk-surface">
+            <summary className="cursor-pointer list-none px-3 py-2.5 flex items-center justify-between text-[13px] font-bold text-rk-forest">
+              <span>{bn ? GROUP_LABEL[g].bn : GROUP_LABEL[g].en}</span>
+              <ChevronDown className="w-4 h-4 text-rk-muted" aria-hidden="true" />
+            </summary>
+            <div className="px-2 pb-2 space-y-1">
+              {radios.map((L) => {
+                const v = sel.district ? L.value(sel.district.pcode, data, bn) : null;
+                const badge = v ? alertBadge(v.cls) : null;
+                return (
+                  <label key={L.id} className={`flex cursor-pointer items-start gap-2.5 rounded-xl border px-3 py-2.5 ${layerId === L.id ? "border-rk-brand bg-rk-brand-soft" : "border-transparent hover:bg-rk-secondary"}`}>
+                    <input type="radio" name="rk-layer" value={L.id} checked={layerId === L.id} onChange={() => setLayerId(L.id)} className="mt-1 accent-[#247A5B]" />
+                    <span className="flex-1 min-w-0">
+                      <span className="flex flex-wrap items-center gap-1.5">
+                        <span className="text-[14px] font-semibold text-rk-forest">{bn ? L.label.bn : L.label.en}</span>
+                        {badge}
+                      </span>
+                      {v && <span className="mt-0.5 flex items-center gap-1.5 text-[13px] text-rk-muted"><span aria-hidden="true" className={`h-2.5 w-2.5 shrink-0 rounded-sm border ${isNodata(L, v.cls) ? "border-dashed" : "border-black/10"}`} style={{ background: classColor(L, v.cls) }} />{bn ? v.text.bn : v.text.en}</span>}
+                    </span>
+                  </label>
+                );
+              })}
+              {g === "water" && (
+                <>
+                  <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-transparent px-3 py-2 hover:bg-rk-secondary">
+                    <input type="checkbox" checked={showStations} onChange={(e) => { setShowStations(e.target.checked); if (!e.target.checked) setSelStation(null); }} className="h-4 w-4 accent-[#247A5B]" />
+                    <span className="text-[14px] font-semibold text-rk-forest">{tr("River-flow stations", "নদী-প্রবাহ স্টেশন")}</span>
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-transparent px-3 py-2 hover:bg-rk-secondary">
+                    <input type="checkbox" checked={showRivers} onChange={(e) => setShowRivers(e.target.checked)} className="h-4 w-4 accent-[#247A5B]" />
+                    <span className="flex items-center gap-2 text-[14px] font-semibold text-rk-forest"><span aria-hidden="true" className="inline-block h-0.5 w-5 rounded bg-[#4F8FA3]" /> {tr("Rivers", "নদী")}</span>
+                  </label>
+                </>
+              )}
+              {missing.map((u) => (
+                <div key={u.label.en} className="rounded-lg border border-dashed border-rk-line px-3 py-1.5" aria-disabled="true">
+                  <span className="flex items-center justify-between gap-2 text-[13px] font-semibold text-rk-muted">
+                    {bn ? u.label.bn : u.label.en}
+                    <span className="shrink-0 rounded-full bg-rk-secondary px-2 py-0.5 text-[11px] font-semibold">{tr("Not available", "নেই")}</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </details>
+        );
+      })}
+    </div>
+  );
 
   return (
-    <div className="rk-map-explorer relative grid lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-4 lg:h-[calc(100vh-96px)] lg:min-h-[620px]">
-      {/* MAP */}
-      <div className="relative h-[calc(100svh-150px)] min-h-[440px] lg:h-full overflow-hidden rounded-2xl border border-rk-line bg-rk-page">
-        {/* MapLibre's CSS makes its container position:relative, so it sits inside a positioned box. */}
-        <div className="absolute inset-0">
-          <div ref={containerRef} className="h-full w-full" role="region" aria-label={tr("Interactive flood map of Bangladesh", "বাংলাদেশের ইন্টারঅ্যাকটিভ বন্যা মানচিত্র")} />
-        </div>
-        {!ready && !mapError && (
-          <div className="absolute inset-0 flex items-center justify-center bg-rk-page/80" role="status">
-            <Loader2 className="w-5 h-5 animate-spin text-rk-brand mr-2" aria-hidden="true" /> <span className="text-sm text-rk-muted">{tr("Loading the map of Bangladesh…", "বাংলাদেশের মানচিত্র লোড হচ্ছে…")}</span>
-          </div>
-        )}
-        {mapError && (
-          <div className="absolute inset-0 flex items-center justify-center p-6 text-center" role="alert">
-            <p className="max-w-sm text-sm text-rk-ink">{tr("The interactive map could not start on this device", "এই ডিভাইসে মানচিত্র চালু হয়নি")} ({mapError}). {tr("The district list on this page still works.", "এই পাতার জেলার তালিকা তবুও কাজ করে।")}</p>
-          </div>
-        )}
-
-        {/* Search (Bangladesh places only) */}
-        <div className="absolute left-3 right-14 top-3 sm:right-auto sm:w-[340px] z-10">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 w-4 h-4 text-rk-muted" aria-hidden="true" />
-            <input
-              type="search"
-              role="combobox"
-              aria-expanded={searchOpen && results.length > 0}
-              aria-controls="rk-map-search-list"
-              aria-autocomplete="list"
-              aria-activedescendant={searchOpen && results[activeResult] ? `rk-res-${resultKey(results[activeResult])}` : undefined}
-              aria-label={tr("Search a division, district, upazila or river station", "বিভাগ, জেলা, উপজেলা বা নদী-স্টেশন খুঁজুন")}
-              placeholder={tr("Search a place or river station", "জায়গা বা নদী-স্টেশন খুঁজুন")}
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                setSearchOpen(true);
-                setActiveResult(0);
-              }}
-              onFocus={() => setSearchOpen(true)}
-              onBlur={() => window.setTimeout(() => setSearchOpen(false), 150)}
-              onKeyDown={(e) => {
-                if (e.key === "ArrowDown") { e.preventDefault(); setActiveResult((i) => Math.min(i + 1, results.length - 1)); }
-                else if (e.key === "ArrowUp") { e.preventDefault(); setActiveResult((i) => Math.max(i - 1, 0)); }
-                else if (e.key === "Enter" && results[activeResult]) { e.preventDefault(); chooseResult(results[activeResult]); }
-                else if (e.key === "Escape") { setQuery(""); setSearchOpen(false); }
-              }}
-              className="h-12 w-full rounded-xl border border-rk-line bg-rk-surface/95 pl-9 pr-3 text-[16px] text-rk-ink shadow-[var(--rk-shadow-float)] backdrop-blur focus:outline-none focus-visible:ring-2 focus-visible:ring-rk-brand"
-            />
-          </div>
-          {searchOpen && query.trim().length >= 2 && (
-            <ul id="rk-map-search-list" role="listbox" className="mt-1.5 max-h-[50vh] overflow-auto rounded-xl border border-rk-line bg-rk-surface p-1 shadow-[var(--rk-shadow-float)]">
-              {results.length === 0 && <li className="px-3 py-2 text-[14px] text-rk-muted">{tr("No division, district, upazila or river station of Bangladesh by that name.", "এই নামে বাংলাদেশের কোনো বিভাগ, জেলা, উপজেলা বা নদী-স্টেশন নেই।")}</li>}
-              {results.map((res, i) => (
-                <li key={resultKey(res)} id={`rk-res-${resultKey(res)}`} role="option" aria-selected={i === activeResult}>
-                  <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => chooseResult(res)} className={`w-full rounded-lg px-3 py-2 text-left ${i === activeResult ? "bg-rk-brand-soft" : "hover:bg-rk-secondary"}`}>
-                    {res.type === "place" ? (
-                      <>
-                        <span className="block text-[15px] font-semibold text-rk-forest">{placeName(res.p, bn)}</span>
-                        <span className="block text-xs text-rk-muted">
-                          {bn ? LEVEL_LABEL[res.p.level].bn : LEVEL_LABEL[res.p.level].en}
-                          {res.p.district ? ` · ${placeName({ level: 2, pcode: res.p.district_pcode!, name: res.p.district }, bn)}` : ""}
-                          {res.p.division && res.p.level > 1 ? ` · ${placeName({ level: 1, pcode: "", name: res.p.division }, bn)}` : ""}
-                        </span>
-                      </>
-                    ) : res.type === "river" ? (
-                      <>
-                        <span className="block text-[15px] font-semibold text-rk-forest">{bn ? res.r.bn || res.r.en : res.r.en || res.r.bn}</span>
-                        <span className="block text-xs text-rk-muted">{tr("River (map context)", "নদী (মানচিত্রের প্রসঙ্গ)")} · ~{n(res.r.km)} {tr("km", "কিমি")}</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="flex items-center gap-1.5 text-[15px] font-semibold text-rk-forest">
-                          <Activity className="w-4 h-4 text-rk-river-text" aria-hidden="true" /> {res.s.name}
-                        </span>
-                        <span className="block text-xs text-rk-muted">{tr("River-flow station (modelled)", "নদী-প্রবাহ স্টেশন (মডেল)")}{res.s.river ? ` · ${res.s.river}` : ""}</span>
-                      </>
-                    )}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        {/* Quick actions under the zoom buttons */}
-        <div className="absolute right-[10px] top-[124px] z-10 flex flex-col gap-1.5">
-          <button type="button" onClick={resetToBangladesh} title={tr("Show all of Bangladesh", "পুরো বাংলাদেশ")} aria-label={tr("Show all of Bangladesh", "পুরো বাংলাদেশ দেখুন")} className="h-[29px] w-[29px] rounded bg-white shadow-[0_0_0_2px_rgba(0,0,0,0.1)] inline-flex items-center justify-center text-rk-forest hover:bg-rk-secondary">
-            <Home className="w-4 h-4" aria-hidden="true" />
+    <div className="flex flex-col h-full">
+      {/* Tabs */}
+      <div className="flex gap-1 p-1 rounded-xl bg-rk-secondary mb-4">
+        {(["status", "layers"] as const).map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            onClick={() => setPanelTab(tab)}
+            className={`flex-1 h-9 rounded-lg text-[13px] font-semibold transition-colors ${panelTab === tab ? "bg-white text-rk-forest shadow-sm" : "text-rk-muted hover:text-rk-forest"}`}
+          >
+            {bn ? TAB_LABELS[tab].bn : TAB_LABELS[tab].en}
           </button>
-          <button type="button" onClick={useMyLocation} disabled={locating} title={tr("Check my location", "আমার অবস্থান যাচাই")} aria-label={tr("Check my location", "আমার অবস্থান যাচাই")} className="h-[29px] w-[29px] rounded bg-white shadow-[0_0_0_2px_rgba(0,0,0,0.1)] inline-flex items-center justify-center text-rk-forest hover:bg-rk-secondary">
-            {locating ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Crosshair className="w-4 h-4" aria-hidden="true" />}
-          </button>
-        </div>
-
-        {/* Desktop legend on the map */}
-        <div className="hidden lg:block absolute left-3 bottom-3 z-10 w-[290px] rounded-xl border border-rk-line bg-rk-surface/95 shadow-[var(--rk-shadow-float)] backdrop-blur">
-          <button type="button" onClick={() => setLegendOpen((v) => !v)} aria-expanded={legendOpen} className="w-full flex items-center justify-between px-3 py-2 text-[12px] font-semibold text-rk-muted">
-            {tr("Legend", "রঙের অর্থ")}
-            {legendOpen ? <ChevronDown className="w-4 h-4" aria-hidden="true" /> : <ChevronUp className="w-4 h-4" aria-hidden="true" />}
-          </button>
-          {legendOpen && <div className="px-3 pb-3 -mt-1">{Legend({})}</div>}
-        </div>
-
-        {picking && (
-          <div className="absolute left-1/2 top-[68px] z-20 w-[min(92%,520px)] -translate-x-1/2 rounded-2xl border border-rk-brand/40 bg-rk-surface px-4 py-3 shadow-[var(--rk-shadow-float)]" role="region" aria-label={tr("Check a place", "একটি জায়গা যাচাই")}>
-            <p className="flex items-center gap-2 text-[15px] font-bold text-rk-forest">
-              <MapPin className="w-4 h-4 text-rk-brand" aria-hidden="true" /> {tr("Tap the place you want to check", "যে জায়গাটি যাচাই করতে চান, মানচিত্রে সেখানে চাপুন")}
-            </p>
-            <p className="mt-0.5 text-[13px] text-rk-muted">{tr("You will see its flood record, modelled flood depth, the district forecast and nearby help. Or search a place above.", "আপনি দেখবেন সেখানকার বন্যার ইতিহাস, মডেলের গভীরতা, জেলার পূর্বাভাস ও কাছের সহায়তা। অথবা ওপরে জায়গা খুঁজুন।")}</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <button type="button" onClick={() => (setPicking(false), useMyLocation())} disabled={locating} className="h-10 px-3 rounded-lg bg-rk-brand text-white font-semibold inline-flex items-center gap-1.5 hover:bg-rk-brand-strong">
-                {locating ? <Loader2 className="w-4 h-4 motion-safe:animate-spin" aria-hidden="true" /> : <Crosshair className="w-4 h-4" aria-hidden="true" />} {tr("Use my location", "আমার অবস্থান ব্যবহার করুন")}
-              </button>
-              <button type="button" onClick={() => setPicking(false)} className="h-10 px-3 rounded-lg border border-rk-line font-semibold text-rk-forest hover:bg-rk-secondary">{tr("Cancel", "বাতিল")}</button>
-            </div>
-          </div>
-        )}
-
-        {notice && !picking && (
-          <div className="absolute left-1/2 top-[68px] z-20 -translate-x-1/2 max-w-[90%] rounded-xl bg-rk-forest px-4 py-2 text-[14px] text-white shadow-lg flex items-center gap-2" role="status">
-            <Info className="w-4 h-4 shrink-0" aria-hidden="true" /> {notice}
-            <button type="button" onClick={() => setNotice(null)} aria-label={tr("Dismiss", "বন্ধ")} className="ml-1 h-7 w-7 inline-flex items-center justify-center rounded hover:bg-white/10"><X className="w-4 h-4" aria-hidden="true" /></button>
-          </div>
-        )}
-
-        {/* PANEL — phones: bottom sheet over the map */}
-        <div className={`lg:hidden absolute inset-x-0 bottom-0 z-20 rounded-t-2xl border-t border-rk-line bg-rk-page shadow-[0_-8px_24px_rgb(23_61_50/0.12)] transition-[max-height] duration-300 ${sheetOpen ? "max-h-[62%]" : "max-h-[132px]"} flex flex-col`}>
-          <button type="button" onClick={() => setSheetOpen((v) => !v)} aria-expanded={sheetOpen} aria-controls="rk-sheet-body" className="w-full px-4 pt-2 pb-2 text-left">
-            <span aria-hidden="true" className="mx-auto mb-2 block h-1 w-10 rounded-full bg-rk-line" />
-            <span className="flex items-center gap-2">
-              <span className="flex-1 min-w-0">
-                <span className="block truncate text-[17px] font-extrabold text-rk-forest">{selStation ? stations?.find((x) => x.id === selStation)?.name ?? placeTitle : point && pointResult?.place?.label ? pointResult.place.label : placeTitle}</span>
-                <span className="block truncate text-[13px] text-rk-muted">{bn ? layer.label.bn : layer.label.en} · {dateLabel}</span>
-              </span>
-              {sheetOpen ? <ChevronDown className="w-5 h-5 text-rk-forest" aria-hidden="true" /> : <ChevronUp className="w-5 h-5 text-rk-forest" aria-hidden="true" />}
-              <span className="sr-only">{sheetOpen ? tr("Hide details", "বিবরণ লুকান") : tr("Show details", "বিবরণ দেখুন")}</span>
-            </span>
-          </button>
-          <div className="px-4 pb-2">{Breadcrumbs()}</div>
-          <div id="rk-sheet-body" className={`overflow-y-auto px-4 pb-6 ${sheetOpen ? "" : "hidden"}`}>
-            {!isDesktop && PanelBody()}
-          </div>
-        </div>
+        ))}
       </div>
-
-      {/* PANEL — desktop side panel */}
-      <aside className="hidden lg:flex flex-col min-h-0 rounded-2xl border border-rk-line bg-rk-page" aria-label={tr("Map details", "মানচিত্রের বিবরণ")}>
-        <div className="border-b border-rk-line px-4 pt-4 pb-3">
-          <p className="font-mono text-[11px] uppercase tracking-wider text-rk-brand-strong">{tr("Flood intelligence map", "বন্যা তথ্য মানচিত্র")}</p>
-          <h1 className="mt-0.5 text-2xl font-extrabold text-rk-forest">{placeTitle}</h1>
-          <div className="mt-1.5">{Breadcrumbs()}</div>
-        </div>
-        <div className="flex-1 overflow-y-auto px-4 py-4">
-          {isDesktop && PanelBody()}
-        </div>
-        <p className="border-t border-rk-line px-4 py-2 text-[11px] text-rk-muted">{GEO_ATTRIBUTION} · © OpenStreetMap contributors</p>
-      </aside>
+      {panelTab === "status" ? statusContent : layersContent}
     </div>
   );
+};
 
-  function Breadcrumbs() {
-    // At country level the title already says "Bangladesh"; a one-item trail would only repeat it.
-    if (crumbs.length <= 1 && !point && !selStation && !selRiver) {
-      return (
-        <p className="text-[13px] text-rk-muted">
-          {tr("Choose a division or district, search a place, or tap the map for a Point Check.", "একটি বিভাগ বা জেলা বেছে নিন, স্থান খুঁজুন, অথবা কোনো জায়গা যাচাই করতে মানচিত্রে চাপুন।")}
-        </p>
-      );
-    }
-    return (
-      <nav aria-label={tr("Where you are on the map", "মানচিত্রে আপনি কোথায়")} className="flex flex-wrap items-center gap-x-1 gap-y-1 text-[13px]">
-        {(sel.division || point || selStation || selRiver) && (
-          <button type="button" onClick={goBack} className="mr-1 h-8 px-2 rounded-lg border border-rk-line bg-rk-surface inline-flex items-center gap-1 font-semibold text-rk-forest hover:bg-rk-secondary">
-            <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" /> {tr("Back", "পেছনে")}
-          </button>
-        )}
-        <ol className="flex flex-wrap items-center gap-x-1">
-          {crumbs.map((c, i) => {
-            const last = i === crumbs.length - 1 && !point && !selStation && !selRiver;
-            return (
-              <li key={c.pcode} className="inline-flex items-center gap-1">
-                {i > 0 && <span aria-hidden="true" className="text-rk-muted">/</span>}
-                {last ? (
-                  <span aria-current="location" className="font-bold text-rk-forest">{placeName(c, bn)}</span>
-                ) : (
-                  <button type="button" onClick={() => (c.level === 0 ? resetToBangladesh() : selectPlace(c))} className="font-semibold text-rk-brand-strong underline underline-offset-2 decoration-rk-brand/30 hover:decoration-rk-brand">
-                    {placeName(c, bn)}
-                  </button>
-                )}
+const placeTitle = current ? placeName(current, bn) : tr("Bangladesh", "বাংলাদেশ");
+
+return (
+  <div className="rk-map-explorer relative grid lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-4 lg:h-[calc(100vh-96px)] lg:min-h-[620px]">
+    {/* MAP */}
+    <div className="relative h-[calc(100svh-150px)] min-h-[440px] lg:h-full overflow-hidden rounded-2xl border border-rk-line bg-rk-page">
+      {/* MapLibre's CSS makes its container position:relative, so it sits inside a positioned box. */}
+      <div className="absolute inset-0">
+        <div ref={containerRef} className="h-full w-full" role="region" aria-label={tr("Interactive flood map of Bangladesh", "বাংলাদেশের ইন্টারঅ্যাকটিভ বন্যা মানচিত্র")} />
+      </div>
+      {!ready && !mapError && (
+        <div className="absolute inset-0 flex items-center justify-center bg-rk-page/80" role="status">
+          <Loader2 className="w-5 h-5 animate-spin text-rk-brand mr-2" aria-hidden="true" /> <span className="text-sm text-rk-muted">{tr("Loading the map of Bangladesh…", "বাংলাদেশের মানচিত্র লোড হচ্ছে…")}</span>
+        </div>
+      )}
+      {mapError && (
+        <div className="absolute inset-0 flex items-center justify-center p-6 text-center" role="alert">
+          <p className="max-w-sm text-sm text-rk-ink">{tr("The interactive map could not start on this device", "এই ডিভাইসে মানচিত্র চালু হয়নি")} ({mapError}). {tr("The district list on this page still works.", "এই পাতার জেলার তালিকা তবুও কাজ করে।")}</p>
+        </div>
+      )}
+
+      {/* Search (Bangladesh places only) */}
+      <div className="absolute left-3 right-14 top-3 sm:right-auto sm:w-[340px] z-10">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 w-4 h-4 text-rk-muted" aria-hidden="true" />
+          <input
+            type="search"
+            role="combobox"
+            aria-expanded={searchOpen && results.length > 0}
+            aria-controls="rk-map-search-list"
+            aria-autocomplete="list"
+            aria-activedescendant={searchOpen && results[activeResult] ? `rk-res-${resultKey(results[activeResult])}` : undefined}
+            aria-label={tr("Search a division, district, upazila or river station", "বিভাগ, জেলা, উপজেলা বা নদী-স্টেশন খুঁজুন")}
+            placeholder={tr("Search a place or river station", "জায়গা বা নদী-স্টেশন খুঁজুন")}
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setSearchOpen(true);
+              setActiveResult(0);
+            }}
+            onFocus={() => setSearchOpen(true)}
+            onBlur={() => window.setTimeout(() => setSearchOpen(false), 150)}
+            onKeyDown={(e) => {
+              if (e.key === "ArrowDown") { e.preventDefault(); setActiveResult((i) => Math.min(i + 1, results.length - 1)); }
+              else if (e.key === "ArrowUp") { e.preventDefault(); setActiveResult((i) => Math.max(i - 1, 0)); }
+              else if (e.key === "Enter" && results[activeResult]) { e.preventDefault(); chooseResult(results[activeResult]); }
+              else if (e.key === "Escape") { setQuery(""); setSearchOpen(false); }
+            }}
+            className="h-12 w-full rounded-xl border border-rk-line bg-rk-surface/95 pl-9 pr-3 text-[16px] text-rk-ink shadow-[var(--rk-shadow-float)] backdrop-blur focus:outline-none focus-visible:ring-2 focus-visible:ring-rk-brand"
+          />
+        </div>
+        {searchOpen && query.trim().length >= 2 && (
+          <ul id="rk-map-search-list" role="listbox" className="mt-1.5 max-h-[50vh] overflow-auto rounded-xl border border-rk-line bg-rk-surface p-1 shadow-[var(--rk-shadow-float)]">
+            {results.length === 0 && <li className="px-3 py-2 text-[14px] text-rk-muted">{tr("No division, district, upazila or river station of Bangladesh by that name.", "এই নামে বাংলাদেশের কোনো বিভাগ, জেলা, উপজেলা বা নদী-স্টেশন নেই।")}</li>}
+            {results.map((res, i) => (
+              <li key={resultKey(res)} id={`rk-res-${resultKey(res)}`} role="option" aria-selected={i === activeResult}>
+                <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => chooseResult(res)} className={`w-full rounded-lg px-3 py-2 text-left ${i === activeResult ? "bg-rk-brand-soft" : "hover:bg-rk-secondary"}`}>
+                  {res.type === "place" ? (
+                    <>
+                      <span className="block text-[15px] font-semibold text-rk-forest">{placeName(res.p, bn)}</span>
+                      <span className="block text-xs text-rk-muted">
+                        {bn ? LEVEL_LABEL[res.p.level].bn : LEVEL_LABEL[res.p.level].en}
+                        {res.p.district ? ` · ${placeName({ level: 2, pcode: res.p.district_pcode!, name: res.p.district }, bn)}` : ""}
+                        {res.p.division && res.p.level > 1 ? ` · ${placeName({ level: 1, pcode: "", name: res.p.division }, bn)}` : ""}
+                      </span>
+                    </>
+                  ) : res.type === "river" ? (
+                    <>
+                      <span className="block text-[15px] font-semibold text-rk-forest">{bn ? res.r.bn || res.r.en : res.r.en || res.r.bn}</span>
+                      <span className="block text-xs text-rk-muted">{tr("River (map context)", "নদী (মানচিত্রের প্রসঙ্গ)")} · ~{n(res.r.km)} {tr("km", "কিমি")}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="flex items-center gap-1.5 text-[15px] font-semibold text-rk-forest">
+                        <Activity className="w-4 h-4 text-rk-river-text" aria-hidden="true" /> {res.s.name}
+                      </span>
+                      <span className="block text-xs text-rk-muted">{tr("River-flow station (modelled)", "নদী-প্রবাহ স্টেশন (মডেল)")}{res.s.river ? ` · ${res.s.river}` : ""}</span>
+                    </>
+                  )}
+                </button>
               </li>
-            );
-          })}
-          {point && (
-            <li className="inline-flex items-center gap-1">
-              <span aria-hidden="true" className="text-rk-muted">/</span>
-              <span aria-current="location" className="font-bold text-rk-forest">{tr("Point", "বিন্দু")}</span>
-            </li>
-          )}
-          {selRiver && !selStation && (
-            <li className="inline-flex items-center gap-1">
-              <span aria-hidden="true" className="text-rk-muted">/</span>
-              <span aria-current="location" className="font-bold text-rk-forest">{tr("River", "নদী")}</span>
-            </li>
-          )}
-          {selStation && (
-            <li className="inline-flex items-center gap-1">
-              <span aria-hidden="true" className="text-rk-muted">/</span>
-              <span aria-current="location" className="font-bold text-rk-forest">{tr("River station", "নদী-স্টেশন")}</span>
-            </li>
-          )}
-        </ol>
-      </nav>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* Quick actions under the zoom buttons */}
+      <div className="absolute right-[10px] top-[124px] z-10 flex flex-col gap-1.5">
+        <button type="button" onClick={resetToBangladesh} title={tr("Show all of Bangladesh", "পুরো বাংলাদেশ")} aria-label={tr("Show all of Bangladesh", "পুরো বাংলাদেশ দেখুন")} className="h-[29px] w-[29px] rounded bg-white shadow-[0_0_0_2px_rgba(0,0,0,0.1)] inline-flex items-center justify-center text-rk-forest hover:bg-rk-secondary">
+          <Home className="w-4 h-4" aria-hidden="true" />
+        </button>
+        <button type="button" onClick={useMyLocation} disabled={locating} title={tr("Check my location", "আমার অবস্থান যাচাই")} aria-label={tr("Check my location", "আমার অবস্থান যাচাই")} className="h-[29px] w-[29px] rounded bg-white shadow-[0_0_0_2px_rgba(0,0,0,0.1)] inline-flex items-center justify-center text-rk-forest hover:bg-rk-secondary">
+          {locating ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Crosshair className="w-4 h-4" aria-hidden="true" />}
+        </button>
+      </div>
+
+      {/* Safety status overlay — bottom-left of the map */}
+      <div className="hidden lg:block absolute left-3 bottom-3 z-10 w-[290px] rounded-2xl border border-rk-line bg-rk-surface/95 shadow-[var(--rk-shadow-float)] backdrop-blur overflow-hidden">
+        <LegendSafetyCard />
+        {layerId !== "forecast" && (
+          <div className="border-t border-rk-line px-3 py-2.5 bg-rk-page/50">
+            {Legend({ compact: true })}
+          </div>
+        )}
+      </div>
+
+      {picking && (
+        <div className="absolute left-1/2 top-[68px] z-20 w-[min(92%,520px)] -translate-x-1/2 rounded-2xl border border-rk-brand/40 bg-rk-surface px-4 py-3 shadow-[var(--rk-shadow-float)]" role="region" aria-label={tr("Check a place", "একটি জায়গা যাচাই")}>
+          <p className="flex items-center gap-2 text-[15px] font-bold text-rk-forest">
+            <MapPin className="w-4 h-4 text-rk-brand" aria-hidden="true" /> {tr("Tap the place you want to check", "যে জায়গাটি যাচাই করতে চান, মানচিত্রে সেখানে চাপুন")}
+          </p>
+          <p className="mt-0.5 text-[13px] text-rk-muted">{tr("You will see its flood record, modelled flood depth, the district forecast and nearby help. Or search a place above.", "আপনি দেখবেন সেখানকার বন্যার ইতিহাস, মডেলের গভীরতা, জেলার পূর্বাভাস ও কাছের সহায়তা। অথবা ওপরে জায়গা খুঁজুন।")}</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button type="button" onClick={() => (setPicking(false), useMyLocation())} disabled={locating} className="h-10 px-3 rounded-lg bg-rk-brand text-white font-semibold inline-flex items-center gap-1.5 hover:bg-rk-brand-strong">
+              {locating ? <Loader2 className="w-4 h-4 motion-safe:animate-spin" aria-hidden="true" /> : <Crosshair className="w-4 h-4" aria-hidden="true" />} {tr("Use my location", "আমার অবস্থান ব্যবহার করুন")}
+            </button>
+            <button type="button" onClick={() => setPicking(false)} className="h-10 px-3 rounded-lg border border-rk-line font-semibold text-rk-forest hover:bg-rk-secondary">{tr("Cancel", "বাতিল")}</button>
+          </div>
+        </div>
+      )}
+
+      {notice && !picking && (
+        <div className="absolute left-1/2 top-[68px] z-20 -translate-x-1/2 max-w-[90%] rounded-xl bg-rk-forest px-4 py-2 text-[14px] text-white shadow-lg flex items-center gap-2" role="status">
+          <Info className="w-4 h-4 shrink-0" aria-hidden="true" /> {notice}
+          <button type="button" onClick={() => setNotice(null)} aria-label={tr("Dismiss", "বন্ধ")} className="ml-1 h-7 w-7 inline-flex items-center justify-center rounded hover:bg-white/10"><X className="w-4 h-4" aria-hidden="true" /></button>
+        </div>
+      )}
+
+      {/* PANEL — phones: bottom sheet over the map */}
+      <div className={`lg:hidden absolute inset-x-0 bottom-0 z-20 rounded-t-2xl border-t border-rk-line bg-rk-page shadow-[0_-8px_24px_rgb(23_61_50/0.12)] transition-[max-height] duration-300 ${sheetOpen ? "max-h-[62%]" : "max-h-[132px]"} flex flex-col`}>
+        <button type="button" onClick={() => setSheetOpen((v) => !v)} aria-expanded={sheetOpen} aria-controls="rk-sheet-body" className="w-full px-4 pt-2 pb-2 text-left">
+          <span aria-hidden="true" className="mx-auto mb-2 block h-1 w-10 rounded-full bg-rk-line" />
+          <span className="flex items-center gap-2">
+            <span className="flex-1 min-w-0">
+              <span className="block truncate text-[17px] font-extrabold text-rk-forest">{selStation ? stations?.find((x) => x.id === selStation)?.name ?? placeTitle : point && pointResult?.place?.label ? pointResult.place.label : placeTitle}</span>
+              <span className="block truncate text-[13px] text-rk-muted">{bn ? layer.label.bn : layer.label.en} · {dateLabel}</span>
+            </span>
+            {sheetOpen ? <ChevronDown className="w-5 h-5 text-rk-forest" aria-hidden="true" /> : <ChevronUp className="w-5 h-5 text-rk-forest" aria-hidden="true" />}
+            <span className="sr-only">{sheetOpen ? tr("Hide details", "বিবরণ লুকান") : tr("Show details", "বিবরণ দেখুন")}</span>
+          </span>
+        </button>
+        <div className="px-4 pb-2">{Breadcrumbs()}</div>
+        <div id="rk-sheet-body" className={`overflow-y-auto px-4 pb-6 ${sheetOpen ? "" : "hidden"}`}>
+          {!isDesktop && PanelBody()}
+        </div>
+      </div>
+    </div>
+
+    {/* PANEL — desktop side panel */}
+    <aside className="hidden lg:flex flex-col min-h-0 rounded-2xl border border-rk-line bg-rk-page" aria-label={tr("Map details", "মানচিত্রের বিবরণ")}>
+      <div className="border-b border-rk-line px-4 pt-4 pb-3">
+        <p className="font-mono text-[11px] uppercase tracking-wider text-rk-brand-strong">{tr("Flood intelligence map", "বন্যা তথ্য মানচিত্র")}</p>
+        <h1 className="mt-0.5 text-2xl font-extrabold text-rk-forest">{placeTitle}</h1>
+        <div className="mt-1.5">{Breadcrumbs()}</div>
+      </div>
+      <div className="flex-1 overflow-y-auto px-4 py-4">
+        {isDesktop && PanelBody()}
+      </div>
+      <p className="border-t border-rk-line px-4 py-2 text-[11px] text-rk-muted">{GEO_ATTRIBUTION} · © OpenStreetMap contributors</p>
+    </aside>
+  </div>
+);
+
+function Breadcrumbs() {
+  // At country level the title already says "Bangladesh"; a one-item trail would only repeat it.
+  if (crumbs.length <= 1 && !point && !selStation && !selRiver) {
+    return (
+      <p className="text-[13px] text-rk-muted">
+        {tr("Choose a division or district, search a place, or tap the map for a Point Check.", "একটি বিভাগ বা জেলা বেছে নিন, স্থান খুঁজুন, অথবা কোনো জায়গা যাচাই করতে মানচিত্রে চাপুন।")}
+      </p>
     );
   }
+  return (
+    <nav aria-label={tr("Where you are on the map", "মানচিত্রে আপনি কোথায়")} className="flex flex-wrap items-center gap-x-1 gap-y-1 text-[13px]">
+      {(sel.division || point || selStation || selRiver) && (
+        <button type="button" onClick={goBack} className="mr-1 h-8 px-2 rounded-lg border border-rk-line bg-rk-surface inline-flex items-center gap-1 font-semibold text-rk-forest hover:bg-rk-secondary">
+          <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" /> {tr("Back", "পেছনে")}
+        </button>
+      )}
+      <ol className="flex flex-wrap items-center gap-x-1">
+        {crumbs.map((c, i) => {
+          const last = i === crumbs.length - 1 && !point && !selStation && !selRiver;
+          return (
+            <li key={c.pcode} className="inline-flex items-center gap-1">
+              {i > 0 && <span aria-hidden="true" className="text-rk-muted">/</span>}
+              {last ? (
+                <span aria-current="location" className="font-bold text-rk-forest">{placeName(c, bn)}</span>
+              ) : (
+                <button type="button" onClick={() => (c.level === 0 ? resetToBangladesh() : selectPlace(c))} className="font-semibold text-rk-brand-strong underline underline-offset-2 decoration-rk-brand/30 hover:decoration-rk-brand">
+                  {placeName(c, bn)}
+                </button>
+              )}
+            </li>
+          );
+        })}
+        {point && (
+          <li className="inline-flex items-center gap-1">
+            <span aria-hidden="true" className="text-rk-muted">/</span>
+            <span aria-current="location" className="font-bold text-rk-forest">{tr("Point", "বিন্দু")}</span>
+          </li>
+        )}
+        {selRiver && !selStation && (
+          <li className="inline-flex items-center gap-1">
+            <span aria-hidden="true" className="text-rk-muted">/</span>
+            <span aria-current="location" className="font-bold text-rk-forest">{tr("River", "নদী")}</span>
+          </li>
+        )}
+        {selStation && (
+          <li className="inline-flex items-center gap-1">
+            <span aria-hidden="true" className="text-rk-muted">/</span>
+            <span aria-current="location" className="font-bold text-rk-forest">{tr("River station", "নদী-স্টেশন")}</span>
+          </li>
+        )}
+      </ol>
+    </nav>
+  );
+}
 };
 
 export default FloodMapExplorer;
