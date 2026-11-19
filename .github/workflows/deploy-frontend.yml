@@ -1,9 +1,9 @@
-name: Deploy Frontend to Vercel
+name: Deploy Previous Production to Vercel
 
 on:
   push:
     branches:
-      - production
+      - previous-production
     paths:
       - 'Frontend/**'
       - '.github/workflows/deploy-frontend.yml'
@@ -23,5 +23,6 @@ jobs:
         working-directory: Frontend
         env:
           VERCEL_ORG_ID: team_8i8eMSPvyI8iDiL6GpHBN1Ym
-          VERCEL_PROJECT_ID: prj_QpHYw136pwBZ71OtU5FfvtXe5oFR
-        run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
+        run: |
+          rm -rf ../.git
+          vercel deploy --prod --project=rokkha-previous --create-if-missing --token=${{ secrets.VERCEL_TOKEN }} --yes
