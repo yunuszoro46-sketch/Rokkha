@@ -1,7 +1,20 @@
 "use client";
 
 import React, { useEffect, useId, useRef, useState } from "react";
-import { ChevronDown, FileText, LifeBuoy, ListChecks, LogIn, LogOut, Menu, ShieldCheck, Siren, X } from "lucide-react";
+import {
+  ChevronDown,
+  FileText,
+  House,
+  LifeBuoy,
+  ListChecks,
+  LogIn,
+  LogOut,
+  Menu,
+  Phone,
+  ShieldCheck,
+  Siren,
+  X,
+} from "lucide-react";
 import type { CitizenView } from "../SideDashboard";
 import type { AccountUser } from "../../services/auth";
 import type { Need } from "../../services/rescue";
@@ -20,44 +33,161 @@ export type NavAction =
   | { kind: "anchor"; view: CitizenView; id: string }
   | { kind: "external"; href: string };
 
-type NavSection = { id: string; label: Words; action: NavAction };
+type DropdownItem = {
+  id: string;
+  label: Words;
+  desc?: Words;
+  icon?: React.ElementType;
+  action: NavAction;
+};
+
+type NavSection = {
+  id: string;
+  label: Words;
+  action?: NavAction;
+  children?: DropdownItem[];
+};
 
 function sectionsFor(): NavSection[] {
   return [
     { id: "home", label: { en: "Home", bn: "হোম" }, action: { kind: "view", view: "overview" } },
-
-
     { id: "safety", label: { en: "Check your safety", bn: "আপনার এলাকার ঝুঁকি দেখুন" }, action: { kind: "view", view: "map" } },
-
     { id: "warnings", label: { en: "Current warnings", bn: "বর্তমান সতর্কতা" }, action: { kind: "view", view: "alerts" } },
-
-
+    {
+      id: "aid",
+      label: { en: "Emergency Aid", bn: "জরুরি সহায়তা" },
+      children: [
+        {
+          id: "shelters",
+          label: { en: "Nearest Shelters", bn: "নিকটস্থ আশ্রয়কেন্দ্র" },
+          desc: { en: "Find safe flood shelters & clinics", bn: "কাছের আশ্রয়কেন্দ্র ও ক্লিনিক খুঁজুন" },
+          icon: House,
+          action: { kind: "view", view: "shelters" },
+        },
+        {
+          id: "contacts",
+          label: { en: "Emergency Contacts", bn: "জরুরি যোগাযোগ নম্বর" },
+          desc: { en: "Verified rescue and relief helplines", bn: "যাচাই করা উদ্ধার ও ত্রাণ হটলাইন" },
+          icon: Phone,
+          action: { kind: "view", view: "contacts" },
+        },
+      ],
+    },
     { id: "intelligence", label: { en: "AI performance", bn: "এআই পূর্বাভাসের নির্ভুলতা" }, action: { kind: "view", view: "intelligence" } },
     { id: "rescuers", label: { en: "For rescuers", bn: "উদ্ধারকর্মীদের জন্য" }, action: { kind: "view", view: "login" } },
   ];
 }
 
 function isActive(section: NavSection, view: CitizenView): boolean {
-  return section.action.kind === "view" && section.action.view === view;
+  if (section.action?.kind === "view" && section.action.view === view) return true;
+  if (section.children) {
+    return section.children.some((child) => child.action.kind === "view" && child.action.view === view);
+  }
+  return false;
 }
 
-/** A direct-link item in the desktop navigation. */
+/** A direct-link item or dropdown in the desktop navigation. */
 const DesktopSection: React.FC<{
   section: NavSection;
   active: boolean;
+  activeView: CitizenView;
   isBn: boolean;
   onAction: (a: NavAction) => void;
-}> = ({ section, active, isBn, onAction }) => {
+}> = ({ section, active, activeView, isBn, onAction }) => {
   const tr = (w: Words) => (isBn ? w.bn : w.en);
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => ref.current && !ref.current.contains(e.target as Node) && setOpen(false);
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("mousedown", onDown);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("mousedown", onDown);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
   // Bangla letters run narrower than Latin at the same size: a step up keeps both menus equally readable.
-  const base = `h-10 ${isBn ? "px-3.5" : "px-2.5 2xl:px-3"} rounded-lg inline-flex items-center ${isBn ? "text-[16.5px]" : "text-[15px]"} font-semibold whitespace-nowrap transition-colors ${
+  const base = `h-10 ${isBn ? "px-3" : "px-2.5 2xl:px-3"} rounded-lg inline-flex items-center gap-1.5 ${
+    isBn ? "text-[16px]" : "text-[15px]"
+  } font-semibold whitespace-nowrap transition-colors ${
     active ? "text-rk-brand-strong bg-rk-brand-soft" : "text-rk-forest hover:bg-rk-secondary"
   }`;
 
+  if (!section.children) {
+    return (
+      <button
+        type="button"
+        className={base}
+        aria-current={active ? "page" : undefined}
+        onClick={() => section.action && onAction(section.action)}
+      >
+        {tr(section.label)}
+      </button>
+    );
+  }
+
   return (
-    <button type="button" className={base} aria-current={active ? "page" : undefined} onClick={() => onAction(section.action)}>
-      {tr(section.label)}
-    </button>
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        className={base}
+        aria-expanded={open}
+        aria-haspopup="true"
+        onClick={() => setOpen((v) => !v)}
+      >
+        <span>{tr(section.label)}</span>
+        <ChevronDown
+          className={`w-3.5 h-3.5 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          aria-hidden="true"
+        />
+      </button>
+
+      {open && (
+        <div className="absolute left-0 top-full mt-2 w-72 rounded-2xl border border-rk-line bg-rk-surface p-2 shadow-[var(--rk-shadow-float)] z-[900] animate-in fade-in slide-in-from-top-1 duration-150">
+          <div className="space-y-1">
+            {section.children.map((child) => {
+              const isChildActive = child.action.kind === "view" && child.action.view === activeView;
+              const Icon = child.icon;
+              return (
+                <button
+                  key={child.id}
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    onAction(child.action);
+                  }}
+                  className={`flex w-full items-start gap-3 rounded-xl p-2.5 text-left transition-colors ${
+                    isChildActive
+                      ? "bg-rk-brand-soft text-rk-brand-strong"
+                      : "hover:bg-rk-secondary text-rk-forest"
+                  }`}
+                >
+                  {Icon && (
+                    <span
+                      className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                        isChildActive ? "bg-rk-brand text-white" : "bg-rk-secondary text-rk-forest"
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[14px] font-bold leading-snug">{tr(child.label)}</p>
+                    {child.desc && (
+                      <p className="text-[12px] text-rk-muted leading-tight mt-0.5">{tr(child.desc)}</p>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -223,6 +353,7 @@ export const SiteHeader: React.FC<{
               key={section.id}
               section={section}
               active={isActive(section, activeView)}
+              activeView={activeView}
               isBn={isBn}
               onAction={run}
             />
@@ -277,18 +408,56 @@ export const SiteHeader: React.FC<{
       {menuOpen && (
         <nav id="rk-mobile-menu" aria-label={isBn ? "প্রধান" : "Main"} className="xl:hidden border-t border-rk-line bg-rk-surface max-h-[calc(100vh-8rem)] overflow-y-auto">
           <ul className="max-w-[1240px] mx-auto px-4 py-3 space-y-1">
-            {sections.map((section) => (
-              <li key={section.id}>
-                <button
-                  type="button"
-                  aria-current={isActive(section, activeView) ? "page" : undefined}
-                  onClick={() => run(section.action)}
-                  className="w-full h-12 text-left px-3 rounded-lg text-base font-bold text-rk-ink hover:bg-rk-secondary"
-                >
-                  {tr(section.label)}
-                </button>
-              </li>
-            ))}
+            {sections.map((section) => {
+              if (!section.children) {
+                return (
+                  <li key={section.id}>
+                    <button
+                      type="button"
+                      aria-current={isActive(section, activeView) ? "page" : undefined}
+                      onClick={() => section.action && run(section.action)}
+                      className={`w-full h-12 text-left px-3 rounded-lg text-base font-bold transition-colors ${
+                        isActive(section, activeView)
+                          ? "text-rk-brand-strong bg-rk-brand-soft"
+                          : "text-rk-ink hover:bg-rk-secondary"
+                      }`}
+                    >
+                      {tr(section.label)}
+                    </button>
+                  </li>
+                );
+              }
+
+              // Dropdown Section in Mobile Menu
+              return (
+                <li key={section.id} className="pt-2 border-t border-rk-line/60">
+                  <p className="px-3 py-1 font-mono text-xs font-bold uppercase tracking-wider text-rk-muted">
+                    {tr(section.label)}
+                  </p>
+                  <div className="mt-1 space-y-1 pl-1">
+                    {section.children.map((child) => {
+                      const isChildActive = child.action.kind === "view" && child.action.view === activeView;
+                      const Icon = child.icon;
+                      return (
+                        <button
+                          key={child.id}
+                          type="button"
+                          onClick={() => run(child.action)}
+                          className={`flex w-full items-center gap-3 h-11 px-3 rounded-lg text-[15px] font-semibold transition-colors ${
+                            isChildActive
+                              ? "text-rk-brand-strong bg-rk-brand-soft"
+                              : "text-rk-ink hover:bg-rk-secondary"
+                          }`}
+                        >
+                          {Icon && <Icon className="w-4 h-4 text-rk-brand shrink-0" />}
+                          <span>{tr(child.label)}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </li>
+              );
+            })}
             <li className="pt-2 border-t border-rk-line">
               {user ? (
                 <div aria-label={isBn ? "অ্যাকাউন্ট" : "Account"} role="group">
