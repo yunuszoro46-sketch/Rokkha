@@ -2,12 +2,9 @@
 
 import React, { useState } from "react";
 import { AlertItem } from "../types/api";
-import { formatProbability } from "../lib/utils";
 import { Card, CardHeader, CardContent } from "./ui/card";
 import {
   Info,
-  Landmark,
-  Users,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -82,49 +79,49 @@ export const AlertsFeed: React.FC<AlertsFeedProps> = ({
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-        {onChangeTargetDate && (
-          <div className="flex items-center gap-1.5 rounded-xl border border-rk-line bg-rk-surface px-1.5 py-1" role="group" aria-label={lang === "bn" ? "পূর্বাভাসের দিন" : "Forecast day"}>
-            <button type="button" onClick={() => onChangeTargetDate(addDays(targetDate, -1))} className="h-9 w-9 rounded-lg inline-flex items-center justify-center text-rk-forest hover:bg-rk-secondary transition-colors" aria-label={lang === "bn" ? "আগের দিন" : "Previous day"}>
-              <ChevronLeft className="w-4 h-4" aria-hidden="true" />
-            </button>
-            <span className="flex-1 min-w-[8.5rem] text-center text-sm font-bold text-rk-forest whitespace-nowrap" aria-live="polite">
-              {displayDate}{targetDate === today ? (lang === "bn" ? " · আজ" : " · today") : ""}
-            </span>
-            <button type="button" disabled={targetDate >= today} onClick={() => onChangeTargetDate(addDays(targetDate, 1))} className="h-9 w-9 rounded-lg inline-flex items-center justify-center text-rk-forest hover:bg-rk-secondary transition-colors disabled:opacity-40 disabled:hover:bg-transparent" aria-label={lang === "bn" ? "পরের দিন" : "Next day"}>
-              <ChevronRight className="w-4 h-4" aria-hidden="true" />
-            </button>
-          </div>
-        )}
+          {onChangeTargetDate && (
+            <div className="flex items-center gap-1.5 rounded-xl border border-rk-line bg-rk-surface px-1.5 py-1" role="group" aria-label={lang === "bn" ? "পূর্বাভাসের দিন" : "Forecast day"}>
+              <button type="button" onClick={() => onChangeTargetDate(addDays(targetDate, -1))} className="h-9 w-9 rounded-lg inline-flex items-center justify-center text-rk-forest hover:bg-rk-secondary transition-colors" aria-label={lang === "bn" ? "আগের দিন" : "Previous day"}>
+                <ChevronLeft className="w-4 h-4" aria-hidden="true" />
+              </button>
+              <span className="flex-1 min-w-[8.5rem] text-center text-sm font-bold text-rk-forest whitespace-nowrap" aria-live="polite">
+                {displayDate}{targetDate === today ? (lang === "bn" ? " · আজ" : " · today") : ""}
+              </span>
+              <button type="button" disabled={targetDate >= today} onClick={() => onChangeTargetDate(addDays(targetDate, 1))} className="h-9 w-9 rounded-lg inline-flex items-center justify-center text-rk-forest hover:bg-rk-secondary transition-colors disabled:opacity-40 disabled:hover:bg-transparent" aria-label={lang === "bn" ? "পরের দিন" : "Next day"}>
+                <ChevronRight className="w-4 h-4" aria-hidden="true" />
+              </button>
+            </div>
+          )}
 
-        {/* 64 District Dropdown */}
-        <div className="relative w-full sm:w-auto">
-          <label htmlFor="rk-alert-district" className="sr-only">{lang === "bn" ? "জেলা বেছে নিন" : "Show one district"}</label>
-          <select
-            id="rk-alert-district"
-            value={selectedDistrictFilter}
-            onChange={(e) => {
-              const val = e.target.value;
-              setSelectedDistrictFilter(val);
-              if (val) {
-                const d = ALL_DISTRICTS.find((item) => item.pcode === val);
-                if (d) onSelectDistrict(d.pcode, d.name);
-              }
-            }}
-            className="appearance-none bg-rk-page hover:bg-rk-secondary border border-rk-line text-rk-ink font-semibold text-sm rounded-xl pl-3.5 pr-9 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rk-brand cursor-pointer w-full sm:w-auto sm:min-w-[210px] h-11 transition-colors"
-          >
-            <option value="">
-              {lang === "bn" ? "সকল জেলা (৬৪টি)" : "All districts (64)"}
-            </option>
-            {ALL_DISTRICTS.map((d) => (
-              <option key={d.pcode} value={d.pcode}>
-                {lang === "bn"
-                  ? `${DISTRICTS_BN[d.pcode] || d.name} (${DIVISIONS_BN[d.division] || d.division})`
-                  : `${d.name} (${d.division})`}
+          {/* 64 District Dropdown */}
+          <div className="relative w-full sm:w-auto">
+            <label htmlFor="rk-alert-district" className="sr-only">{lang === "bn" ? "জেলা বেছে নিন" : "Show one district"}</label>
+            <select
+              id="rk-alert-district"
+              value={selectedDistrictFilter}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSelectedDistrictFilter(val);
+                if (val) {
+                  const d = ALL_DISTRICTS.find((item) => item.pcode === val);
+                  if (d) onSelectDistrict(d.pcode, d.name);
+                }
+              }}
+              className="appearance-none bg-rk-page hover:bg-rk-secondary border border-rk-line text-rk-ink font-semibold text-sm rounded-xl pl-3.5 pr-9 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rk-brand cursor-pointer w-full sm:w-auto sm:min-w-[210px] h-11 transition-colors"
+            >
+              <option value="">
+                {lang === "bn" ? "সকল জেলা (৬৪টি)" : "All districts (64)"}
               </option>
-            ))}
-          </select>
-          <ChevronDown className="w-4 h-4 text-rk-muted absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
-        </div>
+              {ALL_DISTRICTS.map((d) => (
+                <option key={d.pcode} value={d.pcode}>
+                  {lang === "bn"
+                    ? `${DISTRICTS_BN[d.pcode] || d.name} (${DIVISIONS_BN[d.division] || d.division})`
+                    : `${d.name} (${d.division})`}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="w-4 h-4 text-rk-muted absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
+          </div>
         </div>
       </CardHeader>
 
@@ -145,13 +142,8 @@ export const AlertsFeed: React.FC<AlertsFeedProps> = ({
 
               const likelihoodText =
                 alert.probability >= 0.95
-                  ? lang === "bn" ? "৯৫% এর বেশি" : "More than 95%"
+                  ? lang === "bn" ? "৯৫% এর বেশি" : ">95%"
                   : `${percentNum}%`;
-
-              // Counts of places registered in the backend for this district; 0 is a real answer.
-              const assetsCount = alert.assets_at_risk?.total?.assets ?? 0;
-              const occupancy = alert.assets_at_risk?.total?.occupancy ?? 0;
-              const peopleServed = occupancy.toLocaleString();
 
               return (
                 <button
@@ -160,74 +152,44 @@ export const AlertsFeed: React.FC<AlertsFeedProps> = ({
                   onClick={() =>
                     onSelectDistrict(alert.district.pcode, alert.district.name)
                   }
-                  className={`text-left w-full bg-white rounded-2xl p-4 sm:p-6 border border-rk-line shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-md hover:-translate-y-px motion-reduce:hover:translate-y-0 transition-[box-shadow,transform] duration-200 cursor-pointer flex flex-col justify-between gap-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rk-brand focus-visible:ring-offset-2 ${
-                    isAlert
+                  className={`text-left w-full bg-white rounded-2xl p-4 sm:p-5 border border-rk-line shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-md hover:-translate-y-px motion-reduce:hover:translate-y-0 transition-[box-shadow,transform] duration-200 cursor-pointer flex flex-col gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rk-brand focus-visible:ring-offset-2 ${isAlert
                       ? "border-l-[6px] border-l-rk-risk-alert"
                       : "border-l-[6px] border-l-rk-risk-watch"
-                  }`}
+                    }`}
                 >
-                  {/* Top Row: District Name + Badge on Left, Likelihood & Graph Chart on Right */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="space-y-1.5 flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-extrabold text-base sm:text-lg text-rk-forest truncate">
-                          {dName} {lang === "bn" ? "জেলা" : "District"}
-                        </span>
-                        {isAlert ? (
-                          <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-rk-danger-soft text-rk-danger border border-rk-danger-accent/40 uppercase tracking-wider shrink-0">
-                            {lang === "bn" ? "সতর্কতা" : "ALERT"}
-                          </span>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-rk-warning-soft text-rk-warning border border-rk-warning-accent/60 uppercase tracking-wider shrink-0">
-                            {lang === "bn" ? "নজরদারি" : "WATCH"}
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-xs text-rk-muted">
-                        {lang === "bn" ? "মডেলের বন্যা সম্ভাবনা" : "Model flood probability"}
-                      </div>
-                    </div>
-
-                    {/* Percentage Text & Linear Meter */}
-                    <div className="text-right flex flex-col items-end shrink-0">
-                      <div className="text-[13px] text-rk-muted font-semibold leading-none mb-1">
-                        {lang === "bn" ? "সম্ভাবনা" : "Likelihood"}
-                      </div>
-                      <div className="text-sm sm:text-base font-black text-rk-forest leading-none">
-                        {isBn ? toBnNum(likelihoodText) : likelihoodText}
-                      </div>
-                      {/* Mini Linear Graph Bar */}
-                      <div className="w-16 sm:w-20 h-1.5 bg-rk-secondary rounded-full overflow-hidden mt-1.5">
-                        <div
-                          className={`h-full rounded-full transition-all duration-500 ${
-                            isAlert
-                              ? "bg-gradient-to-r from-rk-danger-accent/70 to-rk-danger-accent"
-                              : "bg-gradient-to-r from-rk-warning-accent/70 to-rk-warning-accent"
-                          }`}
-                          style={{ width: `${Math.min(100, Math.max(8, alert.probability * 100))}%` }}
-                        />
-                      </div>
-                    </div>
+                  {/* District name + badge */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-extrabold text-base sm:text-lg text-rk-forest truncate">
+                      {dName}
+                    </span>
+                    {isAlert ? (
+                      <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-rk-danger-soft text-rk-danger border border-rk-danger-accent/40 uppercase tracking-wider shrink-0">
+                        {lang === "bn" ? "সতর্কতা" : "ALERT"}
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-rk-warning-soft text-rk-warning border border-rk-warning-accent/60 uppercase tracking-wider shrink-0">
+                        {lang === "bn" ? "নজরদারি" : "WATCH"}
+                      </span>
+                    )}
                   </div>
 
-                  {/* Bottom Row: Assets + Sheltered/Served with Icons */}
-                  <div className="flex flex-wrap items-center justify-between text-xs sm:text-[13px] text-rk-muted pt-3 border-t border-rk-line gap-2">
-                    <div className="flex items-center gap-1.5 font-medium">
-                      <Landmark size={14} className="text-rk-muted shrink-0" />
-                      <span>
-                        {isBn ? toBnNum(assetsCount) : assetsCount}{" "}
-                        {lang === "bn" ? "নিবন্ধিত স্থাপনা" : "registered facilities"}
+                  {/* Probability bar + percentage */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-xs text-rk-muted">
+                      <span>{lang === "bn" ? "বন্যার সম্ভাবনা" : "Flood probability"}</span>
+                      <span className="font-bold text-rk-forest">
+                        {isBn ? toBnNum(likelihoodText) : likelihoodText}
                       </span>
                     </div>
-                    {occupancy > 0 && (
-                      <div className="flex items-center gap-1.5 font-medium">
-                        <Users size={14} className="text-rk-muted shrink-0" />
-                        <span>
-                          {isBn ? toBnNum(peopleServed) : peopleServed}{" "}
-                          {lang === "bn" ? "জনের ধারণক্ষমতা" : "capacity"}
-                        </span>
-                      </div>
-                    )}
+                    <div className="w-full h-2 bg-rk-secondary rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${isAlert
+                            ? "bg-gradient-to-r from-rk-danger-accent/70 to-rk-danger-accent"
+                            : "bg-gradient-to-r from-rk-warning-accent/70 to-rk-warning-accent"
+                          }`}
+                        style={{ width: `${Math.min(100, Math.max(8, alert.probability * 100))}%` }}
+                      />
+                    </div>
                   </div>
                 </button>
               );
