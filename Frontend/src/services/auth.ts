@@ -139,10 +139,10 @@ export async function call<T>(path: string, init: RequestInit = {}, withToken = 
 
 type Session = { token: string; expires_at: string; user: AccountUser };
 
-export async function registerAccount(name: string, email: string, password: string): Promise<AccountUser> {
+export async function registerAccount(name: string, email: string, password: string, role: "user" | "rescuer" = "user"): Promise<AccountUser> {
   const session = await call<Session>(
     "/auth/register",
-    { method: "POST", body: JSON.stringify({ name, email, password }) },
+    { method: "POST", body: JSON.stringify({ name, email, password, role }) },
     false
   );
   setToken(session.token);
