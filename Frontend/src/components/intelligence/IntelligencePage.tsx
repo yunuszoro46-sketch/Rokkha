@@ -245,12 +245,6 @@ export const IntelligencePage: React.FC<Props> = ({ lang, onAction }) => {
               <h1 className="mt-2 text-2xl md:text-3xl font-extrabold text-rk-forest tracking-tight">
                 {tr("Model Architecture, Evaluation & Benchmarks", "মডেল কাঠামো, মূল্যায়ন ও বেঞ্চমার্ক")}
               </h1>
-              <p className="mt-1 text-sm text-rk-muted max-w-2xl">
-                {tr(
-                  "Interactive evaluation dashboard designed for hackathon judges: feature importance, leak-free validation, benchmark performance, and operational boundaries.",
-                  "বিচারক ও মূল্যায়কদের জন্য ইন্টারঅ্যাক্টিভ ড্যাশবোর্ড: ফিচার গুরুত্ব, ফাঁকিহীন ভ্যালিডেশন, বেঞ্চমার্ক এবং ব্যবহারিক সীমাবদ্ধতা।"
-                )}
-              </p>
             </div>
 
             <button
