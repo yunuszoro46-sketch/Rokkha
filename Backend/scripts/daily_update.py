@@ -8,8 +8,13 @@ Talks to the running backend over its own API, in this order:
     4. new satellite passes of this month and the last            (Copernicus GFM)
     5. POST /predictions for today (UTC)
     6. GET  /alerts      for today
+    7. river_forecast  river flow for today and the next 6 days       (GloFAS forecast, 9 river sites)
+    8. rain_forecast   hourly rain from 00:00 UTC for 4 days, so the next 72 h are covered (GFS, 64 district sites)
 
-About 235 Open-Meteo calls per day, far inside the free budget.
+Steps 7-8 feed the map (river charts, rain-forecast layer), not today's prediction, so they run after it and a
+failure there is reported but does not fail the update.
+
+About 310 Open-Meteo calls per day (235 + 9 + 64), far inside the free budget (10,000 a day).
 
 Step 4 runs scripts/build_gfm_labels.py (needs requirements-dev.txt) and
 rewrites data/labels/district_flood_observations.json; the backend notices the
@@ -42,6 +47,14 @@ RIVER_DAYS = 35
 RAIN_DAYS = 32
 ERA5_DELAY_DAYS = 6
 RECENT_DAYS = 7
+RIVER_FORECAST_DAYS = 7
+RAIN_FORECAST_DAYS = 4  # starts at 00:00 UTC; 4 days so the full 72 hours after a morning run are covered
+
+# Forecasts for the map. Best effort: they never block or undo today's predictions.
+FORECAST_STEPS = [
+    dict(kind="river_forecast", forecast_days=RIVER_FORECAST_DAYS),
+    dict(kind="rain_forecast", forecast_days=RAIN_FORECAST_DAYS),
+]
 
 
 class StepFailed(Exception):
@@ -145,11 +158,22 @@ def daily_update(client, today=None, wait_seconds=5, log=print, refresh_satellit
     for alert in alerts["alerts"]:
         log(f"{alert['level'].upper()}: {alert['message']}")
 
+    forecasts_refreshed = []
+
+    for body in FORECAST_STEPS:
+        try:
+            run = ingest(client, wait_seconds, **body)
+            log(f"{body['kind']}: {run['values_written']} values, {run['api_calls']:.0f} calls")
+            forecasts_refreshed.append(body["kind"])
+        except StepFailed as error:
+            log(f"{body['kind']} NOT refreshed ({error}); the map shows the last stored forecast or none")
+
     return {
         "target_date": today.isoformat(),
         "predicted": predictions["count_predicted"],
         "alerts": alerts["alerts"],
         "satellite_refreshed": satellite_refreshed,
+        "forecasts_refreshed": forecasts_refreshed,
     }
 
 

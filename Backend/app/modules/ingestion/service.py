@@ -21,14 +21,17 @@ from uuid import uuid4
 from app.core.config import settings
 from app.modules.ingestion import sources
 from app.modules.ingestion.repository import (
+    close_interrupted_runs,
     add_api_calls,
     api_calls_used,
     count_documents,
+    delete_old_forecasts,
     find_series,
     get_run,
     get_sites,
     get_sites_document,
     insert_run,
+    latest_forecast_values,
     latest_value,
     list_runs,
     update_run,
@@ -43,6 +46,8 @@ ERA5_DELAY_DAYS = 6
 
 HISTORY_KINDS = {"rain_history", "river_history"}
 FORECAST_KINDS = {"rain_forecast", "river_forecast"}
+# Rain-forecast fetches older than this are deleted after each new fetch.
+FORECAST_KEEP_DAYS = 3
 
 # Recent rain: the last days from GFS, for the days ERA5 has not delivered yet.
 RECENT_KINDS = {"rain_recent"}
@@ -153,6 +158,9 @@ async def start_run(
 ) -> dict:
 
     # One run at a time, so two runs cannot overspend the budget together.
+    # A run left "running" by a server that has since died does not count.
+    await close_interrupted_runs(_utc_now())
+
     for run in await list_runs(5):
         if run["status"] in ("queued", "running"):
             raise IngestionBusyError(f"Run {run['_id']} is still {run['status']}.")
@@ -244,7 +252,8 @@ def _daily_documents(kind, run_id, fetched_at, sites, results, field, value_name
                 "missing": value is None,
                 "unit": unit,
                 "statistic": statistic,
-                "is_forecast": kind == "river_forecast" and _midnight(day) > fetched_at,
+                # Today's daily mean is not over when it is fetched, so a forecast run's "today" is a forecast too.
+                "is_forecast": kind == "river_forecast" and _midnight(day) >= _midnight(fetched_at.date().isoformat()),
                 "source": SOURCE_LABELS[kind],
                 "grid_location": grid,
                 "fetched_at": fetched_at,
@@ -322,7 +331,13 @@ async def _forecast_rain_piece(run, sites, forecast_days):
                 "run_id": run["_id"],
             })
 
-    return await upsert_documents("rain_forecast_hourly", documents), calls
+    written = await upsert_documents("rain_forecast_hourly", documents)
+
+    # Keep only the last few days of fetches: each fetch is 24 values per site per day, and only the latest
+    # is shown. Older fetches are removed so the collection stays small (MongoDB free tier).
+    await delete_old_forecasts([s["site_id"] for s in sites], fetched_at - timedelta(days=FORECAST_KEEP_DAYS))
+
+    return written, calls
 
 
 async def _recent_rain_piece(run, sites, past_days):
@@ -484,6 +499,59 @@ async def river_series(site_id: str, start_date: date, end_date: date) -> dict:
     }, "date")
 
     return {"site": site, "count": len(values), "values": values, "attribution": sources.ATTRIBUTION}
+
+
+async def rain_forecast_summary(hours: int) -> dict:
+    """Every district's GFS rain total for the next `hours` hours of its latest fetch, in one answer.
+
+    Only hours after the fetch count (the run also returns earlier hours of the same day). Missing hours are
+    reported, not filled: `hours_covered` < `hours` means the total covers less than asked.
+    """
+
+    sites = list_sites("district")["sites"]
+    by_site = await latest_forecast_values([s["site_id"] for s in sites])
+    districts = []
+    newest = None
+
+    for site in sites:
+        found = by_site.get(site["site_id"])
+        if not found:
+            districts.append({"site_id": site["site_id"], "district_pcode": site.get("district_pcode"), "name": site["name"],
+                              "fetched_at": None, "total_mm": None, "hours_covered": 0, "window_start": None, "window_end": None})
+            continue
+        fetched_at, values = found
+        start = fetched_at
+        end = fetched_at + timedelta(hours=hours)
+        window = [v for v in values if start < v["valid_time"] <= end]
+        good = [v for v in window if not v["missing"] and v["precipitation_mm"] is not None]
+        newest = fetched_at if newest is None or fetched_at > newest else newest
+        districts.append({
+            "site_id": site["site_id"],
+            "district_pcode": site.get("district_pcode"),
+            "name": site["name"],
+            "fetched_at": fetched_at,
+            "total_mm": round(sum(v["precipitation_mm"] for v in good), 1) if good else None,
+            "hours_covered": len(good),
+            "window_start": window[0]["valid_time"] - timedelta(hours=1) if window else None,
+            "window_end": window[-1]["valid_time"] if window else None,
+        })
+
+    return {
+        "hours": hours,
+        "kind": "forecast",
+        "latest_fetched_at": newest,
+        "count": sum(d["total_mm"] is not None for d in districts),
+        "districts": districts,
+        "what": "Total forecast rain (mm) at each district's weather point over the next hours after the latest "
+                "fetch; hourly GFS values, the hour ending at each valid time.",
+        "source": SOURCE_LABELS["rain_forecast"],
+        "attribution": sources.ATTRIBUTION,
+        "limitations": [
+            "A weather-model forecast at one point per district, not an area average and not a rain-gauge reading.",
+            "GFS grid is about 13-25 km; local thunderstorms can be missed or misplaced.",
+            "Forecast rain is not a flood forecast; the flood model uses rain that has already fallen.",
+        ],
+    }
 
 
 async def latest_rain_forecast(site_id: str) -> dict:

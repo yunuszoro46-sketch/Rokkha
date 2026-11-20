@@ -89,8 +89,9 @@ from app.modules.ingestion.router import router as ingestion_router
 from app.modules.ingestion.repository import close_interrupted_runs
 from app.modules.prediction.router import router as prediction_router
 from app.modules.alerts.router import router as alerts_router
+from app.modules.admin.router import router as admin_center_router, public_router as announcements_router
 from app.modules.accounts.router import router as accounts_router, admin_router
-from app.modules.rescue.router import router as rescue_router
+from app.modules.rescue.router import router as rescue_router, teams_router
 
 
 @asynccontextmanager
@@ -192,6 +193,27 @@ async def read_only_guard(request: Request, call_next):
     return await call_next(request)
 
 
+# Standard browser protections on every answer (added after the guard, so its
+# 403 answers get them too): no guessing of content types, no showing the API
+# inside another site's frame, no leaking addresses to other sites, and HTTPS only.
+SECURITY_HEADERS = {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Content-Security-Policy": "frame-ancestors 'none'",
+    "Referrer-Policy": "no-referrer",
+    "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+}
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+
+    response = await call_next(request)
+    for name, value in SECURITY_HEADERS.items():
+        response.headers.setdefault(name, value)
+    return response
+
+
 # Let the frontend (running on another address) call this API from a browser.
 # (Added after the guard above, so it wraps it: a 403 still carries the CORS headers.)
 app.add_middleware(
@@ -242,7 +264,23 @@ app.include_router(
     prefix=settings.API_V1_PREFIX
 )
 
+# Admin Control Centre (permission-checked) and the public list of administrative announcements.
+app.include_router(
+    admin_center_router,
+    prefix=settings.API_V1_PREFIX
+)
+
+app.include_router(
+    announcements_router,
+    prefix=settings.API_V1_PREFIX
+)
+
 app.include_router(
     rescue_router,
+    prefix=settings.API_V1_PREFIX
+)
+
+app.include_router(
+    teams_router,
     prefix=settings.API_V1_PREFIX
 )

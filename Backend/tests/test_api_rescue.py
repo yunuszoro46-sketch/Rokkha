@@ -65,9 +65,10 @@ def test_anyone_can_send_a_request_and_gets_a_receipt(client):
 
     assert response.status_code == 201
     receipt = response.json()
-    assert receipt["status"] == "new"
+    assert receipt["status"] == "available"
     assert receipt["district"] == {"pcode": "BD6090", "name": "Sunamganj", "division": "Sylhet"}
-    assert receipt["history"][0]["status"] == "new"
+    assert receipt["history"][0] == {"event": "received", "status": "available", "at": receipt["received_at"],
+                                     "team": None, "reason": None}
     # The receipt holds no personal details: it may be shown on a shared screen.
     assert "contact_phone" not in receipt and "location" not in receipt
 
@@ -116,6 +117,26 @@ def test_too_many_new_requests_from_one_connection_are_refused(client):
     assert "999" in refused.json()["detail"]
 
 
+def test_a_faked_forwarded_address_does_not_skip_the_limit(client):
+
+    # Render keeps any X-Forwarded-For the visitor sends, so it must not count.
+    for i in range(service.MAX_NEW_PER_HOUR):
+        client.post(SOS, json=sos(), headers={"X-Forwarded-For": f"10.0.0.{i}"})
+
+    refused = client.post(SOS, json=sos(), headers={"X-Forwarded-For": "10.9.9.9"})
+
+    assert refused.status_code == 429
+
+
+def test_the_limit_counts_the_address_cloudflare_reports(client):
+
+    for _ in range(service.MAX_NEW_PER_HOUR):
+        client.post(SOS, json=sos(), headers={"CF-Connecting-IP": "203.0.113.1"})
+
+    assert client.post(SOS, json=sos(), headers={"CF-Connecting-IP": "203.0.113.1"}).status_code == 429
+    assert client.post(SOS, json=sos(), headers={"CF-Connecting-IP": "203.0.113.2"}).status_code == 201
+
+
 def test_a_retry_still_works_when_the_limit_is_reached(client):
 
     first = sos()
@@ -138,7 +159,7 @@ def test_sender_reads_the_status_with_their_key(client):
     status = client.get(f"{SOS}/status/{request['client_id']}")
 
     assert status.status_code == 200
-    assert status.json()["status"] == "new"
+    assert status.json()["status"] == "available"
     assert client.get(f"{SOS}/status/{uuid.uuid4()}").status_code == 404
 
 
@@ -186,7 +207,8 @@ def test_only_rescuers_and_admins_can_read_the_list(client):
 def test_rescuer_sees_what_is_needed_to_reach_the_person(client):
 
     client.post(SOS, json=sos())
-    rescuer = account(client, "rescuer@example.org", "rescuer")
+    # An admin sees contact details; a team only after accepting (tests/test_api_rescue_board.py).
+    rescuer = account(client, "admin@example.org", "admin")
 
     request = client.get(SOS, headers=rescuer).json()["requests"][0]
 
@@ -196,54 +218,7 @@ def test_rescuer_sees_what_is_needed_to_reach_the_person(client):
     assert request["from_account"] is False
 
 
-def test_list_shows_open_requests_and_can_be_filtered(client):
 
-    rescuer = account(client, "rescuer@example.org", "rescuer")
-    haor = client.post(SOS, json=sos()).json()
-    client.post(SOS, json=sos(location=DHAKA))
-    client.patch(f"{SOS}/{haor['id']}", json={"status": "resolved"}, headers=rescuer)
-
-    open_requests = client.get(SOS, headers=rescuer).json()
-    resolved = client.get(SOS, params={"status": "resolved"}, headers=rescuer).json()
-    in_dhaka = client.get(SOS, params={"district_pcode": "BD3026"}, headers=rescuer).json()
-
-    assert open_requests["count"] == 1
-    assert open_requests["by_status"] == {"new": 1, "resolved": 1}
-    assert [r["id"] for r in resolved["requests"]] == [haor["id"]]
-    assert in_dhaka["count"] == 1
-
-
-def test_status_moves_forward_and_the_sender_sees_it(client):
-
-    rescuer = account(client, "rescuer@example.org", "rescuer")
-    request = sos()
-    request_id = client.post(SOS, json=request).json()["id"]
-
-    for status in ("acknowledged", "team_sent"):
-        moved = client.patch(
-            f"{SOS}/{request_id}", headers=rescuer,
-            json={"status": status, "message_to_sender": "Boat leaving from Sunamganj ghat"},
-        )
-        assert moved.status_code == 200
-
-    seen = client.get(f"{SOS}/status/{request['client_id']}").json()
-    assert seen["status"] == "team_sent"
-    assert seen["message_to_sender"] == "Boat leaving from Sunamganj ghat"
-    assert [step["status"] for step in seen["history"]] == ["new", "acknowledged", "team_sent"]
-
-
-def test_status_never_moves_backwards(client):
-
-    rescuer = account(client, "rescuer@example.org", "rescuer")
-    request_id = client.post(SOS, json=sos()).json()["id"]
-    client.patch(f"{SOS}/{request_id}", json={"status": "team_sent"}, headers=rescuer)
-
-    back = client.patch(f"{SOS}/{request_id}", json={"status": "acknowledged"}, headers=rescuer)
-
-    assert back.status_code == 409
-
-    client.patch(f"{SOS}/{request_id}", json={"status": "resolved"}, headers=rescuer)
-    assert client.patch(f"{SOS}/{request_id}", json={"status": "cancelled"}, headers=rescuer).status_code == 409
 
 
 def test_a_normal_user_cannot_change_a_request(client):
@@ -251,10 +226,11 @@ def test_a_normal_user_cannot_change_a_request(client):
     request_id = client.post(SOS, json=sos()).json()["id"]
     user = account(client, "user@example.org")
 
-    assert client.patch(f"{SOS}/{request_id}", json={"status": "resolved"}, headers=user).status_code == 403
-    assert client.patch(f"{SOS}/{request_id}", json={"status": "resolved"}).status_code == 401
-    assert client.patch(f"{SOS}/no-such-id", json={"status": "resolved"},
-                        headers=account(client, "rescuer@example.org", "rescuer")).status_code == 404
+    assert client.post(f"{SOS}/{request_id}/accept", headers=user).status_code == 403
+    assert client.post(f"{SOS}/{request_id}/accept").status_code == 401
+    assert client.post(f"{SOS}/{request_id}/progress", json={"status": "en_route"}, headers=user).status_code == 403
+    # The old free status change no longer exists.
+    assert client.patch(f"{SOS}/{request_id}", json={"status": "resolved"}, headers=user).status_code in (404, 405)
 
 
 # ==========================================

@@ -27,6 +27,12 @@ def open_meteo(recent_rain_mm):
         count = len(params["latitude"].split(","))
         today = datetime.now(timezone.utc).date()
 
+        if "hourly" in params:                       # GFS rain forecast: 0.5 mm every hour
+            hours = int(params["forecast_days"]) * 24
+            times = [(datetime.combine(today, datetime.min.time()) + timedelta(hours=h)).strftime("%Y-%m-%dT%H:%M") for h in range(hours)]
+            location = {"latitude": 24.0, "longitude": 90.0, "hourly": {"time": times, "precipitation": [0.5] * hours}}
+            return httpx.Response(200, json=[location] * count if count > 1 else location)
+
         if "past_days" in params:
             past = int(params["past_days"])
             days = [(today - timedelta(days=past - k)).isoformat() for k in range(past + 1)]
@@ -68,8 +74,13 @@ def test_daily_update_on_a_dry_day(client, flood_model, weather):
     assert result["target_date"] == today
     assert result["predicted"] == 56                 # every district satellites can observe
     assert result["alerts"] == []
-    assert lines[-1] == "alerts: none"
+    assert "alerts: none" in lines
     assert [line.split(":")[0] for line in lines[:3]] == ["river_history", "rain_history", "rain_recent"]
+    # Forecasts for the map come after today's predictions.
+    assert [line.split(":")[0] for line in lines[-2:]] == ["river_forecast", "rain_forecast"]
+    assert result["forecasts_refreshed"] == ["river_forecast", "rain_forecast"]
+    summary = client.get("/api/v1/ingestion/rain-forecast/summary").json()
+    assert summary["count"] == 64
 
     stored = client.get("/api/v1/predictions", params={"target_date": today}).json()
     dhaka = next(p for p in stored["predictions"] if p["pcode"] == "BD3026")
@@ -165,3 +176,25 @@ def test_daily_update_without_a_satellite_step(client, flood_model, weather):
     result = daily.daily_update(client, wait_seconds=0, log=lambda text: None)
 
     assert result["satellite_refreshed"] is False
+
+
+def test_a_failing_forecast_does_not_undo_the_predictions(client, flood_model, weather):
+
+    weather(recent_rain_mm=0.0)
+    real = daily.ingest
+
+    def flaky(client_, wait, **body):
+        if body["kind"] == "rain_forecast":
+            raise daily.StepFailed("rain_forecast: failed: Open-Meteo down")
+        return real(client_, wait, **body)
+
+    daily.ingest = flaky
+    lines = []
+    try:
+        result = daily.daily_update(client, wait_seconds=0, log=lines.append)
+    finally:
+        daily.ingest = real
+
+    assert result["predicted"] == 56
+    assert result["forecasts_refreshed"] == ["river_forecast"]
+    assert any(line.startswith("rain_forecast NOT refreshed") for line in lines)

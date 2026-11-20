@@ -1,4 +1,5 @@
 from datetime import date, datetime, timezone
+from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -71,6 +72,10 @@ def require_role(*roles: str):
     async def check(user: dict = Depends(current_user)) -> dict:
 
         if user["role"] not in roles:
+            if "admin" in roles and "rescuer" not in roles:
+                # A logged-in account trying an admin-only action is a security event.
+                from app.modules.admin import audit
+                await audit.record(user, "permission_denied", result="denied", details={"required": list(roles)})
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Your account is not allowed to do this.",
@@ -138,6 +143,10 @@ async def login(data: LoginRequest):
             status_code=429,
             detail="Too many wrong passwords. Wait 15 minutes and try again.",
         )
+
+    except service.AccountSuspended:
+        # Only reached with the correct password, so it reveals nothing to someone guessing.
+        raise HTTPException(status_code=403, detail="This account is suspended. Contact a Rokkha administrator.")
 
 
 @router.post(
@@ -234,10 +243,14 @@ admin_router = APIRouter(
 )
 async def list_users(
     limit: int = Query(default=200, ge=1, le=1000),
+    q: str | None = Query(default=None, max_length=100, description="Search in name or email."),
+    role: Literal["user", "rescuer", "admin"] | None = None,
+    status: Literal["active", "suspended"] | None = None,
+    skip: int = Query(default=0, ge=0, le=100000),
     admin: dict = Depends(require_role("admin")),
 ):
 
-    return await service.list_users(limit)
+    return await service.list_users(limit, q, role, status, skip)
 
 
 @admin_router.patch(
@@ -250,11 +263,24 @@ async def change_role(
     admin: dict = Depends(require_role("admin")),
 ):
 
+    from app.modules.admin import audit
+
+    before = await service.find_user(user_id)
+
     try:
-        return await service.set_role(admin, user_id, data.role)
+        after = await service.set_role(admin, user_id, data.role)
 
     except service.OwnRole:
+        await audit.record(admin, "role_changed", "user", user_id, result="denied", details={"why": "own role", "to": data.role})
         raise HTTPException(status_code=409, detail="You cannot change your own role.")
+
+    except service.LastAdmin:
+        await audit.record(admin, "role_changed", "user", user_id, result="denied", details={"why": "last active admin", "to": data.role})
+        raise HTTPException(status_code=409, detail="This is the last active admin; make another admin first.")
 
     except service.UserNotFound:
         raise HTTPException(status_code=404, detail="User not found")
+
+    await audit.record(admin, "role_changed", "user", user_id, after["name"],
+                       details={"from": (before or {}).get("role"), "to": data.role})
+    return after

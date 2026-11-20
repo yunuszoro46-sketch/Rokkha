@@ -4,6 +4,7 @@ from datetime import date
 from fastapi import APIRouter, HTTPException, Query, status
 
 from app.modules.geospatial.schemas import (
+    GeoJSONPoint,
     LocationCreate,
     LocationResponse,
     SpatialAnalysisRequest,
@@ -35,6 +36,7 @@ from app.modules.geospatial.schemas import (
 )
 
 from app.modules.geospatial.service import (
+    place_name,
     add_location,
     list_locations,
     find_location,
@@ -443,3 +445,14 @@ def flood_check(
 ):
 
     return check_flood_at_point(data.point)
+
+
+@router.get("/place-name")
+async def readable_place_name(
+    lng: float = Query(ge=-180, le=180),
+    lat: float = Query(ge=-90, le=90),
+):
+
+    # "Tahirpur, Sunamganj" for a GPS point, looked up on this server from the
+    # official upazila boundaries. Nothing is stored; no outside service is asked.
+    return place_name(GeoJSONPoint(coordinates=[lng, lat]))

@@ -8,12 +8,18 @@ from app.core.database import get_db
 
 
 # Two MongoDB collections (indexes in app/core/database.py):
-#   sos_requests   one document per request; client_key_hash is unique
+#   sos_requests   one document per request; client_key_hash and reference are unique
+#   rescue_teams   one per rescue team (name + organisation, unique together)
 #   sos_senders    one per accepted request and sender address; MongoDB deletes
 #                  them after an hour (they only exist to limit floods of requests)
 
 REQUESTS = "sos_requests"
 SENDERS = "sos_senders"
+TEAMS = "rescue_teams"
+
+
+class ReferenceTaken(Exception):
+    pass
 
 
 def now() -> datetime:
@@ -28,6 +34,8 @@ def _to_api(document: dict | None) -> dict | None:
         return None
 
     request = {k: v for k, v in document.items() if k not in ("client_key_hash", "sender_hash")}
+    request.setdefault("support_teams", [])
+    request.setdefault("releases", [])
     request["id"] = request.pop("_id")
     request["from_account"] = request.pop("user_id", None) is not None
     return request
@@ -40,8 +48,13 @@ async def insert_request(document: dict) -> dict | None:
     try:
         await get_db()[REQUESTS].insert_one(document)
 
-    # The unique index on client_key_hash refused it: this request is already stored.
-    except DuplicateKeyError:
+    except DuplicateKeyError as error:
+
+        # The short reference number happened to be in use: the caller makes a new one.
+        if "reference" in (error.details or {}).get("keyPattern", {}):
+            raise ReferenceTaken()
+
+        # The unique index on client_key_hash refused it: this request is already stored.
         return None
 
     return _to_api(document)
@@ -82,17 +95,69 @@ async def count_by_status() -> dict[str, int]:
     return counts
 
 
-async def move_request(request_id: str, from_status: str, changes: dict, step: dict) -> dict | None:
+async def change_request(request_id: str, conditions: dict, update: dict) -> dict | None:
 
-    # "status: from_status" in the filter makes the change safe when two
-    # rescuers click at the same moment: only the first one matches.
+    # One atomic change of one document. "conditions" holds what must still be
+    # true (the expected status, the primary team...): when two teams click at
+    # the same moment only the first one matches, the second gets None.
     result = await get_db()[REQUESTS].find_one_and_update(
-        {"_id": request_id, "status": from_status},
-        {"$set": changes, "$push": {"history": step}},
+        {"_id": request_id, **conditions},
+        update,
         return_document=True,
     )
 
     return _to_api(result)
+
+
+# ==========================================
+# TEAMS
+# ==========================================
+
+def _team_to_api(document: dict, members: int = 0) -> dict:
+
+    return {
+        "id": document["_id"],
+        "name": document["name"],
+        "organization": document["organization"],
+        "created_at": document["created_at"],
+        "members": members,
+    }
+
+
+async def insert_team(name: str, organization: str) -> dict | None:
+
+    document = {"_id": str(uuid4()), "name": name, "organization": organization, "created_at": now()}
+
+    try:
+        await get_db()[TEAMS].insert_one(document)
+
+    # The same name already exists in this organisation.
+    except DuplicateKeyError:
+        return None
+
+    return _team_to_api(document)
+
+
+async def find_team(team_id: str) -> dict | None:
+
+    document = await get_db()[TEAMS].find_one({"_id": team_id})
+
+    return _team_to_api(document) if document else None
+
+
+async def list_teams() -> list[dict]:
+
+    members = {}
+
+    async for row in await get_db()["users"].aggregate([
+        {"$match": {"team_id": {"$ne": None}}},
+        {"$group": {"_id": "$team_id", "n": {"$sum": 1}}},
+    ]):
+        members[row["_id"]] = row["n"]
+
+    cursor = get_db()[TEAMS].find({}).sort([("organization", ASCENDING), ("name", ASCENDING)])
+
+    return [_team_to_api(document, members.get(document["_id"], 0)) async for document in cursor]
 
 
 async def count_recent_from(sender_hash: str, since: datetime) -> int:

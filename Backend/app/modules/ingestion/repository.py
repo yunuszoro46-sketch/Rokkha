@@ -17,7 +17,7 @@ value instead of duplicating it.
 """
 
 import json
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 from pathlib import Path
 
@@ -74,6 +74,30 @@ async def find_series(collection: str, query: dict, sort_field: str) -> list[dic
     return [document async for document in cursor]
 
 
+async def delete_old_forecasts(site_ids: list[str], before) -> int:
+    """Remove rain-forecast values fetched before `before` for these sites."""
+
+    result = await _collection("rain_forecast_hourly").delete_many({"site_id": {"$in": site_ids}, "fetched_at": {"$lt": before}})
+
+    return result.deleted_count
+
+
+async def latest_forecast_values(site_ids: list[str]) -> dict:
+    """{site_id: (fetched_at, [values of that fetch sorted by valid_time])} for the newest fetch of each site."""
+
+    collection = _collection("rain_forecast_hourly")
+    groups = await collection.aggregate([
+        {"$match": {"site_id": {"$in": site_ids}}},
+        {"$group": {"_id": "$site_id", "fetched_at": {"$max": "$fetched_at"}}},
+    ])
+    newest = {row["_id"]: row["fetched_at"] async for row in groups}
+    out = {}
+    for site_id, fetched_at in newest.items():
+        cursor = collection.find({"site_id": site_id, "fetched_at": fetched_at}, {"_id": 0}).sort("valid_time", ASCENDING)
+        out[site_id] = (fetched_at, [d async for d in cursor])
+    return out
+
+
 async def latest_value(collection: str, query: dict, field: str):
 
     document = await _collection(collection).find_one(query, sort=[(field, DESCENDING)])
@@ -85,22 +109,45 @@ async def latest_value(collection: str, query: dict, field: str):
 # RUN LOG
 # ==========================================
 
+# A run notes the time ("heartbeat_at") whenever it changes, at least once per
+# piece. One piece is a single Open-Meteo request, at most about 7 minutes with
+# its retries. A run silent for longer than this belongs to a server that is gone.
+RUN_STALE_AFTER = timedelta(minutes=30)
+
+
 async def insert_run(run: dict) -> None:
 
-    await _collection("ingestion_runs").insert_one(dict(run))
+    document = dict(run)
+    document.setdefault("heartbeat_at", document.get("started_at"))
+
+    await _collection("ingestion_runs").insert_one(document)
 
 
 async def update_run(run_id: str, changes: dict) -> None:
 
+    changes = {**changes, "heartbeat_at": datetime.now(timezone.utc)}
+
     await _collection("ingestion_runs").update_one({"_id": run_id}, {"$set": changes})
 
 
-async def close_interrupted_runs(now: datetime) -> int:
+async def close_interrupted_runs(now: datetime, stale_after: timedelta = RUN_STALE_AFTER) -> int:
 
-    # Called when the server starts. A run still marked queued or running
-    # belonged to a server process that no longer exists.
+    # Called when a server starts and before a new run starts. Only runs that
+    # have shown no sign of life for a while are closed: the hosted backend and
+    # the daily job's own copy of the backend share this database, so a run
+    # that is "running" may belong to the other one and still be alive.
+    # (Runs stored before heartbeats existed are judged by their start time.)
+    cutoff = now - stale_after
+
     result = await _collection("ingestion_runs").update_many(
-        {"status": {"$in": ["queued", "running"]}},
+        {
+            "status": {"$in": ["queued", "running"]},
+            "$or": [
+                {"heartbeat_at": {"$lt": cutoff}},
+                {"heartbeat_at": {"$exists": False}, "started_at": {"$lt": cutoff}},
+                {"heartbeat_at": None, "started_at": {"$lt": cutoff}},
+            ],
+        },
         {"$set": {
             "status": "failed",
             "finished_at": now,

@@ -192,7 +192,7 @@ Rokkha/
     ├── docs/
     │   └── FRONTEND_API_GUIDE.md  guide for the frontend developer
     ├── scripts/                   rebuild the data files from their sources
-    ├── tests/                     352 automated tests
+    ├── tests/                     442 automated tests
     ├── ml/                        (placeholder)
     ├── pytest.ini
     ├── requirements.txt           pinned API dependencies
@@ -283,6 +283,12 @@ If MongoDB is unreachable, the server does not start (see section 10).
 
 **Hosted since 13 November 2026 at `https://rokkha-backend.onrender.com`** (API under `/api/v1`, interactive
 docs at `/docs`). The steps below are how it was set up, for anyone who has to repeat it.
+The portal (frontend) is hosted on Vercel at **`https://rokkha-app.vercel.app`**, built from the `production` branch.
+Since 17 Nov 2026 every push to `production` that changes `Frontend/` is deployed automatically by the GitHub Action
+`.github/workflows/deploy-frontend.yml` (about one minute). The older address `rokkha-portal.vercel.app` no longer exists.
+Login and location were checked end to end on 17 Nov 2026. The backend's register, login and location endpoints
+worked; the faults were in the portal (no visible login state, GPS snapped to the district centre, invented
+numbers on the location card) and were fixed on the `production` branch.
 
 The file `render.yaml` in the repository root describes the hosted backend, so nothing has to be typed into
 Render except the database secret.
@@ -307,6 +313,11 @@ What the hosted copy is set to do (all in `render.yaml`):
 | `CORS_ORIGINS` | the Vercel address and localhost | Only these websites may call the API from a browser. Add the address here if the frontend moves |
 | Start command | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` | One process, no `--reload` |
 | Region | Singapore | Closest to Bangladesh |
+
+Every answer also carries standard browser protections, set in `app/main.py`: `X-Content-Type-Options: nosniff`,
+`X-Frame-Options: DENY` and `Content-Security-Policy: frame-ancestors 'none'` (no showing the API inside another
+site), `Referrer-Policy: no-referrer` and `Strict-Transport-Security` (HTTPS only). The portal sets the same in
+`Frontend/next.config.mjs`.
 
 Limits to know:
 
@@ -393,6 +404,7 @@ All module paths start with `/api/v1`. Full request and response shapes: `/docs`
 | GET | `/ingestion/rain-recent?site_id=&start_date=&end_date=` | Daily rain of the last days (GFS), kept apart from ERA5 |
 | GET | `/ingestion/river?site_id=&start_date=&end_date=` | Daily river discharge (GloFAS) |
 | GET | `/ingestion/rain-forecast?site_id=` | Latest hourly rain forecast (GFS) |
+| GET | `/ingestion/rain-forecast/summary?hours=72` | Every district's forecast rain total for the next 6–168 hours after its latest fetch, with `hours_covered` and the valid window (map layer) |
 
 Run kinds: `rain_history` and `river_history` (need `start_date`, `end_date`), `rain_forecast` and `river_forecast`
 (`forecast_days` 1–7), and `rain_recent` (`past_days` 1–30: the last finished days from GFS). Optional `site_ids` limits a run to some sites. Only one run at a time (409 otherwise).
@@ -461,37 +473,75 @@ the request says.
 The first admin is made on a developer's machine, straight in the database:
 `python scripts/set_role.py someone@example.org admin` (the person registers first).
 
+**Admin Control Centre** (`app/modules/admin`, guide section J2): permission-checked overview, analytics, data
+sources, ingestion runs, system health, account suspension, administrative announcements (never official warnings)
+and an append-only audit log (`admin_audit`). The admin area reads the science; it has no route that changes a
+prediction, an observation or the model.
+
+**Local test accounts for the portal's browser tests** (rescue board, two teams):
+`scripts/seed_local_test_accounts.py` creates one admin and two rescuers in "Local Test Team A" and "Local Test Team B"
+through the normal API (passwords hashed as for real users). It refuses to run unless the database and the API are both
+on this computer, reads every email and password from the environment (`E2E_ADMIN_*`, `E2E_RESCUER_*`, `E2E_RESCUER2_*`,
+kept in the git-ignored `Frontend/.env.e2e.local`) and changes nothing when run again. Usage is in the script's header.
+
 On the public server (`PUBLIC_READ_ONLY=true`) creating, changing and deleting **assets** needs an admin
 login; ingestion runs, new predictions, weather records and saved locations stay switched off there.
 
-### Rescue requests (SOS)
+### Rescue requests and the shared rescue board
+
+Since 18 November 2026. Full rules: [docs/RESCUE_COORDINATION_SPEC.md](docs/RESCUE_COORDINATION_SPEC.md); why it
+is built this way: [docs/decisions/ADR-001-shared-rescue-board.md](docs/decisions/ADR-001-shared-rescue-board.md).
 
 | Method | Endpoint | Who | Purpose |
 | --- | --- | --- | --- |
-| POST | `/sos` | anyone | Send a request: `client_id`, `location`, `people`, `need`, optional `note`, `contact_name`, `contact_phone`. 201 with a receipt; the same `client_id` again gives 200 and stores nothing new |
-| GET | `/sos/status/{client_id}` | the sender | Status, history and the rescuers' message |
+| POST | `/sos` | anyone | Send a request: `client_id`, `needs`, `people`, `serious_injury`, `vulnerable`, a GPS `location` **or** a typed `place`, optional `note`, `contact_name`, `contact_phone`. 201 with a receipt and a `reference` (`RK-XXXXXX`); the same `client_id` again gives 200 and stores nothing new |
+| GET | `/sos/status/{client_id}` | the sender | Status, history (with team names) and the team's message |
 | POST | `/sos/status/{client_id}/cancel` | the sender | "I no longer need help" |
 | GET | `/sos/mine` | logged-in user | Requests sent while logged in |
-| GET | `/sos?status=&district_pcode=&limit=` | rescuer, admin | Open requests (or one status), longest-waiting first, with location and contact |
-| PATCH | `/sos/{id}` | rescuer, admin | `{"status", "message_to_sender"}` |
+| GET | `/sos?status=&district_pcode=&mine=&limit=` | rescuer, admin | The shared board: open requests (or one status), untaken first |
+| POST | `/sos/{id}/accept` | a rescuer in a team | Become the primary team; 409 if another team was first |
+| POST | `/sos/{id}/progress` | the primary team | `en_route`, `arrived`, `in_progress`, `completed` (with `outcome`) |
+| POST | `/sos/{id}/release` | the primary team, admin | Back to the board with a reason (`unable_to_reach`, `lacks_resources`, `other`) |
+| POST | `/sos/{id}/support-request`, `/sos/{id}/support` | primary team / another team | Ask for and join as a support team |
+| POST | `/sos/{id}/close` | admin | Close a duplicate or false request |
+| GET, POST | `/admin/teams` | admin | List and create rescue teams (name + organisation) |
+| PATCH | `/admin/users/{user_id}/team` | admin | Put an account in a team (`{"team_id": ...}` or `null`) |
 
 How it is built:
 
 - **No login is needed to ask for help.** The phone makes a random `client_id` when the request is first
   saved and sends it unchanged on every retry. That makes retries safe (a phone with a bad connection may send
   the same request several times) and it is also the sender's private key for reading the status. Only its
-  SHA-256 hash is stored.
-- **Status only moves forward:** `new` → `acknowledged` → `team_sent` → `resolved`. A request can be cancelled
-  until it is resolved. A change is written only if the status is still the one the rescuer saw, so two rescuers
-  clicking at the same moment cannot overwrite each other.
-- **The receipt and the sender's status view hold no personal details.** Location, phone number and note are
-  returned only to rescuers and admins.
+  SHA-256 hash is stored. Requests queued by the previous portal (one `need`, no `location_source`) are still
+  accepted; their location source stays unknown instead of being guessed.
+- **A request without GPS is allowed.** The person chooses the district and describes the place (village, area,
+  landmark...). No coordinates are made up from a place name; `location` stays `null`.
+- **One primary team per request.** Teams (`rescue_teams`: name, organisation) are created by an admin, who also
+  puts each rescuer account into a team. Accepting is one atomic MongoDB update whose filter requires the
+  status `available`: when two teams press at the same moment exactly one wins, the other gets 409 (tested with
+  8 parallel accepts). Every later step also requires the expected status and the primary team in the filter.
+- **Statuses:** `available` → `accepted` → `en_route` → `arrived` → (`in_progress` →) `completed`; or
+  `cancelled` (by the sender, or closed by an admin). Steps cannot be skipped, so "on its way" always means the
+  team confirmed it. "Unable to reach" and "released" are reasons recorded in the history: the request goes back
+  to `available` at once instead of waiting on a team that gave up. An admin can release a stuck request.
+- **Support:** the primary team can ask for support; another team can join as support without taking over.
+- **Privacy:** the sender's view holds no personal details (only team names). On the board every rescuer sees
+  what is needed to judge the request (needs, people, injury, place, location); **contact name and phone only go
+  to the primary team, support teams and admins.** The acting account is stored in the history but never sent
+  to the sender.
 - **Flood protection:** at most 10 new requests per internet address per hour (the address is stored hashed
-  and deleted after an hour). Retries are not counted.
-- The location must be inside Bangladesh; the district is filled in from it.
+  and deleted after an hour). Retries are not counted. The address is the one Cloudflare (in front of Render)
+  reports in `CF-Connecting-IP`; `X-Forwarded-For` is ignored because Render keeps whatever the visitor writes
+  there, and a live test on 15 November 2026 showed that faking it skipped the limit (fixed the same day).
+- A GPS point must be inside Bangladesh; the district is filled in from it.
+- **Readable place names** (`GET /geospatial/place-name`, and `area_name` on board items): the upazila and
+  district containing a GPS point, looked up on this server from `data/boundaries/bangladesh_upazilas.geojson`
+  (507 upazilas, HDX COD-AB v03 — the same BBS / OCHA release as the districts, CC BY-IGO; the answer includes
+  `upazila_pcode`). No outside geocoding service is used. `scripts/build_map_geography.py` rebuilds this file and
+  the portal's map geography from one archive.
 
 Not covered: requests are kept until someone deletes them (no retention period is set), there is no SMS or
-push notification to rescuers, and nothing verifies that a request is genuine.
+push notification to teams (they must look at the board), and nothing verifies that a request is genuine.
 
 ## 7. Try the API without writing code
 
@@ -709,7 +759,7 @@ Allowed by default: `http://localhost:3000` and `http://localhost:5173`. Add oth
 python -m pytest -v
 ```
 
-Expected: **352 passed**.
+Expected: **442 passed**.
 
 Tests that store data use a **separate local test MongoDB in Docker**, never Atlas:
 
@@ -724,8 +774,9 @@ test. Use another test server with `TEST_MONGODB_URI=mongodb://host:port`.
 | Test file | Covers |
 | --- | --- |
 | `test_api_accounts.py` | Register, log in and out, wrong passwords, home location, report for it, account deletion |
-| `test_public_read_only.py` | Read-only mode: changes refused, reading, point checks and accounts still work |
-| `test_api_rescue.py` | Rescue requests (send, retry, follow, cancel, handle), roles and admin routes |
+| `test_public_read_only.py` | Read-only mode: changes refused, reading, point checks and accounts still work; browser security headers on every answer |
+| `test_api_rescue.py` | Rescue requests (send, retry, follow, cancel), the flood limit (a faked `X-Forwarded-For` does not skip it), roles and admin routes |
+| `test_api_rescue_board.py` | The shared rescue board: requests without GPS, several needs, teams, one primary team (8 parallel accepts, exactly one wins), explicit progress, release, support, contact privacy, the sender's status |
 | `test_osm_facilities.py` | OpenStreetMap facility selection and the built facility file |
 | `test_api_geospatial.py` | Geometry tools, locations, health, CORS |
 | `test_api_boundaries.py` | Dhaka boundaries |
@@ -741,7 +792,7 @@ test. Use another test server with `TEST_MONGODB_URI=mongodb://host:port`.
 | `test_prediction_features.py` | Model inputs, the no-future-data rule, training table rows and time split |
 | `test_api_prediction.py` | Prediction and alert API with a test-only model: no model (503), inputs shown, stored, alert levels, assets at risk, recent-rain fallback |
 | `test_train_flood_model.py` | Training script: measures, baselines, thresholds, calibration; whole pipeline on a made-up table; the API accepts its files (skipped without scikit-learn) |
-| `test_daily_update.py` | Daily chain: refresh data → predict today → alerts; no model; failing data source |
+| `test_daily_update.py` | Daily chain: refresh data → predict today → alerts → river and rain forecasts; no model; failing data source; a failing forecast does not undo the predictions |
 
 `tests/test_geospatial.py` is an older print-only Shapely demonstration, kept for reference.
 
@@ -770,7 +821,8 @@ Planned items are not claims of completed functionality.
 | Check the model on 2025, a year never used so far | Done (section 13) |
 | Check on 2026 (kept untouched for the next model change) | Data stored 12 Nov 2026 (rain 1 Mar–5 Nov, river 15 Feb–10 Nov, satellite passes); **not measured yet on purpose** |
 | User accounts and login, with a flood report for the user's saved location | Done (`/auth`) |
-| Roles (admin, rescue), protecting asset and ingestion endpoints, general rate limiting | Planned, before any public use |
+| Roles (admin, rescue), protecting asset and ingestion endpoints | Done (`/admin`, `/sos`; read-only guard on the hosted server) |
+| General rate limiting for all endpoints | Planned, before wide public use |
 
 ## 13. The flood model: design and measured results
 
@@ -863,8 +915,12 @@ satellite pass saw no flood), a model without satellite inputs, and held-out div
 
 **Daily use.** With the backend running: `python scripts/daily_update.py` refreshes river flow, ERA5 rain and
 recent rain, fetches the newest satellite passes (Copernicus GFM, this month and the last), predicts today and
-prints the alerts. It takes about a minute and a half and about 235 Open-Meteo calls. To run it every morning,
-add the cron line shown at the top of the script.
+prints the alerts. Then, for the map, it stores the **GloFAS river-flow forecast** (today + 6 days, 9 river sites)
+and the **GFS hourly rain forecast** (4 days from 00:00 UTC, so the 72 hours after a morning run are covered, 64
+district sites). These two forecast steps run after the predictions and are best effort: if one fails the update
+still succeeds and says "NOT refreshed". Rain-forecast fetches older than 3 days are deleted after each new fetch,
+so the collection stays small. In total about 310 Open-Meteo calls a day (free limit 10,000). To run it every
+morning, add the cron line shown at the top of the script.
 
 **Running it automatically.** `.github/workflows/daily-update.yml` runs the same script every day at 03:30 UTC
 (09:30 in Bangladesh) on a GitHub machine: it starts a copy of the backend there, runs the update, and the
@@ -880,6 +936,42 @@ New satellite passes are files, not database rows, so the job commits them to `m
 "observed" map of the hosted backend up to date. **Run `git pull` before you start work**: there is usually
 one such commit per day. The month cache is kept in the repository for this reason: with it, the job rebuilds
 the observations file from every month exactly as a developer's machine does.
+
+**Two things seen in live use (15 November 2026):**
+
+- **GitHub starts scheduled jobs late**, sometimes by hours (the 14 November run started at 10:44 UTC instead of
+  03:30, and the 17 November one at 12:12 UTC). Until it runs, the portal's "Today" button shows grey districts
+  with "No forecast for this date". Fixed on 17 November, see below.
+- **A restart of the hosted backend broke a running update (17 November).** Render and the job's own copy of the
+  backend share one database, and every server start closed all "running" ingestion runs, including the job's.
+  Now each run notes the time whenever it makes progress (`heartbeat_at`); a starting server, or a new run,
+  closes only runs silent for more than 30 minutes (`RUN_STALE_AFTER`). If the update still fails (for example
+  Open-Meteo timing out), the job tries once more after 10 minutes; it resumes where it stopped.
+- **The satellite catalogue (EODC STAC) can be down** (on 15 November it answered `502 Bad Gateway`). The job then
+  logs `satellite passes NOT refreshed`, predicts with the passes already stored, and still succeeds. Nothing is
+  lost: every run fetches this month and the last, so the next run that reaches the catalogue adds the missed
+  passes.
+
+**Starting the daily update on time (since 17 November 2026).** GitHub's own timer is now only a backup (03:30
+and 06:17 UTC). The main start comes from a free outside timer, [cron-job.org](https://cron-job.org), which at
+03:30 UTC asks GitHub to run the workflow. The job's first step checks the hosted backend: if today (UTC) already
+has predictions it stops within seconds, so several starts a day do no harm. To redo a day anyway, start it by
+hand with **force** ticked. One-time setup (only the repository owner can do it; never paste the token anywhere
+else, including chats):
+
+1. GitHub > your picture > **Settings > Developer settings > Personal access tokens > Fine-grained tokens >
+   Generate new token**. Name `rokkha-daily-timer`, expiry 90 days (put a reminder in your calendar),
+   **Repository access: Only select repositories > Rokkha**, **Permissions > Repository > Actions: Read and
+   write** (nothing else). Generate and copy it.
+2. Sign up at cron-job.org > **Create cronjob**:
+   - URL `https://api.github.com/repos/yunuszoro46-sketch/Rokkha/actions/workflows/daily-update.yml/dispatches`
+   - Schedule: every day at **09:30**, time zone **Asia/Dhaka** (= 03:30 UTC).
+   - **Advanced**: request method **POST**; headers `Authorization: Bearer <the token>`,
+     `Accept: application/vnd.github+json`, `X-GitHub-Api-Version: 2022-11-28`; request body `{"ref":"main"}`.
+   - Save, then press **Test run**: GitHub answers `204 No Content`, and a run started by `workflow_dispatch`
+     appears in the **Actions** tab within a minute.
+3. If the token expires the timer's runs fail (401) and the GitHub backups take over, late again. Make a new
+   token and paste it into the cron-job.org header.
 
 What the automatic run does **not** do:
 
