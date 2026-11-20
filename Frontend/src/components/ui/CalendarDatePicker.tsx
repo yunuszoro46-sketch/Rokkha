@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, RotateCcw } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, RotateCcw, Waves } from "lucide-react";
 import { toBnNum } from "@/lib/translations";
+import { PAST_FLOOD_EVENTS } from "@/lib/pastFloodEvents";
 
 const EN_MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -35,7 +36,7 @@ export const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
   onChangeDate,
   lang = "en",
   maxDate = today,
-  minDate = "2024-01-01",
+  minDate = "2016-01-01",
   children,
   align = "center",
 }) => {
@@ -190,6 +191,34 @@ export const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
               </button>
             );
           })}
+        </div>
+
+        {/* Past Flood Predictions shortcuts */}
+        <div className="mt-2.5 pt-2 border-t border-rk-line">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-rk-muted mb-1.5 flex items-center gap-1">
+            <Waves className="w-3 h-3 text-rk-brand shrink-0" />
+            <span>{lang === "bn" ? "ঐতিহাসিক বন্যা পূর্বাভাস" : "Past flood predictions"}</span>
+          </p>
+          <div className="flex flex-wrap gap-1 max-h-[76px] overflow-y-auto pr-0.5">
+            {PAST_FLOOD_EVENTS.map((e) => {
+              const isMatch = selectedDate >= e.startDate && selectedDate <= e.endDate;
+              return (
+                <button
+                  key={e.id}
+                  type="button"
+                  onClick={() => handleSelectDay(e.targetDate)}
+                  className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border transition-colors ${
+                    isMatch
+                      ? "bg-rk-brand text-white border-rk-brand font-bold shadow-xs"
+                      : "bg-rk-surface hover:bg-rk-secondary border-rk-line text-rk-ink"
+                  }`}
+                  title={`${e.name} (${e.startDate} to ${e.endDate})`}
+                >
+                  {lang === "bn" ? e.labelBn : e.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Footer with Today shortcut */}

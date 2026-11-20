@@ -45,6 +45,7 @@ import { readGpsPosition } from "../../services/auth";
 import { useSampleParts, type DataPart } from "../../services/dataSource";
 import { Hydrograph } from "./Hydrograph";
 import { CalendarDatePicker } from "../ui/CalendarDatePicker";
+import { PastFloodEventsBar } from "../ui/PastFloodEventsBar";
 import { STATION_STATUS, Station, distanceKm, loadStations } from "./riverStations";
 import {
   BANGLADESH_BBOX,
@@ -2106,6 +2107,11 @@ const PanelBody = () => {
           <button type="button" disabled={targetDate >= today} onClick={() => onChangeTargetDate(addDays(targetDate, 1))} className="h-9 w-9 rounded-lg border border-rk-line inline-flex items-center justify-center text-rk-forest hover:bg-rk-secondary disabled:opacity-40" aria-label={tr("Next day", "পরের দিন")}>
             <ChevronDown className="w-4 h-4 -rotate-90" aria-hidden="true" />
           </button>
+        </div>
+
+        {/* 10 Past Flood Events stepper & selector */}
+        <div className="mt-2 pt-2 border-t border-rk-line">
+          <PastFloodEventsBar currentDate={targetDate} onSelectDate={onChangeTargetDate} lang={lang} />
         </div>
         <p className="mt-1.5 text-center text-xs text-rk-muted" aria-live="polite">
           {isForecastLoading
