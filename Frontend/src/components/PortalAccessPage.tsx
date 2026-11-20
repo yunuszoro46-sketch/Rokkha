@@ -115,7 +115,7 @@ export function PortalAccessPage({
     try {
       let user =
         tab === "register"
-          ? await registerAccount(fullName, contact, password)
+          ? await registerAccount(fullName, contact, password, "rescuer")
           : await logIn(contact, password);
 
       if (tab === "register" && gpsPosition) {
