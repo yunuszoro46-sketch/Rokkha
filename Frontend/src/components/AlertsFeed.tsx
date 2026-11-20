@@ -8,9 +8,12 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Calendar as CalendarIcon,
 } from "lucide-react";
 import { addDays, dhakaToday, formatDay } from "@/lib/dates";
 import { ALL_DISTRICTS } from "@/lib/districts";
+import { CalendarDatePicker } from "./ui/CalendarDatePicker";
+import { PastFloodEventsBar } from "./ui/PastFloodEventsBar";
 import {
   Language,
   UI_TEXT,
@@ -80,17 +83,35 @@ export const AlertsFeed: React.FC<AlertsFeedProps> = ({
 
         <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
           {onChangeTargetDate && (
-            <div className="flex items-center gap-1.5 rounded-xl border border-rk-line bg-rk-surface px-1.5 py-1" role="group" aria-label={lang === "bn" ? "পূর্বাভাসের দিন" : "Forecast day"}>
-              <button type="button" onClick={() => onChangeTargetDate(addDays(targetDate, -1))} className="h-9 w-9 rounded-lg inline-flex items-center justify-center text-rk-forest hover:bg-rk-secondary transition-colors" aria-label={lang === "bn" ? "আগের দিন" : "Previous day"}>
-                <ChevronLeft className="w-4 h-4" aria-hidden="true" />
-              </button>
-              <span className="flex-1 min-w-[8.5rem] text-center text-sm font-bold text-rk-forest whitespace-nowrap" aria-live="polite">
-                {displayDate}{targetDate === today ? (lang === "bn" ? " · আজ" : " · today") : ""}
-              </span>
-              <button type="button" disabled={targetDate >= today} onClick={() => onChangeTargetDate(addDays(targetDate, 1))} className="h-9 w-9 rounded-lg inline-flex items-center justify-center text-rk-forest hover:bg-rk-secondary transition-colors disabled:opacity-40 disabled:hover:bg-transparent" aria-label={lang === "bn" ? "পরের দিন" : "Next day"}>
-                <ChevronRight className="w-4 h-4" aria-hidden="true" />
-              </button>
-            </div>
+            <>
+              <div className="flex items-center gap-1.5 rounded-xl border border-rk-line bg-rk-surface px-1.5 py-1" role="group" aria-label={lang === "bn" ? "পূর্বাভাসের দিন" : "Forecast day"}>
+                <button type="button" onClick={() => onChangeTargetDate(addDays(targetDate, -1))} className="h-9 w-9 rounded-lg inline-flex items-center justify-center text-rk-forest hover:bg-rk-secondary transition-colors" aria-label={lang === "bn" ? "আগের দিন" : "Previous day"}>
+                  <ChevronLeft className="w-4 h-4" aria-hidden="true" />
+                </button>
+                <CalendarDatePicker
+                  selectedDate={targetDate}
+                  today={today}
+                  onChangeDate={onChangeTargetDate}
+                  lang={lang}
+                >
+                  <button
+                    type="button"
+                    className="flex-1 min-w-[8.5rem] px-2 py-1 rounded-lg text-center text-sm font-bold text-rk-forest hover:bg-rk-secondary transition-colors inline-flex items-center justify-center gap-1.5 cursor-pointer group"
+                    aria-label={lang === "bn" ? "ক্যালেন্ডার খুলুন" : "Open calendar"}
+                  >
+                    <CalendarIcon className="w-3.5 h-3.5 text-rk-brand group-hover:scale-110 transition-transform" aria-hidden="true" />
+                    <span className="whitespace-nowrap">
+                      {displayDate}{targetDate === today ? (lang === "bn" ? " · আজ" : " · today") : ""}
+                    </span>
+                  </button>
+                </CalendarDatePicker>
+                <button type="button" disabled={targetDate >= today} onClick={() => onChangeTargetDate(addDays(targetDate, 1))} className="h-9 w-9 rounded-lg inline-flex items-center justify-center text-rk-forest hover:bg-rk-secondary transition-colors disabled:opacity-40 disabled:hover:bg-transparent" aria-label={lang === "bn" ? "পরের দিন" : "Next day"}>
+                  <ChevronRight className="w-4 h-4" aria-hidden="true" />
+                </button>
+              </div>
+
+              <PastFloodEventsBar currentDate={targetDate} onSelectDate={onChangeTargetDate} lang={lang} />
+            </>
           )}
 
           {/* 64 District Dropdown */}

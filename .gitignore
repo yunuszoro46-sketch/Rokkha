@@ -37,5 +37,5 @@ Backend/docs/BACKEND_EXPLAINED.md
 
 # Internal working docs: kept locally, not published on GitHub (owner decision, 19 Nov 2026).
 Backend/docs/
-docs/
+docs/*.md
 Frontend/design-system/

@@ -15,6 +15,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   Building2,
+  Calendar as CalendarIcon,
   CheckCircle2,
   ChevronDown,
   ChevronRight,
@@ -43,6 +44,8 @@ import { getPlaceName, listDistrictAssets, type PlaceNameAnswer } from "../../se
 import { readGpsPosition } from "../../services/auth";
 import { useSampleParts, type DataPart } from "../../services/dataSource";
 import { Hydrograph } from "./Hydrograph";
+import { CalendarDatePicker } from "../ui/CalendarDatePicker";
+import { PastFloodEventsBar } from "../ui/PastFloodEventsBar";
 import { STATION_STATUS, Station, distanceKm, loadStations } from "./riverStations";
 import {
   BANGLADESH_BBOX,
@@ -2081,13 +2084,34 @@ const PanelBody = () => {
           <button type="button" onClick={() => onChangeTargetDate(addDays(targetDate, -1))} className="h-9 w-9 rounded-lg border border-rk-line inline-flex items-center justify-center text-rk-forest hover:bg-rk-secondary" aria-label={tr("Previous day", "আগের দিন")}>
             <ChevronDown className="w-4 h-4 rotate-90" aria-hidden="true" />
           </button>
-          <div className="flex-1 text-center">
-            <p className="font-mono text-[11px] uppercase tracking-wider text-rk-muted">{tr("Forecast day", "পূর্বাভাসের দিন")}</p>
-            <p className="text-[15px] font-bold text-rk-forest">{dateLabel}{targetDate === today ? ` · ${tr("today", "আজ")}` : ""}</p>
-          </div>
+          <CalendarDatePicker
+            selectedDate={targetDate}
+            today={today}
+            onChangeDate={onChangeTargetDate}
+            lang={lang}
+          >
+            <button
+              type="button"
+              className="flex-1 text-center py-1 px-2 rounded-lg hover:bg-rk-secondary/70 transition-colors cursor-pointer group"
+              aria-label={tr("Select forecast date from calendar", "ক্যালেন্ডার থেকে পূর্বাভাসের তারিখ নির্বাচন করুন")}
+            >
+              <p className="font-mono text-[11px] uppercase tracking-wider text-rk-muted inline-flex items-center justify-center gap-1.5">
+                <CalendarIcon className="w-3.5 h-3.5 text-rk-brand group-hover:scale-110 transition-transform" aria-hidden="true" />
+                <span>{tr("Forecast day", "পূর্বাভাসের দিন")}</span>
+              </p>
+              <p className="text-[15px] font-bold text-rk-forest leading-tight mt-0.5">
+                {dateLabel}{targetDate === today ? ` · ${tr("today", "আজ")}` : ""}
+              </p>
+            </button>
+          </CalendarDatePicker>
           <button type="button" disabled={targetDate >= today} onClick={() => onChangeTargetDate(addDays(targetDate, 1))} className="h-9 w-9 rounded-lg border border-rk-line inline-flex items-center justify-center text-rk-forest hover:bg-rk-secondary disabled:opacity-40" aria-label={tr("Next day", "পরের দিন")}>
             <ChevronDown className="w-4 h-4 -rotate-90" aria-hidden="true" />
           </button>
+        </div>
+
+        {/* 10 Past Flood Events stepper & selector */}
+        <div className="mt-2 pt-2 border-t border-rk-line">
+          <PastFloodEventsBar currentDate={targetDate} onSelectDate={onChangeTargetDate} lang={lang} />
         </div>
         <p className="mt-1.5 text-center text-xs text-rk-muted" aria-live="polite">
           {isForecastLoading
