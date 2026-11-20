@@ -1070,7 +1070,7 @@ export function CitizenPortalApp({
                   issuedAt={
                     predictions.find((p) => p.issued_at)?.issued_at || null
                   }
-                  alerts={alerts}
+                  predictions={predictions}
                   isStaff={
                     accountUser?.role === "rescuer" ||
                     accountUser?.role === "admin"

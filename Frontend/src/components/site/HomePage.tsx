@@ -12,8 +12,8 @@ import {
   ShieldCheck,
   Users,
 } from "lucide-react";
-import { Language, DISTRICTS_BN, toBnNum } from "../../lib/translations";
-import type { AlertItem } from "../../types/api";
+import { Language, toBnNum } from "../../lib/translations";
+import type { DistrictPrediction } from "../../types/api";
 import type { NavAction } from "./SiteNavigation";
 
 export type ForecastState = "loading" | "ready" | "none" | "unavailable";
@@ -23,7 +23,7 @@ interface HomePageProps {
   targetDate: string;
   forecastState: ForecastState;
   issuedAt: string | null;
-  alerts: AlertItem[];
+  predictions: DistrictPrediction[];
   isStaff: boolean;
   onAction: (action: NavAction) => void;
 }
@@ -33,7 +33,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   targetDate,
   forecastState,
   issuedAt,
-  alerts,
+  predictions,
   isStaff,
   onAction,
 }) => {
@@ -71,10 +71,8 @@ export const HomePage: React.FC<HomePageProps> = ({
       year: "numeric",
     },
   );
-  const districtName = (a: AlertItem) =>
-    isBn ? DISTRICTS_BN[a.district.pcode] || a.district.name : a.district.name;
-  const onAlert = alerts.filter((a) => a.level === "alert");
-  const onWatch = alerts.filter((a) => a.level === "watch");
+  const onAlert = predictions.filter((p) => p.alert_level === "alert");
+  const onWatch = predictions.filter((p) => p.alert_level === "watch");
 
   const primaryBtn =
     "min-h-[50px] px-6 rounded-xl bg-rk-brand hover:bg-rk-brand-strong text-white text-[16px] font-bold inline-flex items-center justify-center gap-2 transition-all shadow-sm";
@@ -182,7 +180,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                         aria-hidden="true"
                       />
                       <strong className="text-rk-forest">
-                        {num(onAlert.length || 7)}
+                        {num(onAlert.length)}
                       </strong>{" "}
                       <span className="text-rk-ink">
                         {tr("Districts on Alert", "জেলায় সতর্কতা")}
@@ -194,7 +192,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                         aria-hidden="true"
                       />
                       <strong className="text-rk-forest">
-                        {num(onWatch.length || 10)}
+                        {num(onWatch.length)}
                       </strong>{" "}
                       <span className="text-rk-ink">
                         {tr("on Watch", "জেলায় নজরদারি")}
