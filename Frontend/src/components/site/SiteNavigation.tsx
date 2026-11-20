@@ -341,7 +341,11 @@ export const SiteHeader: React.FC<{
   };
 
   return (
-    <header className="rk-site-header w-full border-b border-rk-line bg-rk-surface/95 backdrop-blur sticky top-0 z-[800]">
+    <header
+      className={`rk-site-header w-full border-b border-rk-line bg-rk-surface/95 backdrop-blur sticky top-0 z-[800] ${
+        activeView === "overview" ? "rk-site-header--hero" : ""
+      }`}
+    >
       <div className="max-w-[1320px] 2xl:max-w-[1480px] mx-auto px-4 md:px-6 h-16 flex items-center gap-3">
         <button type="button" onClick={() => run({ kind: "view", view: "overview" })} aria-label={isBn ? "রক্ষা হোম" : "Rokkha home"} className="shrink-0 flex items-center">
           <img src={logoSrc} alt="Rokkha" className="h-9 w-auto" />

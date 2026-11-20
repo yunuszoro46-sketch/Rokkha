@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { Language, DISTRICTS_BN, toBnNum } from "../../lib/translations";
 import type { AlertItem } from "../../types/api";
-import { HeroIntelligenceMap } from "./HeroIntelligenceMap";
 import type { NavAction } from "./SiteNavigation";
 
 export type ForecastState = "loading" | "ready" | "none" | "unavailable";
@@ -41,10 +40,18 @@ export const HomePage: React.FC<HomePageProps> = ({
   const isBn = lang === "bn";
   const tr = (en: string, bn: string) => (isBn ? bn : en);
   const num = (v: string | number) => (isBn ? toBnNum(v) : String(v));
-  const go = (view: "map" | "alerts" | "shelters" | "contacts" | "rescue" | "login" | "intelligence") =>
-    onAction({ kind: "view", view });
+  const go = (
+    view:
+      | "map"
+      | "alerts"
+      | "shelters"
+      | "contacts"
+      | "rescue"
+      | "login"
+      | "intelligence",
+  ) => onAction({ kind: "view", view });
 
-  const wrap = "max-w-[1240px] mx-auto px-4 md:px-6";
+  const wrap = "max-w-[1320px] mx-auto px-4 md:px-6";
   const issued = issuedAt
     ? num(
         new Date(issuedAt).toLocaleString(isBn ? "bn-BD" : "en-GB", {
@@ -53,15 +60,19 @@ export const HomePage: React.FC<HomePageProps> = ({
           month: "short",
           hour: "2-digit",
           minute: "2-digit",
-        })
+        }),
       )
     : null;
-  const dateLabel = new Date(`${targetDate}T00:00:00`).toLocaleDateString(isBn ? "bn-BD" : "en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-  const districtName = (a: AlertItem) => (isBn ? DISTRICTS_BN[a.district.pcode] || a.district.name : a.district.name);
+  const dateLabel = new Date(`${targetDate}T00:00:00`).toLocaleDateString(
+    isBn ? "bn-BD" : "en-GB",
+    {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    },
+  );
+  const districtName = (a: AlertItem) =>
+    isBn ? DISTRICTS_BN[a.district.pcode] || a.district.name : a.district.name;
   const onAlert = alerts.filter((a) => a.level === "alert");
   const onWatch = alerts.filter((a) => a.level === "watch");
 
@@ -73,36 +84,53 @@ export const HomePage: React.FC<HomePageProps> = ({
   return (
     <div className="w-full bg-rk-page">
       {/* ── 1. HERO SECTION ── */}
-      <section className="relative overflow-hidden border-b border-rk-line bg-gradient-to-b from-[#F3EFE6] via-[#FAF7F2] to-rk-page py-10 md:py-16 lg:py-20">
-        <div className={`${wrap} grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:items-center`}>
-          <div>
+      <section className="rk-home-hero relative overflow-hidden">
+        <div className={`${wrap} relative z-10 w-full`}>
+          <div className="max-w-[620px]">
             <div className="inline-flex items-center gap-2 rounded-full border border-rk-brand/20 bg-rk-brand-soft/70 px-3.5 py-1 text-xs sm:text-[13px] font-bold uppercase tracking-wider text-rk-brand-strong font-mono">
-              <span className="h-2 w-2 rounded-full bg-rk-brand animate-pulse" aria-hidden="true" />
-              {tr("AI Flood Forecasting & Response", "বন্যা পূর্বাভাস ও জীবন রক্ষায় আগাম সতর্কতা")}
+              <span
+                className="h-2 w-2 rounded-full bg-rk-brand animate-pulse"
+                aria-hidden="true"
+              />
+              {tr(
+                "AI Flood Forecasting & Response",
+                "বন্যা পূর্বাভাস ও জীবন রক্ষায় আগাম সতর্কতা",
+              )}
             </div>
 
             {/* Slogan tied to Flood and Rokkha (Protection) */}
-            <h1 className="mt-5 text-[34px] leading-[1.08] sm:text-[44px] lg:text-[52px] font-extrabold text-rk-forest tracking-tight">
+            <h1 className="mt-5 text-[34px] leading-[1.08] sm:text-[44px] lg:text-[48px] font-extrabold text-rk-forest tracking-tight">
               {tr(
                 "Intelligent flood foresight to protect lives before waters rise.",
-                "পানি বাড়ার আগেই আগাম প্রস্তুতি — বন্যা থেকে জানমাল সুরক্ষায় 'রক্ষা'।"
+                "পানি বাড়ার আগেই আগাম প্রস্তুতি — বন্যা থেকে জানমাল সুরক্ষায় 'রক্ষা'।",
               )}
             </h1>
 
-            <p className="mt-4 text-[16.5px] sm:text-[18px] text-rk-ink leading-relaxed max-w-xl">
+            {/* <p className="mt-4 text-[16.5px] sm:text-[18px] text-rk-ink leading-relaxed max-w-xl">
               {tr(
                 "Rokkha unites daily AI flood forecasting, satellite radar observations, and verified community rescue into one life-saving shield for Bangladesh.",
                 "রক্ষা স্যাটেলাইট রাডার, বৃষ্টিপাত ও নদীর তথ্য একত্রিত করে বন্যার আগাম পূর্বাভাস দেয় — ঘরে পানি ওঠার আগেই বাংলাদেশের প্রতিটি জীবন ও সম্পদ রক্ষা করতে।"
               )}
-            </p>
+            </p> */}
 
-            <div className="mt-7 flex flex-col sm:flex-row gap-3">
-              <button type="button" onClick={() => go("map")} className={primaryBtn}>
+            <div className="mt-8 flex flex-col sm:flex-row gap-3">
+              <button
+                type="button"
+                onClick={() => go("map")}
+                className={primaryBtn}
+              >
                 <MapIcon className="w-5 h-5" aria-hidden="true" />
                 {tr("Explore Live Flood Map", "লাইভ বন্যার মানচিত্র দেখুন")}
               </button>
-              <button type="button" onClick={() => onAction({ kind: "help" })} className={secondaryBtn}>
-                <LifeBuoy className="w-5 h-5 text-rk-brand" aria-hidden="true" />
+              <button
+                type="button"
+                onClick={() => onAction({ kind: "help" })}
+                className={secondaryBtn}
+              >
+                <LifeBuoy
+                  className="w-5 h-5 text-rk-brand"
+                  aria-hidden="true"
+                />
                 {tr("Request Assistance", "জরুরি সাহায্য চান")}
               </button>
             </div>
@@ -111,7 +139,11 @@ export const HomePage: React.FC<HomePageProps> = ({
             <div className="mt-7 rounded-2xl border border-rk-line bg-white/90 p-4 max-w-xl shadow-xs">
               <div className="flex items-center justify-between">
                 <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-rk-muted">
-                  {tr("Today's Nationwide Situation", "আজকের সার্বিক পরিস্থিতি")} · {dateLabel}
+                  {tr(
+                    "Today's Nationwide Situation",
+                    "আজকের সার্বিক পরিস্থিতি",
+                  )}{" "}
+                  · {dateLabel}
                 </span>
                 {issued && (
                   <span className="font-mono text-[11px] text-rk-muted">
@@ -122,46 +154,64 @@ export const HomePage: React.FC<HomePageProps> = ({
 
               <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[14px]">
                 {forecastState === "loading" && (
-                  <span className="text-rk-muted">{tr("Loading live forecast data…", "পূর্বাভাস লোড হচ্ছে…")}</span>
+                  <span className="text-rk-muted">
+                    {tr("Loading live forecast data…", "পূর্বাভাস লোড হচ্ছে…")}
+                  </span>
                 )}
                 {forecastState === "unavailable" && (
                   <span className="text-rk-warning-accent font-semibold">
-                    {tr("Forecast temporarily unavailable.", "পূর্বাভাস সাময়িকভাবে পাওয়া যাচ্ছে না।")}
+                    {tr(
+                      "Forecast temporarily unavailable.",
+                      "পূর্বাভাস সাময়িকভাবে পাওয়া যাচ্ছে না।",
+                    )}
                   </span>
                 )}
                 {forecastState === "none" && (
                   <span className="text-rk-muted">
-                    {tr("Generating morning update…", "সকালের পূর্বাভাস প্রস্তুত হচ্ছে…")}
+                    {tr(
+                      "Generating morning update…",
+                      "সকালের পূর্বাভাস প্রস্তুত হচ্ছে…",
+                    )}
                   </span>
                 )}
                 {forecastState === "ready" && (
                   <>
                     <span className="inline-flex items-center gap-1.5">
-                      <span className="h-3 w-3 rounded-[3px] bg-[#9C3024]" aria-hidden="true" />
-                      <strong className="text-rk-forest">{num(onAlert.length || 7)}</strong>{" "}
-                      <span className="text-rk-ink">{tr("Districts on Alert", "জেলায় সতর্কতা")}</span>
+                      <span
+                        className="h-3 w-3 rounded-[3px] bg-[#9C3024]"
+                        aria-hidden="true"
+                      />
+                      <strong className="text-rk-forest">
+                        {num(onAlert.length || 7)}
+                      </strong>{" "}
+                      <span className="text-rk-ink">
+                        {tr("Districts on Alert", "জেলায় সতর্কতা")}
+                      </span>
                     </span>
                     <span className="inline-flex items-center gap-1.5">
-                      <span className="h-3 w-3 rounded-[3px] bg-[#D68C27]" aria-hidden="true" />
-                      <strong className="text-rk-forest">{num(onWatch.length || 10)}</strong>{" "}
-                      <span className="text-rk-ink">{tr("on Watch", "জেলায় নজরদারি")}</span>
+                      <span
+                        className="h-3 w-3 rounded-[3px] bg-[#D68C27]"
+                        aria-hidden="true"
+                      />
+                      <strong className="text-rk-forest">
+                        {num(onWatch.length || 10)}
+                      </strong>{" "}
+                      <span className="text-rk-ink">
+                        {tr("on Watch", "জেলায় নজরদারি")}
+                      </span>
                     </span>
                     <button
                       type="button"
                       onClick={() => go("alerts")}
                       className="ml-auto inline-flex items-center gap-1 text-[13px] font-bold text-rk-brand hover:underline"
                     >
-                      {tr("View Alerts", "বিস্তারিত")} <ArrowRight className="h-3.5 w-3.5" />
+                      {tr("View Alerts", "বিস্তারিত")}{" "}
+                      <ArrowRight className="h-3.5 w-3.5" />
                     </button>
                   </>
                 )}
               </div>
             </div>
-          </div>
-
-          {/* Right Side Visual: Combination of the User's Map & Status Card */}
-          <div className="w-full">
-            <HeroIntelligenceMap lang={lang} alerts={alerts} onExplore={() => go("map")} />
           </div>
         </div>
       </section>
@@ -173,12 +223,15 @@ export const HomePage: React.FC<HomePageProps> = ({
             {tr("Core Capabilities", "মূল সুবিধাসমূহ")}
           </p>
           <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold text-rk-forest tracking-tight">
-            {tr("How Rokkha Protects Communities", "রক্ষা কীভাবে জানমাল রক্ষা করে")}
+            {tr(
+              "How Rokkha Protects Communities",
+              "রক্ষা কীভাবে জানমাল রক্ষা করে",
+            )}
           </h2>
           <p className="mt-2 text-[15px] sm:text-[16px] text-rk-muted">
             {tr(
               "Combining satellite intelligence, local topography, and real-time community coordination into three essential tools.",
-              "স্যাটেলাইট তথ্য, মাটির গঠন ও সরাসরি উদ্ধার সমন্বয়ের মাধ্যমে তিনটি মূল সেবা।"
+              "স্যাটেলাইট তথ্য, মাটির গঠন ও সরাসরি উদ্ধার সমন্বয়ের মাধ্যমে তিনটি মূল সেবা।",
             )}
           </p>
         </div>
@@ -196,7 +249,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               <p className="mt-2 text-[14.5px] text-rk-muted leading-relaxed">
                 {tr(
                   "Calibrated machine-learning model computes flood risk every morning across 56 districts from Sentinel-1 radar, rainfall sums, and GloFAS river discharge.",
-                  "প্রতিদিন সকালে সেন্টিনেল-১ রাডার, বৃষ্টিপাত ও নদীর প্রবাহ বিশ্লেষণ করে ৫৬টি জেলায় সম্ভাব্য প্লাবনের পূর্বাভাস দেয়।"
+                  "প্রতিদিন সকালে সেন্টিনেল-১ রাডার, বৃষ্টিপাত ও নদীর প্রবাহ বিশ্লেষণ করে ৫৬টি জেলায় সম্ভাব্য প্লাবনের পূর্বাভাস দেয়।",
                 )}
               </p>
             </div>
@@ -224,7 +277,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               <p className="mt-2 text-[14.5px] text-rk-muted leading-relaxed">
                 {tr(
                   "Tap anywhere on the map or use GPS to inspect simulated flood depths (~90m grid) and verify historical UNOSAT satellite flood inundation records.",
-                  "মানচিত্রে যেকোনো স্থানে ট্যাপ করে বা জিপিএস দিয়ে ৯০ মিটার গ্রিডে পানির সম্ভাব্য গভীরতা ও অতীতের প্লাবন রেকর্ড যাচাই করুন।"
+                  "মানচিত্রে যেকোনো স্থানে ট্যাপ করে বা জিপিএস দিয়ে ৯০ মিটার গ্রিডে পানির সম্ভাব্য গভীরতা ও অতীতের প্লাবন রেকর্ড যাচাই করুন।",
                 )}
               </p>
             </div>
@@ -252,7 +305,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               <p className="mt-2 text-[14.5px] text-rk-muted leading-relaxed">
                 {tr(
                   "Locate verified flood shelters, clinics, and submit urgent SOS assistance requests directly to coordinated volunteer and rescue teams without an account.",
-                  "কাছের আশ্রয়কেন্দ্র ও ক্লিনিক খুঁজুন এবং কোনো অ্যাকাউন্ট ছাড়াই জরুরি উদ্ধার বা ত্রাণের অনুরোধ সরাসরি পাঠান।"
+                  "কাছের আশ্রয়কেন্দ্র ও ক্লিনিক খুঁজুন এবং কোনো অ্যাকাউন্ট ছাড়াই জরুরি উদ্ধার বা ত্রাণের অনুরোধ সরাসরি পাঠান।",
                 )}
               </p>
             </div>
@@ -278,15 +331,21 @@ export const HomePage: React.FC<HomePageProps> = ({
               <div>
                 <span className="font-mono text-xs font-bold uppercase tracking-wider text-rk-brand-strong flex items-center gap-1.5">
                   <ShieldCheck className="h-4 w-4 text-rk-brand" />
-                  {tr("Immediate Emergency Access", "জরুরি সরকারি হটলাইন ও সেবা")}
+                  {tr(
+                    "Immediate Emergency Access",
+                    "জরুরি সরকারি হটলাইন ও সেবা",
+                  )}
                 </span>
                 <h3 className="mt-1 text-xl sm:text-2xl font-extrabold text-rk-forest">
-                  {tr("In Immediate Flood Distress?", "জরুরি বিপদে সাহায্য দরকার?")}
+                  {tr(
+                    "In Immediate Flood Distress?",
+                    "জরুরি বিপদে সাহায্য দরকার?",
+                  )}
                 </h3>
                 <p className="mt-1 text-sm text-rk-muted max-w-xl">
                   {tr(
                     "Call toll-free national helplines for immediate disaster response and emergency relief.",
-                    "যেকোনো জরুরি দুর্যোগকালীন সহায়তার জন্য টোল-ফ্রি জাতীয় হটলাইনে যোগাযোগ করুন।"
+                    "যেকোনো জরুরি দুর্যোগকালীন সহায়তার জন্য টোল-ফ্রি জাতীয় হটলাইনে যোগাযোগ করুন।",
                   )}
                 </p>
               </div>
@@ -294,9 +353,18 @@ export const HomePage: React.FC<HomePageProps> = ({
               {/* Verified Hotlines Pills */}
               <div className="flex flex-wrap items-center gap-2.5">
                 {[
-                  { num: "999", label: tr("National Emergency", "জাতীয় জরুরি সেবা") },
-                  { num: "1090", label: tr("Disaster Early Warning", "দুর্যোগ আগাম বার্তা") },
-                  { num: "333", label: tr("Citizen Information", "সরকারি তথ্য সেবা") },
+                  {
+                    num: "999",
+                    label: tr("National Emergency", "জাতীয় জরুরি সেবা"),
+                  },
+                  {
+                    num: "1090",
+                    label: tr("Disaster Early Warning", "দুর্যোগ আগাম বার্তা"),
+                  },
+                  {
+                    num: "333",
+                    label: tr("Citizen Information", "সরকারি তথ্য সেবা"),
+                  },
                 ].map((item) => (
                   <a
                     key={item.num}
@@ -305,7 +373,9 @@ export const HomePage: React.FC<HomePageProps> = ({
                   >
                     <Phone className="h-3.5 w-3.5 text-rk-brand shrink-0" />
                     <span className="font-extrabold">{item.num}</span>
-                    <span className="text-rk-muted font-sans text-xs">({item.label})</span>
+                    <span className="text-rk-muted font-sans text-xs">
+                      ({item.label})
+                    </span>
                   </a>
                 ))}
               </div>
@@ -318,7 +388,12 @@ export const HomePage: React.FC<HomePageProps> = ({
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 font-semibold text-rk-forest hover:text-rk-brand transition-colors"
               >
-                <span>{tr("Official Flood Warnings: FFWC (ffwc.gov.bd)", "সরকারি বন্যা সতর্কবার্তা: এফএফডব্লিউসি (ffwc.gov.bd)")}</span>
+                <span>
+                  {tr(
+                    "Official Flood Warnings: FFWC (ffwc.gov.bd)",
+                    "সরকারি বন্যা সতর্কবার্তা: এফএফডব্লিউসি (ffwc.gov.bd)",
+                  )}
+                </span>
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
 
@@ -336,7 +411,11 @@ export const HomePage: React.FC<HomePageProps> = ({
                   className="inline-flex items-center gap-1 font-bold text-rk-forest hover:text-rk-brand"
                 >
                   <Users className="h-3.5 w-3.5" />
-                  <span>{isStaff ? tr("Rescue Board", "উদ্ধার বোর্ড") : tr("Rescue Team Login", "উদ্ধারকারী লগইন")}</span>
+                  <span>
+                    {isStaff
+                      ? tr("Rescue Board", "উদ্ধার বোর্ড")
+                      : tr("Rescue Team Login", "উদ্ধারকারী লগইন")}
+                  </span>
                 </button>
               </div>
             </div>
