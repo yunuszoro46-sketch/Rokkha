@@ -1048,7 +1048,7 @@ export function CitizenPortalApp({
           className={`flex-1 w-full max-w-full bg-rk-page min-w-0 flex flex-col justify-between overflow-x-hidden ${""}`}
         >
           <main className="w-full max-w-full flex-1 flex flex-col justify-between overflow-x-hidden">
-            <div className="w-full">
+            <div className={`w-full ${activeView === "overview" ? "rk-home-shell" : ""}`}>
               {/* Says when any part of the page shows the saved sample instead of live data. */}
 
               <SiteHeader
