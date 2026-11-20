@@ -118,7 +118,7 @@ async def admin_on_public_server(
 async def register(data: RegisterRequest):
 
     try:
-        return await service.register(data.name, data.email, data.password)
+        return await service.register(data.name, data.email, data.password, data.role)
 
     except service.EmailTaken:
         raise HTTPException(status_code=409, detail="An account with this email already exists.")

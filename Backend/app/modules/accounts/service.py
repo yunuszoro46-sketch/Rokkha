@@ -155,12 +155,12 @@ async def _open_session(user: dict) -> dict:
     return {"token": token, "token_type": "bearer", "expires_at": expires_at, "user": user}
 
 
-async def register(name: str, email: str, password: str) -> dict:
+async def register(name: str, email: str, password: str, role: str = "user") -> dict:
 
     # Hashing is slow on purpose: run it in a thread so other requests are not held up.
     password_hash = await asyncio.to_thread(hash_password, password)
 
-    user = await repository.create_user(name, email, password_hash)
+    user = await repository.create_user(name, email, password_hash, role)
 
     if user is None:
         raise EmailTaken()

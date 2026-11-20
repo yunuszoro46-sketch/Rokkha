@@ -43,16 +43,14 @@ def _to_api(document: dict | None) -> dict | None:
 # USERS
 # ==========================================
 
-async def create_user(name: str, email: str, password_hash: str) -> dict | None:
+async def create_user(name: str, email: str, password_hash: str, role: str = "user") -> dict | None:
 
     document = {
         "_id": str(uuid4()),
         "name": name,
         "email": email,
         "password_hash": password_hash,
-        "role": "user",
-        "status": "active",
-        "last_login_at": None,
+        "role": role,
         "location": None,
         "location_label": None,
         "district": None,

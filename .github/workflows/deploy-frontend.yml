@@ -1,0 +1,29 @@
+name: Deploy Frontend to Vercel
+
+on:
+  push:
+    branches:
+      - production
+    paths:
+      - 'Frontend/**'
+      - '.github/workflows/deploy-frontend.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy-to-vercel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Deploy to Vercel
+        working-directory: Frontend
+        env:
+          VERCEL_ORG_ID: team_8i8eMSPvyI8iDiL6GpHBN1Ym
+          VERCEL_PROJECT_ID: prj_QpHYw136pwBZ71OtU5FfvtXe5oFR
+        run: |
+          rm -rf ../.git
+          vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes

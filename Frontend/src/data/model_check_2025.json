@@ -1,0 +1,136 @@
+{
+ "model_version": "xgb-2026-11-11-60d30b1a",
+ "checked_on": "2026-11-11",
+ "years": [
+  2025
+ ],
+ "note": "These years were not used to train, tune, calibrate or choose thresholds.",
+ "model": {
+  "rows": 2485,
+  "floods": 83,
+  "flood_rate": 0.0334,
+  "pr_auc": 0.569,
+  "roc_auc": 0.941,
+  "brier": 0.02,
+  "at_watch": {
+   "floods_caught": 54,
+   "floods_missed": 29,
+   "false_alarms": 68,
+   "precision": 0.443,
+   "recall": 0.651,
+   "f1": 0.527
+  },
+  "at_alert": {
+   "floods_caught": 38,
+   "floods_missed": 45,
+   "false_alarms": 13,
+   "precision": 0.745,
+   "recall": 0.458,
+   "f1": 0.567
+  }
+ },
+ "alert_thresholds": {
+  "watch": 0.1818,
+  "alert": 0.375
+ },
+ "persistence": {
+  "rows": 2485,
+  "floods": 83,
+  "flood_rate": 0.0334,
+  "pr_auc": 0.499,
+  "roc_auc": 0.898,
+  "brier": 0.0273,
+  "decision": {
+   "floods_caught": 45,
+   "floods_missed": 38,
+   "false_alarms": 38,
+   "precision": 0.542,
+   "recall": 0.542,
+   "f1": 0.542
+  }
+ },
+ "climatology": {
+  "rows": 2485,
+  "floods": 83,
+  "flood_rate": 0.0334,
+  "pr_auc": 0.213,
+  "roc_auc": 0.784,
+  "brier": 0.0301,
+  "decision": {
+   "floods_caught": 16,
+   "floods_missed": 67,
+   "false_alarms": 41,
+   "precision": 0.281,
+   "recall": 0.193,
+   "f1": 0.229
+  }
+ },
+ "onset_days": {
+  "meaning": "days where the latest satellite pass saw no flood (or there was none)",
+  "rows": 2402,
+  "floods": 38,
+  "flood_rate": 0.0158,
+  "pr_auc": 0.174,
+  "roc_auc": 0.888,
+  "brier": 0.0144,
+  "at_watch": {
+   "floods_caught": 10,
+   "floods_missed": 28,
+   "false_alarms": 34,
+   "precision": 0.227,
+   "recall": 0.263,
+   "f1": 0.244
+  }
+ },
+ "reliability": [
+  {
+   "bin": "0.00-0.02",
+   "rows": 2017,
+   "mean_predicted": 0.002,
+   "observed_rate": 0.003
+  },
+  {
+   "bin": "0.02-0.05",
+   "rows": 170,
+   "mean_predicted": 0.036,
+   "observed_rate": 0.047
+  },
+  {
+   "bin": "0.05-0.10",
+   "rows": 1,
+   "mean_predicted": 0.064,
+   "observed_rate": 0.0
+  },
+  {
+   "bin": "0.10-0.20",
+   "rows": 190,
+   "mean_predicted": 0.132,
+   "observed_rate": 0.079
+  },
+  {
+   "bin": "0.20-0.40",
+   "rows": 61,
+   "mean_predicted": 0.247,
+   "observed_rate": 0.295
+  },
+  {
+   "bin": "0.40-0.60",
+   "rows": 6,
+   "mean_predicted": 0.469,
+   "observed_rate": 0.833
+  },
+  {
+   "bin": "0.60-0.80",
+   "rows": 24,
+   "mean_predicted": 0.731,
+   "observed_rate": 0.625
+  },
+  {
+   "bin": "0.80-1.00",
+   "rows": 16,
+   "mean_predicted": 0.965,
+   "observed_rate": 0.938
+  }
+ ],
+ "dropped_for_missing_rain_by_year": {}
+}

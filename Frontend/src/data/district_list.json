@@ -1,0 +1,325 @@
+{
+ "_about": "Names only, derived from src/data/bangladesh_districts.json (same 64 districts, same pcodes). Kept separate so pages that only need a district list do not download the boundary shapes.",
+ "districts": [
+  {
+   "pcode": "BD4001",
+   "name": "Bagerhat",
+   "division": "Khulna"
+  },
+  {
+   "pcode": "BD2003",
+   "name": "Bandarban",
+   "division": "Chattogram"
+  },
+  {
+   "pcode": "BD1004",
+   "name": "Barguna",
+   "division": "Barishal"
+  },
+  {
+   "pcode": "BD1006",
+   "name": "Barishal",
+   "division": "Barishal"
+  },
+  {
+   "pcode": "BD1009",
+   "name": "Bhola",
+   "division": "Barishal"
+  },
+  {
+   "pcode": "BD5010",
+   "name": "Bogura",
+   "division": "Rajshahi"
+  },
+  {
+   "pcode": "BD2012",
+   "name": "Brahmanbaria",
+   "division": "Chattogram"
+  },
+  {
+   "pcode": "BD2013",
+   "name": "Chandpur",
+   "division": "Chattogram"
+  },
+  {
+   "pcode": "BD5070",
+   "name": "Chapainababganj",
+   "division": "Rajshahi"
+  },
+  {
+   "pcode": "BD2015",
+   "name": "Chattogram",
+   "division": "Chattogram"
+  },
+  {
+   "pcode": "BD4018",
+   "name": "Chuadanga",
+   "division": "Khulna"
+  },
+  {
+   "pcode": "BD2022",
+   "name": "Cox's Bazar",
+   "division": "Chattogram"
+  },
+  {
+   "pcode": "BD2019",
+   "name": "Cumilla",
+   "division": "Chattogram"
+  },
+  {
+   "pcode": "BD3026",
+   "name": "Dhaka",
+   "division": "Dhaka"
+  },
+  {
+   "pcode": "BD5527",
+   "name": "Dinajpur",
+   "division": "Rangpur"
+  },
+  {
+   "pcode": "BD3029",
+   "name": "Faridpur",
+   "division": "Dhaka"
+  },
+  {
+   "pcode": "BD2030",
+   "name": "Feni",
+   "division": "Chattogram"
+  },
+  {
+   "pcode": "BD5532",
+   "name": "Gaibandha",
+   "division": "Rangpur"
+  },
+  {
+   "pcode": "BD3033",
+   "name": "Gazipur",
+   "division": "Dhaka"
+  },
+  {
+   "pcode": "BD3035",
+   "name": "Gopalganj",
+   "division": "Dhaka"
+  },
+  {
+   "pcode": "BD6036",
+   "name": "Habiganj",
+   "division": "Sylhet"
+  },
+  {
+   "pcode": "BD4539",
+   "name": "Jamalpur",
+   "division": "Mymensingh"
+  },
+  {
+   "pcode": "BD4041",
+   "name": "Jashore",
+   "division": "Khulna"
+  },
+  {
+   "pcode": "BD1042",
+   "name": "Jhalokati",
+   "division": "Barishal"
+  },
+  {
+   "pcode": "BD4044",
+   "name": "Jhenaidah",
+   "division": "Khulna"
+  },
+  {
+   "pcode": "BD5038",
+   "name": "Joypurhat",
+   "division": "Rajshahi"
+  },
+  {
+   "pcode": "BD2046",
+   "name": "Khagrachhari",
+   "division": "Chattogram"
+  },
+  {
+   "pcode": "BD4047",
+   "name": "Khulna",
+   "division": "Khulna"
+  },
+  {
+   "pcode": "BD3048",
+   "name": "Kishoreganj",
+   "division": "Dhaka"
+  },
+  {
+   "pcode": "BD5549",
+   "name": "Kurigram",
+   "division": "Rangpur"
+  },
+  {
+   "pcode": "BD4050",
+   "name": "Kushtia",
+   "division": "Khulna"
+  },
+  {
+   "pcode": "BD2051",
+   "name": "Lakshmipur",
+   "division": "Chattogram"
+  },
+  {
+   "pcode": "BD5552",
+   "name": "Lalmonirhat",
+   "division": "Rangpur"
+  },
+  {
+   "pcode": "BD3054",
+   "name": "Madaripur",
+   "division": "Dhaka"
+  },
+  {
+   "pcode": "BD4055",
+   "name": "Magura",
+   "division": "Khulna"
+  },
+  {
+   "pcode": "BD3056",
+   "name": "Manikganj",
+   "division": "Dhaka"
+  },
+  {
+   "pcode": "BD4057",
+   "name": "Meherpur",
+   "division": "Khulna"
+  },
+  {
+   "pcode": "BD6058",
+   "name": "Moulvibazar",
+   "division": "Sylhet"
+  },
+  {
+   "pcode": "BD3059",
+   "name": "Munshiganj",
+   "division": "Dhaka"
+  },
+  {
+   "pcode": "BD4561",
+   "name": "Mymensingh",
+   "division": "Mymensingh"
+  },
+  {
+   "pcode": "BD5064",
+   "name": "Naogaon",
+   "division": "Rajshahi"
+  },
+  {
+   "pcode": "BD4065",
+   "name": "Narail",
+   "division": "Khulna"
+  },
+  {
+   "pcode": "BD3067",
+   "name": "Narayanganj",
+   "division": "Dhaka"
+  },
+  {
+   "pcode": "BD3068",
+   "name": "Narsingdi",
+   "division": "Dhaka"
+  },
+  {
+   "pcode": "BD5069",
+   "name": "Natore",
+   "division": "Rajshahi"
+  },
+  {
+   "pcode": "BD4572",
+   "name": "Netrakona",
+   "division": "Mymensingh"
+  },
+  {
+   "pcode": "BD5573",
+   "name": "Nilphamari",
+   "division": "Rangpur"
+  },
+  {
+   "pcode": "BD2075",
+   "name": "Noakhali",
+   "division": "Chattogram"
+  },
+  {
+   "pcode": "BD5076",
+   "name": "Pabna",
+   "division": "Rajshahi"
+  },
+  {
+   "pcode": "BD5577",
+   "name": "Panchagarh",
+   "division": "Rangpur"
+  },
+  {
+   "pcode": "BD1078",
+   "name": "Patuakhali",
+   "division": "Barishal"
+  },
+  {
+   "pcode": "BD1079",
+   "name": "Pirojpur",
+   "division": "Barishal"
+  },
+  {
+   "pcode": "BD3082",
+   "name": "Rajbari",
+   "division": "Dhaka"
+  },
+  {
+   "pcode": "BD5081",
+   "name": "Rajshahi",
+   "division": "Rajshahi"
+  },
+  {
+   "pcode": "BD2084",
+   "name": "Rangamati",
+   "division": "Chattogram"
+  },
+  {
+   "pcode": "BD5585",
+   "name": "Rangpur",
+   "division": "Rangpur"
+  },
+  {
+   "pcode": "BD4087",
+   "name": "Satkhira",
+   "division": "Khulna"
+  },
+  {
+   "pcode": "BD3086",
+   "name": "Shariatpur",
+   "division": "Dhaka"
+  },
+  {
+   "pcode": "BD4589",
+   "name": "Sherpur",
+   "division": "Mymensingh"
+  },
+  {
+   "pcode": "BD5088",
+   "name": "Sirajganj",
+   "division": "Rajshahi"
+  },
+  {
+   "pcode": "BD6090",
+   "name": "Sunamganj",
+   "division": "Sylhet"
+  },
+  {
+   "pcode": "BD6091",
+   "name": "Sylhet",
+   "division": "Sylhet"
+  },
+  {
+   "pcode": "BD3093",
+   "name": "Tangail",
+   "division": "Dhaka"
+  },
+  {
+   "pcode": "BD5594",
+   "name": "Thakurgaon",
+   "division": "Rangpur"
+  }
+ ]
+}

@@ -30,6 +30,9 @@ class RegisterRequest(BaseModel):
     # Long passwords are fine; the upper limit only stops abuse (hashing is slow on purpose).
     password: str = Field(min_length=8, max_length=128)
 
+    # Only "user" and "rescuer" may self-register. "admin" is set by an existing admin only.
+    role: Literal["user", "rescuer"] = "user"
+
     @field_validator("name")
     @classmethod
     def name_not_blank(cls, value: str) -> str:

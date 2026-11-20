@@ -1,0 +1,5298 @@
+{
+  "generated_on": "2026-11-09",
+  "method": {
+    "grid": "JRC GloFAS 3 arc-second grid (~90 m)",
+    "flooded_cell": "UNOSAT detected water AND NOT JRC permanent water",
+    "water_classes_used": [
+      1,
+      2,
+      3,
+      4,
+      99
+    ],
+    "excluded_layers": "NOAA VIIRS (375 m) products",
+    "observed_rule": "district observed if >= 50% of its land was inside the analysis extent",
+    "flooded_rule": "district flooded if >= 2% of its observed land was flood water"
+  },
+  "events": [
+    {
+      "event_id": "2016-07-monsoon",
+      "name": "Monsoon flood, central and eastern Bangladesh",
+      "start": "2016-06-30",
+      "end": "2016-07-24",
+      "unosat_packages": [
+        "FL20160725BGD"
+      ],
+      "layers_used": [
+        "FL20160725BGD/ST20160724_Water_Extent (218770/218770 features)",
+        "FL20160725BGD/ST20160630_Water_Extent (115256/115256 features)"
+      ],
+      "analysis_extents_skipped": [],
+      "flooded_area_sqkm": 10830.5
+    },
+    {
+      "event_id": "2017-08-monsoon",
+      "name": "Monsoon flood, central, northern and southern Bangladesh",
+      "start": "2017-08-12",
+      "end": "2017-08-22",
+      "unosat_packages": [
+        "FL20170815BGD"
+      ],
+      "layers_used": [
+        "FL20170815BGD/ST_20170812_FL20170815BGD_CentralBangladesh_SatelliteDetectedFloodWaters (259024/259024 features)",
+        "FL20170815BGD/TX_20170816_FL20170815BGD_NorthWesternBangladesh_SatelliteDetectedFloodWaters (18458/18458 features)",
+        "FL20170815BGD/ST_20170822_FL20170815BGD_CentralBangladesh_SatelliteDetectedFloodWaters (217847/217847 features)",
+        "FL20170815BGD/ST_20170822_FL20170815BGD_SouthernBangladesh_SatelliteDetectedFloodWaters (323396/323396 features)"
+      ],
+      "analysis_extents_skipped": [],
+      "flooded_area_sqkm": 21491.6
+    },
+    {
+      "event_id": "2018-06-sylhet",
+      "name": "Flash flood, Sylhet Division",
+      "start": "2018-06-15",
+      "end": "2018-06-15",
+      "unosat_packages": [
+        "FL20180619BGD"
+      ],
+      "layers_used": [
+        "FL20180619BGD/ST20180615_Assam_Flood_Water (23613/23613 features)",
+        "FL20180619BGD/ST20180615_Sylhet_Flood_Water (51629/51629 features)"
+      ],
+      "analysis_extents_skipped": [],
+      "flooded_area_sqkm": 5967.8
+    },
+    {
+      "event_id": "2020-05-cyclone-amphan",
+      "name": "Cyclone Amphan, Khulna Division",
+      "start": "2020-05-25",
+      "end": "2020-05-31",
+      "unosat_packages": [
+        "TC20200518BGD"
+      ],
+      "layers_used": [
+        "TC20200518BGD/ST1_20200525_WaterExtent_Khulna_Bangladesh (1/1 features)",
+        "TC20200518BGD/ST1_20200531_WaterExtent_Khulna_Bangladesh (10697/10697 features)"
+      ],
+      "analysis_extents_skipped": [],
+      "flooded_area_sqkm": 1367.1
+    },
+    {
+      "event_id": "2020-07-monsoon",
+      "name": "Monsoon flood, nationwide",
+      "start": "2020-07-09",
+      "end": "2020-08-08",
+      "unosat_packages": [
+        "FL20200713BGD"
+      ],
+      "layers_used": [
+        "FL20200713BGD/TDX_20200719_WaterExtent_NE_Bangladesh (1/1 features)",
+        "FL20200713BGD/TDX_20200719_FloodExtent_NE_Bangladesh (1/1 features)",
+        "FL20200713BGD/ST1_20200713_FloodExtent_Mymensingh_Rajshahi_Rangpur (1256/1256 features)",
+        "FL20200713BGD/ST1_20200713_WaterExtent_Mymensingh_Rajshahi_Rangpur (6038/6038 features)",
+        "FL20200713BGD/TSX_20200718_FloodExtent_Mymensingh_Rajshahi_Rangpur (1/1 features)",
+        "FL20200713BGD/TSX_20200718_WaterExtent_Mymensingh_Rajshahi_Rangpur (15471/15471 features)",
+        "FL20200713BGD/TSX_20200718_FloodExtent_E_Sylhet (4/4 features)",
+        "FL20200713BGD/TSX_20200718_WaterExtent_E_Sylhet (7665/7665 features)",
+        "FL20200713BGD/ST1_20200713_FloodExtent_Bangladesh (12914/12914 features)",
+        "FL20200713BGD/ST1_20200713_WaterExtent_Bangladesh (12407/12407 features)",
+        "FL20200713BGD/ST1_20200719_FloodExtent_Bangladesh (17810/17810 features)",
+        "FL20200713BGD/ST1_20200719_WaterExtent_Bangladesh (70904/70904 features)",
+        "FL20200713BGD/ST1_20200720_FloodExtent_NE_Bangladesh (7/7 features)",
+        "FL20200713BGD/ST1_20200720_WaterExtent_NE_Bangladesh (13811/13811 features)",
+        "FL20200713BGD/ST1_20200709_FloodExtent_Northwestern (17993/17993 features)",
+        "FL20200713BGD/ST1_20200709_WaterExtent_Northwestern (33682/33682 features)",
+        "FL20200713BGD/ST1_20200721_FloodExtent_Northwestern (12562/12562 features)",
+        "FL20200713BGD/ST1_20200721_WaterExtent_Northwestern (47714/47714 features)",
+        "FL20200713BGD/ST1_20200721_FloodExtent_CentralRegion (42/42 features)",
+        "FL20200713BGD/ST1_20200721_WaterExtent_CentralRegion (3038/56834 features)",
+        "FL20200713BGD/ST1_20200808_FloodExtent_Central_Northern (39/39 features)",
+        "FL20200713BGD/ST1_20200808_WaterExtent_Central_Northern (116267/116267 features)"
+      ],
+      "analysis_extents_skipped": [
+        "FL20200713BGD/NOAA_20200723_20200727_AnalysisExtent_Bangladesh"
+      ],
+      "flooded_area_sqkm": 30623.2
+    },
+    {
+      "event_id": "2021-07-chattogram",
+      "name": "Flood, Chattogram Division",
+      "start": "2021-07-27",
+      "end": "2021-08-10",
+      "unosat_packages": [
+        "FL20210729BGD"
+      ],
+      "layers_used": [
+        "FL20210729BGD/S1_20210729_WaterExtent_Chittagong (1/1 features)",
+        "FL20210729BGD/S1_20210729_FloodExtent_Chittagong (1/1 features)",
+        "FL20210729BGD/S1_20210727_WaterExtent_Chittagong (1/1 features)",
+        "FL20210729BGD/S1_20210727_FloodExtent_Chittagong (1/1 features)",
+        "FL20210729BGD/S1_20210808_FloodExtent_Chittagong (1/1 features)",
+        "FL20210729BGD/S1_20210808_WaterExtent_Chittagong (1/1 features)",
+        "FL20210729BGD/S1_20210810_WaterExtent_Chittagong (1/1 features)",
+        "FL20210729BGD/S1_20210810_FloodExtent_Chittagong (1/1 features)"
+      ],
+      "analysis_extents_skipped": [],
+      "flooded_area_sqkm": 8471.1
+    },
+    {
+      "event_id": "2022-05-northeast",
+      "name": "Flood, Sylhet and north-east Bangladesh",
+      "start": "2022-05-25",
+      "end": "2022-06-21",
+      "unosat_packages": [
+        "FL20220525BGD"
+      ],
+      "layers_used": [
+        "FL20220525BGD/S1_20220525_WaterExtent_NE (1/1 features)",
+        "FL20220525BGD/S1_20220525_FloodExtent_NE (1/1 features)",
+        "FL20220525BGD/Chaohu1_20220525_WaterExtent_Sylhet (1/1 features)",
+        "FL20220525BGD/S1_20220528_FloodExtent_NE (1/1 features)",
+        "FL20220525BGD/Chaohu1_20220525_FloodExtent_Sylhet (1/1 features)",
+        "FL20220525BGD/S1_20220528_WaterExtent_NE (1/1 features)",
+        "FL20220525BGD/RCM1_20220619_FloodExtent_NE (1/1 features)",
+        "FL20220525BGD/RCM1_20220619_WaterExtent_NE (1/1 features)",
+        "FL20220525BGD/RCM1_20220618_WaterExtent_Sylhet (3/3 features)",
+        "FL20220525BGD/RCM1_20220618_FloodExtent_Sylhet (3/3 features)",
+        "FL20220525BGD/S1_20220621_FloodExtent_Rajshahi_Rangpur (1/1 features)",
+        "FL20220525BGD/S1_20220621_WaterExtent_Rajshahi_Rangpur (1/1 features)",
+        "FL20220525BGD/S1_20220609_WaterExtent_Rajshahi_Rangpur (1/1 features)",
+        "FL20220525BGD/S1_20220609_FloodExtent_Rajshahi_Rangpur (1/1 features)",
+        "FL20220525BGD/S1_20220525_20220528_WaterExtent_NE (1/1 features)",
+        "FL20220525BGD/S1_20220525_20220528_FloodExtent_NE (1/1 features)",
+        "FL20220525BGD/S1_20220621_WaterExtent_Rangpur (1/1 features)",
+        "FL20220525BGD/S1_20220621_FloodExtent_Rangpur (1/1 features)"
+      ],
+      "analysis_extents_skipped": [],
+      "flooded_area_sqkm": 15424.1
+    },
+    {
+      "event_id": "2024-05-cyclone-remal",
+      "name": "Cyclone Remal, southern Bangladesh",
+      "start": "2024-06-01",
+      "end": "2024-06-01",
+      "unosat_packages": [
+        "FL20240502BGD-3865",
+        "TC20240502BGD-3878"
+      ],
+      "layers_used": [
+        "FL20240502BGD-3865/ST1_20240601_FloodExtent_Bangladesh (29/29 features)",
+        "TC20240502BGD-3878/TDX1_20240601_FloodWater_Satkhira (1/1 features)"
+      ],
+      "analysis_extents_skipped": [],
+      "flooded_area_sqkm": 1030.3
+    },
+    {
+      "event_id": "2024-06-monsoon",
+      "name": "Monsoon flood, Sylhet then nationwide",
+      "start": "2024-06-19",
+      "end": "2024-07-23",
+      "unosat_packages": [
+        "TC20240502BGD-3885",
+        "TC20240502BGD-3897",
+        "TC20240502BGD-3903"
+      ],
+      "layers_used": [
+        "TC20240502BGD-3885/S1_20240619_20240622_FloodExtent_Sylhet (1/1 features)",
+        "TC20240502BGD-3885/S1_20240619_20240622_WaterExtent_Sylhet (1/1 features)",
+        "TC20240502BGD-3897/S1_20240619_20240622_FloodExtent_Sylhet (1/1 features)",
+        "TC20240502BGD-3897/S1_20240619_20240622_WaterExtent_Sylhet (1/1 features)",
+        "TC20240502BGD-3897/SAOCOM_20240626_FloodExtent_Sylhet (1/1 features)",
+        "TC20240502BGD-3897/GLOBAL_20240626_FloodExtent_Sunamganj (1/1 features)",
+        "TC20240502BGD-3897/PHR_20240626_FloodExtent_SunamganjSadar (1/1 features)",
+        "TC20240502BGD-3897/ST1_20240622_20240629_FloodExtent_Bangladesh (511/511 features)",
+        "TC20240502BGD-3897/ST1_20240704_20240711_FloodExtent_Bangladesh (522/522 features)",
+        "TC20240502BGD-3903/S1_20240619_20240622_FloodExtent_Sylhet (1/1 features)",
+        "TC20240502BGD-3903/S1_20240619_20240622_WaterExtent_Sylhet (1/1 features)",
+        "TC20240502BGD-3903/SAOCOM_20240626_FloodExtent_Sylhet (1/1 features)",
+        "TC20240502BGD-3903/GLOBAL_20240626_FloodExtent_Sunamganj (1/1 features)",
+        "TC20240502BGD-3903/PHR_20240626_FloodExtent_SunamganjSadar (1/1 features)",
+        "TC20240502BGD-3903/ST1_20240622_20240629_FloodExtent_Bangladesh (511/511 features)",
+        "TC20240502BGD-3903/ST1_20240704_20240711_FloodExtent_Bangladesh (522/522 features)",
+        "TC20240502BGD-3903/ST1_20240716_20240723_FloodExtent_Bangladesh (1/1 features)"
+      ],
+      "analysis_extents_skipped": [],
+      "flooded_area_sqkm": 17283.8
+    },
+    {
+      "event_id": "2024-08-eastern",
+      "name": "Flash flood, eastern Bangladesh",
+      "start": "2024-08-18",
+      "end": "2024-09-04",
+      "unosat_packages": [
+        "FL20240825BGD"
+      ],
+      "layers_used": [
+        "FL20240825BGD/S1_20240818_20240826_FloodExtent_Bangladesh (1/1 features)",
+        "FL20240825BGD/S1_20240828_20240904_FloodExtent_Bangladesh (1/1 features)"
+      ],
+      "analysis_extents_skipped": [],
+      "flooded_area_sqkm": 13466.3
+    }
+  ],
+  "skipped_events": [
+    {
+      "event_id": "2017-05-cyclone-mora",
+      "name": "Cyclone Mora, Chattogram and Cox's Bazar",
+      "start": "2017-05-30",
+      "end": "2017-06-01",
+      "packages": [
+        "TC20170529BGD"
+      ],
+      "reason": "no usable flood-water classes (only excluded classes such as 6 'possibly saturated soil')"
+    }
+  ],
+  "districts": [
+    {
+      "pcode": "BD6090",
+      "name": "Sunamganj",
+      "division": "Sylhet",
+      "events_observed": 6,
+      "events_flooded": 6,
+      "max_flooded_share": 0.818,
+      "flooded_event_ids": [
+        "2017-08-monsoon",
+        "2018-06-sylhet",
+        "2020-07-monsoon",
+        "2022-05-northeast",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0.1382,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0.6105,
+          "flooded_share": 0.7888,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0.9982,
+          "flooded_share": 0.6433,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.9997,
+          "flooded_share": 0.792,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.9998,
+          "flooded_share": 0.7976,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.0001,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9997,
+          "flooded_share": 0.818,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9997,
+          "flooded_share": 0.0661,
+          "status": "flooded"
+        }
+      ],
+      "rank": 1,
+      "hazard_share_10yr": 0.6629,
+      "hazard_share_100yr": 0.7752
+    },
+    {
+      "pcode": "BD4572",
+      "name": "Netrakona",
+      "division": "Mymensingh",
+      "events_observed": 6,
+      "events_flooded": 6,
+      "max_flooded_share": 0.6718,
+      "flooded_event_ids": [
+        "2016-07-monsoon",
+        "2017-08-monsoon",
+        "2020-07-monsoon",
+        "2022-05-northeast",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0.5909,
+          "flooded_share": 0.5647,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.6718,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0.0046,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.9992,
+          "flooded_share": 0.5649,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.9994,
+          "flooded_share": 0.534,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.0004,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9992,
+          "flooded_share": 0.1739,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9992,
+          "flooded_share": 0.2079,
+          "status": "flooded"
+        }
+      ],
+      "rank": 2,
+      "hazard_share_10yr": 0.5448,
+      "hazard_share_100yr": 0.6412
+    },
+    {
+      "pcode": "BD3048",
+      "name": "Kishoreganj",
+      "division": "Dhaka",
+      "events_observed": 7,
+      "events_flooded": 6,
+      "max_flooded_share": 0.622,
+      "flooded_event_ids": [
+        "2016-07-monsoon",
+        "2017-08-monsoon",
+        "2020-07-monsoon",
+        "2022-05-northeast",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.5801,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.6016,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0.0016,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.622,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 1,
+          "flooded_share": 0.5749,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.992,
+          "flooded_share": 0.0054,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.0765,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 1,
+          "flooded_share": 0.0898,
+          "status": "flooded"
+        }
+      ],
+      "rank": 3,
+      "hazard_share_10yr": 0.5019,
+      "hazard_share_100yr": 0.58
+    },
+    {
+      "pcode": "BD5010",
+      "name": "Bogura",
+      "division": "Rajshahi",
+      "events_observed": 6,
+      "events_flooded": 6,
+      "max_flooded_share": 0.5704,
+      "flooded_event_ids": [
+        "2016-07-monsoon",
+        "2017-08-monsoon",
+        "2020-07-monsoon",
+        "2022-05-northeast",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.3088,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.5704,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.3317,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 1,
+          "flooded_share": 0.0879,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.1528,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 1,
+          "flooded_share": 0.1234,
+          "status": "flooded"
+        }
+      ],
+      "rank": 4,
+      "hazard_share_10yr": 0.4215,
+      "hazard_share_100yr": 0.5898
+    },
+    {
+      "pcode": "BD4539",
+      "name": "Jamalpur",
+      "division": "Mymensingh",
+      "events_observed": 6,
+      "events_flooded": 6,
+      "max_flooded_share": 0.5654,
+      "flooded_event_ids": [
+        "2016-07-monsoon",
+        "2017-08-monsoon",
+        "2020-07-monsoon",
+        "2022-05-northeast",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0.6997,
+          "flooded_share": 0.2331,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.5654,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.9999,
+          "flooded_share": 0.4866,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.9914,
+          "flooded_share": 0.2528,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.0013,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9999,
+          "flooded_share": 0.1205,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9999,
+          "flooded_share": 0.0788,
+          "status": "flooded"
+        }
+      ],
+      "rank": 5,
+      "hazard_share_10yr": 0.5605,
+      "hazard_share_100yr": 0.9032
+    },
+    {
+      "pcode": "BD2012",
+      "name": "Brahmanbaria",
+      "division": "Chattogram",
+      "events_observed": 6,
+      "events_flooded": 6,
+      "max_flooded_share": 0.5314,
+      "flooded_event_ids": [
+        "2016-07-monsoon",
+        "2017-08-monsoon",
+        "2020-07-monsoon",
+        "2022-05-northeast",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0.9263,
+          "flooded_share": 0.4824,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0.9275,
+          "flooded_share": 0.3844,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0.0026,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.9994,
+          "flooded_share": 0.5314,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.8623,
+          "flooded_share": 0.3398,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.0058,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9994,
+          "flooded_share": 0.1523,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9994,
+          "flooded_share": 0.2021,
+          "status": "flooded"
+        }
+      ],
+      "rank": 6,
+      "hazard_share_10yr": 0.4364,
+      "hazard_share_100yr": 0.7334
+    },
+    {
+      "pcode": "BD5088",
+      "name": "Sirajganj",
+      "division": "Rajshahi",
+      "events_observed": 6,
+      "events_flooded": 6,
+      "max_flooded_share": 0.5232,
+      "flooded_event_ids": [
+        "2016-07-monsoon",
+        "2017-08-monsoon",
+        "2020-07-monsoon",
+        "2022-05-northeast",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.4067,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.5232,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.4949,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 1,
+          "flooded_share": 0.3394,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.0049,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.1259,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 1,
+          "flooded_share": 0.1292,
+          "status": "flooded"
+        }
+      ],
+      "rank": 7,
+      "hazard_share_10yr": 0.8331,
+      "hazard_share_100yr": 0.9826
+    },
+    {
+      "pcode": "BD6036",
+      "name": "Habiganj",
+      "division": "Sylhet",
+      "events_observed": 6,
+      "events_flooded": 6,
+      "max_flooded_share": 0.5091,
+      "flooded_event_ids": [
+        "2017-08-monsoon",
+        "2018-06-sylhet",
+        "2020-07-monsoon",
+        "2022-05-northeast",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0.2297,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0.5956,
+          "flooded_share": 0.4242,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0.9977,
+          "flooded_share": 0.291,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.9976,
+          "flooded_share": 0.4996,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.9981,
+          "flooded_share": 0.4535,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.0012,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9976,
+          "flooded_share": 0.5091,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9976,
+          "flooded_share": 0.1936,
+          "status": "flooded"
+        }
+      ],
+      "rank": 8,
+      "hazard_share_10yr": 0.4491,
+      "hazard_share_100yr": 0.5481
+    },
+    {
+      "pcode": "BD5076",
+      "name": "Pabna",
+      "division": "Rajshahi",
+      "events_observed": 6,
+      "events_flooded": 6,
+      "max_flooded_share": 0.4158,
+      "flooded_event_ids": [
+        "2016-07-monsoon",
+        "2017-08-monsoon",
+        "2020-07-monsoon",
+        "2022-05-northeast",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.2106,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.4158,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.2929,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.9729,
+          "flooded_share": 0.1112,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.0067,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.0663,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 1,
+          "flooded_share": 0.1013,
+          "status": "flooded"
+        }
+      ],
+      "rank": 9,
+      "hazard_share_10yr": 0.5888,
+      "hazard_share_100yr": 0.9397
+    },
+    {
+      "pcode": "BD4561",
+      "name": "Mymensingh",
+      "division": "Mymensingh",
+      "events_observed": 6,
+      "events_flooded": 6,
+      "max_flooded_share": 0.4153,
+      "flooded_event_ids": [
+        "2016-07-monsoon",
+        "2017-08-monsoon",
+        "2020-07-monsoon",
+        "2022-05-northeast",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0.8369,
+          "flooded_share": 0.108,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.4153,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.2214,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.7943,
+          "flooded_share": 0.135,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.0015,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.0585,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 1,
+          "flooded_share": 0.1849,
+          "status": "flooded"
+        }
+      ],
+      "rank": 10,
+      "hazard_share_10yr": 0.1408,
+      "hazard_share_100yr": 0.2308
+    },
+    {
+      "pcode": "BD3093",
+      "name": "Tangail",
+      "division": "Dhaka",
+      "events_observed": 7,
+      "events_flooded": 6,
+      "max_flooded_share": 0.3646,
+      "flooded_event_ids": [
+        "2016-07-monsoon",
+        "2017-08-monsoon",
+        "2020-07-monsoon",
+        "2022-05-northeast",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.177,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.3646,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.3489,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.8865,
+          "flooded_share": 0.209,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.9924,
+          "flooded_share": 0.0019,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.1176,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 1,
+          "flooded_share": 0.0489,
+          "status": "flooded"
+        }
+      ],
+      "rank": 11,
+      "hazard_share_10yr": 0.2569,
+      "hazard_share_100yr": 0.6871
+    },
+    {
+      "pcode": "BD5069",
+      "name": "Natore",
+      "division": "Rajshahi",
+      "events_observed": 6,
+      "events_flooded": 6,
+      "max_flooded_share": 0.3525,
+      "flooded_event_ids": [
+        "2016-07-monsoon",
+        "2017-08-monsoon",
+        "2020-07-monsoon",
+        "2022-05-northeast",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.199,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.3525,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.2908,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.7471,
+          "flooded_share": 0.1593,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.0007,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.099,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 1,
+          "flooded_share": 0.1555,
+          "status": "flooded"
+        }
+      ],
+      "rank": 12,
+      "hazard_share_10yr": 0.4162,
+      "hazard_share_100yr": 0.8845
+    },
+    {
+      "pcode": "BD3068",
+      "name": "Narsingdi",
+      "division": "Dhaka",
+      "events_observed": 7,
+      "events_flooded": 6,
+      "max_flooded_share": 0.2398,
+      "flooded_event_ids": [
+        "2016-07-monsoon",
+        "2017-08-monsoon",
+        "2020-07-monsoon",
+        "2022-05-northeast",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.2165,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.1917,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.2398,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.9002,
+          "flooded_share": 0.1249,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.9992,
+          "flooded_share": 0.0098,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.058,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 1,
+          "flooded_share": 0.0982,
+          "status": "flooded"
+        }
+      ],
+      "rank": 13,
+      "hazard_share_10yr": 0.2372,
+      "hazard_share_100yr": 0.4021
+    },
+    {
+      "pcode": "BD5038",
+      "name": "Joypurhat",
+      "division": "Rajshahi",
+      "events_observed": 6,
+      "events_flooded": 5,
+      "max_flooded_share": 0.6319,
+      "flooded_event_ids": [
+        "2016-07-monsoon",
+        "2017-08-monsoon",
+        "2020-07-monsoon",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0.8056,
+          "flooded_share": 0.41,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.6319,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.9992,
+          "flooded_share": 0.3412,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.999,
+          "flooded_share": 0.0057,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9992,
+          "flooded_share": 0.2841,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9992,
+          "flooded_share": 0.1354,
+          "status": "flooded"
+        }
+      ],
+      "rank": 14,
+      "hazard_share_10yr": 0.2197,
+      "hazard_share_100yr": 0.3081
+    },
+    {
+      "pcode": "BD6091",
+      "name": "Sylhet",
+      "division": "Sylhet",
+      "events_observed": 5,
+      "events_flooded": 5,
+      "max_flooded_share": 0.6125,
+      "flooded_event_ids": [
+        "2018-06-sylhet",
+        "2020-07-monsoon",
+        "2022-05-northeast",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 1,
+          "flooded_share": 0.4775,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.9988,
+          "flooded_share": 0.4702,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.9994,
+          "flooded_share": 0.6125,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9988,
+          "flooded_share": 0.5976,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9988,
+          "flooded_share": 0.1422,
+          "status": "flooded"
+        }
+      ],
+      "rank": 15,
+      "hazard_share_10yr": 0.516,
+      "hazard_share_100yr": 0.6571
+    },
+    {
+      "pcode": "BD3056",
+      "name": "Manikganj",
+      "division": "Dhaka",
+      "events_observed": 6,
+      "events_flooded": 5,
+      "max_flooded_share": 0.5036,
+      "flooded_event_ids": [
+        "2016-07-monsoon",
+        "2017-08-monsoon",
+        "2020-07-monsoon",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.2122,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0.9335,
+          "flooded_share": 0.4745,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.5036,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.3573,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.9997,
+          "flooded_share": 0.0068,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.0558,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 1,
+          "flooded_share": 0.0223,
+          "status": "flooded"
+        }
+      ],
+      "rank": 16,
+      "hazard_share_10yr": 0.6396,
+      "hazard_share_100yr": 0.9405
+    },
+    {
+      "pcode": "BD4589",
+      "name": "Sherpur",
+      "division": "Mymensingh",
+      "events_observed": 5,
+      "events_flooded": 5,
+      "max_flooded_share": 0.5015,
+      "flooded_event_ids": [
+        "2017-08-monsoon",
+        "2020-07-monsoon",
+        "2022-05-northeast",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0.3336,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.5015,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.9983,
+          "flooded_share": 0.3345,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.8132,
+          "flooded_share": 0.1732,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9983,
+          "flooded_share": 0.0958,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9983,
+          "flooded_share": 0.1633,
+          "status": "flooded"
+        }
+      ],
+      "rank": 17,
+      "hazard_share_10yr": 0.1028,
+      "hazard_share_100yr": 0.5305
+    },
+    {
+      "pcode": "BD5532",
+      "name": "Gaibandha",
+      "division": "Rangpur",
+      "events_observed": 5,
+      "events_flooded": 5,
+      "max_flooded_share": 0.4948,
+      "flooded_event_ids": [
+        "2017-08-monsoon",
+        "2020-07-monsoon",
+        "2022-05-northeast",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0.1394,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.4948,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.3468,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 1,
+          "flooded_share": 0.253,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.124,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 1,
+          "flooded_share": 0.0672,
+          "status": "flooded"
+        }
+      ],
+      "rank": 18,
+      "hazard_share_10yr": 0.6657,
+      "hazard_share_100yr": 0.8575
+    },
+    {
+      "pcode": "BD5549",
+      "name": "Kurigram",
+      "division": "Rangpur",
+      "events_observed": 5,
+      "events_flooded": 5,
+      "max_flooded_share": 0.4772,
+      "flooded_event_ids": [
+        "2017-08-monsoon",
+        "2020-07-monsoon",
+        "2022-05-northeast",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.3903,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.9971,
+          "flooded_share": 0.4772,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.9964,
+          "flooded_share": 0.3794,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9971,
+          "flooded_share": 0.2026,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9971,
+          "flooded_share": 0.0671,
+          "status": "flooded"
+        }
+      ],
+      "rank": 19,
+      "hazard_share_10yr": 0.6542,
+      "hazard_share_100yr": 0.8506
+    },
+    {
+      "pcode": "BD6058",
+      "name": "Moulvibazar",
+      "division": "Sylhet",
+      "events_observed": 5,
+      "events_flooded": 5,
+      "max_flooded_share": 0.2834,
+      "flooded_event_ids": [
+        "2018-06-sylhet",
+        "2020-07-monsoon",
+        "2022-05-northeast",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 1,
+          "flooded_share": 0.2391,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.9968,
+          "flooded_share": 0.208,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.9977,
+          "flooded_share": 0.2305,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9968,
+          "flooded_share": 0.2834,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9968,
+          "flooded_share": 0.1328,
+          "status": "flooded"
+        }
+      ],
+      "rank": 20,
+      "hazard_share_10yr": 0.2882,
+      "hazard_share_100yr": 0.3612
+    },
+    {
+      "pcode": "BD4087",
+      "name": "Satkhira",
+      "division": "Khulna",
+      "events_observed": 5,
+      "events_flooded": 5,
+      "max_flooded_share": 0.2685,
+      "flooded_event_ids": [
+        "2020-05-cyclone-amphan",
+        "2020-07-monsoon",
+        "2024-05-cyclone-remal",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0.63,
+          "flooded_share": 0.2685,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.8308,
+          "flooded_share": 0.2265,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.832,
+          "flooded_share": 0.0445,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.8308,
+          "flooded_share": 0.0377,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.8308,
+          "flooded_share": 0.0746,
+          "status": "flooded"
+        }
+      ],
+      "rank": 21,
+      "hazard_share_10yr": 0.2298,
+      "hazard_share_100yr": 0.2699
+    },
+    {
+      "pcode": "BD4050",
+      "name": "Kushtia",
+      "division": "Khulna",
+      "events_observed": 6,
+      "events_flooded": 5,
+      "max_flooded_share": 0.251,
+      "flooded_event_ids": [
+        "2016-07-monsoon",
+        "2017-08-monsoon",
+        "2020-07-monsoon",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0.9766,
+          "flooded_share": 0.0882,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0.776,
+          "flooded_share": 0.251,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.9987,
+          "flooded_share": 0.1406,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.3056,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.9802,
+          "flooded_share": 0.0036,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9987,
+          "flooded_share": 0.0204,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9987,
+          "flooded_share": 0.0872,
+          "status": "flooded"
+        }
+      ],
+      "rank": 22,
+      "hazard_share_10yr": 0.3673,
+      "hazard_share_100yr": 0.8819
+    },
+    {
+      "pcode": "BD3067",
+      "name": "Narayanganj",
+      "division": "Dhaka",
+      "events_observed": 6,
+      "events_flooded": 5,
+      "max_flooded_share": 0.2186,
+      "flooded_event_ids": [
+        "2016-07-monsoon",
+        "2017-08-monsoon",
+        "2020-07-monsoon",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.2186,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0.8851,
+          "flooded_share": 0.0963,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.2023,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.0317,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.9972,
+          "flooded_share": 0.0085,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.0442,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 1,
+          "flooded_share": 0.0304,
+          "status": "flooded"
+        }
+      ],
+      "rank": 23,
+      "hazard_share_10yr": 0.7003,
+      "hazard_share_100yr": 0.8748
+    },
+    {
+      "pcode": "BD5552",
+      "name": "Lalmonirhat",
+      "division": "Rangpur",
+      "events_observed": 5,
+      "events_flooded": 5,
+      "max_flooded_share": 0.1921,
+      "flooded_event_ids": [
+        "2017-08-monsoon",
+        "2020-07-monsoon",
+        "2022-05-northeast",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0.796,
+          "flooded_share": 0.1093,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.6669,
+          "flooded_share": 0.1406,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.9933,
+          "flooded_share": 0.1472,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9942,
+          "flooded_share": 0.1921,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9942,
+          "flooded_share": 0.0394,
+          "status": "flooded"
+        }
+      ],
+      "rank": 24,
+      "hazard_share_10yr": 0.4248,
+      "hazard_share_100yr": 0.6505
+    },
+    {
+      "pcode": "BD4047",
+      "name": "Khulna",
+      "division": "Khulna",
+      "events_observed": 5,
+      "events_flooded": 5,
+      "max_flooded_share": 0.1874,
+      "flooded_event_ids": [
+        "2020-05-cyclone-amphan",
+        "2020-07-monsoon",
+        "2024-05-cyclone-remal",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0.6242,
+          "flooded_share": 0.1874,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.8081,
+          "flooded_share": 0.1497,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.8117,
+          "flooded_share": 0.0287,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.8081,
+          "flooded_share": 0.058,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.8081,
+          "flooded_share": 0.0856,
+          "status": "flooded"
+        }
+      ],
+      "rank": 25,
+      "hazard_share_10yr": 0.2385,
+      "hazard_share_100yr": 0.3136
+    },
+    {
+      "pcode": "BD5585",
+      "name": "Rangpur",
+      "division": "Rangpur",
+      "events_observed": 5,
+      "events_flooded": 5,
+      "max_flooded_share": 0.1665,
+      "flooded_event_ids": [
+        "2017-08-monsoon",
+        "2020-07-monsoon",
+        "2022-05-northeast",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0.649,
+          "flooded_share": 0.1665,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.8965,
+          "flooded_share": 0.088,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 1,
+          "flooded_share": 0.0548,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.0816,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 1,
+          "flooded_share": 0.0379,
+          "status": "flooded"
+        }
+      ],
+      "rank": 26,
+      "hazard_share_10yr": 0.2897,
+      "hazard_share_100yr": 0.458
+    },
+    {
+      "pcode": "BD3033",
+      "name": "Gazipur",
+      "division": "Dhaka",
+      "events_observed": 6,
+      "events_flooded": 5,
+      "max_flooded_share": 0.1273,
+      "flooded_event_ids": [
+        "2016-07-monsoon",
+        "2017-08-monsoon",
+        "2020-07-monsoon",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.1196,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.1273,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.1256,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.4449,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.9987,
+          "flooded_share": 0.0117,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.0301,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 1,
+          "flooded_share": 0.0227,
+          "status": "flooded"
+        }
+      ],
+      "rank": 27,
+      "hazard_share_10yr": 0.1357,
+      "hazard_share_100yr": 0.282
+    },
+    {
+      "pcode": "BD1078",
+      "name": "Patuakhali",
+      "division": "Barishal",
+      "events_observed": 4,
+      "events_flooded": 4,
+      "max_flooded_share": 0.2855,
+      "flooded_event_ids": [
+        "2020-07-monsoon",
+        "2024-05-cyclone-remal",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.8275,
+          "flooded_share": 0.2685,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.8275,
+          "flooded_share": 0.0375,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.8275,
+          "flooded_share": 0.1153,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.8275,
+          "flooded_share": 0.2855,
+          "status": "flooded"
+        }
+      ],
+      "rank": 28,
+      "hazard_share_10yr": 0.23,
+      "hazard_share_100yr": 0.4777
+    },
+    {
+      "pcode": "BD3059",
+      "name": "Munshiganj",
+      "division": "Dhaka",
+      "events_observed": 5,
+      "events_flooded": 4,
+      "max_flooded_share": 0.2631,
+      "flooded_event_ids": [
+        "2016-07-monsoon",
+        "2020-07-monsoon",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0.9999,
+          "flooded_share": 0.2169,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0.0284,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.2631,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.9983,
+          "flooded_share": 0.016,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.1057,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 1,
+          "flooded_share": 0.0379,
+          "status": "flooded"
+        }
+      ],
+      "rank": 29,
+      "hazard_share_10yr": 0.7973,
+      "hazard_share_100yr": 0.8313
+    },
+    {
+      "pcode": "BD3026",
+      "name": "Dhaka",
+      "division": "Dhaka",
+      "events_observed": 6,
+      "events_flooded": 4,
+      "max_flooded_share": 0.2322,
+      "flooded_event_ids": [
+        "2016-07-monsoon",
+        "2017-08-monsoon",
+        "2020-07-monsoon",
+        "2024-06-monsoon"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.1358,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0.8245,
+          "flooded_share": 0.1364,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.2322,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.1098,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 1,
+          "flooded_share": 0.0026,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.0385,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 1,
+          "flooded_share": 0.0186,
+          "status": "not_flooded"
+        }
+      ],
+      "rank": 30,
+      "hazard_share_10yr": 0.5431,
+      "hazard_share_100yr": 0.7957
+    },
+    {
+      "pcode": "BD1079",
+      "name": "Pirojpur",
+      "division": "Barishal",
+      "events_observed": 4,
+      "events_flooded": 4,
+      "max_flooded_share": 0.208,
+      "flooded_event_ids": [
+        "2020-07-monsoon",
+        "2024-05-cyclone-remal",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.9975,
+          "flooded_share": 0.208,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.9975,
+          "flooded_share": 0.0774,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9975,
+          "flooded_share": 0.1042,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9975,
+          "flooded_share": 0.1771,
+          "status": "flooded"
+        }
+      ],
+      "rank": 31,
+      "hazard_share_10yr": 0.0815,
+      "hazard_share_100yr": 0.687
+    },
+    {
+      "pcode": "BD1006",
+      "name": "Barishal",
+      "division": "Barishal",
+      "events_observed": 4,
+      "events_flooded": 4,
+      "max_flooded_share": 0.194,
+      "flooded_event_ids": [
+        "2020-07-monsoon",
+        "2024-05-cyclone-remal",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.8923,
+          "flooded_share": 0.194,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.8893,
+          "flooded_share": 0.022,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.8923,
+          "flooded_share": 0.0914,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.8923,
+          "flooded_share": 0.1831,
+          "status": "flooded"
+        }
+      ],
+      "rank": 32,
+      "hazard_share_10yr": 0.4398,
+      "hazard_share_100yr": 0.7602
+    },
+    {
+      "pcode": "BD2019",
+      "name": "Cumilla",
+      "division": "Chattogram",
+      "events_observed": 4,
+      "events_flooded": 4,
+      "max_flooded_share": 0.1895,
+      "flooded_event_ids": [
+        "2016-07-monsoon",
+        "2020-07-monsoon",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0.598,
+          "flooded_share": 0.166,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0.3342,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.7234,
+          "flooded_share": 0.133,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0.0348,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.0012,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.0025,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9996,
+          "flooded_share": 0.0699,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9996,
+          "flooded_share": 0.1895,
+          "status": "flooded"
+        }
+      ],
+      "rank": 33,
+      "hazard_share_10yr": 0.4397,
+      "hazard_share_100yr": 0.6288
+    },
+    {
+      "pcode": "BD4041",
+      "name": "Jashore",
+      "division": "Khulna",
+      "events_observed": 5,
+      "events_flooded": 4,
+      "max_flooded_share": 0.1858,
+      "flooded_event_ids": [
+        "2020-05-cyclone-amphan",
+        "2020-07-monsoon",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0.5384,
+          "flooded_share": 0.07,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.9995,
+          "flooded_share": 0.1246,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.9995,
+          "flooded_share": 0.0076,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9995,
+          "flooded_share": 0.0611,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9995,
+          "flooded_share": 0.1858,
+          "status": "flooded"
+        }
+      ],
+      "rank": 34,
+      "hazard_share_10yr": 0.2142,
+      "hazard_share_100yr": 0.3031
+    },
+    {
+      "pcode": "BD1004",
+      "name": "Barguna",
+      "division": "Barishal",
+      "events_observed": 4,
+      "events_flooded": 4,
+      "max_flooded_share": 0.1794,
+      "flooded_event_ids": [
+        "2020-07-monsoon",
+        "2024-05-cyclone-remal",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.8754,
+          "flooded_share": 0.1631,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.8754,
+          "flooded_share": 0.0923,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.8754,
+          "flooded_share": 0.1127,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.8754,
+          "flooded_share": 0.1794,
+          "status": "flooded"
+        }
+      ],
+      "rank": 35,
+      "hazard_share_10yr": 0.041,
+      "hazard_share_100yr": 0.5767
+    },
+    {
+      "pcode": "BD3035",
+      "name": "Gopalganj",
+      "division": "Dhaka",
+      "events_observed": 4,
+      "events_flooded": 4,
+      "max_flooded_share": 0.1767,
+      "flooded_event_ids": [
+        "2020-07-monsoon",
+        "2024-05-cyclone-remal",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.1767,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 1,
+          "flooded_share": 0.0644,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.097,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 1,
+          "flooded_share": 0.0668,
+          "status": "flooded"
+        }
+      ],
+      "rank": 36,
+      "hazard_share_10yr": 0.5278,
+      "hazard_share_100yr": 0.9712
+    },
+    {
+      "pcode": "BD4001",
+      "name": "Bagerhat",
+      "division": "Khulna",
+      "events_observed": 4,
+      "events_flooded": 4,
+      "max_flooded_share": 0.1248,
+      "flooded_event_ids": [
+        "2020-07-monsoon",
+        "2024-05-cyclone-remal",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0.3131,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.8683,
+          "flooded_share": 0.1248,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.8683,
+          "flooded_share": 0.0474,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.8683,
+          "flooded_share": 0.0608,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.8683,
+          "flooded_share": 0.0686,
+          "status": "flooded"
+        }
+      ],
+      "rank": 37,
+      "hazard_share_10yr": 0.1193,
+      "hazard_share_100yr": 0.3365
+    },
+    {
+      "pcode": "BD4065",
+      "name": "Narail",
+      "division": "Khulna",
+      "events_observed": 4,
+      "events_flooded": 4,
+      "max_flooded_share": 0.1186,
+      "flooded_event_ids": [
+        "2020-07-monsoon",
+        "2024-05-cyclone-remal",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0.3112,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.0683,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 1,
+          "flooded_share": 0.0246,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.083,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 1,
+          "flooded_share": 0.1186,
+          "status": "flooded"
+        }
+      ],
+      "rank": 38,
+      "hazard_share_10yr": 0.5476,
+      "hazard_share_100yr": 0.8066
+    },
+    {
+      "pcode": "BD5064",
+      "name": "Naogaon",
+      "division": "Rajshahi",
+      "events_observed": 3,
+      "events_flooded": 3,
+      "max_flooded_share": 0.3797,
+      "flooded_event_ids": [
+        "2020-07-monsoon",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0.2385,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0.3209,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.9992,
+          "flooded_share": 0.3797,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.2976,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9992,
+          "flooded_share": 0.2443,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9992,
+          "flooded_share": 0.0754,
+          "status": "flooded"
+        }
+      ],
+      "rank": 39,
+      "hazard_share_10yr": 0.436,
+      "hazard_share_100yr": 0.5399
+    },
+    {
+      "pcode": "BD3029",
+      "name": "Faridpur",
+      "division": "Dhaka",
+      "events_observed": 4,
+      "events_flooded": 3,
+      "max_flooded_share": 0.3154,
+      "flooded_event_ids": [
+        "2020-07-monsoon",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0.4285,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.3154,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 1,
+          "flooded_share": 0.0039,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.0324,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 1,
+          "flooded_share": 0.0835,
+          "status": "flooded"
+        }
+      ],
+      "rank": 40,
+      "hazard_share_10yr": 0.5596,
+      "hazard_share_100yr": 0.8587
+    },
+    {
+      "pcode": "BD2030",
+      "name": "Feni",
+      "division": "Chattogram",
+      "events_observed": 3,
+      "events_flooded": 3,
+      "max_flooded_share": 0.3061,
+      "flooded_event_ids": [
+        "2021-07-chattogram",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0.816,
+          "flooded_share": 0.2838,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9734,
+          "flooded_share": 0.1524,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9734,
+          "flooded_share": 0.3061,
+          "status": "flooded"
+        }
+      ],
+      "rank": 41,
+      "hazard_share_10yr": 0.1416,
+      "hazard_share_100yr": 0.2453
+    },
+    {
+      "pcode": "BD3054",
+      "name": "Madaripur",
+      "division": "Dhaka",
+      "events_observed": 4,
+      "events_flooded": 3,
+      "max_flooded_share": 0.3008,
+      "flooded_event_ids": [
+        "2020-07-monsoon",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0.0554,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.3008,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 1,
+          "flooded_share": 0.015,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.0323,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 1,
+          "flooded_share": 0.0566,
+          "status": "flooded"
+        }
+      ],
+      "rank": 42,
+      "hazard_share_10yr": 0.7388,
+      "hazard_share_100yr": 0.8818
+    },
+    {
+      "pcode": "BD5081",
+      "name": "Rajshahi",
+      "division": "Rajshahi",
+      "events_observed": 3,
+      "events_flooded": 3,
+      "max_flooded_share": 0.2928,
+      "flooded_event_ids": [
+        "2020-07-monsoon",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0.2306,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0.2148,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.9995,
+          "flooded_share": 0.2928,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.0037,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9995,
+          "flooded_share": 0.1241,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9995,
+          "flooded_share": 0.0308,
+          "status": "flooded"
+        }
+      ],
+      "rank": 43,
+      "hazard_share_10yr": 0.4951,
+      "hazard_share_100yr": 0.7136
+    },
+    {
+      "pcode": "BD2022",
+      "name": "Cox's Bazar",
+      "division": "Chattogram",
+      "events_observed": 3,
+      "events_flooded": 3,
+      "max_flooded_share": 0.2859,
+      "flooded_event_ids": [
+        "2021-07-chattogram",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0.991,
+          "flooded_share": 0.2859,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9275,
+          "flooded_share": 0.0752,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9275,
+          "flooded_share": 0.0665,
+          "status": "flooded"
+        }
+      ],
+      "rank": 44,
+      "hazard_share_10yr": 0.1299,
+      "hazard_share_100yr": 0.1672
+    },
+    {
+      "pcode": "BD5070",
+      "name": "Chapainababganj",
+      "division": "Rajshahi",
+      "events_observed": 3,
+      "events_flooded": 3,
+      "max_flooded_share": 0.2549,
+      "flooded_event_ids": [
+        "2020-07-monsoon",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.9982,
+          "flooded_share": 0.2549,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9982,
+          "flooded_share": 0.0739,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9982,
+          "flooded_share": 0.0268,
+          "status": "flooded"
+        }
+      ],
+      "rank": 45,
+      "hazard_share_10yr": 0.4677,
+      "hazard_share_100yr": 0.6667
+    },
+    {
+      "pcode": "BD3086",
+      "name": "Shariatpur",
+      "division": "Dhaka",
+      "events_observed": 4,
+      "events_flooded": 3,
+      "max_flooded_share": 0.2406,
+      "flooded_event_ids": [
+        "2020-07-monsoon",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0.0277,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.9633,
+          "flooded_share": 0.2406,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.963,
+          "flooded_share": 0.0144,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9633,
+          "flooded_share": 0.0403,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9633,
+          "flooded_share": 0.0423,
+          "status": "flooded"
+        }
+      ],
+      "rank": 46,
+      "hazard_share_10yr": 0.6594,
+      "hazard_share_100yr": 0.821
+    },
+    {
+      "pcode": "BD2051",
+      "name": "Lakshmipur",
+      "division": "Chattogram",
+      "events_observed": 3,
+      "events_flooded": 3,
+      "max_flooded_share": 0.2299,
+      "flooded_event_ids": [
+        "2020-07-monsoon",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.7625,
+          "flooded_share": 0.1529,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.0013,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.8098,
+          "flooded_share": 0.0577,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.8098,
+          "flooded_share": 0.2299,
+          "status": "flooded"
+        }
+      ],
+      "rank": 47,
+      "hazard_share_10yr": 0.3806,
+      "hazard_share_100yr": 0.601
+    },
+    {
+      "pcode": "BD1042",
+      "name": "Jhalokati",
+      "division": "Barishal",
+      "events_observed": 4,
+      "events_flooded": 3,
+      "max_flooded_share": 0.2074,
+      "flooded_event_ids": [
+        "2020-07-monsoon",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.2,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 1,
+          "flooded_share": 0.012,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.062,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 1,
+          "flooded_share": 0.2074,
+          "status": "flooded"
+        }
+      ],
+      "rank": 48,
+      "hazard_share_10yr": 0.2689,
+      "hazard_share_100yr": 0.9398
+    },
+    {
+      "pcode": "BD2015",
+      "name": "Chattogram",
+      "division": "Chattogram",
+      "events_observed": 3,
+      "events_flooded": 3,
+      "max_flooded_share": 0.2002,
+      "flooded_event_ids": [
+        "2021-07-chattogram",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0.9721,
+          "flooded_share": 0.2002,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9088,
+          "flooded_share": 0.0494,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9088,
+          "flooded_share": 0.0783,
+          "status": "flooded"
+        }
+      ],
+      "rank": 49,
+      "hazard_share_10yr": 0.1028,
+      "hazard_share_100yr": 0.181
+    },
+    {
+      "pcode": "BD2013",
+      "name": "Chandpur",
+      "division": "Chattogram",
+      "events_observed": 3,
+      "events_flooded": 3,
+      "max_flooded_share": 0.1859,
+      "flooded_event_ids": [
+        "2020-07-monsoon",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0.2786,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.8747,
+          "flooded_share": 0.1859,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.0084,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.8747,
+          "flooded_share": 0.0532,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.8747,
+          "flooded_share": 0.1403,
+          "status": "flooded"
+        }
+      ],
+      "rank": 50,
+      "hazard_share_10yr": 0.5003,
+      "hazard_share_100yr": 0.7599
+    },
+    {
+      "pcode": "BD4055",
+      "name": "Magura",
+      "division": "Khulna",
+      "events_observed": 4,
+      "events_flooded": 3,
+      "max_flooded_share": 0.1835,
+      "flooded_event_ids": [
+        "2020-07-monsoon",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0.1231,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.1214,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 1,
+          "flooded_share": 0.0014,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.0545,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 1,
+          "flooded_share": 0.1835,
+          "status": "flooded"
+        }
+      ],
+      "rank": 51,
+      "hazard_share_10yr": 0.5135,
+      "hazard_share_100yr": 0.8731
+    },
+    {
+      "pcode": "BD3082",
+      "name": "Rajbari",
+      "division": "Dhaka",
+      "events_observed": 5,
+      "events_flooded": 3,
+      "max_flooded_share": 0.183,
+      "flooded_event_ids": [
+        "2016-07-monsoon",
+        "2020-07-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.1128,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0.2495,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.183,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.1235,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.996,
+          "flooded_share": 0.0021,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 1,
+          "flooded_share": 0.0162,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 1,
+          "flooded_share": 0.1114,
+          "status": "flooded"
+        }
+      ],
+      "rank": 52,
+      "hazard_share_10yr": 0.5476,
+      "hazard_share_100yr": 0.9496
+    },
+    {
+      "pcode": "BD4044",
+      "name": "Jhenaidah",
+      "division": "Khulna",
+      "events_observed": 4,
+      "events_flooded": 3,
+      "max_flooded_share": 0.1342,
+      "flooded_event_ids": [
+        "2020-07-monsoon",
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0.2321,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0.0002,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.9993,
+          "flooded_share": 0.1002,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.0001,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.9993,
+          "flooded_share": 0.0037,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9993,
+          "flooded_share": 0.0408,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9993,
+          "flooded_share": 0.1342,
+          "status": "flooded"
+        }
+      ],
+      "rank": 53,
+      "hazard_share_10yr": 0.1765,
+      "hazard_share_100yr": 0.5243
+    },
+    {
+      "pcode": "BD5573",
+      "name": "Nilphamari",
+      "division": "Rangpur",
+      "events_observed": 3,
+      "events_flooded": 2,
+      "max_flooded_share": 0.2268,
+      "flooded_event_ids": [
+        "2022-05-northeast",
+        "2024-06-monsoon"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0.0007,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.0082,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.9993,
+          "flooded_share": 0.0568,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9993,
+          "flooded_share": 0.2268,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9993,
+          "flooded_share": 0.0159,
+          "status": "not_flooded"
+        }
+      ],
+      "rank": 54,
+      "hazard_share_10yr": 0.2334,
+      "hazard_share_100yr": 0.3335
+    },
+    {
+      "pcode": "BD1009",
+      "name": "Bhola",
+      "division": "Barishal",
+      "events_observed": 3,
+      "events_flooded": 2,
+      "max_flooded_share": 0.2136,
+      "flooded_event_ids": [
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.4839,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.5492,
+          "flooded_share": 0.014,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.5499,
+          "flooded_share": 0.0603,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.5499,
+          "flooded_share": 0.2136,
+          "status": "flooded"
+        }
+      ],
+      "rank": 55,
+      "hazard_share_10yr": 0.3388,
+      "hazard_share_100yr": 0.3991
+    },
+    {
+      "pcode": "BD2075",
+      "name": "Noakhali",
+      "division": "Chattogram",
+      "events_observed": 2,
+      "events_flooded": 2,
+      "max_flooded_share": 0.2124,
+      "flooded_event_ids": [
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.0956,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0.0179,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.001,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.823,
+          "flooded_share": 0.091,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.823,
+          "flooded_share": 0.2124,
+          "status": "flooded"
+        }
+      ],
+      "rank": 56,
+      "hazard_share_10yr": 0.1907,
+      "hazard_share_100yr": 0.3399
+    },
+    {
+      "pcode": "BD5577",
+      "name": "Panchagarh",
+      "division": "Rangpur",
+      "events_observed": 3,
+      "events_flooded": 2,
+      "max_flooded_share": 0.1939,
+      "flooded_event_ids": [
+        "2022-05-northeast",
+        "2024-06-monsoon"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.5231,
+          "flooded_share": 0.0361,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9708,
+          "flooded_share": 0.1939,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9708,
+          "flooded_share": 0.0084,
+          "status": "not_flooded"
+        }
+      ],
+      "rank": 57,
+      "hazard_share_10yr": 0.0975,
+      "hazard_share_100yr": 0.1488
+    },
+    {
+      "pcode": "BD5527",
+      "name": "Dinajpur",
+      "division": "Rangpur",
+      "events_observed": 3,
+      "events_flooded": 2,
+      "max_flooded_share": 0.118,
+      "flooded_event_ids": [
+        "2024-06-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0.1313,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.3291,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.6166,
+          "flooded_share": 0.0188,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9991,
+          "flooded_share": 0.118,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9991,
+          "flooded_share": 0.0571,
+          "status": "flooded"
+        }
+      ],
+      "rank": 58,
+      "hazard_share_10yr": 0.1684,
+      "hazard_share_100yr": 0.256
+    },
+    {
+      "pcode": "BD4018",
+      "name": "Chuadanga",
+      "division": "Khulna",
+      "events_observed": 4,
+      "events_flooded": 2,
+      "max_flooded_share": 0.0667,
+      "flooded_event_ids": [
+        "2020-07-monsoon",
+        "2024-08-eastern"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0.3113,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.9912,
+          "flooded_share": 0.0667,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.9992,
+          "flooded_share": 0.0017,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9992,
+          "flooded_share": 0.0075,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9992,
+          "flooded_share": 0.0367,
+          "status": "flooded"
+        }
+      ],
+      "rank": 59,
+      "hazard_share_10yr": 0.2761,
+      "hazard_share_100yr": 0.5339
+    },
+    {
+      "pcode": "BD4057",
+      "name": "Meherpur",
+      "division": "Khulna",
+      "events_observed": 5,
+      "events_flooded": 2,
+      "max_flooded_share": 0.0648,
+      "flooded_event_ids": [
+        "2016-07-monsoon",
+        "2020-07-monsoon"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0.5555,
+          "flooded_share": 0.0229,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0.0907,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0.5697,
+          "flooded_share": 0.0648,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0.9989,
+          "flooded_share": 0.0003,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9989,
+          "flooded_share": 0.0038,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9989,
+          "flooded_share": 0.0157,
+          "status": "not_flooded"
+        }
+      ],
+      "rank": 60,
+      "hazard_share_10yr": 0.2488,
+      "hazard_share_100yr": 0.7433
+    },
+    {
+      "pcode": "BD5594",
+      "name": "Thakurgaon",
+      "division": "Rangpur",
+      "events_observed": 2,
+      "events_flooded": 1,
+      "max_flooded_share": 0.1271,
+      "flooded_event_ids": [
+        "2024-06-monsoon"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0.0073,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9987,
+          "flooded_share": 0.1271,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9987,
+          "flooded_share": 0.0138,
+          "status": "not_flooded"
+        }
+      ],
+      "rank": 61,
+      "hazard_share_10yr": 0.0309,
+      "hazard_share_100yr": 0.0406
+    },
+    {
+      "pcode": "BD2084",
+      "name": "Rangamati",
+      "division": "Chattogram",
+      "events_observed": 3,
+      "events_flooded": 1,
+      "max_flooded_share": 0.0298,
+      "flooded_event_ids": [
+        "2021-07-chattogram"
+      ],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0.8232,
+          "flooded_share": 0.0298,
+          "status": "flooded"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9982,
+          "flooded_share": 0.002,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9982,
+          "flooded_share": 0.0085,
+          "status": "not_flooded"
+        }
+      ],
+      "rank": 62,
+      "hazard_share_10yr": 0.0989,
+      "hazard_share_100yr": 0.1143
+    },
+    {
+      "pcode": "BD2046",
+      "name": "Khagrachhari",
+      "division": "Chattogram",
+      "events_observed": 3,
+      "events_flooded": 0,
+      "max_flooded_share": 0.0101,
+      "flooded_event_ids": [],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 0.6949,
+          "flooded_share": 0.0101,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9857,
+          "flooded_share": 0.0013,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9857,
+          "flooded_share": 0.0034,
+          "status": "not_flooded"
+        }
+      ],
+      "rank": 63,
+      "hazard_share_10yr": 0.0233,
+      "hazard_share_100yr": 0.0291
+    },
+    {
+      "pcode": "BD2003",
+      "name": "Bandarban",
+      "division": "Chattogram",
+      "events_observed": 3,
+      "events_flooded": 0,
+      "max_flooded_share": 0.0042,
+      "flooded_event_ids": [],
+      "events": [
+        {
+          "event_id": "2016-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2017-08-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2018-06-sylhet",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-05-cyclone-amphan",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2020-07-monsoon",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2021-07-chattogram",
+          "observed_share": 1,
+          "flooded_share": 0.0042,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2022-05-northeast",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-05-cyclone-remal",
+          "observed_share": 0,
+          "flooded_share": null,
+          "status": "not_observed"
+        },
+        {
+          "event_id": "2024-06-monsoon",
+          "observed_share": 0.9975,
+          "flooded_share": 0.0007,
+          "status": "not_flooded"
+        },
+        {
+          "event_id": "2024-08-eastern",
+          "observed_share": 0.9975,
+          "flooded_share": 0.0005,
+          "status": "not_flooded"
+        }
+      ],
+      "rank": 64,
+      "hazard_share_10yr": 0.0114,
+      "hazard_share_100yr": 0.0153
+    }
+  ]
+}
