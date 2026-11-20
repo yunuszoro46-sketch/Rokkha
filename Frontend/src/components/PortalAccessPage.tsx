@@ -6,7 +6,7 @@ import {
   MapPin,
   Eye,
   EyeOff,
-  X,
+  X, Sparkles, ArrowRight,
 } from "lucide-react";
 import {
   Card,
@@ -43,14 +43,13 @@ interface PortalAccessPageProps {
   onToggleLanguage?: () => void;
 }
 
-// Demo logins for the LOCAL preview only: read from .env.local (git-ignored). Never set on Vercel, so the live
-// site shows nothing here. Format: "email|password".
-// const DEMO_LOGINS = [
-//   { key: "rescuer", label: "Rescue team demo", raw: process.env.NEXT_PUBLIC_DEMO_RESCUER },
-//   { key: "admin", label: "Admin demo", raw: process.env.NEXT_PUBLIC_DEMO_ADMIN },
-// ]
-//   .filter((d) => d.raw && d.raw.includes("|"))
-//   .map((d) => ({ key: d.key, label: d.label, email: d.raw!.split("|")[0], password: d.raw!.slice(d.raw!.indexOf("|") + 1) }));
+// This public build-time value is visible in the browser bundle; use only a disposable demo account.
+const demoRescuerLogin = (() => {
+  const raw = process.env.NEXT_PUBLIC_DEMO_RESCUER;
+  const separator = raw?.indexOf("|") ?? -1;
+  if (!raw || separator <= 0 || separator === raw.length - 1) return null;
+  return { email: raw.slice(0, separator), password: raw.slice(separator + 1) };
+})();
 
 export function PortalAccessPage({
   isOpen = true,
@@ -345,6 +344,26 @@ export function PortalAccessPage({
                     <span>{isBn ? "লগ ইন" : "Log in"}</span>
                   )}
                 </Button>
+
+
+                {tab === "login" && demoRescuerLogin && (
+                    <div className="flex justify-center -mt-2">
+                      <button
+                          type="button"
+                          onClick={() => {
+                            setContact(demoRescuerLogin.email);
+                            setPassword(demoRescuerLogin.password);
+                            setFormError(null);
+                          }}
+                          className="inline-flex items-center justify-center gap-2 rounded-full border border-rk-brand/30 bg-rk-brand/5 px-4 py-2 text-xs font-semibold text-rk-brand shadow-sm transition-all duration-200 hover:border-rk-brand/60 hover:bg-rk-brand/10 hover:shadow-md active:scale-95"
+                      >
+                        <Sparkles className="h-3.5 w-3.5" />
+                        {isBn ? "ডেমো লগইন তথ্য পূরণ করুন" : "Fill Demo Login Details"}
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                )}
+
               </form>
             </TabsContent>
           </Tabs>
